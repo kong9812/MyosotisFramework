@@ -29,24 +29,17 @@ namespace MyosotisFW::System::Render
 		// command pool
 		VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsFamilyIndex());
 		VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, nullptr, &m_commandPool));
-		// command buffers
-		m_commandBuffers.resize(m_swapchain->GetImageCount());
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
-		VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_commandBuffers.data()));
+		prepareCommandBuffers();
 
 		// fences
-		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo(VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT);
-		m_fences.resize(m_commandBuffers.size());
-		for (VkFence& fence : m_fences) {
-			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, nullptr, &fence));
-		}
+		prepareFences();
 
 		// pipeline cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = Utility::Vulkan::CreateInfo::pipelineCacheCreateInfo();
 		VK_VALIDATION(vkCreatePipelineCache(*m_device, &pipelineCacheCreateInfo, nullptr, &m_pipelineCache));
 
 		// framebuffers
-		prepareFramebuffers();
+		prepareFrameBuffers();
 
 		// semaphore(present/render)
 		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
@@ -91,6 +84,42 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkQueueWaitIdle(m_queue));
 	}
 
+	void RenderSubsystem::Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
+	{
+		// デバイスの処理を待つ
+		vkDeviceWaitIdle(*m_device);
+
+		// swapchain
+		m_swapchain.reset();
+		m_swapchain = std::make_unique<RenderSwapchain>(m_device, surface);
+
+		// depth/stencil
+		vkDestroyImage(*m_device, m_depthStencil.image, nullptr);
+		vkDestroyImageView(*m_device, m_depthStencil.view, nullptr);
+		vkFreeMemory(*m_device, m_depthStencil.memory, nullptr);
+		prepareDepthStencil();
+
+		// framebuffers
+		for (VkFramebuffer& framebuffer : m_frameBuffers)
+		{
+			vkDestroyFramebuffer(*m_device, framebuffer, nullptr);
+		}
+		prepareFrameBuffers();
+
+		// command buffers
+		vkFreeCommandBuffers(*m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+		prepareCommandBuffers();
+		buildCommandBuffers();
+
+		// fences
+		for (VkFence& fence : m_fences) {
+			vkDestroyFence(*m_device, fence, nullptr);
+		}
+		prepareFences();
+
+		vkDeviceWaitIdle(*m_device);
+	}
+
 	void RenderSubsystem::prepareDepthStencil()
 	{
 		// image
@@ -129,7 +158,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, nullptr, &m_renderPass));
 	}
 
-	void RenderSubsystem::prepareFramebuffers()
+	void RenderSubsystem::prepareFrameBuffers()
 	{
 		std::array<VkImageView, 2> attachments = {};
 
@@ -150,6 +179,23 @@ namespace MyosotisFW::System::Render
 		{
 			attachments[0] = m_swapchain->GetSwapchainImage()[i].view;
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, nullptr, &m_frameBuffers[i]));
+		}
+	}
+
+	void RenderSubsystem::prepareCommandBuffers()
+	{
+		// command buffers
+		m_commandBuffers.resize(m_swapchain->GetImageCount());
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
+		VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_commandBuffers.data()));
+	}
+
+	void RenderSubsystem::prepareFences()
+	{
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo(VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT);
+		m_fences.resize(m_commandBuffers.size());
+		for (VkFence& fence : m_fences) {
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, nullptr, &fence));
 		}
 	}
 

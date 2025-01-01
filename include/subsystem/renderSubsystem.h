@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Render
 		~RenderSubsystem();
 
 		void Render();
+		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
 	private:
 		struct {
@@ -46,7 +47,9 @@ namespace MyosotisFW::System::Render
 
 		void prepareDepthStencil();
 		void prepareRenderPass();
-		void prepareFramebuffers();
+		void prepareFrameBuffers();
+		void prepareCommandBuffers();
+		void prepareFences();
 		void buildCommandBuffers();
 	};
 

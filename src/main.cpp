@@ -18,7 +18,7 @@ int main()
     // GLFWèâä˙âª
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, 0);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     // WindowçÏê¨
     GLFWwindow* glfwWindow = glfwCreateWindow(
         MyosotisFW::AppInfo::g_windowWidth,

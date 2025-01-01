@@ -93,6 +93,10 @@ namespace MyosotisFW::System
 
 		// m_renderSubsystem
 		m_renderSubsystem = std::make_unique<Render::RenderSubsystem>(m_instance, m_surface);
+
+		// リサイズコールバック
+		glfwSetWindowUserPointer(window, this);
+		glfwSetWindowSizeCallback(window, ResizedCallback);
 	}
 
 	SystemManager::~SystemManager()
@@ -110,5 +114,12 @@ namespace MyosotisFW::System
 	void SystemManager::Update()
 	{
 		m_renderSubsystem->Render();
+	}
+
+	void SystemManager::ResizedCallback(GLFWwindow* window, int width, int height)
+	{
+		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
+		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
+		systemManager->GetRenderSubsystem()->Resize(systemManager->GetSurface(), width, height);
 	}
 }
