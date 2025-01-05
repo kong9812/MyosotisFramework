@@ -1,6 +1,8 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>
 
@@ -43,4 +45,22 @@ namespace MyosotisFW::AppInfo
     constexpr VkClearValue g_colorClearValues = { 0.0f, 0.2f, 0.2f, 1.0f };
     // depth
     constexpr VkClearValue g_depthClearValues = { 1.0f, 0 };
+
+    // [デフォルト]カメラ位置
+    constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 2.0f, -5.0f);
+    // [デフォルト]カメラ視点
+    constexpr glm::vec3 g_cameraLookAt = glm::vec3(0.0f, 0.0f, 0.0f);
+    // [デフォルト]カメラ　前ベクトル
+    constexpr glm::vec3 g_cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
+    // [デフォルト]カメラ　上ベクトル
+    constexpr glm::vec3 g_cameraUp = glm::vec3(0.0f, -1.0f, 0.0f);
+    // [デフォルト]カメラ　右ベクトル
+    constexpr glm::vec3 g_cameraRight = glm::vec3(1.0f, 0.0f, 0.0f);
+    // [デフォルト]カメラ FOV
+    constexpr float g_cameraFov = 60.0f;
+    // [デフォルト]カメラ Far
+    constexpr float g_cameraFar = 1000.0f;
+    // [デフォルト]カメラ Near
+    constexpr float g_cameraNear = 0.1f;
+
 }

@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #include "subsystem/renderSubsystem.h"
 
 #include <array>
@@ -16,6 +17,9 @@ namespace MyosotisFW::System::Render
 		
 		// Swapchain
 		m_swapchain = std::make_unique<RenderSwapchain>(m_device, surface);
+
+		// Camera
+		m_camera = std::make_shared<Camera::CameraBase>();
 
 		// depth/stencil
 		prepareDepthStencil();
@@ -226,6 +230,7 @@ namespace MyosotisFW::System::Render
 			vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
 
 			// bind here
+
 
 			vkCmdEndRenderPass(m_commandBuffers[i]);
 

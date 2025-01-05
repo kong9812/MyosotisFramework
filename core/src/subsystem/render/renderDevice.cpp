@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #include "subsystem/render/renderDevice.h"
 
 #include "vkValidation.h"

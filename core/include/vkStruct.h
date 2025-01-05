@@ -1,5 +1,7 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 namespace Utility::Vulkan::Struct
 {
@@ -15,4 +17,11 @@ namespace Utility::Vulkan::Struct
 		VkDeviceMemory memory;
 		VkImageView view;
 	}DeviceImage;
+
+	typedef struct
+	{
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 proj;
+	}StaticMeshStandardUBO;
 }

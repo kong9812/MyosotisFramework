@@ -1,3 +1,5 @@
+// Copyright (c) 2025 kong9812
+// For include GLFW
 #pragma once
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN

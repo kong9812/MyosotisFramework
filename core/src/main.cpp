@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #include <Windows.h>
 #include <crtdbg.h>
 #include <memory>

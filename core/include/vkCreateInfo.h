@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -10,13 +11,13 @@ namespace Utility::Vulkan::CreateInfo
 		const uint32_t apiVersion,
 		const uint32_t engineVersion)
 	{
-		VkApplicationInfo applicationInfo{};
-		applicationInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		applicationInfo.pApplicationName = applicationName;
-		applicationInfo.pEngineName = engineName;
-		applicationInfo.apiVersion = apiVersion;
-		applicationInfo.engineVersion = engineVersion;
-		return applicationInfo;
+		VkApplicationInfo ai{};
+		ai.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		ai.pApplicationName = applicationName;
+		ai.pEngineName = engineName;
+		ai.apiVersion = apiVersion;
+		ai.engineVersion = engineVersion;
+		return ai;
 	}
 
 	inline VkInstanceCreateInfo instanceCreateInfo(VkApplicationInfo applicationInfo, const std::vector<const char*>& enabledExtensionNames, const std::vector<const char*>& enabledLayerNames)
@@ -248,9 +249,9 @@ namespace Utility::Vulkan::CreateInfo
 	}
 
 	inline VkRenderPassCreateInfo renderPassCreateInfo(
-		std::vector<VkAttachmentDescription>& attachments,
-		std::vector<VkSubpassDependency>& dependencies,
-		std::vector<VkSubpassDescription>& subpasses)
+		const std::vector<VkAttachmentDescription>& attachments,
+		const std::vector<VkSubpassDependency>& dependencies,
+		const std::vector<VkSubpassDescription>& subpasses)
 	{
 		VkRenderPassCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -304,7 +305,7 @@ namespace Utility::Vulkan::CreateInfo
 		return bi;
 	}
 
-	inline VkRenderPassBeginInfo renderPassBeginInfo(VkRenderPass renderPass, uint32_t width, uint32_t height, std::vector<VkClearValue>& clearValues)
+	inline VkRenderPassBeginInfo renderPassBeginInfo(VkRenderPass renderPass, uint32_t width, uint32_t height, const std::vector<VkClearValue>& clearValues)
 	{
 		VkRenderPassBeginInfo bi{};
 		bi.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -336,5 +337,135 @@ namespace Utility::Vulkan::CreateInfo
 		r2d.offset.x = offsetX;
 		r2d.offset.y = offsetY;
 		return r2d;
+	}
+
+	inline VkDescriptorPoolSize descriptorPoolSize(VkDescriptorType descriptorType, uint32_t descriptorCount)
+	{
+		VkDescriptorPoolSize ps{};
+		ps.type = descriptorType;
+		ps.descriptorCount = descriptorCount;
+		return ps;
+	}
+
+	inline VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(const std::vector<VkDescriptorPoolSize>& descriptorPoolSizes, uint32_t maxSets = 1, VkDescriptorPoolCreateFlags flags = 0)
+	{
+		VkDescriptorPoolCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		ci.flags = flags;
+		ci.maxSets = maxSets;
+		ci.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());
+		ci.pPoolSizes = descriptorPoolSizes.data();
+		return ci;
+	}
+
+	inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags shaderStageFlags, uint32_t descriptorCount = 1)
+	{
+		VkDescriptorSetLayoutBinding lb{};
+		lb.binding = binding;
+		lb.descriptorType = descriptorType;
+		lb.descriptorCount = descriptorCount;
+		lb.stageFlags = shaderStageFlags;
+		return lb;
+	}
+
+	inline VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(const std::vector<VkDescriptorSetLayoutBinding>& descriptorSetLayoutBinding)
+	{
+		VkDescriptorSetLayoutCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		ci.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBinding.size());
+		ci.pBindings = descriptorSetLayoutBinding.data();
+		return ci;
+	}
+
+	inline VkDescriptorSetAllocateInfo descriptorSetAllocateInfo(VkDescriptorPool descriptorPool, const VkDescriptorSetLayout* descriptorSetLayout, uint32_t descriptorSetCount = 1)
+	{
+		VkDescriptorSetAllocateInfo ai{};
+		ai.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		ai.descriptorPool = descriptorPool;
+		ai.descriptorSetCount = descriptorSetCount;
+		ai.pSetLayouts = descriptorSetLayout;
+		return ai;
+	}
+
+	inline VkWriteDescriptorSet writeDescriptorSet(
+		VkDescriptorSet descriptorSet,
+		uint32_t dstBinding,
+		VkDescriptorType descriptorType,
+		const VkDescriptorBufferInfo* pBufferInfo,
+		uint32_t descriptorCount = 1)
+	{
+		VkWriteDescriptorSet wds{};
+		wds.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		wds.dstSet = descriptorSet;
+		wds.dstBinding = dstBinding;
+		wds.descriptorCount = descriptorCount;
+		wds.descriptorType = descriptorType;
+		wds.pBufferInfo = pBufferInfo;
+		return wds;
+	}
+
+	inline VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(const VkDescriptorSetLayout* pSetLayouts, uint32_t setLayoutCount = 1)
+	{
+		VkPipelineLayoutCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		ci.setLayoutCount = setLayoutCount;
+		ci.pSetLayouts = pSetLayouts;
+		return ci;
+	}
+
+	inline VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo(
+		VkPrimitiveTopology primitiveTopology,
+		VkBool32 primitiveRestartEnable = VK_FALSE)
+	{
+		VkPipelineInputAssemblyStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		ci.topology = primitiveTopology;						// プリミティブトポロジ
+		ci.primitiveRestartEnable = primitiveRestartEnable;		// プリミティブリスタートの有効化
+		return ci;
+	}
+
+	inline VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(
+		VkPolygonMode polygonMode, 
+		VkCullModeFlags cullMode,
+		VkFrontFace frontFace)
+	{
+		VkPipelineRasterizationStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		ci.depthClampEnable = VK_FALSE;					// 深度クランプの有効化
+		ci.rasterizerDiscardEnable = VK_FALSE;			// ラスタライゼーションの破棄
+		ci.polygonMode = polygonMode;					// ポリゴンの塗りつぶしモード
+		ci.cullMode = cullMode;							// カリングモード
+		ci.frontFace = frontFace;						// 前面の判定方法
+		ci.depthBiasClamp = VK_FALSE;					// 深度バイアスの有効化
+		ci.depthBiasConstantFactor = 0.0f;				// 深度バイアスの定数
+		ci.depthBiasClamp = 0.0f;						// 深度バイアスの最大値
+		ci.depthBiasSlopeFactor = 0.0f;					// 深度バイアスのスロープスケール
+		ci.lineWidth = 1.0f;							// ライン幅
+		return ci;
+	}
+
+	inline VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(VkBool32 blendEnable, VkColorComponentFlags colorComponentFlags = VkColorComponentFlagBits::VK_COLOR_COMPONENT_FLAG_BITS_MAX_ENUM)
+	{
+		VkPipelineColorBlendAttachmentState as{};
+		as.blendEnable = blendEnable;										// ブレンディングの有効化
+		as.srcColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ソースカラーのブレンド係数
+		as.dstColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// デスティネーションカラーのブレンド係数
+		as.colorBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// カラーブレンドの演算方法
+		as.srcAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ソースアルファのブレンド係数
+		as.dstAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// デスティネーションアルファのブレンド係数
+		as.alphaBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// アルファブレンドの演算方法
+		as.colorWriteMask = colorComponentFlags;							// 書き込むカラーチャンネル
+		return as;
+	}
+
+	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(const VkPipelineColorBlendAttachmentState* pAttachments, uint32_t attachmentCount = 1)
+	{
+		VkPipelineColorBlendStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		ci.logicOpEnable = VK_FALSE;					// 論理演算の有効化
+		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;		// 論理演算の種類
+		ci.attachmentCount = attachmentCount;			// アタッチメントの数
+		ci.pAttachments = pAttachments;					// 各アタッチメントの設定
+		return ci;
 	}
 }

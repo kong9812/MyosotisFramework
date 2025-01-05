@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #include "subsystem/render/renderSwapchain.h"
 #include "vkValidation.h"
 #include "vkCreateInfo.h"

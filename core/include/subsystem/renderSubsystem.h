@@ -1,7 +1,9 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include <memory>
 #include "render/renderDevice.h"
 #include "render/renderSwapchain.h"
+#include "camera/camera.h"
 #include "libs/glfw.h"
 #include "vkStruct.h"
 
@@ -26,6 +28,7 @@ namespace MyosotisFW::System::Render
 
 		RenderDevice_prt m_device;
 		RenderSwapchain_prt m_swapchain;
+		Camera::CameraBase_ptr m_camera;
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
