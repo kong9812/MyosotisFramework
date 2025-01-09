@@ -468,4 +468,72 @@ namespace Utility::Vulkan::CreateInfo
 		ci.pAttachments = pAttachments;					// 各アタッチメントの設定
 		return ci;
 	}
+
+	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(uint32_t viewportCount = 1,uint32_t scissorCount =1)
+	{
+		VkPipelineViewportStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		ci.viewportCount = viewportCount;		// ビューポートの数
+		ci.pViewports = nullptr;				// ビューポート配列 (パイプライン作成時にビューポートを動的に設定する場合は nullptr)
+		ci.scissorCount = scissorCount;			// シザー矩形の数
+		ci.pScissors = nullptr;					// シザー矩形配列 (パイプライン作成時に動的に設定する場合は nullptr)
+		return ci;
+	}
+
+	inline VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo(VkSampleCountFlagBits rasterizationSamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT)
+	{
+		VkPipelineMultisampleStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		ci.rasterizationSamples = rasterizationSamples;		// サンプル数(VK_SAMPLE_COUNT_1_BIT マルチサンプリングなし)
+		ci.sampleShadingEnable = VK_FALSE;					// サンプルシェーディングの有効化
+		ci.minSampleShading = 0.0f;							// 最小サンプルシェーディング率
+		ci.pSampleMask = nullptr;							// サンプルマスク
+		ci.alphaToCoverageEnable = VK_FALSE;				// アルファカバレッジの有効化
+		ci.alphaToOneEnable = VK_FALSE;						// アルファを1に固定するオプション
+		return ci;
+	}
+
+	inline VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(const std::vector<VkDynamicState>& dynamicStates)
+	{
+		VkPipelineDynamicStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		ci.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());		// 動的状態の数
+		ci.pDynamicStates = dynamicStates.data();								// 動的状態の配列
+		return ci;
+	}
+
+	inline VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo(
+		std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfo,
+		const VkPipelineVertexInputStateCreateInfo* vertexInputState,
+		const VkPipelineInputAssemblyStateCreateInfo* inputAssemblyState,
+		const VkPipelineViewportStateCreateInfo* viewportState,
+		const VkPipelineRasterizationStateCreateInfo* rasterizationState,
+		const VkPipelineMultisampleStateCreateInfo* multisampleState,
+		const VkPipelineDepthStencilStateCreateInfo* depthStencilState,
+		const VkPipelineColorBlendStateCreateInfo* colorBlendState,
+		const VkPipelineDynamicStateCreateInfo* dynamicState,
+		VkPipelineLayout pipelineLayout,
+		VkRenderPass renderPass,
+		const VkPipelineTessellationStateCreateInfo* tessellationState = nullptr)
+	{
+		VkGraphicsPipelineCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		ci.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());		// シェーダーステージ数
+		ci.pStages = shaderStageCreateInfo.data();									// VkPipelineShaderStageCreateInfo の配列
+		ci.pVertexInputState = vertexInputState;									// 頂点入力
+		ci.pInputAssemblyState = inputAssemblyState;								// 入力アセンブリ
+		ci.pTessellationState = tessellationState;									// テセレーション状態
+		ci.pViewportState = viewportState;											// ビューポートとシザー
+		ci.pRasterizationState = rasterizationState;								// ラスタライゼーション
+		ci.pMultisampleState = multisampleState;									// マルチサンプリング
+		ci.pDepthStencilState = depthStencilState;									// 深度/ステンシル
+		ci.pColorBlendState = colorBlendState;										// カラーブレンディング
+		ci.pDynamicState = dynamicState;											// 動的状態
+		ci.layout = pipelineLayout;													// パイプラインレイアウト
+		ci.renderPass = renderPass;													// レンダーパス
+		ci.subpass = 0;																// サブパスのインデックス
+		ci.basePipelineHandle = VK_NULL_HANDLE;										// 派生パイプラインを使用しない
+		ci.basePipelineIndex = -1;
+		return ci;
+	}
 }

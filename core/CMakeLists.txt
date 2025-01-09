@@ -1,5 +1,6 @@
 # Copyright (c) 2025 kong9812
 cmake_minimum_required(VERSION 3.22)
+include(FetchContent)
 
 project(MyosotisFW)
 
@@ -10,10 +11,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 FILE(GLOB_RECURSE SOURCES 
   "${PROJECT_SOURCE_DIR}/include/*.h"
   "${PROJECT_SOURCE_DIR}/src/*.cpp"
-
-  "${PROJECT_SOURCE_DIR}/libs/OpenFBX/*.h"
-  "${PROJECT_SOURCE_DIR}/libs/OpenFBX/*.c"
-  "${PROJECT_SOURCE_DIR}/libs/OpenFBX/*.cpp"
 )
 
 # Ref: https://github.com/TheLartians/GroupSourcesByFolder.cmake
@@ -55,11 +52,6 @@ function(GroupSourcesByFolder target)
   
 endfunction()
 
-# if (WIN32) 
-#     add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
-# elseif(UNIX)
-#     add_executable(${PROJECT_NAME} ${SOURCES})
-# endif()
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 GroupSourcesByFolder(${PROJECT_NAME})
@@ -68,19 +60,30 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/asset)
 
 # GLFW
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/glfw.3.4.0/include)
-link_directories(${PROJECT_SOURCE_DIR}/libs/glfw.3.4.0/lib-mingw-w64)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/glfw.3.4.0/lib-vc2022/glfw3.lib)
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.4
+)
+FetchContent_MakeAvailable(glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+
 # GLM
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/glm.1.0.1/build/native/include)
-# GITF
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/Microsoft.glTF.CPP.1.6.3.1/build/native/include)
-link_directories(${PROJECT_SOURCE_DIR}/libs/Microsoft.glTF.CPP.1.6.3.1/build/native/lib/x64/Debug)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/Microsoft.glTF.CPP.1.6.3.1/build/native/lib/x64/Debug/GLTFSDK.lib)
-# repidjson
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/rapidjson.temprelease.0.0.2.20/build/native/include)
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG        bf71a834948186f4097caa076cd2663c69a10e1e
+)
+FetchContent_MakeAvailable(glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
+
 # ofbx
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/libs/OpenFBX)
+FetchContent_Declare(
+    ofbx
+    GIT_REPOSITORY https://github.com/nem0/OpenFBX
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(ofbx)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
@@ -98,3 +101,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:RELEASE>
 )
 
+# デフォルトでビルドされるターゲットを設定
+set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY DEFAULT_TARGET MyosotisFW)

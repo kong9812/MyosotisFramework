@@ -18,9 +18,6 @@ namespace MyosotisFW::System::Render
 		// Swapchain
 		m_swapchain = std::make_unique<RenderSwapchain>(m_device, surface);
 
-		// Camera
-		m_camera = std::make_shared<Camera::CameraBase>();
-
 		// depth/stencil
 		prepareDepthStencil();
 
