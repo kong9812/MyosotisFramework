@@ -2,8 +2,8 @@
 A framework created with Vulkan 
 
 ## Requirements
-- **git**
-- **cmake**
+- **[cmake](https://cmake.org)**
+- **[Git](https://git-scm.com)**
 
 ## Environment Setup (Windows)
 To set up the environment, use the provided batch file `envSetup.bat`.  
