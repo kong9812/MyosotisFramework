@@ -93,7 +93,7 @@ namespace MyosotisFW::System
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 
 		// m_renderSubsystem
-		m_renderSubsystem = std::make_unique<Render::RenderSubsystem>(m_instance, m_surface);
+		m_renderSubsystem = Render::CreateRenderSubsystemPointer(m_instance, m_surface);
 
 		// リサイズコールバック
 		glfwSetWindowUserPointer(window, this);

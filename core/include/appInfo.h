@@ -4,7 +4,13 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
+
+#ifdef _WIN32
+#include <wtypes.h>
 #include <vulkan/vulkan_win32.h>
+#elif __APPLE__
+#include <vulkan/vulkan_macos.h>
+#endif
 
 namespace MyosotisFW::AppInfo
 {
@@ -19,8 +25,12 @@ namespace MyosotisFW::AppInfo
     // Žw’èVkExtensionProperties
     const std::vector<const char*> g_vkInstanceExtensionProperties = {
         VK_KHR_SURFACE_EXTENSION_NAME,
-        VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
         VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+#ifdef _WIN32
+        VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#elif __APPLE__
+        VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
+#endif
     };
     // Žw’èVkExtensionProperties
     const std::vector<const char*> g_vkDeviceExtensionProperties = {

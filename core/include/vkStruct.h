@@ -22,6 +22,7 @@ namespace Utility::Vulkan::Struct
 	{
 		glm::mat4 model;
 		glm::mat4 view;
-		glm::mat4 proj;
+		glm::mat4 projection;
+		glm::vec4 color;
 	}StaticMeshStandardUBO;
 }

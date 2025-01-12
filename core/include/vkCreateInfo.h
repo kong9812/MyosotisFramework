@@ -5,6 +5,18 @@
 
 namespace Utility::Vulkan::CreateInfo
 {
+	typedef enum VertexAttributeBit {
+		POSITION_VEC3	= 0x00000001,
+		POSITION_VEC4	= 0x00000002,
+		NORMAL			= 0x00000004,
+		UV				= 0x00000008,
+		TANGENT			= 0x00000010,
+		COLOR_VEC3		= 0x00000020,
+		COLOR_VEC4		= 0x00000040,
+		VERTEX_ATTRIBUTE_BITS_MAX_ENUM = 0x7FFFFFFF
+	} VertexAttributeBit;
+	typedef uint32_t VertexAttributeBits;
+
 	inline VkApplicationInfo applicationInfo(
 		const char* applicationName,
 		const char* engineName,
@@ -493,12 +505,192 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkStencilOpState stencilOpState(
+		VkCompareOp compareOp = VkCompareOp::VK_COMPARE_OP_NEVER,
+		VkStencilOp failOp = VkStencilOp::VK_STENCIL_OP_KEEP,
+		VkStencilOp passOp = VkStencilOp::VK_STENCIL_OP_KEEP,
+		VkStencilOp depthFailOp = VkStencilOp::VK_STENCIL_OP_KEEP,
+		uint32_t compareMask = 0,
+		uint32_t writeMask = 0,
+		uint32_t reference = 0)
+	{
+		VkStencilOpState state{};
+		state.failOp = failOp;				// ステンシルテスト失敗時の操作
+		state.passOp = passOp;				// ステンシルテスト成功＆深度テスト成功時の操作
+		state.depthFailOp = depthFailOp;    // ステンシル成功＆深度テスト失敗時の操作
+		state.compareOp = compareOp;		// ステンシル比較演算子
+		state.compareMask = compareMask;    // 比較時のマスク
+		state.writeMask = writeMask;		// 書き込み時のマスク
+		state.reference = reference;		// 比較に使用する参照値
+		return state;
+	}
+
+	inline VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo(
+		VkBool32 depthTestEnable,
+		VkBool32 depthWriteEnable,
+		VkCompareOp depthCompareOp,
+		VkBool32 depthBoundsTestEnable = VK_FALSE,
+		VkBool32 stencilTestEnable = VK_FALSE,
+		VkStencilOpState front = stencilOpState(),
+		VkStencilOpState back = stencilOpState(VkCompareOp::VK_COMPARE_OP_ALWAYS),
+		float minDepthBounds = 0.0f,
+		float maxDepthBounds = 0.0f
+	)
+	{
+		VkPipelineDepthStencilStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		ci.depthTestEnable = depthTestEnable;				// 深度テストの有効化
+		ci.depthWriteEnable = depthWriteEnable;				// 深度値の書き込みの有効化 (通常:VK_TRUE 透明オブジェクト:VK_FALSE)
+		ci.depthCompareOp = depthCompareOp;					// 深度値を比較する条件
+		ci.depthBoundsTestEnable = depthBoundsTestEnable;	// 深度境界テストを有効化 (minDepthBoundstとmaxDepthBoundsの間に深度値がある場合のみ描画)
+		ci.stencilTestEnable = stencilTestEnable;			// ステンシルテストの有効化
+		ci.front = front;									// ステンシルテストの設定 (表)
+		ci.back = back;										// ステンシルテストの設定 (裏)
+		ci.minDepthBounds = minDepthBounds;					// 深度境界テストの最小値
+		ci.maxDepthBounds = maxDepthBounds;					// 深度境界テストの最大値
+		return ci;
+	}
+
 	inline VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(const std::vector<VkDynamicState>& dynamicStates)
 	{
 		VkPipelineDynamicStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		ci.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());		// 動的状態の数
 		ci.pDynamicStates = dynamicStates.data();								// 動的状態の配列
+		return ci;
+	}
+
+	inline VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule shaderModule)
+	{
+		VkPipelineShaderStageCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		ci.stage = stage;
+		ci.module = shaderModule;
+		ci.pName = "main";
+		return ci;
+	}
+
+	inline VkVertexInputAttributeDescription vertexInputAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+	{
+		VkVertexInputAttributeDescription desc{};
+		desc.location = location;
+		desc.binding = binding;
+		desc.format = format;
+		desc.offset = offset;
+		return desc;
+	}
+
+	inline std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptiones(uint32_t binding, VertexAttributeBits vertexAttributes)
+	{
+		std::vector<VkVertexInputAttributeDescription> descs{};
+		uint32_t location = 0;
+		uint32_t offset = 0;
+
+		// [Vec3]Position
+		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC3) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
+			offset += sizeof(glm::vec3);
+			location++;
+		}
+		// [Vec4]Position
+		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC4) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT, offset));
+			offset += sizeof(glm::vec4);
+			location++;
+		}
+		// [Vec3]Normal
+		if ((vertexAttributes & VertexAttributeBit::NORMAL) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
+			offset += sizeof(glm::vec3);
+			location++;
+		}
+		// [Vec2]UV
+		if ((vertexAttributes & VertexAttributeBit::UV) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32_SFLOAT, offset));
+			offset += sizeof(glm::vec2);
+			location++;
+		}
+		// [Vec3]Tangent
+		if ((vertexAttributes & VertexAttributeBit::TANGENT) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
+			offset += sizeof(glm::vec3);
+			location++;
+		}
+		// [Vec3]Color
+		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC3) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
+			offset += sizeof(glm::vec3);
+			location++;
+		}
+		// [Vec4]Color
+		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC4) == 1)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT, offset));
+			offset += sizeof(glm::vec4);
+			location++;
+		}
+		return descs;
+	}
+
+	inline VkVertexInputBindingDescription vertexInputBindingDescription(uint32_t binding, VertexAttributeBits vertexAttributes)
+	{
+		VkVertexInputBindingDescription desc{};
+		desc.binding = binding;
+		// [Vec3]Position
+		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC3) == 1)
+		{
+			desc.stride += sizeof(glm::vec3);
+		}
+		// [Vec4]Position
+		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC4) == 1)
+		{
+			desc.stride += sizeof(glm::vec4);
+		}
+		// [Vec3]Normal
+		if ((vertexAttributes & VertexAttributeBit::NORMAL) == 1)
+		{
+			desc.stride += sizeof(glm::vec3);
+		}
+		// [Vec2]UV
+		if ((vertexAttributes & VertexAttributeBit::UV) == 1)
+		{
+			desc.stride += sizeof(glm::vec2);
+		}
+		// [Vec3]Tangent
+		if ((vertexAttributes & VertexAttributeBit::TANGENT) == 1)
+		{
+			desc.stride += sizeof(glm::vec3);
+		}
+		// [Vec3]Color
+		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC3) == 1)
+		{
+			desc.stride += sizeof(glm::vec3);
+		}
+		// [Vec4]Color
+		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC4) == 1)
+		{
+			desc.stride += sizeof(glm::vec4);
+		}
+		desc.inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+		return desc;
+	}
+
+	inline VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo(
+		std::vector<VkVertexInputBindingDescription>& vertexBindingDescriptions,
+		std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescription)
+	{
+		VkPipelineVertexInputStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		ci.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindingDescriptions.size());
+		ci.pVertexBindingDescriptions = vertexBindingDescriptions.data();
+		ci.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescription.size());
+		ci.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
 		return ci;
 	}
 
@@ -519,11 +711,11 @@ namespace Utility::Vulkan::CreateInfo
 		VkGraphicsPipelineCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		ci.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());		// シェーダーステージ数
-		ci.pStages = shaderStageCreateInfo.data();									// VkPipelineShaderStageCreateInfo の配列
+		ci.pStages = shaderStageCreateInfo.data();									// VkPipelineShaderStageCreateInfoの配列
 		ci.pVertexInputState = vertexInputState;									// 頂点入力
 		ci.pInputAssemblyState = inputAssemblyState;								// 入力アセンブリ
 		ci.pTessellationState = tessellationState;									// テセレーション状態
-		ci.pViewportState = viewportState;											// ビューポートとシザー
+		ci.pViewportState = viewportState;											// ビューポートステート (ビューポート&シザー)
 		ci.pRasterizationState = rasterizationState;								// ラスタライゼーション
 		ci.pMultisampleState = multisampleState;									// マルチサンプリング
 		ci.pDepthStencilState = depthStencilState;									// 深度/ステンシル
@@ -534,6 +726,17 @@ namespace Utility::Vulkan::CreateInfo
 		ci.subpass = 0;																// サブパスのインデックス
 		ci.basePipelineHandle = VK_NULL_HANDLE;										// 派生パイプラインを使用しない
 		ci.basePipelineIndex = -1;
+		return ci;
+	}
+
+	template<typename T>
+	inline VkBufferCreateInfo uboBufferCreateInfo(T data)
+	{
+		VkBufferCreateInfo ci{};
+		ci.sType = VkBufferCreateInfo::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		ci.size = sizeof(data);													// UBOのサイズ（構造体のサイズに合わせる）
+		ci.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;	// UBO用のビット
+		ci.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;				// 他のキューでの共有が必要ない場合
 		return ci;
 	}
 }

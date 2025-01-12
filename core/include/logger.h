@@ -4,8 +4,10 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
-#include <windows.h>
 #include <filesystem>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace {
     /// <summary>

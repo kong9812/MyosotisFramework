@@ -6,7 +6,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	RenderSwapchain::RenderSwapchain(RenderDevice_prt renderDevice, VkSurfaceKHR& vkSurface)
+	RenderSwapchain::RenderSwapchain(RenderDevice_ptr renderDevice, VkSurfaceKHR& vkSurface)
 	{
 		m_device = renderDevice;
 

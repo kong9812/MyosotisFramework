@@ -1,5 +1,4 @@
 // Copyright (c) 2025 kong9812
-#include <Windows.h>
 #include <crtdbg.h>
 #include <memory>
 #include "libs/glfw.h"
@@ -28,7 +27,7 @@ int main()
         nullptr, nullptr);
 
     // System Manager èâä˙âª
-    std::unique_ptr<MyosotisFW::System::SystemManager> systemManager = std::make_unique<MyosotisFW::System::SystemManager>(glfwWindow);
+    MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer(glfwWindow);
     while (glfwWindowShouldClose(glfwWindow) == GLFW_FALSE)
     {
         glfwPollEvents();

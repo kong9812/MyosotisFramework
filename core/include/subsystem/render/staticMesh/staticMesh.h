@@ -3,8 +3,10 @@
 #pragma once
 #include <vulkan/vulkan.h>
 
+#include "classPointer.h"
 #include "vkStruct.h"
 #include "renderDevice.h"
+#include "renderResources.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -17,22 +19,38 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh(RenderDevice_prt device);
+		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~StaticMesh();
 
+		virtual void BindCommandBuffer() {};
+
 	protected:
+		virtual void loadAssets() {};
+		virtual void prepareUniformBuffers();
+		virtual void prepareShaderStorageBuffers() {};
+
 		// todo. descriptorsManagerに移す
 		// todo. descriptorsはfactoryで作るのがいいかも
-		void prepareDescriptors();
+		virtual void prepareDescriptors();
 
 		// todo. renderpipelineはfactoryで作るのがいいかも
-		void prepareRenderPipeline();
+		virtual void prepareRenderPipeline();
 
 		// render device
-		RenderDevice_prt m_device;
+		RenderDevice_ptr m_device;
 
-		// todo. UBOクラスを用意する(class StandardUBO)
-		Utility::Vulkan::Struct::StaticMeshStandardUBO m_ubo;
+		// render resources
+		RenderResources_ptr m_resources;
+
+		// render pass
+		VkRenderPass m_renderPass;
+
+		// pipeline cache
+		VkPipelineCache m_pipelineCache;
+
+		// pipeline
+		VkPipeline m_pipeline;
+
 
 		// todo.この辺はfactoryで作るといいかも
 		VkDescriptorPool m_descriptorPool;
@@ -44,6 +62,9 @@ namespace MyosotisFW::System::Render
 		VkPipelineLayout m_pipelineLayout;
 
 		// ubo
+		// todo. UBOクラスを用意する(class StandardUBO)
+		Utility::Vulkan::Struct::StaticMeshStandardUBO m_ubo;
 		VkDescriptorBufferInfo m_uboDescriptor;
 	};
+	TYPEDEF_SHARED_PTR_ARGS(StaticMesh)
 }

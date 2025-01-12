@@ -56,9 +56,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 GroupSourcesByFolder(${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/asset)
-
 # GLFW
 FetchContent_Declare(
     glfw
@@ -72,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG        bf71a834948186f4097caa076cd2663c69a10e1e
+    GIT_TAG        1.0.1
 )
 FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
@@ -100,6 +97,3 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:RELEASE>
 )
-
-# デフォルトでビルドされるターゲットを設定
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY DEFAULT_TARGET MyosotisFW)

@@ -1,10 +1,14 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include <memory>
-#include "render/renderDevice.h"
-#include "render/renderSwapchain.h"
+#include "classPointer.h"
+
 #include "libs/glfw.h"
 #include "vkStruct.h"
+
+#include "renderDevice.h"
+#include "renderSwapchain.h"
+#include "renderResources.h"
+#include "staticMesh.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -25,8 +29,9 @@ namespace MyosotisFW::System::Render
 
 		VkInstance m_instance;
 
-		RenderDevice_prt m_device;
-		RenderSwapchain_prt m_swapchain;
+		RenderDevice_ptr m_device;
+		RenderSwapchain_ptr m_swapchain;
+		RenderResources_ptr m_resources;
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
@@ -46,6 +51,8 @@ namespace MyosotisFW::System::Render
 		VkRenderPass m_renderPass;
 		Utility::Vulkan::Struct::DeviceImage m_depthStencil;
 
+		std::vector<StaticMesh_ptr> m_staticMeshes;
+
 		void prepareDepthStencil();
 		void prepareRenderPass();
 		void prepareFrameBuffers();
@@ -53,6 +60,5 @@ namespace MyosotisFW::System::Render
 		void prepareFences();
 		void buildCommandBuffers();
 	};
-
-	using RenderSubsystem_prt = std::unique_ptr<RenderSubsystem>;
+	TYPEDEF_UNIQUE_PTR_ARGS(RenderSubsystem)
 }

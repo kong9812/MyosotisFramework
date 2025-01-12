@@ -5,6 +5,9 @@
 #include "vkValidation.h"
 #include "vkCreateInfo.h"
 #include "appInfo.h"
+#ifdef DEBUG
+#include "primitiveGeometry.h"
+#endif
 
 namespace MyosotisFW::System::Render
 {
@@ -13,10 +16,13 @@ namespace MyosotisFW::System::Render
 		m_instance = instance;
 
 		// RenderDevice
-		m_device = std::make_shared<RenderDevice>(m_instance);
+		m_device = CreateRenderDevicePointer(m_instance);
 		
 		// Swapchain
-		m_swapchain = std::make_unique<RenderSwapchain>(m_device, surface);
+		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
+
+		// Resources
+		m_resources = CreateRenderResourcesPointer(m_device);
 
 		// depth/stencil
 		prepareDepthStencil();
@@ -53,6 +59,10 @@ namespace MyosotisFW::System::Render
 	
 		// bind command buffers
 		buildCommandBuffers();
+
+#ifdef DEBUG
+		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
+#endif
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -92,7 +102,7 @@ namespace MyosotisFW::System::Render
 
 		// swapchain
 		m_swapchain.reset();
-		m_swapchain = std::make_unique<RenderSwapchain>(m_device, surface);
+		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
 
 		// depth/stencil
 		vkDestroyImage(*m_device, m_depthStencil.image, nullptr);

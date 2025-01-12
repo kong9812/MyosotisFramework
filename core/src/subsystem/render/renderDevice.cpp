@@ -122,6 +122,23 @@ namespace MyosotisFW::System::Render
         VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
     }
 
+    template<typename T>
+    void RenderDevice::CreateUBOBuffer(VkDescriptorBufferInfo& descriptorBufferInfo, T ubo)
+    {
+        // Buffer
+        VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::uboBufferCreateInfo(ubo);
+        VkBuffer uboBuffer{};
+        VK_VALIDATION(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &uboBuffer));
+
+        // Memory allocate
+        VkMemoryRequirements memReqs{};
+        vkGetBufferMemoryRequirements(m_device, uboBuffer, &memReqs);
+        VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+        VkDeviceMemory uboBufferMemory{};
+        result = vkAllocateMemory(device, &allocInfo, nullptr, &uboBufferMemory);
+        vkBindBufferMemory(device, uboBuffer, uboBufferMemory, 0);
+    }
+
     uint32_t RenderDevice::getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties)
     {
         // VK_QUEUE_COMPUTE_BIT Only

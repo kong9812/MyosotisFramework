@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "classPointer.h"
 #include "vkStruct.h"
 
 namespace MyosotisFW::System::Render
@@ -25,6 +26,9 @@ namespace MyosotisFW::System::Render
 
 		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
 
+		template<typename T>
+		void CreateUBOBuffer(VkDescriptorBufferInfo& descriptorBufferInfo, T ubo);
+
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkDevice m_device;
@@ -39,6 +43,5 @@ namespace MyosotisFW::System::Render
 		uint32_t getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
 		uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties);
 	};
-
-	using RenderDevice_prt = std::shared_ptr<RenderDevice>;
+	TYPEDEF_SHARED_PTR_ARGS(RenderDevice)
 }
