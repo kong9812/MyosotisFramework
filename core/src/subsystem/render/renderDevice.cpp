@@ -1,7 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "subsystem/render/renderDevice.h"
 
-#include "vkValidation.h"
 #include "vkCreateInfo.h"
 #include "appInfo.h"
 #include "logger.h"
@@ -10,11 +9,11 @@ namespace
 {
 #ifdef DEBUG
     void PrintPhysicalDeviceInfo(VkPhysicalDevice physicalDevice) {
-        // ÉfÉoÉCÉXÉvÉçÉpÉeÉBÇéÊìæ
+        // „Éá„Éê„Ç§„Çπ„Éó„É≠„Éë„ÉÜ„Ç£„ÇíÂèñÂæó
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 
-        // ÉfÉoÉCÉXèÓïÒÇÉçÉOÇ…èoóÕ
+        // „Éá„Éê„Ç§„ÇπÊÉÖÂ†±„Çí„É≠„Ç∞„Å´Âá∫Âäõ
         CustomLog(LogLevel::LOG_INFO, "=============================================================================");
         CustomLog(LogLevel::LOG_INFO, "Device Name: " + std::string(properties.deviceName));
         CustomLog(LogLevel::LOG_INFO, "API Version: " +
@@ -96,7 +95,7 @@ namespace MyosotisFW::System::Render
             Logger::Info(std::string("extensionName: ") + extensionPropertie.extensionName + "(" + std::to_string(extensionPropertie.specVersion) + ")");
         }
 #endif
-        // ÉfÉoÉCÉXã@î\ÇéÊìæ
+        // „Éá„Éê„Ç§„ÇπÊ©üËÉΩ„ÇíÂèñÂæó
         VkPhysicalDeviceFeatures features;
         vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
 
@@ -120,23 +119,6 @@ namespace MyosotisFW::System::Render
         VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
         VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &deviceImage.memory));
         VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
-    }
-
-    template<typename T>
-    void RenderDevice::CreateUBOBuffer(VkDescriptorBufferInfo& descriptorBufferInfo, T ubo)
-    {
-        // Buffer
-        VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::uboBufferCreateInfo(ubo);
-        VkBuffer uboBuffer{};
-        VK_VALIDATION(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &uboBuffer));
-
-        // Memory allocate
-        VkMemoryRequirements memReqs{};
-        vkGetBufferMemoryRequirements(m_device, uboBuffer, &memReqs);
-        VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
-        VkDeviceMemory uboBufferMemory{};
-        result = vkAllocateMemory(device, &allocInfo, nullptr, &uboBufferMemory);
-        vkBindBufferMemory(device, uboBuffer, uboBufferMemory, 0);
     }
 
     uint32_t RenderDevice::getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties)
@@ -181,7 +163,7 @@ namespace MyosotisFW::System::Render
     uint32_t RenderDevice::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
     {
         for (uint32_t i = 0; i < m_physicalDeviceMemoryProperties.memoryTypeCount; i++) {
-            // É^ÉCÉvÉtÉBÉãÉ^Ç™àÍívÇµÅAÉvÉçÉpÉeÉBóvåèÇñûÇΩÇµÇƒÇ¢ÇÈÇ©ämîF
+            // „Çø„Ç§„Éó„Éï„Ç£„É´„Çø„Åå‰∏ÄËá¥„Åó„ÄÅ„Éó„É≠„Éë„ÉÜ„Ç£Ë¶Å‰ª∂„ÇíÊ∫Ä„Åü„Åó„Å¶„ÅÑ„Çã„ÅãÁ¢∫Ë™ç
             if ((typeBits & (1 << i)) &&
                 (m_physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) 
             {

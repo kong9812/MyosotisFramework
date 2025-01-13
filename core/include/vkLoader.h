@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 
+#include "appInfo.h"
 #include "logger.h"
 #include "vkValidation.h"
 
@@ -11,8 +12,11 @@ namespace Utility::Vulkan::Loader
 {
 	inline VkShaderModule loadShader(VkDevice device, std::string fileName)
 	{
-		std::ifstream file(fileName, std::ios::ate | std::ios::binary);
-		ASSERT(!file.is_open(), "Failed to open shader file: " + fileName);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_shaderFolder + fileName);
+
+		std::ifstream file(MyosotisFW::AppInfo::g_shaderFolder + fileName, std::ios::ate | std::ios::binary);
+		ASSERT(file.is_open(), "Failed to open shader file: " + std::string(MyosotisFW::AppInfo::g_shaderFolder) + fileName);
 
 		size_t fileSize = static_cast<size_t>(file.tellg());
 		std::vector<char> buf(fileSize);

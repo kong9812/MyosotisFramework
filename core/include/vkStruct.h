@@ -20,6 +20,14 @@ namespace Utility::Vulkan::Struct
 
 	typedef struct
 	{
+		VkBuffer buffer;
+		VkDeviceMemory memory;
+		VkDescriptorBufferInfo descriptor;
+		void* mapped;
+	}Buffer;
+
+	typedef struct
+	{
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;

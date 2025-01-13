@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.h>
 #include "classPointer.h"
 #include "vkStruct.h"
+#include "vkValidation.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -27,7 +28,29 @@ namespace MyosotisFW::System::Render
 		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
 
 		template<typename T>
-		void CreateUBOBuffer(VkDescriptorBufferInfo& descriptorBufferInfo, T ubo);
+		void CreateUBOBuffer(Utility::Vulkan::Struct::Buffer& buffer, T ubo)
+		{
+			// Buffer
+			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::uboBufferCreateInfo(ubo);
+			VK_VALIDATION(vkCreateBuffer(m_device, &bufferCreateInfo, nullptr, &buffer.buffer));
+
+			// Memory allocate
+			VkMemoryRequirements memReqs{};
+			vkGetBufferMemoryRequirements(m_device, buffer.buffer, &memReqs);
+			VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+			VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &buffer.memory));
+
+			// Descriptor buffer info
+			buffer.descriptor.buffer = buffer.buffer;   // UBOバッファ
+			buffer.descriptor.offset = 0;               // バッファの開始位置（通常は0）
+			buffer.descriptor.range = sizeof(ubo);      // UBOデータのサイズ
+
+			// Bind
+			VK_VALIDATION(vkBindBufferMemory(m_device, buffer.buffer, buffer.memory, buffer.descriptor.offset));
+
+			// Map
+			VK_VALIDATION(vkMapMemory(m_device, buffer.memory, buffer.descriptor.offset, sizeof(ubo), 0, &buffer.mapped));
+		}
 
 	private:
 		VkPhysicalDevice m_physicalDevice;

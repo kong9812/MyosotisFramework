@@ -11,7 +11,7 @@
 
 namespace {
     /// <summary>
-    /// ƒƒOƒŒƒxƒ‹
+    /// ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«
     /// </summary>
     enum class LogLevel {
         LOG_INFO,
@@ -22,7 +22,7 @@ namespace {
     };
 
     /// <summary>
-    /// ƒƒOƒŒƒxƒ‹‚ğ•¶š—ñ‚É•ÏŠ·
+    /// ãƒ­ã‚°ãƒ¬ãƒ™ãƒ«ã‚’æ–‡å­—åˆ—ã«å¤‰æ›
     /// </summary>
     /// <param name="level"></param>
     /// <returns></returns>
@@ -39,29 +39,29 @@ namespace {
     }
 
     /// <summary>
-    /// ƒƒOƒtƒ@ƒCƒ‹‚Ìo—Í
+    /// ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã®å‡ºåŠ›
     /// </summary>
-    /// <param name="logMessage">ƒƒbƒZ[ƒW</param>
+    /// <param name="logMessage">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
     inline void CustomLog(LogLevel level, const std::string& logMessage)
     {
-        // Œ»İ‚ğæ“¾
+        // ç¾åœ¨æ™‚åˆ»ã‚’å–å¾—
         std::time_t now = std::time(nullptr);
-        std::tm localTime = *std::localtime(&now); // ƒ[ƒJƒ‹ƒ^ƒCƒ€‚É•ÏŠ·
+        std::tm localTime = *std::localtime(&now); // ãƒ­ãƒ¼ã‚«ãƒ«ã‚¿ã‚¤ãƒ ã«å¤‰æ›
 
-        // ŠÔ‚ğƒtƒH[ƒ}ƒbƒg
-        char dateBuffer[20]; // "YYYY-MM-DD" —p
+        // æ™‚é–“ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
+        char dateBuffer[20]; // "YYYY-MM-DD" ç”¨
         std::strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d", &localTime);
 
-        // ‚ğƒtƒH[ƒ}ƒbƒg
-        char timeBuffer[10]; // "HH:MM:SS" —p
+        // æ™‚åˆ»ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
+        char timeBuffer[10]; // "HH:MM:SS" ç”¨
         std::strftime(timeBuffer, sizeof(timeBuffer), "%H:%M:%S", &localTime);
 
-        // •¶š—ñ
+        // æ–‡å­—åˆ—
         std::string message = "[" + std::string(dateBuffer) + " " + std::string(timeBuffer) + "] " +
             "[" + LogLevelToString(level).data() + "] " +
             logMessage;
 
-        // •W€o—Í
+        // æ¨™æº–å‡ºåŠ›
         if (level < LogLevel::LOG_ERROR)
         {
             std::cout << message << std::endl;
@@ -71,13 +71,13 @@ namespace {
             std::cerr << message << std::endl;
         }
 
-        // ƒfƒBƒŒƒNƒgƒŠ "log/" ‚ğì¬i‘¶İ‚µ‚È‚¢ê‡‚Ì‚İj
+        // ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª "log/" ã‚’ä½œæˆï¼ˆå­˜åœ¨ã—ãªã„å ´åˆã®ã¿ï¼‰
         const std::string logDir = "log";
         if (!std::filesystem::exists(logDir)) {
             std::filesystem::create_directory(logDir);
         }
 
-        // ƒtƒ@ƒCƒ‹‚ÉƒƒO‚ğ‹L˜^
+        // ãƒ•ã‚¡ã‚¤ãƒ«ã«ãƒ­ã‚°ã‚’è¨˜éŒ²
         std::ofstream logFile("log/" + std::string(dateBuffer) + ".log", std::ios::app);
         if (logFile)
         {
@@ -90,12 +90,12 @@ namespace {
     }
 
     /// <summary>
-    /// ƒJƒXƒ^ƒ€ƒAƒT[ƒgŠÖ”
+    /// ã‚«ã‚¹ã‚¿ãƒ ã‚¢ã‚µãƒ¼ãƒˆé–¢æ•°
     /// </summary>
-    /// <param name="condition">ó‘Ô</param>
-    /// <param name="message">ƒƒbƒZ[ƒW</param>
-    /// <param name="file">ƒtƒ@ƒCƒ‹–¼</param>
-    /// <param name="line">s”</param>
+    /// <param name="condition">çŠ¶æ…‹</param>
+    /// <param name="message">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
+    /// <param name="file">ãƒ•ã‚¡ã‚¤ãƒ«å</param>
+    /// <param name="line">è¡Œæ•°</param>
     inline void CustomAssert(bool condition, const std::string& message, const char* file, int line)
     {
         if (!condition)
@@ -114,16 +114,16 @@ namespace Logger
 {
 #ifdef DEBUG
     /// <summary>
-    /// ƒƒO‚Ìíœ
+    /// ãƒ­ã‚°ã®å‰Šé™¤
     /// </summary>
     inline void ClearLog()
     {
-        // Œ»İ‚ğæ“¾
+        // ç¾åœ¨æ™‚åˆ»ã‚’å–å¾—
         std::time_t now = std::time(nullptr);
-        std::tm localTime = *std::localtime(&now); // ƒ[ƒJƒ‹ƒ^ƒCƒ€‚É•ÏŠ·
+        std::tm localTime = *std::localtime(&now); // ãƒ­ãƒ¼ã‚«ãƒ«ã‚¿ã‚¤ãƒ ã«å¤‰æ›
 
-        // ŠÔ‚ğƒtƒH[ƒ}ƒbƒg
-        char dateBuffer[20]; // "YYYY-MM-DD" —p
+        // æ™‚é–“ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
+        char dateBuffer[20]; // "YYYY-MM-DD" ç”¨
         std::strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d", &localTime);
 
         std::ofstream logFile("log/" + std::string(dateBuffer) + ".log", std::ios::trunc);
@@ -133,7 +133,7 @@ namespace Logger
     /// <summary>
     /// [Log]Info
     /// </summary>
-    /// <param name="logMessage">ƒƒbƒZ[ƒW</param>
+    /// <param name="logMessage">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
     inline void Info(const std::string& logMessage)
     {
         CustomLog(LogLevel::LOG_INFO, logMessage);
@@ -142,7 +142,7 @@ namespace Logger
     /// <summary>
     /// [Log]Debug
     /// </summary>
-    /// <param name="logMessage">ƒƒbƒZ[ƒW</param>
+    /// <param name="logMessage">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
     inline void Debug(const std::string& logMessage)
     {
         CustomLog(LogLevel::LOG_DEBUG, logMessage);
@@ -151,7 +151,7 @@ namespace Logger
     /// <summary>
     /// [Log]Warning
     /// </summary>
-    /// <param name="logMessage">ƒƒbƒZ[ƒW</param>
+    /// <param name="logMessage">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
     inline void Warning(const std::string& logMessage)
     {
         CustomLog(LogLevel::LOG_WARN, logMessage);
@@ -160,7 +160,7 @@ namespace Logger
     /// <summary>
     /// [Log]Error
     /// </summary>
-    /// <param name="logMessage">ƒƒbƒZ[ƒW</param>
+    /// <param name="logMessage">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
     inline void Error(const std::string& logMessage)
     {
         CustomLog(LogLevel::LOG_ERROR, logMessage);
@@ -168,10 +168,10 @@ namespace Logger
 }
 
 #ifdef NDEBUG
-// ƒŠƒŠ[ƒX‚É–³Œø‰»
+// ãƒªãƒªãƒ¼ã‚¹æ™‚ã«ç„¡åŠ¹åŒ–
 #define CustomAssert(condition, message) ((void)0)
 #else
-// ƒfƒoƒbƒO‚É—LŒø‰»
+// ãƒ‡ãƒãƒƒã‚°æ™‚ã«æœ‰åŠ¹åŒ–
 #define ASSERT(condition, message) \
         CustomAssert((condition), (message), __FILE__, __LINE__)
 #endif

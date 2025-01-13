@@ -6,7 +6,7 @@ namespace MyosotisFW::System::Render
 	PrimitiveGeometry::PrimitiveGeometry(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache) :
 		StaticMesh(device, resources, renderPass, pipelineCache)
 	{
-		// プリミティブジオメトリの作成
+		// 繝励Μ繝溘ユ繧｣繝悶ず繧ｪ繝｡繝医Μ縺ｮ菴懈��
 		loadAssets();
 		prepareUniformBuffers();
 		prepareShaderStorageBuffers();
@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::prepareUniformBuffers()
 	{
-		
+		__super::prepareUniformBuffers();
 	}
 
 	void PrimitiveGeometry::prepareDescriptors()

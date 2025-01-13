@@ -6,24 +6,24 @@ namespace MyosotisFW::System::Render::Camera
 {
     CameraBase::CameraBase()
 	{
-        // ƒJƒƒ‰ˆÊ’u
+        // ã‚«ãƒ¡ãƒ©ä½ç½®
         m_cameraPos = AppInfo::g_cameraPos;
-        // ƒJƒƒ‰‹“_
+        // ã‚«ãƒ¡ãƒ©è¦–ç‚¹
         m_cameraLookAt = AppInfo::g_cameraLookAt;
-        // ƒJƒƒ‰@‘OƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€å‰ãƒ™ã‚¯ãƒˆãƒ«
         m_cameraFront = AppInfo::g_cameraFront;
-        // ƒJƒƒ‰@ãƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€ä¸Šãƒ™ã‚¯ãƒˆãƒ«
         m_cameraUp = AppInfo::g_cameraUp;
-        // ƒJƒƒ‰@‰EƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€å³ãƒ™ã‚¯ãƒˆãƒ«
         m_cameraRight = AppInfo::g_cameraRight;
-        // ƒJƒƒ‰ FOV
+        // ã‚«ãƒ¡ãƒ© FOV
         m_cameraFov = AppInfo::g_cameraFov;
-        // ƒJƒƒ‰ Far
+        // ã‚«ãƒ¡ãƒ© Far
         m_cameraFar = AppInfo::g_cameraFar;
-        // ƒJƒƒ‰ Near
+        // ã‚«ãƒ¡ãƒ© Near
         m_cameraNear = AppInfo::g_cameraNear;
 
-        // ƒAƒXƒyƒNƒg”ä
+        // ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
         m_aspectRadio = static_cast<float>(AppInfo::g_windowWidth) / static_cast<float>(AppInfo::g_windowHeight);
 	}
 

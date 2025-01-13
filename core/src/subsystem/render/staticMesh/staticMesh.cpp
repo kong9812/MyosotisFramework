@@ -17,19 +17,22 @@ namespace MyosotisFW::System::Render
 
 	StaticMesh::~StaticMesh()
 	{
+		vkDestroyBuffer(*m_device, m_uboBuffer.buffer, nullptr);
+		vkFreeMemory(*m_device, m_uboBuffer.memory, nullptr);
+		vkDestroyPipeline(*m_device, m_pipeline, nullptr);
+		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, nullptr);
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, nullptr);
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, nullptr);
 	}
 
 	void StaticMesh::prepareUniformBuffers()
 	{
-		//VK_VALIDATION(vulkanDevice->createBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_uniformBuffer, sizeof(uboVS)));
-		//VK_VALIDATION(uniformBuffer.map());
+		m_device->CreateUBOBuffer(m_uboBuffer, m_ubo);
 	}
 
 	void StaticMesh::prepareDescriptors()
 	{
-		// pool(todo.¡Œã‚ÍDescriptorPool‚ğˆê‚Â‚É‚·‚é—\’è)
+		// pool(todo.ä»Šå¾Œã¯DescriptorPoolã‚’ä¸€ã¤ã«ã™ã‚‹äºˆå®š)
 		std::vector<VkDescriptorPoolSize> poolSize = {
 			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
 		};
@@ -49,7 +52,7 @@ namespace MyosotisFW::System::Render
 
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uboDescriptor),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uboBuffer.descriptor),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
@@ -85,17 +88,17 @@ namespace MyosotisFW::System::Render
 		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDynamicStateCreateInfo(dynamicStates);
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = Utility::Vulkan::CreateInfo::graphicsPipelineCreateInfo(
-			shaderStageCreateInfo,						// ƒVƒF[ƒ_[ƒXƒe[ƒW
-			&pipelineVertexInputStateCreateInfo,		// ’¸“_“ü—Í
-			&inputAssemblyStateCreateInfo,				// “ü—ÍƒAƒZƒ“ƒuƒŠ
-			&viewportStateCreateInfo,					// ƒrƒ…[ƒ|[ƒgƒXƒe[ƒg
-			&rasterizationStateCreateInfo,				// ƒ‰ƒXƒ^ƒ‰ƒCƒ[[ƒVƒ‡ƒ“
-			&multisampleStateCreateInfo,				// ƒ}ƒ‹ƒ`ƒTƒ“ƒvƒŠƒ“ƒO
-			&depthStencilStateCreateInfo,				// [“x/ƒXƒeƒ“ƒVƒ‹
-			&colorBlendStateCreateInfo,					// ƒJƒ‰[ƒuƒŒƒ“ƒfƒBƒ“ƒO
-			&dynamicStateCreateInfo,					// “®“Ió‘Ô
-			m_pipelineLayout,							// ƒpƒCƒvƒ‰ƒCƒ“ƒŒƒCƒAƒEƒg
-			m_renderPass);								// ƒŒƒ“ƒ_[ƒpƒX
+			shaderStageCreateInfo,						// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚¹ãƒ†ãƒ¼ã‚¸
+			&pipelineVertexInputStateCreateInfo,		// é ‚ç‚¹å…¥åŠ›
+			&inputAssemblyStateCreateInfo,				// å…¥åŠ›ã‚¢ã‚»ãƒ³ãƒ–ãƒª
+			&viewportStateCreateInfo,					// ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã‚¹ãƒ†ãƒ¼ãƒˆ
+			&rasterizationStateCreateInfo,				// ãƒ©ã‚¹ã‚¿ãƒ©ã‚¤ã‚¼ãƒ¼ã‚·ãƒ§ãƒ³
+			&multisampleStateCreateInfo,				// ãƒãƒ«ãƒã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+			&depthStencilStateCreateInfo,				// æ·±åº¦/ã‚¹ãƒ†ãƒ³ã‚·ãƒ«
+			&colorBlendStateCreateInfo,					// ã‚«ãƒ©ãƒ¼ãƒ–ãƒ¬ãƒ³ãƒ‡ã‚£ãƒ³ã‚°
+			&dynamicStateCreateInfo,					// å‹•çš„çŠ¶æ…‹
+			m_pipelineLayout,							// ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆ
+			m_renderPass);								// ãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ‘ã‚¹
 		VK_VALIDATION(vkCreateGraphicsPipelines(*m_device, m_pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline));
 	}
 }

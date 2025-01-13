@@ -49,7 +49,7 @@ namespace Utility::Vulkan::CreateInfo
 		VkDeviceQueueCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		ci.queueFamilyIndex = queueFamilyIndex;
-		ci.queueCount = 1;	// ‚Æ‚è‚ ‚¦‚¸1
+		ci.queueCount = 1;	// ã¨ã‚Šã‚ãˆãš1
 		ci.pQueuePriorities = &defaultQueuePriority;
 		return ci;
 	}
@@ -431,8 +431,8 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineInputAssemblyStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		ci.topology = primitiveTopology;						// ƒvƒŠƒ~ƒeƒBƒuƒgƒ|ƒƒW
-		ci.primitiveRestartEnable = primitiveRestartEnable;		// ƒvƒŠƒ~ƒeƒBƒuƒŠƒXƒ^[ƒg‚Ì—LŒø‰»
+		ci.topology = primitiveTopology;						// ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–ãƒˆãƒãƒ­ã‚¸
+		ci.primitiveRestartEnable = primitiveRestartEnable;		// ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–ãƒªã‚¹ã‚¿ãƒ¼ãƒˆã®æœ‰åŠ¹åŒ–
 		return ci;
 	}
 
@@ -443,30 +443,36 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineRasterizationStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		ci.depthClampEnable = VK_FALSE;					// [“xƒNƒ‰ƒ“ƒv‚Ì—LŒø‰»
-		ci.rasterizerDiscardEnable = VK_FALSE;			// ƒ‰ƒXƒ^ƒ‰ƒCƒ[[ƒVƒ‡ƒ“‚Ì”jŠü
-		ci.polygonMode = polygonMode;					// ƒ|ƒŠƒSƒ“‚Ì“h‚è‚Â‚Ô‚µƒ‚[ƒh
-		ci.cullMode = cullMode;							// ƒJƒŠƒ“ƒOƒ‚[ƒh
-		ci.frontFace = frontFace;						// ‘O–Ê‚Ì”»’è•û–@
-		ci.depthBiasClamp = VK_FALSE;					// [“xƒoƒCƒAƒX‚Ì—LŒø‰»
-		ci.depthBiasConstantFactor = 0.0f;				// [“xƒoƒCƒAƒX‚Ì’è”
-		ci.depthBiasClamp = 0.0f;						// [“xƒoƒCƒAƒX‚ÌÅ‘å’l
-		ci.depthBiasSlopeFactor = 0.0f;					// [“xƒoƒCƒAƒX‚ÌƒXƒ[ƒvƒXƒP[ƒ‹
-		ci.lineWidth = 1.0f;							// ƒ‰ƒCƒ“•
+		ci.depthClampEnable = VK_FALSE;					// æ·±åº¦ã‚¯ãƒ©ãƒ³ãƒ—ã®æœ‰åŠ¹åŒ–
+		ci.rasterizerDiscardEnable = VK_FALSE;			// ãƒ©ã‚¹ã‚¿ãƒ©ã‚¤ã‚¼ãƒ¼ã‚·ãƒ§ãƒ³ã®ç ´æ£„
+		ci.polygonMode = polygonMode;					// ãƒãƒªã‚´ãƒ³ã®å¡—ã‚Šã¤ã¶ã—ãƒ¢ãƒ¼ãƒ‰
+		ci.cullMode = cullMode;							// ã‚«ãƒªãƒ³ã‚°ãƒ¢ãƒ¼ãƒ‰
+		ci.frontFace = frontFace;						// å‰é¢ã®åˆ¤å®šæ–¹æ³•
+		ci.depthBiasClamp = VK_FALSE;					// æ·±åº¦ãƒã‚¤ã‚¢ã‚¹ã®æœ‰åŠ¹åŒ–
+		ci.depthBiasConstantFactor = 0.0f;				// æ·±åº¦ãƒã‚¤ã‚¢ã‚¹ã®å®šæ•°
+		ci.depthBiasClamp = 0.0f;						// æ·±åº¦ãƒã‚¤ã‚¢ã‚¹ã®æœ€å¤§å€¤
+		ci.depthBiasSlopeFactor = 0.0f;					// æ·±åº¦ãƒã‚¤ã‚¢ã‚¹ã®ã‚¹ãƒ­ãƒ¼ãƒ—ã‚¹ã‚±ãƒ¼ãƒ«
+		ci.lineWidth = 1.0f;							// ãƒ©ã‚¤ãƒ³å¹…
 		return ci;
 	}
 
-	inline VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(VkBool32 blendEnable, VkColorComponentFlags colorComponentFlags = VkColorComponentFlagBits::VK_COLOR_COMPONENT_FLAG_BITS_MAX_ENUM)
+	inline VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(
+		VkBool32 blendEnable,
+		VkColorComponentFlags colorComponentFlags =
+		VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT |
+		VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT |
+		VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT |
+		VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT)
 	{
 		VkPipelineColorBlendAttachmentState as{};
-		as.blendEnable = blendEnable;										// ƒuƒŒƒ“ƒfƒBƒ“ƒO‚Ì—LŒø‰»
-		as.srcColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ƒ\[ƒXƒJƒ‰[‚ÌƒuƒŒƒ“ƒhŒW”
-		as.dstColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ƒfƒXƒeƒBƒl[ƒVƒ‡ƒ“ƒJƒ‰[‚ÌƒuƒŒƒ“ƒhŒW”
-		as.colorBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// ƒJƒ‰[ƒuƒŒƒ“ƒh‚Ì‰‰Z•û–@
-		as.srcAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ƒ\[ƒXƒAƒ‹ƒtƒ@‚ÌƒuƒŒƒ“ƒhŒW”
-		as.dstAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ƒfƒXƒeƒBƒl[ƒVƒ‡ƒ“ƒAƒ‹ƒtƒ@‚ÌƒuƒŒƒ“ƒhŒW”
-		as.alphaBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// ƒAƒ‹ƒtƒ@ƒuƒŒƒ“ƒh‚Ì‰‰Z•û–@
-		as.colorWriteMask = colorComponentFlags;							// ‘‚«‚ŞƒJƒ‰[ƒ`ƒƒƒ“ƒlƒ‹
+		as.blendEnable = blendEnable;										// ãƒ–ãƒ¬ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ã®æœ‰åŠ¹åŒ–
+		as.srcColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ã‚½ãƒ¼ã‚¹ã‚«ãƒ©ãƒ¼ã®ãƒ–ãƒ¬ãƒ³ãƒ‰ä¿‚æ•°
+		as.dstColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ãƒ‡ã‚¹ãƒ†ã‚£ãƒãƒ¼ã‚·ãƒ§ãƒ³ã‚«ãƒ©ãƒ¼ã®ãƒ–ãƒ¬ãƒ³ãƒ‰ä¿‚æ•°
+		as.colorBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// ã‚«ãƒ©ãƒ¼ãƒ–ãƒ¬ãƒ³ãƒ‰ã®æ¼”ç®—æ–¹æ³•
+		as.srcAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ã‚½ãƒ¼ã‚¹ã‚¢ãƒ«ãƒ•ã‚¡ã®ãƒ–ãƒ¬ãƒ³ãƒ‰ä¿‚æ•°
+		as.dstAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ãƒ‡ã‚¹ãƒ†ã‚£ãƒãƒ¼ã‚·ãƒ§ãƒ³ã‚¢ãƒ«ãƒ•ã‚¡ã®ãƒ–ãƒ¬ãƒ³ãƒ‰ä¿‚æ•°
+		as.alphaBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// ã‚¢ãƒ«ãƒ•ã‚¡ãƒ–ãƒ¬ãƒ³ãƒ‰ã®æ¼”ç®—æ–¹æ³•
+		as.colorWriteMask = colorComponentFlags;							// æ›¸ãè¾¼ã‚€ã‚«ãƒ©ãƒ¼ãƒãƒ£ãƒ³ãƒãƒ«
 		return as;
 	}
 
@@ -474,10 +480,10 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineColorBlendStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		ci.logicOpEnable = VK_FALSE;					// ˜_—‰‰Z‚Ì—LŒø‰»
-		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;		// ˜_—‰‰Z‚Ìí—Ş
-		ci.attachmentCount = attachmentCount;			// ƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ì”
-		ci.pAttachments = pAttachments;					// ŠeƒAƒ^ƒbƒ`ƒƒ“ƒg‚Ìİ’è
+		ci.logicOpEnable = VK_FALSE;					// è«–ç†æ¼”ç®—ã®æœ‰åŠ¹åŒ–
+		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;		// è«–ç†æ¼”ç®—ã®ç¨®é¡
+		ci.attachmentCount = attachmentCount;			// ã‚¢ã‚¿ãƒƒãƒãƒ¡ãƒ³ãƒˆã®æ•°
+		ci.pAttachments = pAttachments;					// å„ã‚¢ã‚¿ãƒƒãƒãƒ¡ãƒ³ãƒˆã®è¨­å®š
 		return ci;
 	}
 
@@ -485,10 +491,10 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineViewportStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		ci.viewportCount = viewportCount;		// ƒrƒ…[ƒ|[ƒg‚Ì”
-		ci.pViewports = nullptr;				// ƒrƒ…[ƒ|[ƒg”z—ñ (ƒpƒCƒvƒ‰ƒCƒ“ì¬‚Éƒrƒ…[ƒ|[ƒg‚ğ“®“I‚Éİ’è‚·‚éê‡‚Í nullptr)
-		ci.scissorCount = scissorCount;			// ƒVƒU[‹éŒ`‚Ì”
-		ci.pScissors = nullptr;					// ƒVƒU[‹éŒ`”z—ñ (ƒpƒCƒvƒ‰ƒCƒ“ì¬‚É“®“I‚Éİ’è‚·‚éê‡‚Í nullptr)
+		ci.viewportCount = viewportCount;		// ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã®æ•°
+		ci.pViewports = nullptr;				// ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆé…åˆ— (ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ä½œæˆæ™‚ã«ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã‚’å‹•çš„ã«è¨­å®šã™ã‚‹å ´åˆã¯ nullptr)
+		ci.scissorCount = scissorCount;			// ã‚·ã‚¶ãƒ¼çŸ©å½¢ã®æ•°
+		ci.pScissors = nullptr;					// ã‚·ã‚¶ãƒ¼çŸ©å½¢é…åˆ— (ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ä½œæˆæ™‚ã«å‹•çš„ã«è¨­å®šã™ã‚‹å ´åˆã¯ nullptr)
 		return ci;
 	}
 
@@ -496,12 +502,12 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineMultisampleStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		ci.rasterizationSamples = rasterizationSamples;		// ƒTƒ“ƒvƒ‹”(VK_SAMPLE_COUNT_1_BIT ƒ}ƒ‹ƒ`ƒTƒ“ƒvƒŠƒ“ƒO‚È‚µ)
-		ci.sampleShadingEnable = VK_FALSE;					// ƒTƒ“ƒvƒ‹ƒVƒF[ƒfƒBƒ“ƒO‚Ì—LŒø‰»
-		ci.minSampleShading = 0.0f;							// Å¬ƒTƒ“ƒvƒ‹ƒVƒF[ƒfƒBƒ“ƒO—¦
-		ci.pSampleMask = nullptr;							// ƒTƒ“ƒvƒ‹ƒ}ƒXƒN
-		ci.alphaToCoverageEnable = VK_FALSE;				// ƒAƒ‹ƒtƒ@ƒJƒoƒŒƒbƒW‚Ì—LŒø‰»
-		ci.alphaToOneEnable = VK_FALSE;						// ƒAƒ‹ƒtƒ@‚ğ1‚ÉŒÅ’è‚·‚éƒIƒvƒVƒ‡ƒ“
+		ci.rasterizationSamples = rasterizationSamples;		// ã‚µãƒ³ãƒ—ãƒ«æ•°(VK_SAMPLE_COUNT_1_BIT ãƒãƒ«ãƒã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ãªã—)
+		ci.sampleShadingEnable = VK_FALSE;					// ã‚µãƒ³ãƒ—ãƒ«ã‚·ã‚§ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã®æœ‰åŠ¹åŒ–
+		ci.minSampleShading = 0.0f;							// æœ€å°ã‚µãƒ³ãƒ—ãƒ«ã‚·ã‚§ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ç‡
+		ci.pSampleMask = nullptr;							// ã‚µãƒ³ãƒ—ãƒ«ãƒã‚¹ã‚¯
+		ci.alphaToCoverageEnable = VK_FALSE;				// ã‚¢ãƒ«ãƒ•ã‚¡ã‚«ãƒãƒ¬ãƒƒã‚¸ã®æœ‰åŠ¹åŒ–
+		ci.alphaToOneEnable = VK_FALSE;						// ã‚¢ãƒ«ãƒ•ã‚¡ã‚’1ã«å›ºå®šã™ã‚‹ã‚ªãƒ—ã‚·ãƒ§ãƒ³
 		return ci;
 	}
 
@@ -515,13 +521,13 @@ namespace Utility::Vulkan::CreateInfo
 		uint32_t reference = 0)
 	{
 		VkStencilOpState state{};
-		state.failOp = failOp;				// ƒXƒeƒ“ƒVƒ‹ƒeƒXƒg¸”s‚Ì‘€ì
-		state.passOp = passOp;				// ƒXƒeƒ“ƒVƒ‹ƒeƒXƒg¬Œ÷•[“xƒeƒXƒg¬Œ÷‚Ì‘€ì
-		state.depthFailOp = depthFailOp;    // ƒXƒeƒ“ƒVƒ‹¬Œ÷•[“xƒeƒXƒg¸”s‚Ì‘€ì
-		state.compareOp = compareOp;		// ƒXƒeƒ“ƒVƒ‹”äŠr‰‰Zq
-		state.compareMask = compareMask;    // ”äŠr‚Ìƒ}ƒXƒN
-		state.writeMask = writeMask;		// ‘‚«‚İ‚Ìƒ}ƒXƒN
-		state.reference = reference;		// ”äŠr‚Ég—p‚·‚éQÆ’l
+		state.failOp = failOp;				// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¹ãƒˆå¤±æ•—æ™‚ã®æ“ä½œ
+		state.passOp = passOp;				// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¹ãƒˆæˆåŠŸï¼†æ·±åº¦ãƒ†ã‚¹ãƒˆæˆåŠŸæ™‚ã®æ“ä½œ
+		state.depthFailOp = depthFailOp;    // ã‚¹ãƒ†ãƒ³ã‚·ãƒ«æˆåŠŸï¼†æ·±åº¦ãƒ†ã‚¹ãƒˆå¤±æ•—æ™‚ã®æ“ä½œ
+		state.compareOp = compareOp;		// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«æ¯”è¼ƒæ¼”ç®—å­
+		state.compareMask = compareMask;    // æ¯”è¼ƒæ™‚ã®ãƒã‚¹ã‚¯
+		state.writeMask = writeMask;		// æ›¸ãè¾¼ã¿æ™‚ã®ãƒã‚¹ã‚¯
+		state.reference = reference;		// æ¯”è¼ƒã«ä½¿ç”¨ã™ã‚‹å‚ç…§å€¤
 		return state;
 	}
 
@@ -539,15 +545,15 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineDepthStencilStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		ci.depthTestEnable = depthTestEnable;				// [“xƒeƒXƒg‚Ì—LŒø‰»
-		ci.depthWriteEnable = depthWriteEnable;				// [“x’l‚Ì‘‚«‚İ‚Ì—LŒø‰» (’Êí:VK_TRUE “§–¾ƒIƒuƒWƒFƒNƒg:VK_FALSE)
-		ci.depthCompareOp = depthCompareOp;					// [“x’l‚ğ”äŠr‚·‚éğŒ
-		ci.depthBoundsTestEnable = depthBoundsTestEnable;	// [“x‹«ŠEƒeƒXƒg‚ğ—LŒø‰» (minDepthBoundst‚ÆmaxDepthBounds‚ÌŠÔ‚É[“x’l‚ª‚ ‚éê‡‚Ì‚İ•`‰æ)
-		ci.stencilTestEnable = stencilTestEnable;			// ƒXƒeƒ“ƒVƒ‹ƒeƒXƒg‚Ì—LŒø‰»
-		ci.front = front;									// ƒXƒeƒ“ƒVƒ‹ƒeƒXƒg‚Ìİ’è (•\)
-		ci.back = back;										// ƒXƒeƒ“ƒVƒ‹ƒeƒXƒg‚Ìİ’è (— )
-		ci.minDepthBounds = minDepthBounds;					// [“x‹«ŠEƒeƒXƒg‚ÌÅ¬’l
-		ci.maxDepthBounds = maxDepthBounds;					// [“x‹«ŠEƒeƒXƒg‚ÌÅ‘å’l
+		ci.depthTestEnable = depthTestEnable;				// æ·±åº¦ãƒ†ã‚¹ãƒˆã®æœ‰åŠ¹åŒ–
+		ci.depthWriteEnable = depthWriteEnable;				// æ·±åº¦å€¤ã®æ›¸ãè¾¼ã¿ã®æœ‰åŠ¹åŒ– (é€šå¸¸:VK_TRUE é€æ˜ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ:VK_FALSE)
+		ci.depthCompareOp = depthCompareOp;					// æ·±åº¦å€¤ã‚’æ¯”è¼ƒã™ã‚‹æ¡ä»¶
+		ci.depthBoundsTestEnable = depthBoundsTestEnable;	// æ·±åº¦å¢ƒç•Œãƒ†ã‚¹ãƒˆã‚’æœ‰åŠ¹åŒ– (minDepthBoundstã¨maxDepthBoundsã®é–“ã«æ·±åº¦å€¤ãŒã‚ã‚‹å ´åˆã®ã¿æç”»)
+		ci.stencilTestEnable = stencilTestEnable;			// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¹ãƒˆã®æœ‰åŠ¹åŒ–
+		ci.front = front;									// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¹ãƒˆã®è¨­å®š (è¡¨)
+		ci.back = back;										// ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¹ãƒˆã®è¨­å®š (è£)
+		ci.minDepthBounds = minDepthBounds;					// æ·±åº¦å¢ƒç•Œãƒ†ã‚¹ãƒˆã®æœ€å°å€¤
+		ci.maxDepthBounds = maxDepthBounds;					// æ·±åº¦å¢ƒç•Œãƒ†ã‚¹ãƒˆã®æœ€å¤§å€¤
 		return ci;
 	}
 
@@ -555,8 +561,8 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineDynamicStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		ci.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());		// “®“Ió‘Ô‚Ì”
-		ci.pDynamicStates = dynamicStates.data();								// “®“Ió‘Ô‚Ì”z—ñ
+		ci.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());		// å‹•çš„çŠ¶æ…‹ã®æ•°
+		ci.pDynamicStates = dynamicStates.data();								// å‹•çš„çŠ¶æ…‹ã®é…åˆ—
 		return ci;
 	}
 
@@ -580,7 +586,7 @@ namespace Utility::Vulkan::CreateInfo
 		return desc;
 	}
 
-	inline std::vector<VkVertexInputAttributeDescription>& vertexInputAttributeDescriptiones(uint32_t binding, VertexAttributeBits vertexAttributes)
+	inline std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones(uint32_t binding, VertexAttributeBits vertexAttributes)
 	{
 		std::vector<VkVertexInputAttributeDescription> descs{};
 		uint32_t location = 0;
@@ -710,21 +716,21 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkGraphicsPipelineCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		ci.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());		// ƒVƒF[ƒ_[ƒXƒe[ƒW”
-		ci.pStages = shaderStageCreateInfo.data();									// VkPipelineShaderStageCreateInfo‚Ì”z—ñ
-		ci.pVertexInputState = vertexInputState;									// ’¸“_“ü—Í
-		ci.pInputAssemblyState = inputAssemblyState;								// “ü—ÍƒAƒZƒ“ƒuƒŠ
-		ci.pTessellationState = tessellationState;									// ƒeƒZƒŒ[ƒVƒ‡ƒ“ó‘Ô
-		ci.pViewportState = viewportState;											// ƒrƒ…[ƒ|[ƒgƒXƒe[ƒg (ƒrƒ…[ƒ|[ƒg&ƒVƒU[)
-		ci.pRasterizationState = rasterizationState;								// ƒ‰ƒXƒ^ƒ‰ƒCƒ[[ƒVƒ‡ƒ“
-		ci.pMultisampleState = multisampleState;									// ƒ}ƒ‹ƒ`ƒTƒ“ƒvƒŠƒ“ƒO
-		ci.pDepthStencilState = depthStencilState;									// [“x/ƒXƒeƒ“ƒVƒ‹
-		ci.pColorBlendState = colorBlendState;										// ƒJƒ‰[ƒuƒŒƒ“ƒfƒBƒ“ƒO
-		ci.pDynamicState = dynamicState;											// “®“Ió‘Ô
-		ci.layout = pipelineLayout;													// ƒpƒCƒvƒ‰ƒCƒ“ƒŒƒCƒAƒEƒg
-		ci.renderPass = renderPass;													// ƒŒƒ“ƒ_[ƒpƒX
-		ci.subpass = 0;																// ƒTƒuƒpƒX‚ÌƒCƒ“ƒfƒbƒNƒX
-		ci.basePipelineHandle = VK_NULL_HANDLE;										// ”h¶ƒpƒCƒvƒ‰ƒCƒ“‚ğg—p‚µ‚È‚¢
+		ci.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());		// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚¹ãƒ†ãƒ¼ã‚¸æ•°
+		ci.pStages = shaderStageCreateInfo.data();									// VkPipelineShaderStageCreateInfoã®é…åˆ—
+		ci.pVertexInputState = vertexInputState;									// é ‚ç‚¹å…¥åŠ›
+		ci.pInputAssemblyState = inputAssemblyState;								// å…¥åŠ›ã‚¢ã‚»ãƒ³ãƒ–ãƒª
+		ci.pTessellationState = tessellationState;									// ãƒ†ã‚»ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çŠ¶æ…‹
+		ci.pViewportState = viewportState;											// ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã‚¹ãƒ†ãƒ¼ãƒˆ (ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆ&ã‚·ã‚¶ãƒ¼)
+		ci.pRasterizationState = rasterizationState;								// ãƒ©ã‚¹ã‚¿ãƒ©ã‚¤ã‚¼ãƒ¼ã‚·ãƒ§ãƒ³
+		ci.pMultisampleState = multisampleState;									// ãƒãƒ«ãƒã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+		ci.pDepthStencilState = depthStencilState;									// æ·±åº¦/ã‚¹ãƒ†ãƒ³ã‚·ãƒ«
+		ci.pColorBlendState = colorBlendState;										// ã‚«ãƒ©ãƒ¼ãƒ–ãƒ¬ãƒ³ãƒ‡ã‚£ãƒ³ã‚°
+		ci.pDynamicState = dynamicState;											// å‹•çš„çŠ¶æ…‹
+		ci.layout = pipelineLayout;													// ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆ
+		ci.renderPass = renderPass;													// ãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ‘ã‚¹
+		ci.subpass = 0;																// ã‚µãƒ–ãƒ‘ã‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+		ci.basePipelineHandle = VK_NULL_HANDLE;										// æ´¾ç”Ÿãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚’ä½¿ç”¨ã—ãªã„
 		ci.basePipelineIndex = -1;
 		return ci;
 	}
@@ -733,10 +739,10 @@ namespace Utility::Vulkan::CreateInfo
 	inline VkBufferCreateInfo uboBufferCreateInfo(T data)
 	{
 		VkBufferCreateInfo ci{};
-		ci.sType = VkBufferCreateInfo::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		ci.size = sizeof(data);													// UBO‚ÌƒTƒCƒYi\‘¢‘Ì‚ÌƒTƒCƒY‚É‡‚í‚¹‚éj
-		ci.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;	// UBO—p‚Ìƒrƒbƒg
-		ci.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;				// ‘¼‚ÌƒLƒ…[‚Å‚Ì‹¤—L‚ª•K—v‚È‚¢ê‡
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		ci.size = sizeof(data);													// UBOã®ã‚µã‚¤ã‚ºï¼ˆæ§‹é€ ä½“ã®ã‚µã‚¤ã‚ºã«åˆã‚ã›ã‚‹ï¼‰
+		ci.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;	// UBOç”¨ã®ãƒ“ãƒƒãƒˆ
+		ci.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;				// ä»–ã®ã‚­ãƒ¥ãƒ¼ã§ã®å…±æœ‰ãŒå¿…è¦ãªã„å ´åˆ
 		return ci;
 	}
 }

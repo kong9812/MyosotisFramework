@@ -12,21 +12,21 @@ int main()
     Logger::ClearLog();
 #endif
 
-    // ƒƒ‚ƒŠƒŠ[ƒNƒ`ƒFƒbƒJ
+    // ãƒ¡ãƒ¢ãƒªãƒªãƒ¼ã‚¯ãƒã‚§ãƒƒã‚«
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // GLFW‰Šú‰»
+    // GLFWåˆæœŸåŒ–
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    // Windowì¬
+    // Windowä½œæˆ
     GLFWwindow* glfwWindow = glfwCreateWindow(
         MyosotisFW::AppInfo::g_windowWidth,
         MyosotisFW::AppInfo::g_windowHeight,
         MyosotisFW::AppInfo::g_applicationName,
         nullptr, nullptr);
 
-    // System Manager ‰Šú‰»
+    // System Manager åˆæœŸåŒ–
     MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer(glfwWindow);
     while (glfwWindowShouldClose(glfwWindow) == GLFW_FALSE)
     {

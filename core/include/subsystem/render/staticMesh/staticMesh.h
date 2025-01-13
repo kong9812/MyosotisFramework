@@ -10,15 +10,15 @@
 
 namespace MyosotisFW::System::Render
 {
-	// todo.ƒtƒ@ƒNƒgƒŠ[ƒpƒ^[ƒ“‚É‚·‚é—\’è
+	// todo.ãƒ•ã‚¡ã‚¯ãƒˆãƒªãƒ¼ãƒ‘ã‚¿ãƒ¼ãƒ³ã«ã™ã‚‹äºˆå®š
 	// StaticMeshFactory
-	// EPrimitiveGeometryMesh
-	// EFBXMesh
-	// E...
+	// ãƒ»PrimitiveGeometryMesh
+	// ãƒ»FBXMesh
+	// ãƒ»...
 	class StaticMesh
 	{
 	public:
-		//  todo.‰Šú‰»‚Årenderpipeline‚Ædescriptor‚ğ‚Æ‚Á‚Ä‚­‚é‚Ì‚ª‚¢‚¢‚©‚à
+		//  todo.åˆæœŸåŒ–ã§renderpipelineã¨descriptorã‚’ã¨ã£ã¦ãã‚‹ã®ãŒã„ã„ã‹ã‚‚
 		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~StaticMesh();
 
@@ -29,11 +29,11 @@ namespace MyosotisFW::System::Render
 		virtual void prepareUniformBuffers();
 		virtual void prepareShaderStorageBuffers() {};
 
-		// todo. descriptorsManager‚ÉˆÚ‚·
-		// todo. descriptors‚Ífactory‚Åì‚é‚Ì‚ª‚¢‚¢‚©‚à
+		// todo. descriptorsManagerã«ç§»ã™
+		// todo. descriptorsã¯factoryã§ä½œã‚‹ã®ãŒã„ã„ã‹ã‚‚
 		virtual void prepareDescriptors();
 
-		// todo. renderpipeline‚Ífactory‚Åì‚é‚Ì‚ª‚¢‚¢‚©‚à
+		// todo. renderpipelineã¯factoryã§ä½œã‚‹ã®ãŒã„ã„ã‹ã‚‚
 		virtual void prepareRenderPipeline();
 
 		// render device
@@ -51,20 +51,19 @@ namespace MyosotisFW::System::Render
 		// pipeline
 		VkPipeline m_pipeline;
 
-
-		// todo.‚±‚Ì•Ó‚Ífactory‚Åì‚é‚Æ‚¢‚¢‚©‚à
+		// todo.ã“ã®è¾ºã¯factoryã§ä½œã‚‹ã¨ã„ã„ã‹ã‚‚
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorSet m_descriptorSet;
 
-		VkDescriptorSetLayout m_descriptorSetLayout; // ƒpƒCƒvƒ‰ƒCƒ“‚ğì‚é‚É•K—vII
+		VkDescriptorSetLayout m_descriptorSetLayout; // ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ã‚’ä½œã‚‹æ™‚ã«å¿…è¦ï¼ï¼
 
 		// render pipeline
 		VkPipelineLayout m_pipelineLayout;
 
 		// ubo
-		// todo. UBOƒNƒ‰ƒX‚ğ—pˆÓ‚·‚é(class StandardUBO)
+		// todo. UBOã‚¯ãƒ©ã‚¹ã‚’ç”¨æ„ã™ã‚‹(class StandardUBO)
 		Utility::Vulkan::Struct::StaticMeshStandardUBO m_ubo;
-		VkDescriptorBufferInfo m_uboDescriptor;
+		Utility::Vulkan::Struct::Buffer m_uboBuffer;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(StaticMesh)
 }

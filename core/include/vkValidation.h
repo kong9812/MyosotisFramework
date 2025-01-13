@@ -7,10 +7,10 @@
 namespace
 {
     /// <summary>
-    /// vulkanŒ‹‰Ê -> string
+    /// vulkançµæœ -> string
     /// </summary>
-    /// <param name="result">vulkanŒ‹‰Ê</param>
-    /// <returns>•¶š—ñ</returns>
+    /// <param name="result">vulkançµæœ</param>
+    /// <returns>æ–‡å­—åˆ—</returns>
     inline constexpr char* vkResultToString(VkResult result) 
     {
         switch (result) {

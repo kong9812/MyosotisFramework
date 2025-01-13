@@ -97,7 +97,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height)
 	{
-		// �f�o�C�X�̏�����҂�
+		// デバイスの処理を待つ
 		vkDeviceWaitIdle(*m_device);
 
 		// swapchain

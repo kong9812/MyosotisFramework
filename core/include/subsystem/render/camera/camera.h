@@ -23,23 +23,23 @@ namespace MyosotisFW::System::Render::Camera
         virtual void ProcessKeyboardInput(const std::string& direction, float deltaTime) = 0;
 
     protected:
-        // ƒJƒƒ‰ˆÊ’u
+        // ã‚«ãƒ¡ãƒ©ä½ç½®
         glm::vec3 m_cameraPos;
-        // ƒJƒƒ‰‹“_
+        // ã‚«ãƒ¡ãƒ©è¦–ç‚¹
         glm::vec3 m_cameraLookAt;
-        // ƒJƒƒ‰@‘OƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€å‰ãƒ™ã‚¯ãƒˆãƒ«
         glm::vec3 m_cameraFront;
-        // ƒJƒƒ‰@ãƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€ä¸Šãƒ™ã‚¯ãƒˆãƒ«
         glm::vec3 m_cameraUp;
-        // ƒJƒƒ‰@‰EƒxƒNƒgƒ‹
+        // ã‚«ãƒ¡ãƒ©ã€€å³ãƒ™ã‚¯ãƒˆãƒ«
         glm::vec3 m_cameraRight;
-        // ƒJƒƒ‰ FOV
+        // ã‚«ãƒ¡ãƒ© FOV
         float m_cameraFov;
-        // ƒJƒƒ‰ Far
+        // ã‚«ãƒ¡ãƒ© Far
         float m_cameraFar;
-        // ƒJƒƒ‰ Near
+        // ã‚«ãƒ¡ãƒ© Near
         float m_cameraNear;
-        // ƒAƒXƒyƒNƒg”ä
+        // ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
         float m_aspectRadio;
     };
 }

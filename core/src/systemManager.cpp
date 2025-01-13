@@ -9,7 +9,7 @@
 #include "logger.h"
 
 namespace {
-	// ƒfƒoƒbƒOƒR[ƒ‹ƒoƒbƒNŠÖ”
+	// ãƒ‡ãƒãƒƒã‚°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 	VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugReportFlagsEXT flags,
 		VkDebugReportObjectTypeEXT objectType,
@@ -46,7 +46,7 @@ namespace {
 		}
 		break;
 		}
-		return VK_FALSE;  // ’Êí’Ê‚èˆ—‚ğ‘±s
+		return VK_FALSE;  // é€šå¸¸é€šã‚Šå‡¦ç†ã‚’ç¶šè¡Œ
 	}
 }
 
@@ -89,13 +89,13 @@ namespace MyosotisFW::System
 		vebugReportCallbackCreateInfo.pfnCallback = &debugCallback;
 		m_vkCreateDebugReportCallbackEXT(m_instance, &vebugReportCallbackCreateInfo, nullptr, &m_vkDebugReportCallback);
 
-		// GLFW ƒT[ƒtƒF[ƒXì¬
+		// GLFW ã‚µãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ä½œæˆ
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 
 		// m_renderSubsystem
 		m_renderSubsystem = Render::CreateRenderSubsystemPointer(m_instance, m_surface);
 
-		// ƒŠƒTƒCƒYƒR[ƒ‹ƒoƒbƒN
+		// ãƒªã‚µã‚¤ã‚ºã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 		glfwSetWindowUserPointer(window, this);
 		glfwSetWindowSizeCallback(window, ResizedCallback);
 	}

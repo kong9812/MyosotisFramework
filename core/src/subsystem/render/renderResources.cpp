@@ -23,7 +23,7 @@ namespace MyosotisFW::System::Render
 		auto shaderModule = m_shaderModules.find(fileName);
 		if (shaderModule == m_shaderModules.end())
 		{
-			// ‚È‚¢‚È‚ç“Ç‚İ‚Ş
+			// ãªã„ãªã‚‰èª­ã¿è¾¼ã‚€
 			m_shaderModules.emplace(fileName, Utility::Vulkan::Loader::loadShader(*m_device, fileName));
 		}
 		return m_shaderModules[fileName];
