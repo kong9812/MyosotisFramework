@@ -61,7 +61,7 @@ namespace MyosotisFW::System::Render
 		buildCommandBuffers();
 
 #ifdef DEBUG
-		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
+		// m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
 #endif
 	}
 

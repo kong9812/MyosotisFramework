@@ -10,7 +10,7 @@ namespace MyosotisFW::System::Render
 		PrimitiveGeometry(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~PrimitiveGeometry();
 
-		void BindCommandBuffer() override;
+		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
 
 	private:
 		virtual void loadAssets() override;
@@ -19,6 +19,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void prepareDescriptors() override;
 		virtual void prepareRenderPipeline() override;
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(PrimitiveGeometry)
 }

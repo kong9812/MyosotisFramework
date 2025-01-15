@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 
 	void StaticMesh::prepareUniformBuffers()
 	{
-		m_device->CreateUBOBuffer(m_uboBuffer, m_ubo);
+		m_device->CreateBuffer(m_uboBuffer, static_cast<uint32_t>(sizeof(m_ubo)), VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
 
 	void StaticMesh::prepareDescriptors()
@@ -74,7 +74,7 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4) 
 		};
 		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0,
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4);
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4);
 		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo(vertexInputBindingDescription, vertexInputAttributeDescriptiones);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);

@@ -735,14 +735,13 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	template<typename T>
-	inline VkBufferCreateInfo uboBufferCreateInfo(T data)
+	inline VkBufferCreateInfo bufferCreateInfo(uint32_t size, VkBufferUsageFlagBits usage, VkSharingMode sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE)
 	{
 		VkBufferCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		ci.size = sizeof(data);													// UBOのサイズ（構造体のサイズに合わせる）
-		ci.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;	// UBO用のビット
-		ci.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;				// 他のキューでの共有が必要ない場合
+		ci.size = size;													// UBOのサイズ（構造体のサイズに合わせる）
+		ci.usage = usage;														// UBO用のビット
+		ci.sharingMode = sharingMode;											// 他のキューでの共有が必要ない場合
 		return ci;
 	}
 }

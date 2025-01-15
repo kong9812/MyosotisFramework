@@ -2,6 +2,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace Utility::Vulkan::Struct
 {
@@ -25,6 +26,18 @@ namespace Utility::Vulkan::Struct
 		VkDescriptorBufferInfo descriptor;
 		void* mapped;
 	}Buffer;
+
+	typedef struct
+	{
+		glm::vec4 position;
+		glm::vec4 color;
+	}Vertex;
+
+	typedef struct
+	{
+		std::vector<Vertex> vertex;
+		std::vector<glm::vec3> index;
+	}VertexAndIndex;
 
 	typedef struct
 	{

@@ -1,5 +1,4 @@
 // Copyright (c) 2025 kong9812
-// Camera interface class
 #pragma once
 #include <vulkan/vulkan.h>
 
@@ -22,7 +21,7 @@ namespace MyosotisFW::System::Render
 		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~StaticMesh();
 
-		virtual void BindCommandBuffer() {};
+		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) {};
 
 	protected:
 		virtual void loadAssets() {};
