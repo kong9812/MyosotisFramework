@@ -1,44 +1,89 @@
 // Copyright (c) 2025 kong9812
 #include <crtdbg.h>
-#include <memory>
-#include "libs/glfw.h"
-#include "systemManager.h"
-#include "logger.h"
-#include "appInfo.h"
+#include <Windows.h>
+#include <libloaderapi.h>
+#include <errhandlingapi.h>
+#include <iostream>
+#include <filesystem>
+
+#include "application.h"
+#include "applicationInterface.h"
+
+
+#ifdef FWDLL
+namespace {
+    constexpr char* g_dll = "myosotis.dll";
+    constexpr char* g_dllBuilder = "tools\\dllBuilder.bat";
+    typedef IApplication* (*GetInstanceFunction)();
+}
+
+IApplication* GetApplication(HMODULE hModule)
+{
+    GetInstanceFunction function = reinterpret_cast<GetInstanceFunction>(GetProcAddress(hModule, "GetInstance"));
+    return function();
+}
+
+HMODULE GetDllModule()
+{
+    HMODULE hModule = LoadLibrary(g_dll);
+    if (!hModule) {
+        std::cerr << "Failed to load DLL: " << GetLastError() << '\n';
+        return NULL;
+    }
+    return hModule;
+}
+
+bool BuildDLL(bool force = false)
+{
+    // あればビルドしなくてもいい
+    if ((std::filesystem::exists(g_dll)) && (!force)) return true;
+
+    // なければビルドする (Visual Studio環境を想定する)
+    if (!std::filesystem::exists(g_dllBuilder)) return false;
+
+    return std::system(g_dllBuilder) == EXIT_SUCCESS;
+}
 
 int main()
 {
-#ifdef DEBUG
-    Logger::ClearLog();
-#endif
+    std::cout << std::filesystem::current_path() << std::endl;
 
     // メモリリークチェッカ
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    // GLFW初期化
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    // Window作成
-    GLFWwindow* glfwWindow = glfwCreateWindow(
-        MyosotisFW::AppInfo::g_windowWidth,
-        MyosotisFW::AppInfo::g_windowHeight,
-        MyosotisFW::AppInfo::g_applicationName,
-        nullptr, nullptr);
+    // DLLの準備
+    if (!BuildDLL()) return 1;
 
-    // System Manager 初期化
-    MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer(glfwWindow);
-    while (glfwWindowShouldClose(glfwWindow) == GLFW_FALSE)
+    HMODULE hModule = GetDllModule();
+    if (!hModule) return 1;
+
+    IApplication* application = GetApplication(hModule);
+    while (true)
     {
-        glfwPollEvents();
+        int result = application->Run();
+        // Hot Reload
+        if (result == 2)
+        {
+            delete application;
+            FreeLibrary(hModule);
 
-        systemManager->Update();
-
-        if (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(glfwWindow, GLFW_TRUE);
+            if (!BuildDLL(true)) return 1;
+            hModule = GetDllModule();
+            if (!hModule) return 1;
+            application = GetApplication(hModule);
+            continue;
         }
+        break;
     }
 
-    glfwTerminate();
-    return 0;
+    delete application;
+    FreeLibrary(hModule);
 }
+#else
+int main()
+{
+    std::cout << std::filesystem::current_path() << std::endl;
+    Application* application = new Application(false);
+    return application->Run();
+}
+#endif

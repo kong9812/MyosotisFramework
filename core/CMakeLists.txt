@@ -4,9 +4,10 @@ include(FetchContent)
 
 project(MyosotisFW)
 
-set(CMAKE_CONFIGURATION_TYPES "Release;Debug" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(DLL_PROJECT_NAME "myosotis")
+set(CMAKE_CONFIGURATION_TYPES "Debug;FWDLL;Release" CACHE STRING "" FORCE)
 
 FILE(GLOB_RECURSE SOURCES 
   "${PROJECT_SOURCE_DIR}/include/*.h"
@@ -54,7 +55,12 @@ endfunction()
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+# ライブラリの作成
+add_library(${DLL_PROJECT_NAME} SHARED ${SOURCES})
+# set_target_properties(${DLL_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+
 GroupSourcesByFolder(${PROJECT_NAME})
+GroupSourcesByFolder(${DLL_PROJECT_NAME})
 
 # GLFW
 FetchContent_Declare(
@@ -64,6 +70,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glfw)
 
 # GLM
 FetchContent_Declare(
@@ -73,6 +80,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
+target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
 
 # ofbx
 FetchContent_Declare(
@@ -86,14 +94,33 @@ FetchContent_MakeAvailable(ofbx)
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 
 # work directory
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 )
 
+# FwDLL構成用にデバッグ情報を生成し、最適化を無効化する
+set(CMAKE_C_FLAGS_FWDLL "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "C flags for FwDLL configuration")
+set(CMAKE_CXX_FLAGS_FWDLL "${CMAKE_CXX_FLAGS_DEBUG}" CACHE STRING "C++ flags for FwDLL configuration")
+set(CMAKE_EXE_LINKER_FLAGS_FWDLL "${CMAKE_EXE_LINKER_FLAGS_DEBUG}" CACHE STRING "Linker flags for FwDLL configuration")
+set(CMAKE_SHARED_LINKER_FLAGS_FWDLL "${CMAKE_SHARED_LINKER_FLAGS_DEBUG}" CACHE STRING "Shared linker flags for FwDLL configuration")
+# FwDLL構成にデバッグ用のフラグを設定
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    COMPILE_FLAGS_FWDLL "/Zi /Od"       # デバッグ情報生成と最適化無効化
+    LINK_FLAGS_FWDLL "/DEBUG"           # リンカにデバッグ情報を生成
+)
+
+set_target_properties(${DLL_PROJECT_NAME} PROPERTIES
+        COMPILE_FLAGS "/Zl"
+        LINK_FLAGS "/DEBUG:NONE"
+    )
+
 # build switch
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:RELEASE>
+    $<$<CONFIG:FWDLL>:FWDLL>
 )

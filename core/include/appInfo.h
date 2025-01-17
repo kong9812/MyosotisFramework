@@ -52,7 +52,7 @@ namespace MyosotisFW::AppInfo
     constexpr uint32_t g_minImageCount = 3;
 
     // 背景色
-    constexpr VkClearValue g_colorClearValues = { 0.0f, 0.2f, 0.2f, 1.0f };
+    constexpr VkClearValue g_colorClearValues = { 0.1f, 1.0f, 0.1f, 1.0f };
     // depth
     constexpr VkClearValue g_depthClearValues = { 1.0f, 0 };
 

@@ -169,7 +169,7 @@ namespace Logger
 
 #ifdef NDEBUG
 // リリース時に無効化
-#define CustomAssert(condition, message) ((void)0)
+#define ASSERT(condition, message)
 #else
 // デバッグ時に有効化
 #define ASSERT(condition, message) \
