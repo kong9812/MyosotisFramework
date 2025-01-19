@@ -22,3 +22,6 @@ Once the environment setup is complete, you can use the following batch file to 
     The solution configuration is set to `FWDLL`. Build the project using this configuration to ensure proper operation.
   - **Reload Method**  
     Press the F5 key to trigger hot reloading.
+
+- **ImGui**  
+  ImGui has been integrated into the project, providing an easy-to-use graphical user interface for debugging and development.
