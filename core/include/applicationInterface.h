@@ -6,7 +6,6 @@
 #define DLL_CLASS __declspec(dllimport)
 #endif
 
-
 class DLL_CLASS IApplication
 {
 public:

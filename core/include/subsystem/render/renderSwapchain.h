@@ -16,6 +16,7 @@ namespace MyosotisFW::System::Render
 		uint32_t GetWidth() { return m_width; }
 		uint32_t GetHeight() { return m_height; }
 		uint32_t GetImageCount() { return static_cast<uint32_t>(m_swapchainImage.size()); }
+		uint32_t GetMinImageCount() { return m_minImageCount; }
 		std::vector<Utility::Vulkan::Struct::Image>& GetSwapchainImage() { return m_swapchainImage; }
 
 		void AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex);
@@ -29,6 +30,7 @@ namespace MyosotisFW::System::Render
 		uint32_t m_height;
 
 		std::vector<Utility::Vulkan::Struct::Image> m_swapchainImage;
+		uint32_t m_minImageCount;
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(RenderSwapchain)
+	TYPEDEF_SHARED_PTR_ARGS(RenderSwapchain)
 }

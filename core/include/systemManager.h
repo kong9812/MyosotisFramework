@@ -17,6 +17,7 @@ namespace MyosotisFW::System
 		VkSurfaceKHR& GetSurface() { return m_surface; }
 
 		void Update();
+		void Render();
 
 	private:
 		Render::RenderSubsystem_ptr m_renderSubsystem;

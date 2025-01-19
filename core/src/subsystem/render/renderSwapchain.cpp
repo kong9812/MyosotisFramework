@@ -32,10 +32,12 @@ namespace MyosotisFW::System::Render
 		m_width = surfCaps.currentExtent.width;
 		m_height = surfCaps.currentExtent.height;
 
+		m_minImageCount = surfCaps.maxImageCount < AppInfo::g_minImageCount ? surfCaps.maxImageCount : AppInfo::g_minImageCount;
+
 		VkSwapchainCreateInfoKHR swapchainCreateInfo = Utility::Vulkan::CreateInfo::swapchainCreateInfo(
 			vkSurface,
 			surfCaps,
-			AppInfo::g_minImageCount,
+			m_minImageCount,
 			AppInfo::g_surfaceFormat,
 			AppInfo::g_presentMode
 		);

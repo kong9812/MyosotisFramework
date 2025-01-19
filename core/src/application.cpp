@@ -44,7 +44,14 @@ int Application::Run()
     {
         glfwPollEvents();
 
+        // マウスボタンの反応がないため、こちらで追加 (一時対応)
+        ImGuiIO& io = ImGui::GetIO();
+        io.MouseDown[0] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);   // 左クリック
+        io.MouseDown[1] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);  // 右クリック
+        io.MouseDown[2] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS); // 中クリック
+
         systemManager->Update();
+        systemManager->Render();
 
         if (glfwGetKey(m_glfwWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(m_glfwWindow, GLFW_TRUE);

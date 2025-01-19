@@ -93,7 +93,7 @@ namespace MyosotisFW::System
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 
 		// m_renderSubsystem
-		m_renderSubsystem = Render::CreateRenderSubsystemPointer(m_instance, m_surface);
+		m_renderSubsystem = Render::CreateRenderSubsystemPointer(*window, m_instance, m_surface);
 
 		// リサイズコールバック
 		glfwSetWindowUserPointer(window, this);
@@ -113,6 +113,11 @@ namespace MyosotisFW::System
 	}
 
 	void SystemManager::Update()
+	{
+		m_renderSubsystem->Update();
+	}
+
+	void SystemManager::Render()
 	{
 		m_renderSubsystem->Render();
 	}

@@ -8,6 +8,7 @@
 #include "renderDevice.h"
 #include "renderSwapchain.h"
 #include "renderResources.h"
+#include "debugGUI.h"
 #include "staticMesh.h"
 
 namespace MyosotisFW::System::Render
@@ -15,9 +16,10 @@ namespace MyosotisFW::System::Render
 	class RenderSubsystem
 	{
 	public:
-		RenderSubsystem(VkInstance& instance, VkSurfaceKHR& surface);
+		RenderSubsystem(GLFWwindow& glfwWindow, VkInstance& instance, VkSurfaceKHR& surface);
 		~RenderSubsystem();
 
+		void Update();
 		void Render();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
@@ -32,6 +34,7 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
+		DebugGUI_ptr m_debugGUI;
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
@@ -58,7 +61,7 @@ namespace MyosotisFW::System::Render
 		void prepareFrameBuffers();
 		void prepareCommandBuffers();
 		void prepareFences();
-		void buildCommandBuffers();
+		void buildCommandBuffer(uint32_t bufferIndex);
 	};
 	TYPEDEF_UNIQUE_PTR_ARGS(RenderSubsystem)
 }

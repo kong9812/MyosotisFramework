@@ -84,6 +84,8 @@ int main()
 {
     std::cout << std::filesystem::current_path() << std::endl;
     Application* application = new Application(false);
-    return application->Run();
+    int result = application->Run();
+    delete application;
+    return result;
 }
 #endif

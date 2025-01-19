@@ -2,6 +2,8 @@
 #include "subsystem/renderSubsystem.h"
 
 #include <array>
+#include <backends/imgui_impl_vulkan.h>
+
 #include "vkValidation.h"
 #include "vkCreateInfo.h"
 #include "appInfo.h"
@@ -11,7 +13,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	RenderSubsystem::RenderSubsystem(VkInstance& instance, VkSurfaceKHR& surface)
+	RenderSubsystem::RenderSubsystem(GLFWwindow& glfwWindow, VkInstance& instance, VkSurfaceKHR& surface)
 	{
 		m_instance = instance;
 
@@ -57,10 +59,10 @@ namespace MyosotisFW::System::Render
 		m_submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.renderComplete);
 	
-		// bind command buffers
-		buildCommandBuffers();
+		// debug gui
+		m_debugGUI = CreateDebugGUIPointer(glfwWindow, m_instance, m_device, m_queue, m_renderPass, m_swapchain, m_pipelineCache);
 
-#ifdef DEBUG
+#ifdef _DEBUG
 		// m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
 #endif
 	}
@@ -85,9 +87,16 @@ namespace MyosotisFW::System::Render
 		vkFreeMemory(*m_device, m_depthStencil.memory, nullptr);
 	}
 
+	void RenderSubsystem::Update()
+	{
+
+	}
+
 	void RenderSubsystem::Render()
 	{
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
+		buildCommandBuffer(m_currentBufferIndex);
+
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &m_commandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkQueueSubmit(m_queue, 1, &m_submitInfo, VK_NULL_HANDLE));
@@ -120,7 +129,6 @@ namespace MyosotisFW::System::Render
 		// command buffers
 		vkFreeCommandBuffers(*m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
 		prepareCommandBuffers();
-		buildCommandBuffers();
 
 		// fences
 		for (VkFence& fence : m_fences) {
@@ -210,7 +218,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderSubsystem::buildCommandBuffers()
+	void RenderSubsystem::buildCommandBuffer(uint32_t bufferIndex)
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 
@@ -221,27 +229,24 @@ namespace MyosotisFW::System::Render
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
 
-		for (int32_t i = 0; i < m_commandBuffers.size(); ++i)
-		{
-			// Set target frame buffer
-			renderPassBeginInfo.framebuffer = m_frameBuffers[i];
+		// Set target frame buffer
+		renderPassBeginInfo.framebuffer = m_frameBuffers[bufferIndex];
 
-			VK_VALIDATION(vkBeginCommandBuffer(m_commandBuffers[i], &commandBufferBeginInfo));
+		VK_VALIDATION(vkBeginCommandBuffer(m_commandBuffers[bufferIndex], &commandBufferBeginInfo));
 
-			vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_commandBuffers[bufferIndex], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
-			vkCmdSetViewport(m_commandBuffers[i], 0, 1, &viewport);
+		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
+		vkCmdSetViewport(m_commandBuffers[bufferIndex], 0, 1, &viewport);
 
-			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
+		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		vkCmdSetScissor(m_commandBuffers[bufferIndex], 0, 1, &scissor);
 
-			// bind here
+		// bind here
+		m_debugGUI->BuildCommandBuffer(m_commandBuffers[bufferIndex]);
 
+		vkCmdEndRenderPass(m_commandBuffers[bufferIndex]);
 
-			vkCmdEndRenderPass(m_commandBuffers[i]);
-
-			VK_VALIDATION(vkEndCommandBuffer(m_commandBuffers[i]));
-		}
+		VK_VALIDATION(vkEndCommandBuffer(m_commandBuffers[bufferIndex]));
 	}
 }

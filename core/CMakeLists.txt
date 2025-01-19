@@ -41,7 +41,6 @@ function(GroupSourcesByFolder target)
       # ヘッダーファイルの場合、インクルードディレクトリに追加
       list(APPEND include_dirs "${dir}")
     endif()
-
   endforeach()
 
   if(files)
@@ -50,15 +49,14 @@ function(GroupSourcesByFolder target)
 
   # ターゲットのインクルードディレクトリに追加
   target_include_directories(${target} PRIVATE ${include_dirs})
-  
 endfunction()
 
+# 実行プロジェクトの作成
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # ライブラリの作成
 add_library(${DLL_PROJECT_NAME} SHARED ${SOURCES})
 # set_target_properties(${DLL_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-
 GroupSourcesByFolder(${PROJECT_NAME})
 GroupSourcesByFolder(${DLL_PROJECT_NAME})
 
@@ -90,6 +88,40 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(ofbx)
 
+# imgui
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui
+  GIT_TAG v1.91.7
+)
+FetchContent_MakeAvailable(imgui)
+target_include_directories(${PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
+message("TEST = ${FETCHCONTENT_BASE_DIR}/imgui-src")
+set(IMGUI_SOURCES
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui.cpp
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_draw.cpp
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_tables.cpp
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_widgets.cpp
+  
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_demo.cpp
+
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imconfig.h
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui.h
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_rectpack.h
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_textedit.h
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_truetype.h
+
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_vulkan.cpp
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_glfw.cpp
+
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_vulkan.h
+  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_glfw.h
+)
+source_group("imgui" FILES ${IMGUI_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+target_sources(${DLL_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+
 # Vulkan
 find_package(Vulkan REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
@@ -113,6 +145,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     LINK_FLAGS_FWDLL "/DEBUG"           # リンカにデバッグ情報を生成
 )
 
+# pdbの生成を抑制するため
 set_target_properties(${DLL_PROJECT_NAME} PROPERTIES
         COMPILE_FLAGS "/Zl"
         LINK_FLAGS "/DEBUG:NONE"
