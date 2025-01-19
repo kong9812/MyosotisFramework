@@ -17,8 +17,8 @@ Once the environment setup is complete, you can use the following batch file to 
 
 ## Features
 - **Hot Reload Support**  
-  The project supports hot reloading, allowing changes to be instantly reflected after modification.  
+  The project supports hot reloading, allowing changes to be instantly applied after modification.   
   - **Solution Configuration**  
-    The solution configuration is set to `FWDLL`. Build the project using this configuration for proper operation.
+    The solution configuration is set to `FWDLL`. Build the project using this configuration to ensure proper operation.
   - **Reload Method**  
-    Press the `F5` key to enable hot reloading.
+    Press the F5 key to trigger hot reloading.
