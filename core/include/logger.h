@@ -167,11 +167,5 @@ namespace Logger
     }
 }
 
-#ifdef NDEBUG
-// リリース時に無効化
-#define ASSERT(condition, message)
-#else
-// デバッグ時に有効化
 #define ASSERT(condition, message) \
         CustomAssert((condition), (message), __FILE__, __LINE__)
-#endif

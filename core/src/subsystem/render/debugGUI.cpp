@@ -57,6 +57,7 @@ namespace MyosotisFW::System::Render
 
     void DebugGUI::BuildCommandBuffer(VkCommandBuffer& commandBuffer)
     {
+#ifndef RELEASE
         ImGuiIO& io = ImGui::GetIO();
         ImGui_ImplGlfw_NewFrame();
         ImGui_ImplVulkan_NewFrame();
@@ -78,5 +79,6 @@ namespace MyosotisFW::System::Render
 
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+#endif // !RELEASE
     }
 }

@@ -43,9 +43,7 @@ namespace
     VkResult validationResult = static_cast<VkResult>(result);                                  \
     bool validationCondition = (validationResult == VkResult::VK_SUCCESS);                      \
     if (!validationCondition) {                                                                 \
-                                                                                                \
-                                                                                                \
-            std::string message = "\nVulkan Error " + std::string(vkResultToString(result));    \
-            ASSERT(validationCondition, message);                                               \
+        std::string message = "\nVulkan Error " + std::string(vkResultToString(result));        \
+        ASSERT(validationCondition, message);                                                   \
     }                                                                                           \
 }
