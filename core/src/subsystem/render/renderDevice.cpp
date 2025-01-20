@@ -45,12 +45,62 @@ namespace
         CustomLog(LogLevel::LOG_INFO, "=============================================================================");
     }
 #endif
+    void* vkAllocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+    {
+        void* ptr = malloc(size);
+        std::string message = "vkAllocation ";
+        message += std::string("address: ") + std::to_string(reinterpret_cast<uintptr_t>(ptr)) + " ";
+        message += "size: " + std::to_string(size) + " ";
+        message += "alignment: " + std::to_string(alignment) + " ";
+        message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
+        Logger::Info(message);
+        return ptr;
+    }
+    void* vkReallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+    {
+        void* ptr = std::realloc(pOriginal, size);
+        std::string message = "vkReallocation ";
+        message += std::string("address: ") + std::to_string(reinterpret_cast<uintptr_t>(ptr)) + " ";
+        message += "size: " + std::to_string(size) + " ";
+        message += "alignment: " + std::to_string(alignment) + " ";
+        message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
+        Logger::Info(message);
+        return ptr;
+    }
+    void vkFree(void* pUserData, void* pMemory)
+    {
+        if (!pMemory) return;
+        std::string message = "vkFree ";
+        message += std::string("address: ") + std::to_string(reinterpret_cast<uintptr_t>(pMemory)) + " ";
+        Logger::Info(message);
+        free(pMemory);
+        pMemory = nullptr;
+    }
+    void vkInternalAllocationNotification(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
+    {
+        std::string message = "vkInternalAllocationNotification ";
+        message += "size: " + std::to_string(size) + " ";
+        message += std::string("allocationType: ") + vmaTools::VkInternalAllocationTypeToString(allocationType).data() + " ";
+        message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
+        Logger::Info(message);
+    }
+    void vkInternalFreeNotification(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
+    {
+        std::string message = "vkInternalFreeNotification ";
+        message += "size: " + std::to_string(size) + " ";
+        message += std::string("allocationType: ") + vmaTools::VkInternalAllocationTypeToString(allocationType).data() + " ";
+        message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
+        Logger::Info(message);
+    }
 }
 
 namespace MyosotisFW::System::Render
 {
 	RenderDevice::RenderDevice(VkInstance& vkInstance)
 	{
+        // prepare allocation callbacks
+        prepareAllocationCallbacks();
+
 		// physical device
 		uint32_t physicalDeviceCount = 0;
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr));
@@ -101,15 +151,16 @@ namespace MyosotisFW::System::Render
 
         // create device
         VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
-        VK_VALIDATION(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device));
+        VK_VALIDATION(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, GetAllocationCallbacks(), &m_device));
+
+        // VMA
+        prepareVMA(vkInstance);
 	}
 
 	RenderDevice::~RenderDevice()
 	{
-        if (m_device)
-        {
-            vkDestroyDevice(m_device, nullptr);
-        }
+        vmaDestroyAllocator(m_allocator);
+        vkDestroyDevice(m_device, GetAllocationCallbacks());
     }
 
     void RenderDevice::ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage)
@@ -117,7 +168,7 @@ namespace MyosotisFW::System::Render
         VkMemoryRequirements memReqs{};
         vkGetImageMemoryRequirements(m_device, deviceImage.image, &memReqs);
         VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
-        VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &deviceImage.memory));
+        VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, GetAllocationCallbacks(), &deviceImage.memory));
         VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
     }
 
@@ -125,13 +176,13 @@ namespace MyosotisFW::System::Render
     {
         // Buffer
         VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(bufferSize, usage);
-        VK_VALIDATION(vkCreateBuffer(m_device, &bufferCreateInfo, nullptr, &buffer.buffer));
+        VK_VALIDATION(vkCreateBuffer(m_device, &bufferCreateInfo, GetAllocationCallbacks(), &buffer.buffer));
 
         // Memory allocate
         VkMemoryRequirements memoryRequirements{};
         vkGetBufferMemoryRequirements(m_device, buffer.buffer, &memoryRequirements);
         VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memoryRequirements.size, getMemoryTypeIndex(memoryRequirements.memoryTypeBits, memoryPropertyFlags));
-        VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &buffer.memory));
+        VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, GetAllocationCallbacks(), &buffer.memory));
 
         // Descriptor buffer info
         buffer.descriptor.buffer = buffer.buffer;   // UBOバッファ
@@ -197,5 +248,31 @@ namespace MyosotisFW::System::Render
 
         ASSERT(false, "Could not find a matching memory type index!");
         return 0;
+    }
+
+    void RenderDevice::prepareAllocationCallbacks()
+    {
+        m_allocationCallbacks.pfnAllocation = &vkAllocation;
+        m_allocationCallbacks.pfnFree = &vkFree;
+        m_allocationCallbacks.pfnReallocation = &vkReallocation;
+        m_allocationCallbacks.pfnInternalAllocation = &vkInternalAllocationNotification;
+        m_allocationCallbacks.pfnInternalFree = &vkInternalFreeNotification;
+    }
+
+    void RenderDevice::prepareVMA(VkInstance& vkInstance)
+    {
+        VmaVulkanFunctions vulkanFunctions{};
+        vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+        vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+        VmaAllocatorCreateInfo allocatorCreateInfo{};
+        allocatorCreateInfo.flags = VmaAllocatorCreateFlagBits::VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+        allocatorCreateInfo.vulkanApiVersion = AppInfo::g_apiVersion;
+        allocatorCreateInfo.physicalDevice = m_physicalDevice;
+        allocatorCreateInfo.device = m_device;
+        allocatorCreateInfo.instance = vkInstance;
+        allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+        allocatorCreateInfo.pAllocationCallbacks = &m_allocationCallbacks;
+        VK_VALIDATION(vmaCreateAllocator(&allocatorCreateInfo, &m_allocator));
     }
 }

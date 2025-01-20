@@ -43,8 +43,8 @@ namespace MyosotisFW::System::Render
 			VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 		memcpy(stagingBuffer.mapped, vertex.vertex.data(), bufferSize);
 		vkUnmapMemory(*m_device, stagingBuffer.memory);
-		vkDestroyBuffer(*m_device, stagingBuffer.buffer, nullptr);
-		vkFreeMemory(*m_device, stagingBuffer.memory, nullptr);
+		vkDestroyBuffer(*m_device, stagingBuffer.buffer, m_device->GetAllocationCallbacks());
+		vkFreeMemory(*m_device, stagingBuffer.memory, m_device->GetAllocationCallbacks());
 	}
 
 	void PrimitiveGeometry::prepareUniformBuffers()

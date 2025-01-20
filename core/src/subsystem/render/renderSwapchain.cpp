@@ -41,7 +41,7 @@ namespace MyosotisFW::System::Render
 			AppInfo::g_surfaceFormat,
 			AppInfo::g_presentMode
 		);
-		VK_VALIDATION(vkCreateSwapchainKHR(*m_device, &swapchainCreateInfo, nullptr, &m_swapchain));
+		VK_VALIDATION(vkCreateSwapchainKHR(*m_device, &swapchainCreateInfo, m_device->GetAllocationCallbacks(), &m_swapchain));
 
 		// swapchain image
 		uint32_t imageCount = 0;
@@ -53,7 +53,7 @@ namespace MyosotisFW::System::Render
 		{
 			m_swapchainImage[i].image = images[i];
 			VkImageViewCreateInfo imageViewCreateInfoForSwapchain = Utility::Vulkan::CreateInfo::imageViewCreateInfoForSwapchain(m_swapchainImage[i].image, AppInfo::g_surfaceFormat.format);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForSwapchain, nullptr, &m_swapchainImage[i].view));
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForSwapchain, m_device->GetAllocationCallbacks(), &m_swapchainImage[i].view));
 		}
 	};
 
@@ -61,9 +61,9 @@ namespace MyosotisFW::System::Render
 	{
 		for (Utility::Vulkan::Struct::Image& image : m_swapchainImage)
 		{
-			vkDestroyImageView(*m_device, image.view, nullptr);
+			vkDestroyImageView(*m_device, image.view, m_device->GetAllocationCallbacks());
 		}	
-		vkDestroySwapchainKHR(*m_device, m_swapchain, nullptr);
+		vkDestroySwapchainKHR(*m_device, m_swapchain, m_device->GetAllocationCallbacks());
 	}
 
 	void RenderSwapchain::AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)

@@ -37,7 +37,7 @@ namespace MyosotisFW::System::Render
 
 		// command pool
 		VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsFamilyIndex());
-		VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, nullptr, &m_commandPool));
+		VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_commandPool));
 		prepareCommandBuffers();
 
 		// fences
@@ -45,15 +45,15 @@ namespace MyosotisFW::System::Render
 
 		// pipeline cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = Utility::Vulkan::CreateInfo::pipelineCacheCreateInfo();
-		VK_VALIDATION(vkCreatePipelineCache(*m_device, &pipelineCacheCreateInfo, nullptr, &m_pipelineCache));
+		VK_VALIDATION(vkCreatePipelineCache(*m_device, &pipelineCacheCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineCache));
 
 		// framebuffers
 		prepareFrameBuffers();
 
 		// semaphore(present/render)
 		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, nullptr, &m_semaphores.presentComplete));
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, nullptr, &m_semaphores.renderComplete));
+		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.presentComplete));
+		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.renderComplete));
 
 		// submit info
 		m_submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -69,22 +69,22 @@ namespace MyosotisFW::System::Render
 
 	RenderSubsystem::~RenderSubsystem()
 	{
-		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, nullptr);
-		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, nullptr);
+		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
+		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
 		for (VkFramebuffer& framebuffer : m_frameBuffers)
 		{
-			vkDestroyFramebuffer(*m_device, framebuffer, nullptr);
+			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
 		}
-		vkDestroyPipelineCache(*m_device, m_pipelineCache, nullptr);
+		vkDestroyPipelineCache(*m_device, m_pipelineCache, m_device->GetAllocationCallbacks());
 		for (VkFence& fence : m_fences) {
-			vkDestroyFence(*m_device, fence, nullptr);
+			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 		vkFreeCommandBuffers(*m_device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
-		vkDestroyCommandPool(*m_device, m_commandPool, nullptr);
-		vkDestroyRenderPass(*m_device, m_renderPass, nullptr);
-		vkDestroyImage(*m_device, m_depthStencil.image, nullptr);
-		vkDestroyImageView(*m_device, m_depthStencil.view, nullptr);
-		vkFreeMemory(*m_device, m_depthStencil.memory, nullptr);
+		vkDestroyCommandPool(*m_device, m_commandPool, m_device->GetAllocationCallbacks());
+		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
+		vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
+		vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
+		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 	}
 
 	void RenderSubsystem::Update()
@@ -114,15 +114,15 @@ namespace MyosotisFW::System::Render
 		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
 
 		// depth/stencil
-		vkDestroyImage(*m_device, m_depthStencil.image, nullptr);
-		vkDestroyImageView(*m_device, m_depthStencil.view, nullptr);
-		vkFreeMemory(*m_device, m_depthStencil.memory, nullptr);
+		vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
+		vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
+		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 		prepareDepthStencil();
 
 		// framebuffers
 		for (VkFramebuffer& framebuffer : m_frameBuffers)
 		{
-			vkDestroyFramebuffer(*m_device, framebuffer, nullptr);
+			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
 		}
 		prepareFrameBuffers();
 
@@ -132,7 +132,7 @@ namespace MyosotisFW::System::Render
 
 		// fences
 		for (VkFence& fence : m_fences) {
-			vkDestroyFence(*m_device, fence, nullptr);
+			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 		prepareFences();
 
@@ -143,13 +143,13 @@ namespace MyosotisFW::System::Render
 	{
 		// image
 		VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		VK_VALIDATION(vkCreateImage(*m_device, &imageCreateInfoForDepthStencil, nullptr, &m_depthStencil.image));
+		VK_VALIDATION(vkCreateImage(*m_device, &imageCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.image));
 		// allocate
 		m_device->ImageMemoryAllocate(m_depthStencil);
 
 		// image view
 		VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_depthStencil.image, AppInfo::g_depthFormat);
-		VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, nullptr, &m_depthStencil.view));
+		VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.view));
 	}
 
 	void RenderSubsystem::prepareRenderPass()
@@ -174,7 +174,7 @@ namespace MyosotisFW::System::Render
 		};
 
 		VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescription);
-		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, nullptr, &m_renderPass));
+		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass));
 	}
 
 	void RenderSubsystem::prepareFrameBuffers()
@@ -197,7 +197,7 @@ namespace MyosotisFW::System::Render
 		for (uint32_t i = 0; i < m_frameBuffers.size(); i++)
 		{
 			attachments[0] = m_swapchain->GetSwapchainImage()[i].view;
-			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, nullptr, &m_frameBuffers[i]));
+			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_frameBuffers[i]));
 		}
 	}
 
@@ -214,7 +214,7 @@ namespace MyosotisFW::System::Render
 		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo(VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT);
 		m_fences.resize(m_commandBuffers.size());
 		for (VkFence& fence : m_fences) {
-			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, nullptr, &fence));
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
 		}
 	}
 

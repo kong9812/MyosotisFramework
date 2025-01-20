@@ -10,7 +10,7 @@
 
 namespace Utility::Vulkan::Loader
 {
-	inline VkShaderModule loadShader(VkDevice device, std::string fileName)
+	inline VkShaderModule loadShader(VkDevice device, std::string fileName, const VkAllocationCallbacks* pAllocator = nullptr)
 	{
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_shaderFolder + fileName);
@@ -30,7 +30,7 @@ namespace Utility::Vulkan::Loader
 		shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(buf.data());
 
 		VkShaderModule shaderModule{};
-		VK_VALIDATION(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule));
+		VK_VALIDATION(vkCreateShaderModule(device, &shaderModuleCreateInfo, pAllocator, &shaderModule));
 		return shaderModule;
 	}
 }

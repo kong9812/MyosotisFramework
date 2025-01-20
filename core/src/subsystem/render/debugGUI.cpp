@@ -39,7 +39,7 @@ namespace MyosotisFW::System::Render
         initinfo.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;    // 0 defaults to VK_SAMPLE_COUNT_1_BIT
         initinfo.PipelineCache = pipelineCache;
         initinfo.UseDynamicRendering = false;
-        initinfo.Allocator = nullptr;
+        initinfo.Allocator = m_device->GetAllocationCallbacks();
         //initinfo.CheckVkResultFn =  // todo.
 
         ImGui_ImplVulkan_Init(&initinfo);

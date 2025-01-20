@@ -13,7 +13,7 @@ namespace MyosotisFW::System::Render
 	{
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
 		{
-			vkDestroyShaderModule(*m_device, shaderMoudle.second, nullptr);
+			vkDestroyShaderModule(*m_device, shaderMoudle.second, m_device->GetAllocationCallbacks());
 		}
 		m_shaderModules.clear();
 	}
@@ -24,7 +24,7 @@ namespace MyosotisFW::System::Render
 		if (shaderModule == m_shaderModules.end())
 		{
 			// ないなら読み込む
-			m_shaderModules.emplace(fileName, Utility::Vulkan::Loader::loadShader(*m_device, fileName));
+			m_shaderModules.emplace(fileName, Utility::Vulkan::Loader::loadShader(*m_device, fileName, m_device->GetAllocationCallbacks()));
 		}
 		return m_shaderModules[fileName];
 	}

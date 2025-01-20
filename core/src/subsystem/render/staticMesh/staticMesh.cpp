@@ -17,12 +17,12 @@ namespace MyosotisFW::System::Render
 
 	StaticMesh::~StaticMesh()
 	{
-		vkDestroyBuffer(*m_device, m_uboBuffer.buffer, nullptr);
-		vkFreeMemory(*m_device, m_uboBuffer.memory, nullptr);
-		vkDestroyPipeline(*m_device, m_pipeline, nullptr);
-		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, nullptr);
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, nullptr);
+		vkDestroyBuffer(*m_device, m_uboBuffer.buffer, m_device->GetAllocationCallbacks());
+		vkFreeMemory(*m_device, m_uboBuffer.memory, m_device->GetAllocationCallbacks());
+		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
+		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 	}
 
 	void StaticMesh::prepareUniformBuffers()
@@ -37,7 +37,7 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
 		};
 		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize);
-		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, nullptr, &m_descriptorPool));
+		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
 
 		// [descriptor]layout
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
@@ -45,7 +45,7 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
 		};
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
-		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayout));
+		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
 		// layout allocate
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
@@ -61,7 +61,7 @@ namespace MyosotisFW::System::Render
 	{
 		// [pipeline]layout
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
-		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout));
+		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
@@ -99,6 +99,6 @@ namespace MyosotisFW::System::Render
 			&dynamicStateCreateInfo,					// 動的状態
 			m_pipelineLayout,							// パイプラインレイアウト
 			m_renderPass);								// レンダーパス
-		VK_VALIDATION(vkCreateGraphicsPipelines(*m_device, m_pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline));
+		VK_VALIDATION(vkCreateGraphicsPipelines(*m_device, m_pipelineCache, 1, &graphicsPipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_pipeline));
 	}
 }

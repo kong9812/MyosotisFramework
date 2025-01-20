@@ -6,6 +6,7 @@
 #include "classPointer.h"
 #include "vkStruct.h"
 #include "vkValidation.h"
+#include "vma.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -24,6 +25,7 @@ namespace MyosotisFW::System::Render
 		uint32_t GetGraphicsFamilyIndex() { return m_graphicsFamilyIndex; }
 		uint32_t GetComputeFamilyIndex() { return m_computeFamilyIndex; }
 		uint32_t GetTransferFamilyIndex() { return m_transferFamilyIndex; }
+		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
 
 		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
 
@@ -32,6 +34,8 @@ namespace MyosotisFW::System::Render
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkDevice m_device;
+		VmaAllocator m_allocator;
+		VkAllocationCallbacks m_allocationCallbacks;
 
 		uint32_t m_graphicsFamilyIndex;
 		uint32_t m_computeFamilyIndex;
@@ -39,9 +43,12 @@ namespace MyosotisFW::System::Render
 
 		std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;
 		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
+
 	private:
 		uint32_t getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
 		uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties);
+		void prepareAllocationCallbacks();
+		void prepareVMA(VkInstance& vkInstance);
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderDevice)
 }
