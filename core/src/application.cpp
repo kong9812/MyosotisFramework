@@ -1,5 +1,4 @@
 #define DLL_EXPORTS
-
 #include "application.h"
 
 #include <crtdbg.h>
@@ -28,6 +27,13 @@ Application::Application(bool allowHotReload)
         MyosotisFW::AppInfo::g_applicationName,
         nullptr, nullptr);
 
+    // 画面中央
+    int monitorCount{};
+    GLFWmonitor* monitor = glfwGetMonitors(&monitorCount)[MyosotisFW::AppInfo::g_montorIndex];
+    const GLFWvidmode* vidMode = glfwGetVideoMode(monitor);
+    glfwSetWindowPos(m_glfwWindow,
+        static_cast<int>((vidMode->width - MyosotisFW::AppInfo::g_windowWidth) / 2),
+        static_cast<int>((vidMode->height - MyosotisFW::AppInfo::g_windowHeight) / 2));
     m_allowHotReload = allowHotReload;
 }
 
@@ -43,12 +49,6 @@ int Application::Run()
     while (glfwWindowShouldClose(m_glfwWindow) == GLFW_FALSE)
     {
         glfwPollEvents();
-
-        // マウスボタンの反応がないため、こちらで追加 (一時対応)
-        ImGuiIO& io = ImGui::GetIO();
-        io.MouseDown[0] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);   // 左クリック
-        io.MouseDown[1] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);  // 右クリック
-        io.MouseDown[2] = (glfwGetMouseButton(m_glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS); // 中クリック
 
         systemManager->Update();
         systemManager->Render();

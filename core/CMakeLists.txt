@@ -83,7 +83,7 @@ target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
 # ofbx
 FetchContent_Declare(
     ofbx
-    GIT_REPOSITORY https://github.com/nem0/OpenFBX
+    GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
     GIT_TAG master
 )
 FetchContent_MakeAvailable(ofbx)
@@ -91,13 +91,12 @@ FetchContent_MakeAvailable(ofbx)
 # imgui
 FetchContent_Declare(
   imgui
-  GIT_REPOSITORY https://github.com/ocornut/imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
   GIT_TAG v1.91.7
 )
 FetchContent_MakeAvailable(imgui)
 target_include_directories(${PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
-message("TEST = ${FETCHCONTENT_BASE_DIR}/imgui-src")
 set(IMGUI_SOURCES
   ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui.cpp
   ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_draw.cpp
@@ -118,9 +117,30 @@ set(IMGUI_SOURCES
   ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_vulkan.h
   ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_glfw.h
 )
-source_group("imgui" FILES ${IMGUI_SOURCES})
+source_group("external/imgui" FILES ${IMGUI_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+
+# VMA(VulkanMemoryAllocator)
+FetchContent_Declare(
+  vma
+  GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+  GIT_TAG v3.2.0
+)
+FetchContent_MakeAvailable(vma)
+target_include_directories(${PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/vma-src/include/)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/vma-src/include/)
+set(VMA_SOURCES
+  ${FETCHCONTENT_BASE_DIR}/vma-src/include/vk_mem_alloc.h
+  ${FETCHCONTENT_BASE_DIR}/vma-src/src/Common.h
+  ${FETCHCONTENT_BASE_DIR}/vma-src/src/VmaUsage.h
+
+  ${FETCHCONTENT_BASE_DIR}/vma-src/src/Common.cpp
+  ${FETCHCONTENT_BASE_DIR}/vma-src/src/VmaUsage.cpp
+)
+source_group("external/vma" FILES ${VMA_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 
 # Vulkan
 find_package(Vulkan REQUIRED)
@@ -153,6 +173,11 @@ set_target_properties(${DLL_PROJECT_NAME} PROPERTIES
 
 # build switch
 target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:DEBUG>
+    $<$<CONFIG:Release>:RELEASE>
+    $<$<CONFIG:FWDLL>:FWDLL>
+)
+target_compile_definitions(${DLL_PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:RELEASE>
     $<$<CONFIG:FWDLL>:FWDLL>

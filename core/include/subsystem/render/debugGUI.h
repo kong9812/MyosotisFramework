@@ -1,9 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include <imgui.h>
-#include <backends/imgui_impl_vulkan.h>
-#include <backends/imgui_impl_glfw.h>
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
+#include "iimgui.h"
 #include "classPointer.h"
 
 #include "renderDevice.h"

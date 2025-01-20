@@ -15,8 +15,9 @@
 namespace MyosotisFW::AppInfo
 {
     // アプリケーション情報
-    constexpr uint32_t g_windowWidth = 640;
-    constexpr uint32_t g_windowHeight = 480;
+    constexpr uint32_t g_windowWidth = 1440;
+    constexpr uint32_t g_windowHeight = 810;
+    constexpr uint32_t g_montorIndex = 0;
     constexpr char* g_applicationName = "MyosotisFW";
     constexpr char* g_engineName = "MyosotisFW";
     constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
@@ -75,11 +76,14 @@ namespace MyosotisFW::AppInfo
 
 
     // [フォルダ]リソース
-    constexpr const char* g_resourcesFolder = ".\\resources\\";
+    constexpr char* g_resourcesFolder = ".\\resources\\";
     // [フォルダ]シェーダー
-    constexpr const char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
+    constexpr char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
+    // [フォルダ]フォント
+    constexpr char* g_fontFolder = ".\\resources\\font\\";
 
     // debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
-    constexpr const uint32_t g_imguiDescriptorPoolSize = 2;
-
+    constexpr uint32_t g_imguiDescriptorPoolSize = 2;
+    constexpr float g_imguiFontSize = 16.0f;
+    constexpr char* g_imguiFontFileName = "msgothic.ttc";
 }

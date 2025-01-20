@@ -1,5 +1,5 @@
 #pragma once
-#include "libs/glfw.h"
+#include "glfw.h"
 #include "applicationInterface.h"
 
 #ifdef DLL_EXPORTS

@@ -24,6 +24,7 @@ namespace MyosotisFW::System::Render
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // キーボード操作を有効化
+        io.Fonts->AddFontFromFileTTF((std::string(AppInfo::g_fontFolder) + AppInfo::g_imguiFontFileName).c_str(), AppInfo::g_imguiFontSize);
 
 		ImGui_ImplVulkan_InitInfo initinfo{};
         initinfo.Instance = instance;
@@ -42,7 +43,7 @@ namespace MyosotisFW::System::Render
         //initinfo.CheckVkResultFn =  // todo.
 
         ImGui_ImplVulkan_Init(&initinfo);
-        ImGui_ImplGlfw_InitForVulkan(&glfwWindow, false);
+        ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 
         m_mainWindow = true;
 	}
@@ -62,23 +63,17 @@ namespace MyosotisFW::System::Render
         ImGui::NewFrame();
 
         ImGui::ShowDemoWindow();
-        ImGui::SetNextWindowSize(ImVec2(400, 300));
-        ImGui::Begin("Debug GUI");
+        ImGui::SetNextWindowPos({ 0.0f,0.0f });
+        ImGui::Begin("solution configuration",
+            (bool*)true,
+            ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar|
+            ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
 #ifdef DEBUG
         ImGui::Text("Model: Debug");
 #elif FWDLL
-        ImGui::Text("Model: DLL");
-#elif RELEASE
-        ImGui::Text("Model: Release");
-#else
-        ImGui::Text("Model: Other");
+        ImGui::Text("Model: DLL\nF5: Hot reload");
 #endif
-        float mousePos[2] = { io.MousePos.x, io.MousePos.y };
-        ImGui::DragFloat2("MousePos: ", mousePos);
-        if (io.MouseDown[1])
-        {
-            ImGui::Text("Clicked!");
-        }
         ImGui::End();
 
         ImGui::Render();
