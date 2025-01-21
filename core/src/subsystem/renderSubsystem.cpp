@@ -7,9 +7,7 @@
 #include "vkValidation.h"
 #include "vkCreateInfo.h"
 #include "appInfo.h"
-#ifdef DEBUG
 #include "primitiveGeometry.h"
-#endif
 
 namespace MyosotisFW::System::Render
 {
