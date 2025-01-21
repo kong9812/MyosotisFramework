@@ -8,17 +8,18 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		PrimitiveGeometry(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
-		~PrimitiveGeometry();
+		~PrimitiveGeometry() {};
 
+		void Update(const Camera::CameraBase& camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
 
 	private:
-		virtual void loadAssets() override;
-		virtual void prepareUniformBuffers() override;
-		virtual void prepareShaderStorageBuffers() override {};
+		void loadAssets() override;
+		void prepareUniformBuffers() override;
+		void prepareShaderStorageBuffers() override {};
 
-		virtual void prepareDescriptors() override;
-		virtual void prepareRenderPipeline() override;
+		void prepareDescriptors() override;
+		void prepareRenderPipeline() override;
 
 	};
 	TYPEDEF_SHARED_PTR_ARGS(PrimitiveGeometry)

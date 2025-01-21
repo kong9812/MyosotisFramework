@@ -26,10 +26,9 @@ namespace MyosotisFW::System::Render
 		uint32_t GetComputeFamilyIndex() { return m_computeFamilyIndex; }
 		uint32_t GetTransferFamilyIndex() { return m_transferFamilyIndex; }
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
+		VmaAllocator GetVmaAllocator() { return m_allocator; }
 
 		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
-
-		void CreateBuffer(Utility::Vulkan::Struct::Buffer& buffer, uint32_t bufferSize, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryPropertyFlags);
 
 	private:
 		VkPhysicalDevice m_physicalDevice;

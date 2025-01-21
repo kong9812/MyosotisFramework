@@ -7,30 +7,31 @@
 
 namespace MyosotisFW::System::Render::Shape
 {
-    inline Utility::Vulkan::Struct::VertexAndIndex createQuad(float size, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }, glm::vec3 center = { 0.0f, 0.0f, 0.0f })
+    inline Utility::Vulkan::Struct::Vertex createQuad(float size = 1.0f, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }, glm::vec3 center = { 0.0f, 0.0f, 0.0f })
     {
         float halfSize = size * 0.5f;
 
-        Utility::Vulkan::Struct::VertexAndIndex vertexAndIndex = {};
+        Utility::Vulkan::Struct::Vertex vertexAndIndex = {};
 
         vertexAndIndex.vertex = {
-            {glm::vec4(-halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0)  , color},      // 0
-            {glm::vec4(halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0), color},      // 1
-            {glm::vec4(halfSize + center.x, halfSize + center.y, -halfSize + center.z, 1.0), color},      // 2
-            {glm::vec4(-halfSize + center.x, halfSize + center.y, -halfSize + center.z, 1.0), color},      // 3
-            {glm::vec4(-halfSize + center.x, -halfSize + center.y, halfSize + center.z, 1.0), color},      // 4
-            {glm::vec4(halfSize + center.x, -halfSize + center.y, halfSize + center.z, 1.0), color},      // 5
-            {glm::vec4(halfSize + center.x, halfSize + center.y, halfSize + center.z, 1.0), color},      // 6
-            {glm::vec4(-halfSize + center.x, halfSize + center.y, halfSize + center.z, 1.0), color},      // 7
+            -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0  , color.r, color.g, color.b, color.a,    // 0
+            halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,       // 1
+            halfSize + center.x, halfSize + center.y, -halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,        // 2
+            -halfSize + center.x, halfSize + center.y, -halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,       // 3
+
+            -halfSize + center.x, -halfSize + center.y, halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,       // 4
+            halfSize + center.x, -halfSize + center.y, halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,        // 5
+            halfSize + center.x, halfSize + center.y, halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,         // 6
+            -halfSize + center.x, halfSize + center.y, halfSize + center.z, 1.0, color.r, color.g, color.b, color.a,        // 7
         };
 
         vertexAndIndex.index = {
-            glm::vec3(0, 2, 1), glm::vec3(0, 3, 2),     // 前面
-            glm::vec3(4, 5, 6), glm::vec3(4, 6, 7),     // 背面
-            glm::vec3(0, 1, 5), glm::vec3(0, 5, 4),     // 左面
-            glm::vec3(2, 3, 7), glm::vec3(2, 7, 6),     // 右面
-            glm::vec3(3, 0, 4), glm::vec3(3, 4, 7),     // 上面
-            glm::vec3(1, 2, 6), glm::vec3(1, 6, 5)      // 底面
+            0, 2, 1, 0, 3, 2,     // 前面
+            4, 5, 6, 4, 6, 7,     // 背面
+            0, 1, 5, 0, 5, 4,     // 左面
+            2, 3, 7, 2, 7, 6,     // 右面
+            3, 0, 4, 3, 4, 7,     // 上面
+            1, 2, 6, 1, 6, 5      // 底面
         };
         return vertexAndIndex;
     }

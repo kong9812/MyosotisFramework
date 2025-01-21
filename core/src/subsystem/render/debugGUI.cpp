@@ -1,11 +1,12 @@
 // Copyright (c) 2025 kong9812
 #include "debugGUI.h"
+#include <sstream>
+#include <GLFW/glfw3.h>
 
 #include "appInfo.h"
 
 #include "vkCreateInfo.h"
 #include "vkValidation.h"
-#include <GLFW/glfw3.h>
 
 namespace MyosotisFW::System::Render
 {
@@ -45,7 +46,7 @@ namespace MyosotisFW::System::Render
         ImGui_ImplVulkan_Init(&initinfo);
         ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 
-        m_mainWindow = true;
+        m_lastTime = 0;
 	}
 
 	DebugGUI::~DebugGUI()
@@ -75,6 +76,12 @@ namespace MyosotisFW::System::Render
 #elif FWDLL
         ImGui::Text("Model: DLL\nF5: Hot reload");
 #endif
+        float currentTime = static_cast<float>(glfwGetTime());
+        float deltaTime = currentTime - m_lastTime;
+        std::stringstream ss{};
+        ss << "FPS: " << (1.0f / deltaTime) << "(" << deltaTime * 1000.0f << ")";
+        m_lastTime = currentTime;
+        ImGui::Text(ss.str().c_str());
         ImGui::End();
 
         ImGui::Render();

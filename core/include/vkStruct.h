@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include "vma.h"
 
 namespace Utility::Vulkan::Struct
 {
@@ -22,22 +23,16 @@ namespace Utility::Vulkan::Struct
 	typedef struct
 	{
 		VkBuffer buffer;
-		VkDeviceMemory memory;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
 		VkDescriptorBufferInfo descriptor;
-		void* mapped;
 	}Buffer;
 
 	typedef struct
 	{
-		glm::vec4 position;
-		glm::vec4 color;
+		std::vector<float> vertex;
+		std::vector<uint32_t> index;
 	}Vertex;
-
-	typedef struct
-	{
-		std::vector<Vertex> vertex;
-		std::vector<glm::vec3> index;
-	}VertexAndIndex;
 
 	typedef struct
 	{

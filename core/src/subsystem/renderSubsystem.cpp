@@ -60,11 +60,13 @@ namespace MyosotisFW::System::Render
 		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.renderComplete);
 	
 		// debug gui
+#ifndef RELEASE
 		m_debugGUI = CreateDebugGUIPointer(glfwWindow, m_instance, m_device, m_queue, m_renderPass, m_swapchain, m_pipelineCache);
-
-#ifdef _DEBUG
-		// m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
 #endif
+		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
+
+		// camera
+		m_fpsCamera = Camera::CreateFPSCameraPointer();
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -89,7 +91,10 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Update()
 	{
-
+		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
+		{
+			staticMesh->Update(*m_fpsCamera);
+		}
 	}
 
 	void RenderSubsystem::Render()
@@ -243,7 +248,14 @@ namespace MyosotisFW::System::Render
 		vkCmdSetScissor(m_commandBuffers[bufferIndex], 0, 1, &scissor);
 
 		// bind here
+		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
+		{
+			staticMesh->BindCommandBuffer(m_commandBuffers[bufferIndex]);
+		}
+
+#ifndef RELEASE
 		m_debugGUI->BuildCommandBuffer(m_commandBuffers[bufferIndex]);
+#endif // !RELEASE
 
 		vkCmdEndRenderPass(m_commandBuffers[bufferIndex]);
 

@@ -172,30 +172,6 @@ namespace MyosotisFW::System::Render
         VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
     }
 
-    void RenderDevice::CreateBuffer(Utility::Vulkan::Struct::Buffer& buffer, uint32_t bufferSize, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memoryPropertyFlags)
-    {
-        // Buffer
-        VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(bufferSize, usage);
-        VK_VALIDATION(vkCreateBuffer(m_device, &bufferCreateInfo, GetAllocationCallbacks(), &buffer.buffer));
-
-        // Memory allocate
-        VkMemoryRequirements memoryRequirements{};
-        vkGetBufferMemoryRequirements(m_device, buffer.buffer, &memoryRequirements);
-        VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memoryRequirements.size, getMemoryTypeIndex(memoryRequirements.memoryTypeBits, memoryPropertyFlags));
-        VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, GetAllocationCallbacks(), &buffer.memory));
-
-        // Descriptor buffer info
-        buffer.descriptor.buffer = buffer.buffer;   // UBOバッファ
-        buffer.descriptor.offset = 0;               // バッファの開始位置（通常は0）
-        buffer.descriptor.range = bufferSize;		// UBOデータのサイズ
-
-        // Bind
-        VK_VALIDATION(vkBindBufferMemory(m_device, buffer.buffer, buffer.memory, buffer.descriptor.offset));
-
-        // Map
-        VK_VALIDATION(vkMapMemory(m_device, buffer.memory, buffer.descriptor.offset, bufferSize, 0, &buffer.mapped));
-    }
-
     uint32_t RenderDevice::getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties)
     {
         // VK_QUEUE_COMPUTE_BIT Only

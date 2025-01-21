@@ -10,6 +10,7 @@
 #include "renderResources.h"
 #include "debugGUI.h"
 #include "staticMesh.h"
+#include "fpsCamera.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -35,6 +36,7 @@ namespace MyosotisFW::System::Render
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
 		DebugGUI_ptr m_debugGUI;
+		Camera::FPSCamera_ptr m_fpsCamera;
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;

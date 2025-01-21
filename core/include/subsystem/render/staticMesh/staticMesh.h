@@ -6,6 +6,7 @@
 #include "vkStruct.h"
 #include "renderDevice.h"
 #include "renderResources.h"
+#include "camera.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -21,6 +22,7 @@ namespace MyosotisFW::System::Render
 		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~StaticMesh();
 
+		virtual void Update(const Camera::CameraBase& camera) {};
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) {};
 
 	protected:
@@ -58,6 +60,11 @@ namespace MyosotisFW::System::Render
 
 		// render pipeline
 		VkPipelineLayout m_pipelineLayout;
+
+		// vertex buffer
+		Utility::Vulkan::Struct::Buffer m_vertexBuffer;
+		// index buffer
+		Utility::Vulkan::Struct::Buffer m_indexBuffer;
 
 		// ubo
 		// todo. UBOクラスを用意する(class StandardUBO)

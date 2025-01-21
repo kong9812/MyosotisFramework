@@ -2,6 +2,7 @@
 #include "staticMesh.h"
 #include <vector>
 
+#include "vma.h"
 #include "vkCreateInfo.h"
 #include "vkValidation.h"
 
@@ -17,8 +18,9 @@ namespace MyosotisFW::System::Render
 
 	StaticMesh::~StaticMesh()
 	{
-		vkDestroyBuffer(*m_device, m_uboBuffer.buffer, m_device->GetAllocationCallbacks());
-		vkFreeMemory(*m_device, m_uboBuffer.memory, m_device->GetAllocationCallbacks());
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_uboBuffer.buffer, m_uboBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
@@ -27,7 +29,12 @@ namespace MyosotisFW::System::Render
 
 	void StaticMesh::prepareUniformBuffers()
 	{
-		m_device->CreateBuffer(m_uboBuffer, static_cast<uint32_t>(sizeof(m_ubo)), VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(m_ubo), VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
+		allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング
+		VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_uboBuffer.buffer, &m_uboBuffer.allocation, &m_uboBuffer.allocationInfo));
+		m_uboBuffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_uboBuffer.buffer);
 	}
 
 	void StaticMesh::prepareDescriptors()
@@ -71,7 +78,7 @@ namespace MyosotisFW::System::Render
 
 		// pipelineVertexInputStateCreateInfo
 		std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = { 
-			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4) 
+			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4) 
 		};
 		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0,
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4);

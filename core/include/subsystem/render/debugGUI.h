@@ -25,10 +25,9 @@ namespace MyosotisFW::System::Render
 		void BuildCommandBuffer(VkCommandBuffer& commandBuffer);
 
 	private:
+		float m_lastTime;	// fpsカウンター
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
-
-		bool m_mainWindow;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(DebugGUI)
 }

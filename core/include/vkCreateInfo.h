@@ -593,49 +593,49 @@ namespace Utility::Vulkan::CreateInfo
 		uint32_t offset = 0;
 
 		// [Vec3]Position
-		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC3) == 1)
+		if (vertexAttributes & VertexAttributeBit::POSITION_VEC3)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
 			offset += sizeof(glm::vec3);
 			location++;
 		}
 		// [Vec4]Position
-		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC4) == 1)
+		if (vertexAttributes & VertexAttributeBit::POSITION_VEC4)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT, offset));
 			offset += sizeof(glm::vec4);
 			location++;
 		}
 		// [Vec3]Normal
-		if ((vertexAttributes & VertexAttributeBit::NORMAL) == 1)
+		if (vertexAttributes & VertexAttributeBit::NORMAL)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
 			offset += sizeof(glm::vec3);
 			location++;
 		}
 		// [Vec2]UV
-		if ((vertexAttributes & VertexAttributeBit::UV) == 1)
+		if (vertexAttributes & VertexAttributeBit::UV)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32_SFLOAT, offset));
 			offset += sizeof(glm::vec2);
 			location++;
 		}
 		// [Vec3]Tangent
-		if ((vertexAttributes & VertexAttributeBit::TANGENT) == 1)
+		if (vertexAttributes & VertexAttributeBit::TANGENT)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
 			offset += sizeof(glm::vec3);
 			location++;
 		}
 		// [Vec3]Color
-		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC3) == 1)
+		if (vertexAttributes & VertexAttributeBit::COLOR_VEC3)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32_SFLOAT, offset));
 			offset += sizeof(glm::vec3);
 			location++;
 		}
 		// [Vec4]Color
-		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC4) == 1)
+		if (vertexAttributes & VertexAttributeBit::COLOR_VEC4)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT, offset));
 			offset += sizeof(glm::vec4);
@@ -649,37 +649,37 @@ namespace Utility::Vulkan::CreateInfo
 		VkVertexInputBindingDescription desc{};
 		desc.binding = binding;
 		// [Vec3]Position
-		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC3) == 1)
+		if (vertexAttributes & VertexAttributeBit::POSITION_VEC3)
 		{
 			desc.stride += sizeof(glm::vec3);
 		}
 		// [Vec4]Position
-		if ((vertexAttributes & VertexAttributeBit::POSITION_VEC4) == 1)
+		if (vertexAttributes & VertexAttributeBit::POSITION_VEC4)
 		{
 			desc.stride += sizeof(glm::vec4);
 		}
 		// [Vec3]Normal
-		if ((vertexAttributes & VertexAttributeBit::NORMAL) == 1)
+		if (vertexAttributes & VertexAttributeBit::NORMAL)
 		{
 			desc.stride += sizeof(glm::vec3);
 		}
 		// [Vec2]UV
-		if ((vertexAttributes & VertexAttributeBit::UV) == 1)
+		if (vertexAttributes & VertexAttributeBit::UV)
 		{
 			desc.stride += sizeof(glm::vec2);
 		}
 		// [Vec3]Tangent
-		if ((vertexAttributes & VertexAttributeBit::TANGENT) == 1)
+		if (vertexAttributes & VertexAttributeBit::TANGENT)
 		{
 			desc.stride += sizeof(glm::vec3);
 		}
 		// [Vec3]Color
-		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC3) == 1)
+		if (vertexAttributes & VertexAttributeBit::COLOR_VEC3)
 		{
 			desc.stride += sizeof(glm::vec3);
 		}
 		// [Vec4]Color
-		if ((vertexAttributes & VertexAttributeBit::COLOR_VEC4) == 1)
+		if (vertexAttributes & VertexAttributeBit::COLOR_VEC4)
 		{
 			desc.stride += sizeof(glm::vec4);
 		}
@@ -743,5 +743,14 @@ namespace Utility::Vulkan::CreateInfo
 		ci.usage = usage;														// UBO用のビット
 		ci.sharingMode = sharingMode;											// 他のキューでの共有が必要ない場合
 		return ci;
+	}
+
+	inline VkDescriptorBufferInfo descriptorBufferInfo(VkBuffer& buffer, VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = buffer;
+		bufferInfo.offset = offset;
+		bufferInfo.range = range;
+		return bufferInfo;
 	}
 }
