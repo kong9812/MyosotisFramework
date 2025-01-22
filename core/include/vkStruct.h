@@ -10,6 +10,7 @@ namespace Utility::Vulkan::Struct
 {
 	typedef struct
 	{
+		bool pause;
 		float deltaTime;
 		std::unordered_map<int, int> keyActions;
 		glm::vec2 mousePos;

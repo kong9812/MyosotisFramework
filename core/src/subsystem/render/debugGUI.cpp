@@ -45,8 +45,6 @@ namespace MyosotisFW::System::Render
 
         ImGui_ImplVulkan_Init(&initinfo);
         ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
-
-        m_lastTime = 0.0f;
 	}
 
 	DebugGUI::~DebugGUI()
@@ -55,6 +53,11 @@ namespace MyosotisFW::System::Render
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 	}
+
+    void DebugGUI::Update(Utility::Vulkan::Struct::UpdateData updateData)
+    {
+        m_deltaTime = updateData.deltaTime;
+    }
 
     void DebugGUI::BuildCommandBuffer(VkCommandBuffer& commandBuffer)
     {
@@ -76,11 +79,8 @@ namespace MyosotisFW::System::Render
 #elif FWDLL
         ImGui::Text("Model: DLL\nF5: Hot reload");
 #endif
-        float currentTime = static_cast<float>(glfwGetTime());
-        float deltaTime = currentTime - m_lastTime;
         std::stringstream ss{};
-        ss << "FPS: " << (1.0f / deltaTime) << "(" << deltaTime * 1000.0f << ")";
-        m_lastTime = currentTime;
+        ss << "FPS: " << (1.0f / m_deltaTime) << "(" << m_deltaTime * 1000.0f << " ms)";
         ImGui::Text(ss.str().c_str());
         ImGui::End();
 

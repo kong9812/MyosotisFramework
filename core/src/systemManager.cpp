@@ -95,6 +95,8 @@ namespace MyosotisFW::System
 		// m_renderSubsystem
 		m_renderSubsystem = Render::CreateRenderSubsystemPointer(*window, m_instance, m_surface);
 
+		m_pause = false;
+
 		// リサイズコールバック
 		glfwSetWindowUserPointer(window, this);
 		glfwSetWindowSizeCallback(window, ResizedCallback);
@@ -125,11 +127,28 @@ namespace MyosotisFW::System
 		m_mousePos = pos;
 	}
 
+	void SystemManager::Pause(GLFWwindow* window)
+	{
+		if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+		{
+			m_pause = true;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else
+		{
+			m_pause = false;
+			double x{}, y{};
+			glfwGetCursorPos(window, &x, &y);
+			m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}	
+	}
+
 	void SystemManager::Update()
 	{
 		float currentTime = static_cast<float>(glfwGetTime());
 		float deltaTime = currentTime - m_lastTime;
-		m_renderSubsystem->Update({ deltaTime, m_keyActions, m_mousePos });
+		m_renderSubsystem->Update({ m_pause, deltaTime, m_keyActions, m_mousePos });
 
 		// 後片付け
 		for (auto it = m_keyActions.begin(); it != m_keyActions.end();)
@@ -163,6 +182,10 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->KeyAction(key, action);
+		if ((key == GLFW_KEY_F2) && (action == GLFW_PRESS))
+		{
+			systemManager->Pause(window);
+		}
 	}
 
 	void SystemManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)

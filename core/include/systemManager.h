@@ -18,6 +18,7 @@ namespace MyosotisFW::System
 
 		void KeyAction(int key, int action);
 		void CursorMotion(glm::vec2 pos);
+		void Pause(GLFWwindow* window);
 
 		void Update();
 		void Render();
@@ -28,6 +29,7 @@ namespace MyosotisFW::System
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;
 
+		bool m_pause;
 		float m_lastTime;
 
 		// 入力

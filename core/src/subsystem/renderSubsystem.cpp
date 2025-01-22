@@ -98,6 +98,12 @@ namespace MyosotisFW::System::Render
 		{
 			staticMesh->Update(*m_fpsCamera);
 		}
+
+#ifndef RELEASE
+		ImGuiIO& io = ImGui::GetIO();
+		io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
+		m_debugGUI->Update(updateData);
+#endif // !RELEASE
 	}
 
 	void RenderSubsystem::Render()

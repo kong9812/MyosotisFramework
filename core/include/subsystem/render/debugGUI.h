@@ -22,10 +22,12 @@ namespace MyosotisFW::System::Render
 			VkPipelineCache& pipelineCache);
 		~DebugGUI();
 
+		void Update(Utility::Vulkan::Struct::UpdateData updateData);
+
 		void BuildCommandBuffer(VkCommandBuffer& commandBuffer);
 
 	private:
-		float m_lastTime;	// fpsカウンター
+		float m_deltaTime;	// fpsカウンター
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
 	};

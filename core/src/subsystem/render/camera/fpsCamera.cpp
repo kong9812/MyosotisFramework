@@ -26,14 +26,12 @@ namespace MyosotisFW::System::Render::Camera
 		mouseMovement.x = m_lastMousePos.x - updateData.mousePos.x;
 		mouseMovement.y = updateData.mousePos.y - m_lastMousePos.y;
 		mouseMovement *= 0.1f; // 遅くする
-
 		// X軸回転
 		if (((m_cameraFront.y > -0.99) && (glm::radians(mouseMovement.y) > 0)) || ((m_cameraFront.y < 0.99) && (glm::radians(mouseMovement.y) < 0)))
 		{
 			m_cameraFront = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(mouseMovement.y), m_cameraRight) * glm::vec4(m_cameraFront, 0.0f));
 			m_cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
 		}
-
 		// Y軸回転
 		m_cameraFront = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(mouseMovement.x), m_cameraUp) * glm::vec4(m_cameraFront, 0.0f));
 		m_cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
