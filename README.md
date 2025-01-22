@@ -23,7 +23,14 @@ Once the environment setup is complete, you can use the following batch file to 
   - **Solution Configuration**  
     The solution configuration is set to `FWDLL`. Build the project using this configuration to ensure proper operation.
   - **Reload Method**  
-    Press the F5 key to trigger hot reloading.
+    Press the `F5 key` to trigger hot reloading.
 
 - **ImGui**  
   ImGui has been integrated into the project, providing an easy-to-use graphical user interface for debugging and development.
+
+- **LOD Functionality**  
+  Definition of LOD distances (Very Close, Close, Far)  
+  Objects beyond the "Far" distance become hidden.
+
+- **Pause Functionality (In Progress)**  
+  Press the `F2 key` to pause the update process.
