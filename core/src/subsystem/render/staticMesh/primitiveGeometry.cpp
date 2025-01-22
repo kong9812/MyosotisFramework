@@ -15,6 +15,7 @@ namespace MyosotisFW::System::Render
 		prepareShaderStorageBuffers();
 		prepareDescriptors();
 		prepareRenderPipeline();
+		m_scale = glm::vec3(5.0f);
 	}
 
 	void PrimitiveGeometry::Update(const Camera::CameraBase& camera)
@@ -22,7 +23,8 @@ namespace MyosotisFW::System::Render
 		__super::Update(camera);
 
 		m_ubo.projection = camera.GetProjectionMatrix();
-		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f));
+		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_pos));
+		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_scale));
 		m_ubo.view = camera.GetViewMatrix();
 		memcpy(m_uboBuffer.allocationInfo.pMappedData, &m_ubo, sizeof(m_ubo));
 	}

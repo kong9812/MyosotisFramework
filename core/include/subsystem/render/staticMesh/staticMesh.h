@@ -41,6 +41,7 @@ namespace MyosotisFW::System::Render
 
 		// info
 		glm::vec3 m_pos;
+		glm::vec3 m_scale;
 
 		// todo. descriptorsManagerに移す
 		// todo. descriptorsはfactoryで作るのがいいかも

@@ -18,6 +18,7 @@ namespace MyosotisFW::System::Render
 		m_currentLOD = LOD::Hide;
 		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
 		m_pos = glm::vec3(0.0f);
+		m_scale = glm::vec3(1.0f);
 	}
 
 	StaticMesh::~StaticMesh()

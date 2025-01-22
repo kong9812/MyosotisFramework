@@ -87,9 +87,9 @@ namespace MyosotisFW::AppInfo
     constexpr char* g_imguiFontFileName = "msgothic.ttc";
 
     // [デフォルト]LOD距離
-    constexpr float g_defaultLODVeryClose = 5.0f;
-    constexpr float g_defaultLODClose = 10.0f;
-    constexpr float g_defaultLODFar = 20.0f;
+    constexpr float g_defaultLODVeryClose = 10.0f;
+    constexpr float g_defaultLODClose = 20.0f;
+    constexpr float g_defaultLODFar = 30.0f;
 
     // 移動
     constexpr float g_moveSpeed = 1.0f;
