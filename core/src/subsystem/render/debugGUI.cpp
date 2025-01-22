@@ -46,7 +46,7 @@ namespace MyosotisFW::System::Render
         ImGui_ImplVulkan_Init(&initinfo);
         ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 
-        m_lastTime = 0;
+        m_lastTime = 0.0f;
 	}
 
 	DebugGUI::~DebugGUI()

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "vma.h"
+#include "appInfo.h"
 #include "vkCreateInfo.h"
 #include "vkValidation.h"
 
@@ -14,17 +15,45 @@ namespace MyosotisFW::System::Render
 		m_resources = resources;
 		m_renderPass = renderPass;
 		m_pipelineCache = pipelineCache;
+		m_currentLOD = LOD::Hide;
+		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
+		m_pos = glm::vec3(0.0f);
 	}
 
 	StaticMesh::~StaticMesh()
 	{
+		for (int i = 0; i < m_vertexBuffer.size(); i++)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[i].buffer, m_vertexBuffer[i].allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[i].buffer, m_indexBuffer[i].allocation);
+		}
+
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_uboBuffer.buffer, m_uboBuffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+	}
+
+	void StaticMesh::Update(const Camera::CameraBase& camera)
+	{
+		float distance = camera.GetDistance(m_pos);
+		if (distance <= m_lodDistances[LOD::VeryClose])
+		{
+			m_currentLOD = LOD::VeryClose;
+		}
+		else if (distance <= m_lodDistances[LOD::Close])
+		{
+			m_currentLOD = LOD::Close;
+		}
+		else if (distance <= m_lodDistances[LOD::Far])
+		{
+			m_currentLOD = LOD::Far;
+		}
+		else
+		{
+			m_currentLOD = LOD::Hide;
+		}
 	}
 
 	void StaticMesh::prepareUniformBuffers()

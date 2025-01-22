@@ -36,4 +36,9 @@ namespace MyosotisFW::System::Render::Camera
     {
         return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
     }
+
+    float CameraBase::GetDistance(glm::vec3 pos) const
+    {
+        return glm::distance(m_cameraPos, pos);
+    }
 }

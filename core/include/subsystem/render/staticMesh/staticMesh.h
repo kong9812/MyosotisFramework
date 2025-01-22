@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <array>
 #include <vulkan/vulkan.h>
 
 #include "classPointer.h"
@@ -22,13 +23,24 @@ namespace MyosotisFW::System::Render
 		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		~StaticMesh();
 
-		virtual void Update(const Camera::CameraBase& camera) {};
+		typedef enum {
+			Hide = -1,
+			VeryClose,
+			Close,
+			Far,
+			Max
+		} LOD;
+
+		virtual void Update(const Camera::CameraBase& camera);
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) {};
 
 	protected:
 		virtual void loadAssets() {};
 		virtual void prepareUniformBuffers();
 		virtual void prepareShaderStorageBuffers() {};
+
+		// info
+		glm::vec3 m_pos;
 
 		// todo. descriptorsManagerに移す
 		// todo. descriptorsはfactoryで作るのがいいかも
@@ -62,9 +74,13 @@ namespace MyosotisFW::System::Render
 		VkPipelineLayout m_pipelineLayout;
 
 		// vertex buffer
-		Utility::Vulkan::Struct::Buffer m_vertexBuffer;
+		std::vector<Utility::Vulkan::Struct::Buffer> m_vertexBuffer;
 		// index buffer
-		Utility::Vulkan::Struct::Buffer m_indexBuffer;
+		std::vector<Utility::Vulkan::Struct::Buffer> m_indexBuffer;
+
+		// lod
+		LOD m_currentLOD;
+		std::array<float, LOD::Max> m_lodDistances;
 
 		// ubo
 		// todo. UBOクラスを用意する(class StandardUBO)

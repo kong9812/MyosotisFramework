@@ -44,7 +44,7 @@ namespace MyosotisFW::AppInfo
     // 指定物理デバイスのIndex
     constexpr uint32_t g_physicalIndex = 0;
     // 指定画像フォーマット
-    constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkColorSpaceKHR ::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+    constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_SRGB, VkColorSpaceKHR ::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
     // 指定プレゼントモード
     constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
     // 指定DepthFormat
@@ -53,7 +53,7 @@ namespace MyosotisFW::AppInfo
     constexpr uint32_t g_minImageCount = 3;
 
     // 背景色
-    constexpr VkClearValue g_colorClearValues = { 0.1f, 1.0f, 0.1f, 1.0f };
+    constexpr VkClearValue g_colorClearValues = { 0.1f, 0.1f, 0.1f, 1.0f };
     // depth
     constexpr VkClearValue g_depthClearValues = { 1.0f, 0 };
 
@@ -74,7 +74,6 @@ namespace MyosotisFW::AppInfo
     // [デフォルト]カメラ Near
     constexpr float g_cameraNear = 0.1f;
 
-
     // [フォルダ]リソース
     constexpr char* g_resourcesFolder = ".\\resources\\";
     // [フォルダ]シェーダー
@@ -86,4 +85,13 @@ namespace MyosotisFW::AppInfo
     constexpr uint32_t g_imguiDescriptorPoolSize = 2;
     constexpr float g_imguiFontSize = 16.0f;
     constexpr char* g_imguiFontFileName = "msgothic.ttc";
+
+    // [デフォルト]LOD距離
+    constexpr float g_defaultLODVeryClose = 5.0f;
+    constexpr float g_defaultLODClose = 10.0f;
+    constexpr float g_defaultLODFar = 20.0f;
+
+    // 移動
+    constexpr float g_moveSpeed = 1.0f;
+    constexpr float g_moveBoostSpeed = 10.0f;
 }

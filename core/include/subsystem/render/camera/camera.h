@@ -5,6 +5,7 @@
 #include <string>
 
 #include "classPointer.h"
+#include "vkStruct.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -16,11 +17,9 @@ namespace MyosotisFW::System::Render::Camera
 
         virtual glm::mat4 GetViewMatrix() const;
         virtual glm::mat4 GetProjectionMatrix() const;
+        float GetDistance(glm::vec3 pos) const;
 
-        virtual void ProcessMouseMovement(float xOffset, float yOffset) = 0;
-        virtual void ProcessMouseZoom(float offset) = 0;
-        virtual void ProcessKeyboardInput(const std::string& direction, float deltaTime) = 0;
-
+        virtual void Update(Utility::Vulkan::Struct::UpdateData updateData) = 0;
     protected:
         // カメラ位置
         glm::vec3 m_cameraPos;

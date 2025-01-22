@@ -98,6 +98,9 @@ namespace MyosotisFW::System
 		// リサイズコールバック
 		glfwSetWindowUserPointer(window, this);
 		glfwSetWindowSizeCallback(window, ResizedCallback);
+		// キー & マウスコールバック
+		glfwSetKeyCallback(window, KeyCallback);
+		glfwSetCursorPosCallback(window, CursorPosCallback);
 	}
 
 	SystemManager::~SystemManager()
@@ -112,9 +115,35 @@ namespace MyosotisFW::System
 		vkDestroyInstance(m_instance, nullptr);
 	}
 
+	void SystemManager::KeyAction(int key, int action)
+	{
+		m_keyActions.insert_or_assign(key, action);
+	}
+
+	void SystemManager::CursorMotion(glm::vec2 pos)
+	{
+		m_mousePos = pos;
+	}
+
 	void SystemManager::Update()
 	{
-		m_renderSubsystem->Update();
+		float currentTime = static_cast<float>(glfwGetTime());
+		float deltaTime = currentTime - m_lastTime;
+		m_renderSubsystem->Update({ deltaTime, m_keyActions, m_mousePos });
+
+		// 後片付け
+		for (auto it = m_keyActions.begin(); it != m_keyActions.end();)
+		{
+			if (it->second == GLFW_RELEASE)
+			{
+				it = m_keyActions.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		m_lastTime = currentTime;
 	}
 
 	void SystemManager::Render()
@@ -127,5 +156,19 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->GetRenderSubsystem()->Resize(systemManager->GetSurface(), width, height);
+	}
+
+	void SystemManager::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
+		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
+		systemManager->KeyAction(key, action);
+	}
+
+	void SystemManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+	{
+		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
+		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
+		systemManager->CursorMotion(glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos)));
 	}
 }

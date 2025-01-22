@@ -2,11 +2,19 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
+#include <unordered_map>
 #include <vector>
 #include "vma.h"
 
 namespace Utility::Vulkan::Struct
 {
+	typedef struct
+	{
+		float deltaTime;
+		std::unordered_map<int, int> keyActions;
+		glm::vec2 mousePos;
+	}UpdateData;
+
 	typedef struct
 	{
 		VkImage image;

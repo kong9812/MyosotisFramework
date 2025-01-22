@@ -8,16 +8,18 @@ namespace MyosotisFW::System::Render::Camera
 	class FPSCamera : public CameraBase
 	{
 	public:
-		FPSCamera() : CameraBase(){};
+		FPSCamera(glm::vec2 startMousePos);
 		~FPSCamera() {};
 
 		glm::mat4 GetViewMatrix() const override;
 		glm::mat4 GetProjectionMatrix() const override;
 
-		void ProcessMouseMovement(float xOffset, float yOffset) override {};
-		void ProcessMouseZoom(float offset) override {};
-		void ProcessKeyboardInput(const std::string& direction, float deltaTime) override {};
+		// 一時停止などマウス座標のリセットが必要な時用
+		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
+
+		void Update(Utility::Vulkan::Struct::UpdateData updateData) override;
 	private:
+		glm::vec2 m_lastMousePos;
 	};
-	TYPEDEF_SHARED_PTR(FPSCamera)
+	TYPEDEF_SHARED_PTR_ARGS(FPSCamera)
 }

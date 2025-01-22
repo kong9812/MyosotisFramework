@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render
 		RenderSubsystem(GLFWwindow& glfwWindow, VkInstance& instance, VkSurfaceKHR& surface);
 		~RenderSubsystem();
 
-		void Update();
+		void Update(Utility::Vulkan::Struct::UpdateData updateData);
 		void Render();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 

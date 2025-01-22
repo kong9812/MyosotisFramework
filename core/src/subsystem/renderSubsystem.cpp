@@ -64,7 +64,10 @@ namespace MyosotisFW::System::Render
 		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
 
 		// camera
-		m_fpsCamera = Camera::CreateFPSCameraPointer();
+		double x{}, y{};
+		glfwGetCursorPos(&glfwWindow, &x, &y);
+		m_fpsCamera = Camera::CreateFPSCameraPointer(glm::vec2(static_cast<float>(x), static_cast<float>(y)));
+		glfwSetInputMode(&glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -87,8 +90,10 @@ namespace MyosotisFW::System::Render
 		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 	}
 
-	void RenderSubsystem::Update()
+	void RenderSubsystem::Update(Utility::Vulkan::Struct::UpdateData updateData)
 	{
+		m_fpsCamera->Update(updateData);
+
 		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
 		{
 			staticMesh->Update(*m_fpsCamera);
