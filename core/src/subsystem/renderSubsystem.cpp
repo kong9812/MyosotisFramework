@@ -64,10 +64,10 @@ namespace MyosotisFW::System::Render
 		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
 
 		// camera
+		m_fpsCamera = Camera::CreateFPSCameraPointer();
 		double x{}, y{};
 		glfwGetCursorPos(&glfwWindow, &x, &y);
-		m_fpsCamera = Camera::CreateFPSCameraPointer(glm::vec2(static_cast<float>(x), static_cast<float>(y)));
-		glfwSetInputMode(&glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		m_fpsCamera->ResetMousePos(glm::vec2(static_cast<float>(x), static_cast<float>(y)));
 	}
 
 	RenderSubsystem::~RenderSubsystem()

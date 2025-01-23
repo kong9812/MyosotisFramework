@@ -103,6 +103,11 @@ namespace MyosotisFW::System
 		// キー & マウスコールバック
 		glfwSetKeyCallback(window, KeyCallback);
 		glfwSetCursorPosCallback(window, CursorPosCallback);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		double x{}, y{};
+		glfwGetCursorPos(window, &x, &y);
+		m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
 	}
 
 	SystemManager::~SystemManager()

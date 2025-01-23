@@ -8,7 +8,7 @@ namespace MyosotisFW::System::Render::Camera
 	class FPSCamera : public CameraBase
 	{
 	public:
-		FPSCamera(glm::vec2 startMousePos);
+		FPSCamera();
 		~FPSCamera() {};
 
 		glm::mat4 GetViewMatrix() const override;

@@ -5,9 +5,9 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	FPSCamera::FPSCamera(glm::vec2 startMousePos) :CameraBase()
+	FPSCamera::FPSCamera() : CameraBase()
 	{
-		m_lastMousePos = startMousePos;
+		m_lastMousePos = glm::vec3(0.0f);
 	}
 
 	glm::mat4 FPSCamera::GetViewMatrix() const
