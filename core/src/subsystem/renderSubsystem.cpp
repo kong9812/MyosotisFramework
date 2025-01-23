@@ -90,20 +90,28 @@ namespace MyosotisFW::System::Render
 		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 	}
 
+	void RenderSubsystem::ResetMousePos(glm::vec2 mousePos)
+	{
+		m_fpsCamera->ResetMousePos(mousePos);
+	}
+
 	void RenderSubsystem::Update(Utility::Vulkan::Struct::UpdateData updateData)
 	{
+#ifndef RELEASE
+		ImGuiIO& io = ImGui::GetIO();
+		io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
+		m_debugGUI->Update(updateData);
+#endif // !RELEASE
+
+		// ポーズ中に更新したい物上に追加
+		if (updateData.pause) return;
+
 		m_fpsCamera->Update(updateData);
 
 		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
 		{
 			staticMesh->Update(*m_fpsCamera);
 		}
-
-#ifndef RELEASE
-		ImGuiIO& io = ImGui::GetIO();
-		io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
-		m_debugGUI->Update(updateData);
-#endif // !RELEASE
 	}
 
 	void RenderSubsystem::Render()

@@ -9,8 +9,17 @@
 
 namespace MyosotisFW::System::Render
 {
-	StaticMesh::StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
+	StaticMesh::StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache) :
+		ObjectBase()
 	{
+		m_descriptorPool = VK_NULL_HANDLE;
+		m_descriptorSet = VK_NULL_HANDLE;
+		m_descriptorSetLayout = VK_NULL_HANDLE;
+		m_pipelineLayout = VK_NULL_HANDLE;
+		m_pipeline = VK_NULL_HANDLE;
+		m_ubo = {};
+		m_uboBuffer = {};
+
 		m_device = device;
 		m_resources = resources;
 		m_renderPass = renderPass;

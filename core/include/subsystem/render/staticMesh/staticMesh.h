@@ -3,6 +3,7 @@
 #include <array>
 #include <vulkan/vulkan.h>
 
+#include "objectBase.h"
 #include "classPointer.h"
 #include "vkStruct.h"
 #include "renderDevice.h"
@@ -16,7 +17,7 @@ namespace MyosotisFW::System::Render
 	// ・PrimitiveGeometryMesh
 	// ・FBXMesh
 	// ・...
-	class StaticMesh
+	class StaticMesh : public ObjectBase
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
@@ -32,7 +33,8 @@ namespace MyosotisFW::System::Render
 		} LOD;
 
 		virtual void Update(const Camera::CameraBase& camera);
-		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) {};
+		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};
+		virtual void BindDebugGUIElement() override {};
 
 	protected:
 		virtual void loadAssets() {};

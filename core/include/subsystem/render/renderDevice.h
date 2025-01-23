@@ -21,12 +21,12 @@ namespace MyosotisFW::System::Render
 			return m_device;
 		};
 
-		VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
-		uint32_t GetGraphicsFamilyIndex() { return m_graphicsFamilyIndex; }
-		uint32_t GetComputeFamilyIndex() { return m_computeFamilyIndex; }
-		uint32_t GetTransferFamilyIndex() { return m_transferFamilyIndex; }
+		VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
+		uint32_t GetGraphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
+		uint32_t GetComputeFamilyIndex() const { return m_computeFamilyIndex; }
+		uint32_t GetTransferFamilyIndex() const { return m_transferFamilyIndex; }
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
-		VmaAllocator GetVmaAllocator() { return m_allocator; }
+		VmaAllocator GetVmaAllocator() const { return m_allocator; }
 
 		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
 
@@ -45,7 +45,7 @@ namespace MyosotisFW::System::Render
 
 	private:
 		uint32_t getQueueFamilyIndex(VkQueueFlags queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
-		uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties);
+		uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties) const;
 		void prepareAllocationCallbacks();
 		void prepareVMA(VkInstance& vkInstance);
 	};

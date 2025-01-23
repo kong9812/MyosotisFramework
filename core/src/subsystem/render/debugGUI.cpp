@@ -19,6 +19,9 @@ namespace MyosotisFW::System::Render
         RenderSwapchain_ptr renderSwapchain,
         VkPipelineCache& pipelineCache)
 	{
+        m_deltaTime = {};
+        m_descriptorPool = VK_NULL_HANDLE;
+
         m_device = renderDevice;
 
         IMGUI_CHECKVERSION();
@@ -59,7 +62,7 @@ namespace MyosotisFW::System::Render
         m_deltaTime = updateData.deltaTime;
     }
 
-    void DebugGUI::BuildCommandBuffer(VkCommandBuffer& commandBuffer)
+    void DebugGUI::BuildCommandBuffer(VkCommandBuffer& commandBuffer) const
     {
 #ifndef RELEASE
         ImGuiIO& io = ImGui::GetIO();

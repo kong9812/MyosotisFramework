@@ -4,12 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
+#include "objectBase.h"
 #include "classPointer.h"
 #include "vkStruct.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
-    class CameraBase
+    class CameraBase : public ObjectBase
     {
     public:
         CameraBase();
@@ -19,7 +20,10 @@ namespace MyosotisFW::System::Render::Camera
         virtual glm::mat4 GetProjectionMatrix() const;
         float GetDistance(glm::vec3 pos) const;
 
-        virtual void Update(Utility::Vulkan::Struct::UpdateData updateData) = 0;
+        virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData) = 0;
+        void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};  // 必要ない
+        virtual void BindDebugGUIElement() override = 0;
+
     protected:
         // カメラ位置
         glm::vec3 m_cameraPos;

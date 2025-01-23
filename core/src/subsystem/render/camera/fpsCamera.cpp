@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
 	}
 
-	void FPSCamera::Update(Utility::Vulkan::Struct::UpdateData updateData)
+	void FPSCamera::Update(const Utility::Vulkan::Struct::UpdateData& updateData)
 	{
 		glm::vec2 mouseMovement{};
 		mouseMovement.x = m_lastMousePos.x - updateData.mousePos.x;
@@ -118,5 +118,10 @@ namespace MyosotisFW::System::Render::Camera
 			}
 		}
 		m_cameraPos += move;
+	}
+
+	void FPSCamera::BindDebugGUIElement()
+	{
+
 	}
 }

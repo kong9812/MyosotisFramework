@@ -211,7 +211,7 @@ namespace MyosotisFW::System::Render
         return 0;
     }
 
-    uint32_t RenderDevice::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
+    uint32_t RenderDevice::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties) const
     {
         for (uint32_t i = 0; i < m_physicalDeviceMemoryProperties.memoryTypeCount; i++) {
             // タイプフィルタが一致し、プロパティ要件を満たしているか確認

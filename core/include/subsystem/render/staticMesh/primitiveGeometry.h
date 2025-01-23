@@ -12,6 +12,7 @@ namespace MyosotisFW::System::Render
 
 		void Update(const Camera::CameraBase& camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
+		void BindDebugGUIElement() override {};
 
 	private:
 		void loadAssets() override;

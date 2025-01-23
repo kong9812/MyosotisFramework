@@ -17,7 +17,9 @@ namespace MyosotisFW::System::Render::Camera
 		// 一時停止などマウス座標のリセットが必要な時用
 		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
 
-		void Update(Utility::Vulkan::Struct::UpdateData updateData) override;
+		void Update(const Utility::Vulkan::Struct::UpdateData& updateData) override;
+		void BindDebugGUIElement() override;
+
 	private:
 		glm::vec2 m_lastMousePos;
 	};

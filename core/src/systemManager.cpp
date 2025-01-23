@@ -54,6 +54,17 @@ namespace MyosotisFW::System
 {
 	SystemManager::SystemManager(GLFWwindow* window)
 	{
+		m_lastTime = {};
+
+		// リサイズコールバック
+		glfwSetWindowUserPointer(window, this);
+		glfwSetWindowSizeCallback(window, ResizedCallback);
+		// キー & マウスコールバック
+		glfwSetKeyCallback(window, KeyCallback);
+		glfwSetCursorPosCallback(window, CursorPosCallback);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwPollEvents();
+
 		// applicationInfo
 		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(
 			AppInfo::g_applicationName,
@@ -97,14 +108,6 @@ namespace MyosotisFW::System
 
 		m_pause = false;
 
-		// リサイズコールバック
-		glfwSetWindowUserPointer(window, this);
-		glfwSetWindowSizeCallback(window, ResizedCallback);
-		// キー & マウスコールバック
-		glfwSetKeyCallback(window, KeyCallback);
-		glfwSetCursorPosCallback(window, CursorPosCallback);
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 		double x{}, y{};
 		glfwGetCursorPos(window, &x, &y);
 		m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
@@ -142,10 +145,12 @@ namespace MyosotisFW::System
 		else
 		{
 			m_pause = false;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			glfwPollEvents();
 			double x{}, y{};
 			glfwGetCursorPos(window, &x, &y);
 			m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			m_renderSubsystem->ResetMousePos(m_mousePos);
 		}	
 	}
 
