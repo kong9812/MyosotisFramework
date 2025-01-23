@@ -1,5 +1,9 @@
 # MyosotisFramework
-A framework created with Vulkan 
+A framework created with Vulkan
+
+## Clone Command
+Use the following command to clone the repository.  
+```git clone --recursive https://github.com/kong9812/MyosotisFramework.git```
 
 ## Requirements
 - **[cmake](https://cmake.org)**
