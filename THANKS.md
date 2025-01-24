@@ -1,5 +1,6 @@
 ## Credits
 Thanks to the authors of these libraries for their incredible work and contributions:  
+- [GLM](https://github.com/g-truc/glm.git)  
 - [GLFW](https://github.com/glfw/glfw)  
 - [Dear ImGui](https://github.com/ocornut/imgui)  
 - [OpenFBX (ofbx)](https://github.com/nem0/OpenFBX)  
@@ -12,6 +13,7 @@ Special thanks to all contributors and developers who have made these libraries 
 ## Attributions / Licenses
 Please note that each library is distributed under its own license. Ensure compliance with their respective terms when using them in your own projects:  
 
+- **GLM**: Licensed under the [The Happy Bunny License/MIT License](https://github.com/g-truc/glm/blob/master/copying.txt).  
 - **GLFW**: Licensed under the [zlib/libpng license](https://github.com/glfw/glfw/blob/master/LICENSE.md).  
 - **Vulkan Memory Allocator (VMA)**: Licensed under the [MIT License](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/blob/master/LICENSE.txt).  
 - **Dear ImGui**: Licensed under the [MIT License](https://github.com/ocornut/imgui/blob/master/LICENSE.txt).  
