@@ -9,6 +9,11 @@
 
 namespace MyosotisFW::System::Render
 {
+	StaticMesh::StaticMesh() : ObjectBase(ObjectType::StaticMesh)
+	{
+		m_name = "スタティックメッシュ";
+	}
+
 	StaticMesh::~StaticMesh()
 	{
 		for (int i = 0; i < m_vertexBuffer.size(); i++)
@@ -40,29 +45,36 @@ namespace MyosotisFW::System::Render
 		m_pipelineCache = pipelineCache;
 		m_currentLOD = LOD::Hide;
 		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
-		m_pos = glm::vec3(0.0f);
-		m_scale = glm::vec3(1.0f);
 	}
 
-	void StaticMesh::Update(const Camera::CameraBase& camera)
+	void StaticMesh::Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera)
 	{
-		float distance = camera.GetDistance(m_pos);
-		if (distance <= m_lodDistances[LOD::VeryClose])
+		if (camera)
 		{
-			m_currentLOD = LOD::VeryClose;
+			float distance = camera->GetDistance(m_transfrom.pos);
+			if (distance <= m_lodDistances[LOD::VeryClose])
+			{
+				m_currentLOD = LOD::VeryClose;
+			}
+			else if (distance <= m_lodDistances[LOD::Close])
+			{
+				m_currentLOD = LOD::Close;
+			}
+			else if (distance <= m_lodDistances[LOD::Far])
+			{
+				m_currentLOD = LOD::Far;
+			}
+			else
+			{
+				m_currentLOD = LOD::Hide;
+			}
 		}
-		else if (distance <= m_lodDistances[LOD::Close])
-		{
-			m_currentLOD = LOD::Close;
-		}
-		else if (distance <= m_lodDistances[LOD::Far])
-		{
-			m_currentLOD = LOD::Far;
-		}
-		else
-		{
-			m_currentLOD = LOD::Hide;
-		}
+	}
+
+	rapidjson::Value StaticMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
+	{
+		rapidjson::Value obj = __super::Serialize(allocator);
+		return obj;
 	}
 
 	void StaticMesh::prepareUniformBuffers()
@@ -110,8 +122,8 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.frag.spv")),
 		};
 
 		// pipelineVertexInputStateCreateInfo
@@ -124,10 +136,10 @@ namespace MyosotisFW::System::Render
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineViewportStateCreateInfo();
-		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
+		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
-		VkPipelineColorBlendAttachmentState colorBlendAttachmentState = Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE);
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState = Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE);
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(&colorBlendAttachmentState);
 		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };
 		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDynamicStateCreateInfo(dynamicStates);

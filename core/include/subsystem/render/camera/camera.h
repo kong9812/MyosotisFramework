@@ -2,6 +2,7 @@
 #pragma once
 #include <string>
 
+#include "objectCast.h"
 #include "iglm.h"
 #include "objectBase.h"
 #include "classPointer.h"
@@ -17,12 +18,20 @@ namespace MyosotisFW::System::Render::Camera
 
         virtual glm::mat4 GetViewMatrix() const;
         virtual glm::mat4 GetProjectionMatrix() const;
+        
+        void SetAspectRadio(float aspectRadio) { m_aspectRadio = aspectRadio; }
+
         float GetDistance(glm::vec3 pos) const;
+        glm::vec3 GetFrontPos(float distance) const;
 
-        virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData) = 0;
-        void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};  // 必要ない
-        virtual void BindDebugGUIElement() override = 0;
+        glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
+        virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData) {}
+        void BindCommandBuffer(VkCommandBuffer commandBuffer) override {}  // 必要ない
+        virtual void BindDebugGUIElement() override;
+
+        virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
+        virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override;
     protected:
         // カメラ位置
         glm::vec3 m_cameraPos;
@@ -43,4 +52,6 @@ namespace MyosotisFW::System::Render::Camera
         // アスペクト比
         float m_aspectRadio;
     };
+    TYPEDEF_SHARED_PTR(CameraBase)
+    OBJECT_CAST_FUNCTION(CameraBase)
 }

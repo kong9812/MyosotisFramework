@@ -3,6 +3,7 @@
 #include <array>
 #include <vulkan/vulkan.h>
 
+#include "objectCast.h"
 #include "objectBase.h"
 #include "classPointer.h"
 #include "vkStruct.h"
@@ -21,7 +22,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh() : ObjectBase(ObjectType::StaticMesh) {};
+		StaticMesh();
 		~StaticMesh();
 
 		typedef enum {
@@ -33,18 +34,16 @@ namespace MyosotisFW::System::Render
 		} LOD;
 
 		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
-		virtual void Update(const Camera::CameraBase& camera);
+		virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera);
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};
 		virtual void BindDebugGUIElement() override {};
 
+		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
+		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override { __super::Deserialize(doc, createObject); }
 	protected:
 		virtual void loadAssets() {};
 		virtual void prepareUniformBuffers();
 		virtual void prepareShaderStorageBuffers() {};
-
-		// info
-		glm::vec3 m_pos;
-		glm::vec3 m_scale;
 
 		// todo. descriptorsManagerに移す
 		// todo. descriptorsはfactoryで作るのがいいかも
@@ -92,4 +91,5 @@ namespace MyosotisFW::System::Render
 		Utility::Vulkan::Struct::Buffer m_uboBuffer;
 	};
 	TYPEDEF_SHARED_PTR(StaticMesh)
+	OBJECT_CAST_FUNCTION(StaticMesh)
 }

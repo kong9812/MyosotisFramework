@@ -6,6 +6,11 @@
 
 namespace MyosotisFW::System::Render
 {
+	PrimitiveGeometry::PrimitiveGeometry() : StaticMesh()
+	{
+		m_name = "プリミティブジオメトリ";
+	}
+
 	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
 	{
 		__super::PrepareForRender(device, resources, renderPass, pipelineCache);
@@ -16,28 +21,32 @@ namespace MyosotisFW::System::Render
 		prepareShaderStorageBuffers();
 		prepareDescriptors();
 		prepareRenderPipeline();
-		m_scale = glm::vec3(5.0f);
+		m_transfrom.scale = glm::vec3(5.0f);
 
 		// todo.検証処理
-		m_readyForRender = true;
+		m_isReady = true;
 	}
 
-	void PrimitiveGeometry::Update(const Camera::CameraBase& camera)
+	void PrimitiveGeometry::Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera)
 	{
-		if (!m_readyForRender) return;
+		__super::Update(updateData, camera);
 
-		__super::Update(camera);
+		if (camera)
+		{
+			m_ubo.projection = camera->GetProjectionMatrix();
+			m_ubo.view = camera->GetViewMatrix();
+			m_ubo.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
+		}
+		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
+		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_transfrom.scale));
 
-		m_ubo.projection = camera.GetProjectionMatrix();
-		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_pos));
-		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_scale));
-		m_ubo.view = camera.GetViewMatrix();
+		if (!m_isReady) return;
 		memcpy(m_uboBuffer.allocationInfo.pMappedData, &m_ubo, sizeof(m_ubo));
 	}
 
 	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer)
 	{
-		if ((m_currentLOD == LOD::Hide) || (!m_readyForRender)) return;
+		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
 
 		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);

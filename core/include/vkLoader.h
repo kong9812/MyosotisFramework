@@ -9,8 +9,7 @@
 #include "logger.h"
 #include "vkValidation.h"
 
-namespace Utility::Vulkan::Loader
-{
+namespace Utility::Vulkan::Loader {
 	inline VkShaderModule loadShader(VkDevice device, std::string fileName, const VkAllocationCallbacks* pAllocator = nullptr)
 	{
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -35,7 +34,7 @@ namespace Utility::Vulkan::Loader
 		return shaderModule;
 	}
 
-	/*inline rapidjson::Document loadGameStageFile(std::string fileName)
+	inline rapidjson::Document loadGameStageFile(std::string fileName)
 	{
 		std::ifstream file(MyosotisFW::AppInfo::g_GameStageFolder + fileName);
 		ASSERT(file.is_open(), "Failed to open shader file: " + std::string(MyosotisFW::AppInfo::g_GameStageFolder) + fileName);
@@ -44,5 +43,15 @@ namespace Utility::Vulkan::Loader
 		doc.ParseStream(istream);
 		file.close();
 		return doc;
-	}*/
+	}
+	inline void saveGameStageFile(std::string fileName, rapidjson::Document& doc)
+	{
+		rapidjson::StringBuffer buffer{};
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		doc.Accept(writer);
+		std::ofstream file(MyosotisFW::AppInfo::g_GameStageFolder + fileName, std::ios::trunc);
+		ASSERT(file.is_open(), "Failed to open shader file: " + std::string(MyosotisFW::AppInfo::g_GameStageFolder) + fileName);
+		file << buffer.GetString();
+		file.close();
+	}
 }

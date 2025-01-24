@@ -62,31 +62,39 @@ namespace MyosotisFW::System::Render
         m_deltaTime = updateData.deltaTime;
     }
 
-    void DebugGUI::BuildCommandBuffer(VkCommandBuffer& commandBuffer) const
+    void DebugGUI::BeginDebugCommandBuffer()
     {
 #ifndef RELEASE
         ImGuiIO& io = ImGui::GetIO();
         ImGui_ImplGlfw_NewFrame();
         ImGui_ImplVulkan_NewFrame();
         ImGui::NewFrame();
+#endif // !RELEASE
+    }
 
+    void DebugGUI::BindDebugGUIElement() const
+    {
+#ifndef RELEASE
         ImGui::ShowDemoWindow();
         ImGui::SetNextWindowPos({ 0.0f,0.0f });
         ImGui::Begin("solution configuration",
             (bool*)true,
             ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar|
+            ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar |
             ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
 #ifdef DEBUG
         ImGui::Text("Model: Debug");
 #elif FWDLL
         ImGui::Text("Model: DLL\nF5: Hot reload");
 #endif
-        std::stringstream ss{};
-        ss << "FPS: " << (1.0f / m_deltaTime) << "(" << m_deltaTime * 1000.0f << " ms)";
-        ImGui::Text(ss.str().c_str());
+        ImGui::Text("FPS: %.2f(%.2fms)", (1.0f / m_deltaTime), m_deltaTime * 1000.0f);
         ImGui::End();
+#endif // !RELEASE
+    }
 
+    void DebugGUI::EndDebugCommandBuffer(VkCommandBuffer& commandBuffer)
+    {
+#ifndef RELEASE
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 #endif // !RELEASE

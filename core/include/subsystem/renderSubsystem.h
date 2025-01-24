@@ -28,6 +28,8 @@ namespace MyosotisFW::System::Render
 		void Render();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
+		std::vector<ObjectBase_ptr> GetObjects() { return m_objects; }
+
 	private:
 		struct {
 			VkSemaphore presentComplete;
@@ -40,7 +42,7 @@ namespace MyosotisFW::System::Render
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
 		DebugGUI_ptr m_debugGUI;
-		Camera::FPSCamera_ptr m_fpsCamera;
+		Camera::CameraBase_ptr m_mainCamera;
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
@@ -68,6 +70,21 @@ namespace MyosotisFW::System::Render
 		void prepareCommandBuffers();
 		void prepareFences();
 		void buildCommandBuffer(uint32_t bufferIndex);
+		void bindDebugGUIElement();
+
+	// callback
+	private:
+		using OnPressedSaveGameStageCallback = std::function<void()>;
+		OnPressedSaveGameStageCallback m_onPressedSaveGameStageCallback;
+		using OnPressedLoadGameStageCallback = std::function<void()>;
+		OnPressedLoadGameStageCallback m_onPressedLoadGameStageCallback;
+		using OnPressedCreateObjectCallback = std::function<void(ObjectType, glm::vec3)>;
+		OnPressedCreateObjectCallback m_onPressedCreateObjectCallback;
+;	public:
+	void SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback);
+	void SetOnPressedLoadGameStageCallback(OnPressedLoadGameStageCallback callback);
+	void SetOnPressedCreateObjectCallback(OnPressedCreateObjectCallback callback);
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderSubsystem)
 }

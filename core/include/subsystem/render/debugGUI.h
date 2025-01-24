@@ -24,7 +24,9 @@ namespace MyosotisFW::System::Render
 
 		void Update(Utility::Vulkan::Struct::UpdateData updateData);
 
-		void BuildCommandBuffer(VkCommandBuffer& commandBuffer) const;
+		void BeginDebugCommandBuffer();
+		void BindDebugGUIElement() const;
+		void EndDebugCommandBuffer(VkCommandBuffer& commandBuffer);
 
 	private:
 		float m_deltaTime;	// fpsカウンター

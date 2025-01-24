@@ -47,6 +47,9 @@ namespace MyosotisFW::System
 		static void ResizedCallback(GLFWwindow* window, int width, int height);
 		static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+
+		// renderSubsystem callback
+		void SaveGameStage();
 	};
 	TYPEDEF_SHARED_PTR_ARGS(SystemManager)
 }

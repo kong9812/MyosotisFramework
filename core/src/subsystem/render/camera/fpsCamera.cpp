@@ -8,6 +8,7 @@ namespace MyosotisFW::System::Render::Camera
 	FPSCamera::FPSCamera() : CameraBase()
 	{
 		m_lastMousePos = glm::vec3(0.0f);
+		m_name = "FPSカメラ";
 	}
 
 	glm::mat4 FPSCamera::GetViewMatrix() const
@@ -22,6 +23,15 @@ namespace MyosotisFW::System::Render::Camera
 
 	void FPSCamera::Update(const Utility::Vulkan::Struct::UpdateData& updateData)
 	{
+		if (updateData.pause) return;
+
+		if (!m_isReady)
+		{
+			// 最初の位置をリセット
+			m_lastMousePos = updateData.mousePos;
+			m_isReady = true;
+		}
+
 		glm::vec2 mouseMovement{};
 		mouseMovement.x = m_lastMousePos.x - updateData.mousePos.x;
 		mouseMovement.y = updateData.mousePos.y - m_lastMousePos.y;
@@ -122,6 +132,6 @@ namespace MyosotisFW::System::Render::Camera
 
 	void FPSCamera::BindDebugGUIElement()
 	{
-
+		__super::BindDebugGUIElement();
 	}
 }

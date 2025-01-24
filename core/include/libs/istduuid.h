@@ -2,7 +2,7 @@
 #pragma once
 #include <uuid.h>
 
-inline std::string hashMaker()
+inline uuids::uuid hashMaker()
 {
 	std::random_device rd;
 	auto seed_data = std::array<int, 6> {};
@@ -11,5 +11,5 @@ inline std::string hashMaker()
 	std::ranlux48_base generator(seq);
 	uuids::basic_uuid_random_generator<std::ranlux48_base> gen(&generator);
 	uuids::uuid const id = gen();
-	return uuids::to_string(id);
+	return id;
 }

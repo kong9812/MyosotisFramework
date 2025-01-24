@@ -109,6 +109,14 @@ namespace MyosotisFW::System
 
 		// m_gameDirector
 		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
+		m_renderSubsystem->SetOnPressedSaveGameStageCallback([=]() {m_gameDirector->SaveGameStageFile("TEST.gs", m_renderSubsystem->GetObjects()); });
+		m_renderSubsystem->SetOnPressedLoadGameStageCallback([=]() {m_gameDirector->LoadGameStageFile("TEST.gs"); });
+		m_renderSubsystem->SetOnPressedCreateObjectCallback([=](ObjectType objType, glm::vec3 pos)
+			{
+				ObjectBase_ptr newObject = m_gameDirector->CreateObject(objType);
+				newObject->SetPos(pos);
+				m_renderSubsystem->ResistObject(newObject);
+			});
 
 		m_pause = false;
 

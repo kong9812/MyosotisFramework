@@ -143,14 +143,14 @@ target_sources(${PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 
 # RapidJSON
-# FetchContent_Declare(
-#   RapidJSON
-#   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-#   GIT_TAG v1.1.0
-# )
-# FetchContent_GetProperties(RapidJSON)
-# target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
-# target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+FetchContent_Declare(
+  RapidJSON
+  GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+  GIT_TAG v1.1.0
+)
+FetchContent_GetProperties(RapidJSON)
+target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
 
 # stduuid
 FetchContent_Declare(

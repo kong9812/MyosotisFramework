@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Render
 	RenderSubsystem::RenderSubsystem(GLFWwindow& glfwWindow, VkInstance& instance, VkSurfaceKHR& surface)
 	{
 		m_instance = instance;
+		m_onPressedSaveGameStageCallback = nullptr;
 
 		// RenderDevice
 		m_device = CreateRenderDevicePointer(m_instance);
@@ -61,11 +62,6 @@ namespace MyosotisFW::System::Render
 #ifndef RELEASE
 		m_debugGUI = CreateDebugGUIPointer(glfwWindow, m_instance, m_device, m_queue, m_renderPass, m_swapchain, m_pipelineCache);
 #endif
-		// camera
-		m_fpsCamera = Camera::CreateFPSCameraPointer();
-		double x{}, y{};
-		glfwGetCursorPos(&glfwWindow, &x, &y);
-		m_fpsCamera->ResetMousePos(glm::vec2(static_cast<float>(x), static_cast<float>(y)));
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -90,14 +86,30 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::ResetMousePos(glm::vec2 mousePos)
 	{
-		m_fpsCamera->ResetMousePos(mousePos);
+		if (!m_mainCamera) return;
+
+		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
 	void RenderSubsystem::ResistObject(ObjectBase_ptr& object)
 	{
-		if (object->GetObjectType() == ObjectType::StaticMesh)
+		switch (object->GetObjectType())
 		{
-			std::dynamic_pointer_cast<StaticMesh>(object)->PrepareForRender(m_device, m_resources, m_renderPass, m_pipelineCache);
+		case ObjectType::Camera:
+		{
+			if (!m_mainCamera)
+			{
+				m_mainCamera = Camera::Object_CastToCameraBase(object);
+			}
+		}
+		break;
+		case ObjectType::StaticMesh:
+		{
+			Object_CastToStaticMesh(object)->PrepareForRender(m_device, m_resources, m_renderPass, m_pipelineCache);
+		}
+		break;
+		default:
+			break;
 		}
 		m_objects.push_back(object);
 	}
@@ -105,21 +117,24 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Update(Utility::Vulkan::Struct::UpdateData updateData)
 	{
 #ifndef RELEASE
-		ImGuiIO& io = ImGui::GetIO();
-		io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
+		//if (updateData.pause)
+		//{
+		//	ImGuiIO& io = ImGui::GetIO();
+		//	io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
+		//}
 		m_debugGUI->Update(updateData);
 #endif // !RELEASE
 
-		// ポーズ中に更新したい物上に追加
-		if (updateData.pause) return;
-
-		m_fpsCamera->Update(updateData);
+		if (m_mainCamera)
+		{
+			Object_Cast<Camera::FPSCamera>(m_mainCamera)->Update(updateData);
+		}
 
 		for (ObjectBase_ptr& object : m_objects)
 		{
 			if (object->GetObjectType() == ObjectType::StaticMesh)
 			{
-				std::dynamic_pointer_cast<StaticMesh>(object)->Update(*m_fpsCamera);
+				Object_CastToStaticMesh(object)->Update(updateData, m_mainCamera);
 			}
 		}
 	}
@@ -167,6 +182,11 @@ namespace MyosotisFW::System::Render
 			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 		prepareFences();
+
+		if (m_mainCamera)
+		{
+			m_mainCamera->SetAspectRadio(static_cast<float>(width / height));
+		}
 
 		vkDeviceWaitIdle(*m_device);
 	}
@@ -274,20 +294,100 @@ namespace MyosotisFW::System::Render
 		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 		vkCmdSetScissor(m_commandBuffers[bufferIndex], 0, 1, &scissor);
 
+#ifndef RELEASE
+		m_debugGUI->BeginDebugCommandBuffer();
+#endif // !RELEASE
+
 		// bind here
 		for (ObjectBase_ptr& object : m_objects)
 		{
 			if (object->GetObjectType() == ObjectType::StaticMesh)
 			{
-				std::dynamic_pointer_cast<StaticMesh>(object)->BindCommandBuffer(m_commandBuffers[bufferIndex]);
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				staticMesh->BindCommandBuffer(m_commandBuffers[bufferIndex]);
 			}
+#ifndef RELEASE
+			object->BindDebugGUIElement();
+#endif // !RELEASE
 		}
 #ifndef RELEASE
-		m_debugGUI->BuildCommandBuffer(m_commandBuffers[bufferIndex]);
+		m_debugGUI->BindDebugGUIElement();
+		bindDebugGUIElement();
+		m_debugGUI->EndDebugCommandBuffer(m_commandBuffers[bufferIndex]);
 #endif // !RELEASE
 
 		vkCmdEndRenderPass(m_commandBuffers[bufferIndex]);
 
 		VK_VALIDATION(vkEndCommandBuffer(m_commandBuffers[bufferIndex]));
+	}
+
+	void RenderSubsystem::bindDebugGUIElement()
+	{
+#ifndef RELEASE
+		ImGui::Begin("Game Stage",
+			(bool*)true,
+			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
+			ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar);
+
+		ImGui::Text("name: todo.");
+		ImGui::Text("data: todo.");
+		ImGui::Text("data: todo.");
+		ImGui::Text("data: todo.");
+
+		if (ImGui::Button("Save Game Stage!"))
+		{
+			if (m_onPressedSaveGameStageCallback)
+			{
+				m_onPressedSaveGameStageCallback();
+			}
+		}
+		if (ImGui::Button("Load Game Stage!"))
+		{
+			// todo. 無駄なデータがないように、とりあえずできない
+			if (m_objects.size() > 0) return;
+
+			if (m_onPressedLoadGameStageCallback)
+			{
+				m_onPressedLoadGameStageCallback();
+			}
+		}
+		if (ImGui::Button("Create Camera!"))
+		{
+			if ((!m_mainCamera) && (m_onPressedCreateObjectCallback))
+			{
+				m_onPressedCreateObjectCallback(ObjectType::Camera, glm::vec3(0.0f));
+			}
+		}
+		if (ImGui::Button("Create Cube!"))
+		{
+			if (m_onPressedCreateObjectCallback)
+			{
+				if (m_mainCamera)
+				{
+					// todo. もっと自由に/ 調整 (前*10.0f)
+					m_onPressedCreateObjectCallback(ObjectType::StaticMesh, m_mainCamera->GetFrontPos(10.0f));
+				}
+				else
+				{
+					m_onPressedCreateObjectCallback(ObjectType::StaticMesh, glm::vec3(0.0f));
+				}
+			}
+		}
+
+		ImGui::End();
+#endif // !RELEASE
+	}
+
+	void RenderSubsystem::SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback)
+	{
+		m_onPressedSaveGameStageCallback = callback;
+	}
+	void RenderSubsystem::SetOnPressedLoadGameStageCallback(OnPressedLoadGameStageCallback callback)
+	{
+		m_onPressedLoadGameStageCallback = callback;
+	}
+	void RenderSubsystem::SetOnPressedCreateObjectCallback(OnPressedCreateObjectCallback callback)
+	{
+		m_onPressedCreateObjectCallback = callback;
 	}
 }

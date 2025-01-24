@@ -466,11 +466,11 @@ namespace Utility::Vulkan::CreateInfo
 	{
 		VkPipelineColorBlendAttachmentState as{};
 		as.blendEnable = blendEnable;										// ブレンディングの有効化
-		as.srcColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ソースカラーのブレンド係数
-		as.dstColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// デスティネーションカラーのブレンド係数
+		as.srcColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;		// ソースカラーのブレンド係数
+		as.dstColorBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;		// デスティネーションカラーのブレンド係数
 		as.colorBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// カラーブレンドの演算方法
-		as.srcAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// ソースアルファのブレンド係数
-		as.dstAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ZERO;		// デスティネーションアルファのブレンド係数
+		as.srcAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;		// ソースアルファのブレンド係数
+		as.dstAlphaBlendFactor = VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;		// デスティネーションアルファのブレンド係数
 		as.alphaBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// アルファブレンドの演算方法
 		as.colorWriteMask = colorComponentFlags;							// 書き込むカラーチャンネル
 		return as;

@@ -20,4 +20,13 @@ namespace MyosotisFW
 		{ ObjectType::StaticMesh,			uuids::uuid::from_string("7f3512b5-4cc9-4caa-a8a9-76d05723e415") },
 		{ ObjectType::Max,					uuids::uuid::from_string("") },
 	};
+
+	inline ObjectType findObjectTypeFromTypeID(uuids::uuid typeID)
+	{
+		auto it = std::find_if(g_objectTypeUUID.begin(), g_objectTypeUUID.end(), [&](const std::pair<ObjectType, std::optional<uuids::uuid>>& element)
+			{
+				return element.second == typeID;
+			});
+		return it == g_objectTypeUUID.end() ? ObjectType::Undefined : it->first;
+	}
 }

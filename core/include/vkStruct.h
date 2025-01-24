@@ -49,5 +49,6 @@ namespace Utility::Vulkan::Struct
 		glm::mat4 view;
 		glm::mat4 projection;
 		glm::vec4 color;
+		glm::vec4 cameraPos;
 	}StaticMeshStandardUBO;
 }
