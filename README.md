@@ -1,14 +1,20 @@
 # MyosotisFramework
 A framework created with Vulkan
 
+---
+
 ## Clone Command
 Use the following command to clone the repository.  
 ```git clone --recursive https://github.com/kong9812/MyosotisFramework.git```
+
+---
 
 ## Requirements
 - **[cmake](https://cmake.org)**
 - **[Git](https://git-scm.com)**
 - vswhere
+
+---
 
 ## Environment Setup (Windows)
 To set up the environment, use the provided batch file `envSetup.bat`.  
@@ -20,6 +26,8 @@ This file will:
 ## Build the Solution
 Once the environment setup is complete, you can use the following batch file to create the solution file:  
 `cmakeBuild.bat`
+
+---
 
 ## Features
 - **Hot Reload Support**  
@@ -38,6 +46,8 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Pause Functionality (In Progress)**  
   Press the `F2 key` to pause the update process.
+
+---
 
 ## Credits and Attributions
 See [THANKS.md](THANKS.md) for additional credits and attributions.
