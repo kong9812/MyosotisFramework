@@ -4,6 +4,15 @@ A framework created with Vulkan
 > This software is still under development and contains many unimplemented or partially implemented features.  
 > Please be cautious when using it.  
 > **Feel free to modify it as you wish.**
+
+## Build status
+| [Windows - Build status][win-link] |
+| :--------------------------------: |
+|           ![win-badge]             |
+
+[win-badge]: https://ci.appveyor.com/api/projects/status/6tr51vx4415hflfo/branch/main?svg=true "AppVeyor build status"
+[win-link]:  https://ci.appveyor.com/project/kong9812/myosotisframework/branch/main "AppVeyor build status"
+
 ---
 
 ## Clone Command
