@@ -19,6 +19,6 @@ void main()
     gl_Position = ubo.projection * ubo.view * worldPosition;
     vec4 color = inColor;
     float dist = distance(ubo.cameraPos.xyz, worldPosition.xyz);
-    color.a = 1.0 - smoothstep(20.0, 30.0, dist);
+    color.a = 1.0 - smoothstep(20.0, 50.0, dist);
     outColor = color;
 }
