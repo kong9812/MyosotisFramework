@@ -6,9 +6,10 @@
 
 namespace MyosotisFW::System::Render
 {
-	PrimitiveGeometry::PrimitiveGeometry(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache) :
-		StaticMesh(device, resources, renderPass, pipelineCache)
+	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
 	{
+		__super::PrepareForRender(device, resources, renderPass, pipelineCache);
+
 		// プリミティブジオメトリの作成
 		loadAssets();
 		prepareUniformBuffers();
@@ -16,10 +17,15 @@ namespace MyosotisFW::System::Render
 		prepareDescriptors();
 		prepareRenderPipeline();
 		m_scale = glm::vec3(5.0f);
+
+		// todo.検証処理
+		m_readyForRender = true;
 	}
 
 	void PrimitiveGeometry::Update(const Camera::CameraBase& camera)
 	{
+		if (!m_readyForRender) return;
+
 		__super::Update(camera);
 
 		m_ubo.projection = camera.GetProjectionMatrix();
@@ -31,7 +37,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer)
 	{
-		if (m_currentLOD == LOD::Hide) return;
+		if ((m_currentLOD == LOD::Hide) || (!m_readyForRender)) return;
 
 		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);

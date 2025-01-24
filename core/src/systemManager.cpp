@@ -103,8 +103,12 @@ namespace MyosotisFW::System
 		// GLFW サーフェース作成
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 
+
 		// m_renderSubsystem
 		m_renderSubsystem = Render::CreateRenderSubsystemPointer(*window, m_instance, m_surface);
+
+		// m_gameDirector
+		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
 
 		m_pause = false;
 
@@ -115,6 +119,7 @@ namespace MyosotisFW::System
 
 	SystemManager::~SystemManager()
 	{
+		m_gameDirector.reset();
 		m_renderSubsystem.reset();
 
 		if (m_vkDestroyDebugReportCallbackEXT)

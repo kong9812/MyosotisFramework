@@ -70,23 +70,23 @@ FetchContent_MakeAvailable(glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glfw)
 
-# GLM (v1.0.1にしたいが、cmakelistの記述に問題があるため、最新を取る)
+# GLM
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG        master
+    GIT_TAG        1.0.1
 )
 FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
 
-# ofbx
-FetchContent_Declare(
-    ofbx
-    GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
-    GIT_TAG master
-)
-FetchContent_MakeAvailable(ofbx)
+## ofbx
+#FetchContent_Declare(
+#    ofbx
+#    GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
+#    GIT_TAG master
+#)
+#FetchContent_MakeAvailable(ofbx)
 
 # imgui
 FetchContent_Declare(
@@ -128,8 +128,8 @@ FetchContent_Declare(
   GIT_TAG v3.2.0
 )
 FetchContent_MakeAvailable(vma)
-target_include_directories(${PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/vma-src/include/)
-target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/vma-src/include/)
+target_include_directories(${PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 set(VMA_SOURCES
   ${FETCHCONTENT_BASE_DIR}/vma-src/include/vk_mem_alloc.h
   ${FETCHCONTENT_BASE_DIR}/vma-src/src/Common.h
@@ -141,6 +141,28 @@ set(VMA_SOURCES
 source_group("external/vma" FILES ${VMA_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+
+# RapidJSON
+# FetchContent_Declare(
+#   RapidJSON
+#   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+#   GIT_TAG v1.1.0
+# )
+# FetchContent_GetProperties(RapidJSON)
+# target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+# target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+
+# stduuid
+FetchContent_Declare(
+    stduuid
+    GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
+    GIT_TAG v1.2.3
+)
+FetchContent_MakeAvailable(stduuid)
+target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
 
 # Vulkan
 find_package(Vulkan REQUIRED)

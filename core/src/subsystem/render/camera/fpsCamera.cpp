@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "fpsCamera.h"
-#include "glfw.h"
+#include "iglfw.h"
 #include "appInfo.h"
 
 namespace MyosotisFW::System::Render::Camera

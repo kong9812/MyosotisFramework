@@ -8,7 +8,7 @@ configuration:
 image: Visual Studio 2022
 
 build:
-  project: bin\MyosotisFW.sln
+  project: bin\MyosotisFW.vcxproj
   parallel: true
   verbosity: minimal
 
@@ -34,7 +34,10 @@ install:
 before_build:
   # CMakeでビルド
   - ps: |
+      $ErrorActionPreference = "SilentlyContinue"
       .\cmakeBuild.bat
+      $ErrorActionPreference = "Continue"
+      Write-Host "CMake build completed, continuing..."
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）

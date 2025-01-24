@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #define DLL_EXPORTS
 #include "application.h"
 

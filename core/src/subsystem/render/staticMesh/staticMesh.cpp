@@ -2,15 +2,29 @@
 #include "staticMesh.h"
 #include <vector>
 
-#include "vma.h"
+#include "ivma.h"
 #include "appInfo.h"
 #include "vkCreateInfo.h"
 #include "vkValidation.h"
 
 namespace MyosotisFW::System::Render
 {
-	StaticMesh::StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache) :
-		ObjectBase()
+	StaticMesh::~StaticMesh()
+	{
+		for (int i = 0; i < m_vertexBuffer.size(); i++)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[i].buffer, m_vertexBuffer[i].allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[i].buffer, m_indexBuffer[i].allocation);
+		}
+
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_uboBuffer.buffer, m_uboBuffer.allocation);
+		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
+		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+	}
+
+	void StaticMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
 	{
 		m_descriptorPool = VK_NULL_HANDLE;
 		m_descriptorSet = VK_NULL_HANDLE;
@@ -28,21 +42,6 @@ namespace MyosotisFW::System::Render
 		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
 		m_pos = glm::vec3(0.0f);
 		m_scale = glm::vec3(1.0f);
-	}
-
-	StaticMesh::~StaticMesh()
-	{
-		for (int i = 0; i < m_vertexBuffer.size(); i++)
-		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[i].buffer, m_vertexBuffer[i].allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[i].buffer, m_indexBuffer[i].allocation);
-		}
-
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_uboBuffer.buffer, m_uboBuffer.allocation);
-		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
-		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 	}
 
 	void StaticMesh::Update(const Camera::CameraBase& camera)

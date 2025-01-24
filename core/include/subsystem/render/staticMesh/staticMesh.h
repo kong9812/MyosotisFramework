@@ -21,7 +21,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
+		StaticMesh() : ObjectBase(ObjectType::StaticMesh) {};
 		~StaticMesh();
 
 		typedef enum {
@@ -32,6 +32,7 @@ namespace MyosotisFW::System::Render
 			Max
 		} LOD;
 
+		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		virtual void Update(const Camera::CameraBase& camera);
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};
 		virtual void BindDebugGUIElement() override {};
@@ -90,5 +91,5 @@ namespace MyosotisFW::System::Render
 		Utility::Vulkan::Struct::StaticMeshStandardUBO m_ubo;
 		Utility::Vulkan::Struct::Buffer m_uboBuffer;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(StaticMesh)
+	TYPEDEF_SHARED_PTR(StaticMesh)
 }

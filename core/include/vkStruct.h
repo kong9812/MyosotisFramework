@@ -1,10 +1,10 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 #include <unordered_map>
 #include <vector>
-#include "vma.h"
+#include "ivma.h"
+#include "iglm.h"
 
 namespace Utility::Vulkan::Struct
 {

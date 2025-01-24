@@ -4,7 +4,7 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-    CameraBase::CameraBase()
+    CameraBase::CameraBase() :ObjectBase(ObjectType::Camera)
 	{
         // カメラ位置
         m_cameraPos = AppInfo::g_cameraPos;

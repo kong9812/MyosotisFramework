@@ -7,9 +7,10 @@ namespace MyosotisFW::System::Render
 	class PrimitiveGeometry : public StaticMesh
 	{
 	public:
-		PrimitiveGeometry(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
+		PrimitiveGeometry() : StaticMesh() {};
 		~PrimitiveGeometry() {};
 
+		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		void Update(const Camera::CameraBase& camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
 		void BindDebugGUIElement() override {};
@@ -23,5 +24,5 @@ namespace MyosotisFW::System::Render
 		void prepareRenderPipeline() override;
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(PrimitiveGeometry)
+	TYPEDEF_SHARED_PTR(PrimitiveGeometry)
 }

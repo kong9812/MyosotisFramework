@@ -2,8 +2,9 @@
 #pragma once
 #include "classPointer.h"
 
-#include "libs/glfw.h"
-#include "subsystem/renderSubsystem.h"
+#include "iglfw.h"
+#include "renderSubsystem.h"
+#include "gameDirector.h"
 
 namespace MyosotisFW::System
 {
@@ -25,6 +26,7 @@ namespace MyosotisFW::System
 
 	private:
 		Render::RenderSubsystem_ptr m_renderSubsystem;
+		GameDirector::GameDirector_ptr m_gameDirector;
 		
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;

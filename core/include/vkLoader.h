@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 
+#include "iRapidJson.h"
 #include "appInfo.h"
 #include "logger.h"
 #include "vkValidation.h"
@@ -33,4 +34,15 @@ namespace Utility::Vulkan::Loader
 		VK_VALIDATION(vkCreateShaderModule(device, &shaderModuleCreateInfo, pAllocator, &shaderModule));
 		return shaderModule;
 	}
+
+	/*inline rapidjson::Document loadGameStageFile(std::string fileName)
+	{
+		std::ifstream file(MyosotisFW::AppInfo::g_GameStageFolder + fileName);
+		ASSERT(file.is_open(), "Failed to open shader file: " + std::string(MyosotisFW::AppInfo::g_GameStageFolder) + fileName);
+		rapidjson::IStreamWrapper istream(file);
+		rapidjson::Document doc{};
+		doc.ParseStream(istream);
+		file.close();
+		return doc;
+	}*/
 }

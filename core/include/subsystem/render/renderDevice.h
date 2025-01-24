@@ -6,7 +6,7 @@
 #include "classPointer.h"
 #include "vkStruct.h"
 #include "vkValidation.h"
-#include "vma.h"
+#include "ivma.h"
 
 namespace MyosotisFW::System::Render
 {

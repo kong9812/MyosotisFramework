@@ -1,8 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vector>
-#include <glm/glm.hpp>
 
+#include "iglm.h"
 #include "vkStruct.h"
 
 namespace MyosotisFW::System::Render::Shape

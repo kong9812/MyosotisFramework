@@ -61,8 +61,6 @@ namespace MyosotisFW::System::Render
 #ifndef RELEASE
 		m_debugGUI = CreateDebugGUIPointer(glfwWindow, m_instance, m_device, m_queue, m_renderPass, m_swapchain, m_pipelineCache);
 #endif
-		m_staticMeshes.push_back(CreatePrimitiveGeometryPointer(m_device, m_resources, m_renderPass, m_pipelineCache));
-
 		// camera
 		m_fpsCamera = Camera::CreateFPSCameraPointer();
 		double x{}, y{};
@@ -95,6 +93,15 @@ namespace MyosotisFW::System::Render
 		m_fpsCamera->ResetMousePos(mousePos);
 	}
 
+	void RenderSubsystem::ResistObject(ObjectBase_ptr& object)
+	{
+		if (object->GetObjectType() == ObjectType::StaticMesh)
+		{
+			std::dynamic_pointer_cast<StaticMesh>(object)->PrepareForRender(m_device, m_resources, m_renderPass, m_pipelineCache);
+		}
+		m_objects.push_back(object);
+	}
+
 	void RenderSubsystem::Update(Utility::Vulkan::Struct::UpdateData updateData)
 	{
 #ifndef RELEASE
@@ -108,9 +115,12 @@ namespace MyosotisFW::System::Render
 
 		m_fpsCamera->Update(updateData);
 
-		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
+		for (ObjectBase_ptr& object : m_objects)
 		{
-			staticMesh->Update(*m_fpsCamera);
+			if (object->GetObjectType() == ObjectType::StaticMesh)
+			{
+				std::dynamic_pointer_cast<StaticMesh>(object)->Update(*m_fpsCamera);
+			}
 		}
 	}
 
@@ -265,11 +275,13 @@ namespace MyosotisFW::System::Render
 		vkCmdSetScissor(m_commandBuffers[bufferIndex], 0, 1, &scissor);
 
 		// bind here
-		for (StaticMesh_ptr& staticMesh : m_staticMeshes)
+		for (ObjectBase_ptr& object : m_objects)
 		{
-			staticMesh->BindCommandBuffer(m_commandBuffers[bufferIndex]);
+			if (object->GetObjectType() == ObjectType::StaticMesh)
+			{
+				std::dynamic_pointer_cast<StaticMesh>(object)->BindCommandBuffer(m_commandBuffers[bufferIndex]);
+			}
 		}
-
 #ifndef RELEASE
 		m_debugGUI->BuildCommandBuffer(m_commandBuffers[bufferIndex]);
 #endif // !RELEASE

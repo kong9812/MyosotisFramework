@@ -2,7 +2,7 @@
 #pragma once
 #include "classPointer.h"
 
-#include "libs/glfw.h"
+#include "iglfw.h"
 #include "vkStruct.h"
 
 #include "renderDevice.h"
@@ -21,6 +21,8 @@ namespace MyosotisFW::System::Render
 		~RenderSubsystem();
 
 		void ResetMousePos(glm::vec2 mousePos);
+
+		void ResistObject(ObjectBase_ptr& object);
 
 		void Update(Utility::Vulkan::Struct::UpdateData updateData);
 		void Render();
@@ -58,7 +60,7 @@ namespace MyosotisFW::System::Render
 		VkRenderPass m_renderPass;
 		Utility::Vulkan::Struct::DeviceImage m_depthStencil;
 
-		std::vector<StaticMesh_ptr> m_staticMeshes;
+		std::vector<ObjectBase_ptr> m_objects;
 
 		void prepareDepthStencil();
 		void prepareRenderPass();
@@ -67,5 +69,5 @@ namespace MyosotisFW::System::Render
 		void prepareFences();
 		void buildCommandBuffer(uint32_t bufferIndex);
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(RenderSubsystem)
+	TYPEDEF_SHARED_PTR_ARGS(RenderSubsystem)
 }

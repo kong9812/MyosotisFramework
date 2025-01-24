@@ -1,5 +1,6 @@
+// Copyright (c) 2025 kong9812
 #pragma once
-#include "glfw.h"
+#include "iglfw.h"
 #include "applicationInterface.h"
 
 #ifdef DLL_EXPORTS

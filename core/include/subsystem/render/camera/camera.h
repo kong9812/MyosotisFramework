@@ -1,9 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
+#include "iglm.h"
 #include "objectBase.h"
 #include "classPointer.h"
 #include "vkStruct.h"
