@@ -23,6 +23,6 @@ For more details about the licenses, please refer to the respective library repo
 
 ## Additional Acknowledgments
 For understanding Vulkan and its concepts, the following sample repository was an invaluable resource:  
-- [Sascha Willems Vulkan Samples](https://github.com/SaschaWillems/Vulkan?tab=readme-ov-file#credits-and-attributions)  
+- [Sascha Willems Vulkan Samples](https://github.com/SaschaWillems/Vulkan)  
 
 Thank you to Sascha Willems for providing such a comprehensive and detailed set of Vulkan examples.
