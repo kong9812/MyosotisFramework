@@ -34,11 +34,7 @@ install:
 before_build:
   # CMakeでビルド
   - ps: |
-      try {
-        .\cmakeBuild.bat
-      } catch {
-        Write-Host "Error occurred in cmakeBuild.bat, but continuing..."
-      }
+      .\cmakeBuild.bat
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）
