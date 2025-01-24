@@ -38,3 +38,6 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Pause Functionality (In Progress)**  
   Press the `F2 key` to pause the update process.
+
+## Credits and Attributions
+See [THANKS.md](THANKS.md) for additional credits and attributions.
