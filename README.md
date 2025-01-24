@@ -33,6 +33,22 @@ This file will:
 Once the environment setup is complete, you can use the following batch file to create the solution file:  
 `cmakeBuild.bat`
 
+> [!NOTE]
+> <details>
+>   <summary>Build Instructions (in my environment)</summary>
+> 
+>   To build the project in my environment, follow these steps:
+> 
+>   1. Run `envSetup.bat` to set up the environment.
+>   2. Run `cmakeBuild.bat` to configure the project with CMake.
+>   3. Run `buildAllShaders.bat` to build all the shaders.
+>   4. Open the solution by double-clicking `bin/MyosotisFW.sln` (Visual Studio 2022).
+>   5. In Solution Explorer, set `MyosotisFW` as the startup project.
+>   6. Choose the solution configuration (Debug/FWDLL/Release) and build & run the project.
+> 
+>   These steps are just what works for me. If you have any issues, feel free to reach out!
+> </details>
+
 ---
 
 ## Features
