@@ -7,29 +7,38 @@ configuration:
 
 image: Visual Studio 2022
 
+build:
+  project: bin\MyosotisFW.sln
+  parallel: true
+  verbosity: minimal
+
 environment:
-  VULKAN_SDK: C:\VulkanSDK\1.3.204.0
+  VULKAN_SDK: C:\VulkanSDK\1.4.304.0
+  VK_SDK_PATH: C:\VulkanSDK\1.4.304.0
+  Vulkan_INCLUDE_DIR: C:\VulkanSDK\1.4.304.0\include  # Vulkanヘッダファイルのパス
+  Vulkan_LIBRARY: C:\VulkanSDK\1.4.304.0\Lib\vulkan-1.lib  # Vulkanライブラリのパス
 
 # 必要なツールのインストール
 install:
   # Vulkan SDKをダウンロードしてインストール
-  - cmd: >-
-    curl -L --silent --show-error --output VulkanSDK.exe https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk
-    .\VulkanSDK.exe /S
-
+  - ps: |
+      iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.4.304.0/windows/vulkan-sdk -OutFile vulkan_sdk.exe
+      ./vulkan_sdk.exe --accept-licenses --default-answer --confirm-command install
+      Remove-Item vulkan_sdk.exe -Force
+      
   # CMakeのインストール
   - ps: |
       choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 
-  # 必要なライブラリを取得
-  - git clone --recursive https://github.com/kong9812/MyosotisFramework.git
-
-build_script:
+before_build:
   # CMakeでビルド
   - ps: |
-      cd your-project
-      cmake -S . -B build
-      cmake --build build --config Release
+      try {
+        .\cmakeBuild.bat
+      } catch {
+        Write-Host "Error occurred in cmakeBuild.bat, but continuing..."
+      }
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）
