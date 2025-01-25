@@ -32,7 +32,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ai;
 	}
 
-	inline VkInstanceCreateInfo instanceCreateInfo(VkApplicationInfo applicationInfo, const std::vector<const char*>& enabledExtensionNames, const std::vector<const char*>& enabledLayerNames)
+	inline VkInstanceCreateInfo instanceCreateInfo(VkApplicationInfo& applicationInfo, const std::vector<const char*>& enabledExtensionNames, const std::vector<const char*>& enabledLayerNames)
 	{
 		VkInstanceCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

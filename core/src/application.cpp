@@ -3,6 +3,10 @@
 #include "application.h"
 
 #include <crtdbg.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <memory>
 #include "systemManager.h"
 #include "logger.h"
@@ -27,6 +31,17 @@ Application::Application(bool allowHotReload)
         MyosotisFW::AppInfo::g_windowHeight,
         MyosotisFW::AppInfo::g_applicationName,
         nullptr, nullptr);
+
+    int width, height, channels;
+    unsigned char* data = stbi_load(MyosotisFW::AppInfo::g_applicationIcon, &width, &height, &channels, 0);
+    if (data) {
+        GLFWimage icons[1];
+        icons[0].pixels = data;
+        icons[0].width = width;
+        icons[0].height = height;
+        glfwSetWindowIcon(m_glfwWindow, 1, icons);
+        stbi_image_free(data);
+    }
 
     // 画面中央
     int monitorCount{};

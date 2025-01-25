@@ -66,11 +66,7 @@ namespace MyosotisFW::System
 		glfwPollEvents();
 
 		// applicationInfo
-		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(
-			AppInfo::g_applicationName,
-			AppInfo::g_engineName,
-			AppInfo::g_apiVersion,
-			AppInfo::g_engineVersion);
+		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(AppInfo::g_applicationName, AppInfo::g_engineName, AppInfo::g_apiVersion, AppInfo::g_engineVersion);
 
 		// extension
 		std::vector<VkExtensionProperties> extensionProperties{};

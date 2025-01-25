@@ -23,6 +23,7 @@ namespace MyosotisFW::AppInfo
     constexpr char* g_engineName = "MyosotisFW";
     constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
     constexpr uint32_t g_engineVersion = VK_MAKE_VERSION(0, 0, 1);
+    constexpr char* g_applicationIcon = ".\\resources\\appInfo\\MyosotisFW.png";
 
     // 指定VkExtensionProperties
     const std::vector<const char*> g_vkInstanceExtensionProperties = {

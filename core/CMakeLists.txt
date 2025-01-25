@@ -105,31 +105,32 @@ FetchContent_Declare(
   GIT_TAG v1.91.7
 )
 FetchContent_MakeAvailable(imgui)
-target_include_directories(${PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
-target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${FETCHCONTENT_BASE_DIR}/imgui-src/)
+set(imgui_SOURCES_DIR "${FETCHCONTENT_BASE_DIR}/imgui-src")
 set(IMGUI_SOURCES
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui.cpp
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_draw.cpp
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_tables.cpp
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_widgets.cpp
+  ${imgui_SOURCES_DIR}/imgui.cpp
+  ${imgui_SOURCES_DIR}/imgui_draw.cpp
+  ${imgui_SOURCES_DIR}/imgui_tables.cpp
+  ${imgui_SOURCES_DIR}/imgui_widgets.cpp
   
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui_demo.cpp
+  ${imgui_SOURCES_DIR}/imgui_demo.cpp
 
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imconfig.h
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imgui.h
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_rectpack.h
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_textedit.h
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/imstb_truetype.h
+  ${imgui_SOURCES_DIR}/imconfig.h
+  ${imgui_SOURCES_DIR}/imgui.h
+  ${imgui_SOURCES_DIR}/imstb_rectpack.h
+  ${imgui_SOURCES_DIR}/imstb_textedit.h
+  ${imgui_SOURCES_DIR}/imstb_truetype.h
 
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_vulkan.cpp
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_glfw.cpp
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_vulkan.cpp
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.cpp
 
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_vulkan.h
-  ${FETCHCONTENT_BASE_DIR}/imgui-src/backends/imgui_impl_glfw.h
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_vulkan.h
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.h
 )
 source_group("external/imgui" FILES ${IMGUI_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
 
 # VMA(VulkanMemoryAllocator)
 FetchContent_Declare(
@@ -139,20 +140,21 @@ FetchContent_Declare(
 )
 set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 set(VMA_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(vma_SOURCE_DIR ${FETCHCONTENT_BASE_DIR}/vma-src)
 FetchContent_MakeAvailable(vma)
-target_include_directories(${PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
-target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 set(VMA_SOURCES
-  ${FETCHCONTENT_BASE_DIR}/vma-src/include/vk_mem_alloc.h
-  ${FETCHCONTENT_BASE_DIR}/vma-src/src/Common.h
-  ${FETCHCONTENT_BASE_DIR}/vma-src/src/VmaUsage.h
+  ${vma_SOURCE_DIR}/include/vk_mem_alloc.h
+  ${vma_SOURCE_DIR}/src/Common.h
+  ${vma_SOURCE_DIR}/src/VmaUsage.h
 
-  ${FETCHCONTENT_BASE_DIR}/vma-src/src/Common.cpp
-  ${FETCHCONTENT_BASE_DIR}/vma-src/src/VmaUsage.cpp
+  ${vma_SOURCE_DIR}/src/Common.cpp
+  ${vma_SOURCE_DIR}/src/VmaUsage.cpp
 )
 source_group("external/vma" FILES ${VMA_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 
 # RapidJSON
 FetchContent_Declare(
@@ -180,6 +182,22 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
+
+# stb
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(stb)
+set(STB_SOURCES
+  ${stb_SOURCE_DIR}/stb_image.h
+)
+source_group("external/stb" FILES ${STB_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${STB_SOURCES})
+target_sources(${DLL_PROJECT_NAME} PRIVATE ${STB_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
 
 # Vulkan
 find_package(Vulkan REQUIRED)
