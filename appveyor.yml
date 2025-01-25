@@ -26,10 +26,6 @@ install:
       Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.4.304.0/windows/vulkan-sdk -OutFile vulkan_sdk.exe
       ./vulkan_sdk.exe --accept-licenses --default-answer --confirm-command install
       Remove-Item vulkan_sdk.exe -Force
-      
-  # CMakeのインストール
-  - ps: |
-      choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 
 before_build:
   # CMakeでビルド
