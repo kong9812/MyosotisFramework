@@ -1,0 +1,7 @@
+* text=auto
+*.h linguist-language=C++
+*.gs linguist-language=Other
+*.ttc linguist-language=Font
+*.aps linguist-language=Other
+*.rc linguist-language=Other
+*.spv linguist-language=GLSL
