@@ -30,10 +30,7 @@ install:
 before_build:
   # CMakeでビルド
   - ps: |
-      $ErrorActionPreference = "SilentlyContinue"
-      .\cmakeBuild_P.bat
-      $ErrorActionPreference = "Continue"
-      Write-Host "CMake build completed, continuing..."
+      .\cmakeBuild.bat
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）
