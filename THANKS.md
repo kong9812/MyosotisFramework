@@ -7,7 +7,8 @@ Thanks to the authors of these libraries for their incredible work and contribut
 - [Vulkan Memory Allocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)  
 - [stduuid](https://github.com/mariusbancila/stduuid)  
 - [RapidJSON](https://github.com/Tencent/rapidjson)  
-
+- [stb](https://github.com/nothings/stb)
+  
 Special thanks to all contributors and developers who have made these libraries freely available and easy to integrate.
 
 ---
@@ -21,7 +22,8 @@ Please note that each library is distributed under its own license. Ensure compl
 - **Dear ImGui**: Licensed under the [MIT License](https://github.com/ocornut/imgui/blob/master/LICENSE.txt).  
 - **OpenFBX (ofbx)**: Licensed under the [MIT License](https://github.com/nem0/OpenFBX/blob/master/LICENSE).  
 - **stduuid**: Licensed under the [MIT License](https://github.com/mariusbancila/stduuid/blob/master/LICENSE).  
-- **RapidJSON**: Licensed under the [MIT License](https://github.com/Tencent/rapidjson/blob/master/license.txt).  
+- **RapidJSON**: Licensed under the [MIT License](https://github.com/Tencent/rapidjson/blob/master/license.txt).
+- **stb**: Licensed under the [MIT License](https://github.com/nothings/stb/blob/master/LICENSE).  
 
 For more details about the licenses, please refer to the respective library repositories.
 
