@@ -1,5 +1,7 @@
 # Copyright (c) 2025 kong9812
 cmake_minimum_required(VERSION 3.22)
+cmake_policy(SET CMP0091 NEW)
+
 include(FetchContent)
 
 project(MyosotisFW)
@@ -66,6 +68,10 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.4
 )
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glfw)
@@ -76,6 +82,8 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG        1.0.1
 )
+set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
@@ -127,6 +135,8 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
   GIT_TAG v3.2.0
 )
+set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+set(VMA_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(vma)
 target_include_directories(${PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
@@ -146,9 +156,12 @@ target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 FetchContent_Declare(
   RapidJSON
   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-  GIT_TAG v1.1.0
+  GIT_TAG d621dc9e9c77f81e5c8a35b8dcc16dcd63351321
 )
-FetchContent_GetProperties(RapidJSON)
+set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "" FORCE)
+set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(RapidJSON)
 target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
 
@@ -158,6 +171,8 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
     GIT_TAG v1.2.3
 )
+set(UUID_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(UUID_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(stduuid)
 target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
@@ -204,3 +219,11 @@ target_compile_definitions(${DLL_PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:RELEASE>
     $<$<CONFIG:FWDLL>:FWDLL>
 )
+
+# GLFW
+set_target_properties(glfw PROPERTIES FOLDER "external")
+set_target_properties(update_mappings PROPERTIES FOLDER "external")
+# glm
+set_target_properties(glm PROPERTIES FOLDER "external")
+# travis_doc
+set_target_properties(travis_doc PROPERTIES FOLDER "external")
