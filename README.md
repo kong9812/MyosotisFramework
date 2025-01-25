@@ -7,7 +7,7 @@ A framework created with Vulkan
 > Please be cautious when using it.  
 > **Feel free to modify it as you wish.**
 
-## Build status
+## Build status (AppVeyor)
 | [Windows - Build status][win-link] |
 | :--------------------------------: |
 |           ![win-badge]             |
