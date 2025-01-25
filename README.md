@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">MyosotisFramework<img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">
 A framework created with Vulkan
-![demo](https://github.com/user-attachments/assets/b6ffd3b3-9a82-4edd-8883-6899ef3c6b54)
+![demo](https://github.com/user-attachments/assets/dd22fb92-3fbd-43cd-80fe-b3b3ccc28010)
 
 > [!IMPORTANT]
 > This software is still under development and contains many unimplemented or partially implemented features.  
