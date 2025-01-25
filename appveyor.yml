@@ -31,7 +31,7 @@ before_build:
   # CMakeでビルド
   - ps: |
       $ErrorActionPreference = "SilentlyContinue"
-      .\cmakeBuild.bat
+      .\cmakeBuild_P.bat
       $ErrorActionPreference = "Continue"
       Write-Host "CMake build completed, continuing..."
 
