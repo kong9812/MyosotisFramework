@@ -11,6 +11,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(DLL_PROJECT_NAME "myosotis")
 set(CMAKE_CONFIGURATION_TYPES "Debug;FWDLL;Release" CACHE STRING "" FORCE)
 
+set(APP_INFO_RC ${PROJECT_SOURCE_DIR}/resources/appInfo/appInfo.rc)
+
 FILE(GLOB_RECURSE SOURCES 
   "${PROJECT_SOURCE_DIR}/include/*.h"
   "${PROJECT_SOURCE_DIR}/src/*.cpp"
@@ -54,7 +56,7 @@ function(GroupSourcesByFolder target)
 endfunction()
 
 # 実行プロジェクトの作成
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${APP_INFO_RC})
 
 # ライブラリの作成
 add_library(${DLL_PROJECT_NAME} SHARED ${SOURCES})
