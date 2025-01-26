@@ -2,10 +2,10 @@
 #include "gameDirector.h"
 #include "logger.h"
 #include "istduuid.h"
-#include "fpsCamera.h"
-#include "primitiveGeometry.h"
 #include "customMesh.h"
 #include "vkLoader.h"
+
+#include "objectFactory.h"
 
 namespace {
 	void CreateAndResistObject(
@@ -15,7 +15,7 @@ namespace {
 		const rapidjson::Value& doc) // docはconst参照で受け取る
 	{
 		// オブジェクトを生成
-		MyosotisFW::ObjectBase_ptr obj = gameDirector->CreateObject(type);
+		MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(type);
 
 		// オブジェクトをデシリアライズ
 		obj->Deserialize(doc, [gameDirector, renderSubsystem](MyosotisFW::ObjectType childType, const rapidjson::Value& subDoc) {
@@ -41,38 +41,6 @@ namespace MyosotisFW::System::GameDirector {
 		//m_renderSubsystem->ResistObject(camera);
 	}
 
-	GameDirector::~GameDirector()
-	{
-
-	}
-
-	ObjectBase_ptr GameDirector::CreateObject(ObjectType objectType)
-	{
-		ASSERT((objectType != ObjectType::Undefined) || (objectType != ObjectType::Max), "Error type");
-
-		ObjectBase_ptr object{};
-
-		// todo. factoryを用意
-		switch (objectType)
-		{
-		case ObjectType::Camera:
-		{
-			object = Render::Camera::CreateFPSCameraPointer();
-		}
-		break;
-		case ObjectType::StaticMesh:
-		{
-			object = Render::CreatePrimitiveGeometryPointer();
-
-			//object = Render::CreatePrimitiveGeometryPointer();
-		}
-		break;
-		default:
-			break;
-		}
-		return object;
-	}
-
 	void GameDirector::LoadGameStageFile(std::string fileName)
 	{
 		// todo. load
@@ -87,30 +55,16 @@ namespace MyosotisFW::System::GameDirector {
 					auto optType = uuids::uuid::from_string(typeID);
 					// todo.　もっと検証したい is〇〇を使う
 					ObjectType type = findObjectTypeFromTypeID(optType.value());
+
+					std::vector<ObjectBase_ptr> objects{};
 					if (type == ObjectType::Undefined)
 					{
 						Logger::Error("Undefined Object Type!");
 					}
-					switch (type)
-					{
-					case ObjectType::Camera:
-					{
-						ObjectBase_ptr newObject = Render::Camera::CreateFPSCameraPointer();
-						newObject->Deserialize(obj, [=](ObjectType type, const rapidjson::Value& subDoc) { CreateAndResistObject(this, m_renderSubsystem, type, subDoc); });
-						m_renderSubsystem->ResistObject(newObject);
-					}
-					break;
-					case ObjectType::StaticMesh:
-					{
-						// todo.スタティックメッシュの種類
-						ObjectBase_ptr newObject = Render::CreatePrimitiveGeometryPointer();
-						newObject->Deserialize(obj, [=](ObjectType type, const rapidjson::Value& subDoc) { CreateAndResistObject(this, m_renderSubsystem, type, subDoc); });
-						m_renderSubsystem->ResistObject(newObject);
-					}
-					break;
-					default:
-						break;
-					}
+
+					ObjectBase_ptr newObject = ObjectFactory::CreateObject(type);
+					newObject->Deserialize(obj, [=](ObjectType type, const rapidjson::Value& subDoc) { CreateAndResistObject(this, m_renderSubsystem, type, subDoc); });
+					m_renderSubsystem->ResistObject(newObject);
 				}
 			}
 		}

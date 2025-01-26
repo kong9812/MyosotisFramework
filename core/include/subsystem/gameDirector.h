@@ -9,9 +9,7 @@ namespace MyosotisFW::System::GameDirector {
 	{
 	public:
 		GameDirector(Render::RenderSubsystem_ptr& renderSubsystem);
-		~GameDirector();
-
-		ObjectBase_ptr CreateObject(ObjectType objectType);
+		~GameDirector() {};
 
 		void LoadGameStageFile(std::string fileName);
 		void SaveGameStageFile(std::string fileName, const std::vector<ObjectBase_ptr>& objects);

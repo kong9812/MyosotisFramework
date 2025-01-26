@@ -95,7 +95,7 @@ namespace MyosotisFW::System::Render
 	{
 		switch (object->GetObjectType())
 		{
-		case ObjectType::Camera:
+		case ObjectType::FPSCamera:
 		{
 			if (!m_mainCamera)
 			{
@@ -103,7 +103,8 @@ namespace MyosotisFW::System::Render
 			}
 		}
 		break;
-		case ObjectType::StaticMesh:
+		case ObjectType::PrimitiveGeometryMesh:
+		case ObjectType::CustomMesh:
 		{
 			Object_CastToStaticMesh(object)->PrepareForRender(m_device, m_resources, m_renderPass, m_pipelineCache);
 		}
@@ -132,7 +133,7 @@ namespace MyosotisFW::System::Render
 
 		for (ObjectBase_ptr& object : m_objects)
 		{
-			if (object->GetObjectType() == ObjectType::StaticMesh)
+			if (IsStaticMesh(object->GetObjectType()))
 			{
 				Object_CastToStaticMesh(object)->Update(updateData, m_mainCamera);
 			}
@@ -301,7 +302,7 @@ namespace MyosotisFW::System::Render
 		// bind here
 		for (ObjectBase_ptr& object : m_objects)
 		{
-			if (object->GetObjectType() == ObjectType::StaticMesh)
+			if (IsStaticMesh(object->GetObjectType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
 				staticMesh->BindCommandBuffer(m_commandBuffers[bufferIndex]);
@@ -351,11 +352,11 @@ namespace MyosotisFW::System::Render
 				m_onPressedLoadGameStageCallback();
 			}
 		}
-		if (ImGui::Button("Create Camera!"))
+		if (ImGui::Button("Create FPS Camera!"))
 		{
 			if ((!m_mainCamera) && (m_onPressedCreateObjectCallback))
 			{
-				m_onPressedCreateObjectCallback(ObjectType::Camera, glm::vec3(0.0f));
+				m_onPressedCreateObjectCallback(ObjectType::FPSCamera, glm::vec3(0.0f));
 			}
 		}
 		if (ImGui::Button("Create Cube!"))
@@ -365,11 +366,26 @@ namespace MyosotisFW::System::Render
 				if (m_mainCamera)
 				{
 					// todo. もっと自由に/ 調整 (前*10.0f)
-					m_onPressedCreateObjectCallback(ObjectType::StaticMesh, m_mainCamera->GetFrontPos(10.0f));
+					m_onPressedCreateObjectCallback(ObjectType::PrimitiveGeometryMesh, m_mainCamera->GetFrontPos(10.0f));
 				}
 				else
 				{
-					m_onPressedCreateObjectCallback(ObjectType::StaticMesh, glm::vec3(0.0f));
+					m_onPressedCreateObjectCallback(ObjectType::PrimitiveGeometryMesh, glm::vec3(0.0f));
+				}
+			}
+		}
+		if (ImGui::Button("Create Custom Mesh!"))
+		{
+			if (m_onPressedCreateObjectCallback)
+			{
+				if (m_mainCamera)
+				{
+					// todo. もっと自由に/ 調整 (前*10.0f)
+					m_onPressedCreateObjectCallback(ObjectType::CustomMesh, m_mainCamera->GetFrontPos(10.0f));
+				}
+				else
+				{
+					m_onPressedCreateObjectCallback(ObjectType::CustomMesh, glm::vec3(0.0f));
 				}
 			}
 		}

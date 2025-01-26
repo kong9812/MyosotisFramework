@@ -15,6 +15,8 @@ namespace MyosotisFW::System::Render::Camera
 		glm::mat4 GetViewMatrix() const override;
 		glm::mat4 GetProjectionMatrix() const override;
 
+		virtual const ObjectType GetObjectType() const override { return ObjectType::FPSCamera; }
+
 		// 一時停止などマウス座標のリセットが必要な時用
 		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
 

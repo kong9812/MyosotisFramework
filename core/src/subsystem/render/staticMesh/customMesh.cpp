@@ -60,10 +60,20 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
+	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
+	{
+		return __super::Serialize(allocator);
+	}
+
+	void CustomMesh::Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject)
+	{
+		__super::Deserialize(doc, createObject);
+	}
+
 	void CustomMesh::loadAssets()
 	{
 		//std::vector<Utility::Vulkan::Struct::Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
-		std::vector<Utility::Vulkan::Struct::Mesh> meshes = m_resources->GetMeshVertex("Test\\a.FBX");
+		std::vector<Utility::Vulkan::Struct::Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.m_meshPath);
 
 		for (int i = 0; i < LOD::Max; i++)
 		{

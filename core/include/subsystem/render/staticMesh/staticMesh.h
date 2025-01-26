@@ -33,6 +33,8 @@ namespace MyosotisFW::System::Render
 			Max
 		} LOD;
 
+		virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
+
 		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera);
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
@@ -40,6 +42,7 @@ namespace MyosotisFW::System::Render
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override { __super::Deserialize(doc, createObject); }
+	
 	protected:
 		virtual void loadAssets() {};
 		virtual void prepareUniformBuffers();

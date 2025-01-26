@@ -11,6 +11,8 @@ namespace MyosotisFW::System::Render
 		PrimitiveGeometry();
 		~PrimitiveGeometry() {};
 
+		virtual const ObjectType GetObjectType() const override { return ObjectType::PrimitiveGeometryMesh; }
+
 		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		void Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;

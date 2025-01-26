@@ -9,7 +9,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	StaticMesh::StaticMesh() : ObjectBase(ObjectType::StaticMesh)
+	StaticMesh::StaticMesh() : ObjectBase()
 	{
 		m_name = "スタティックメッシュ";
 		m_transfrom.scale = glm::vec3(1.0f);

@@ -21,14 +21,12 @@ namespace MyosotisFW
 	class ObjectBase
 	{
 	public:
-		ObjectBase(ObjectType objectType) :
+		ObjectBase() :
 			m_transfrom({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) }),
-			m_objectType(objectType),
 			m_objectID(),
 			m_isReady(false),
 			m_name()
 		{
-			m_typeID = g_objectTypeUUID.at(objectType).value();
 			m_objectID = hashMaker();
 			m_name = "object";
 		};
@@ -45,9 +43,9 @@ namespace MyosotisFW
 		// Debug
 		virtual void BindDebugGUIElement() = 0;
 
-		const ObjectType GetObjectType() const { return m_objectType; }
+		virtual const ObjectType GetObjectType() const { return ObjectType::Undefined; }
 		const std::string GetName() const { return m_name; }
-		const uuids::uuid GetTypeID() const { return m_typeID; }
+		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetObjectType()).value(); }
 		const uuids::uuid GetObjectID() const { return m_objectID; }
 
 		const glm::vec3 GetPos() const { return m_transfrom.pos; }
@@ -63,7 +61,7 @@ namespace MyosotisFW
 			rapidjson::Value obj(rapidjson::Type::kObjectType);
 			obj.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
 			obj.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
-			obj.AddMember("typeID", rapidjson::Value(uuids::to_string(m_typeID).c_str(), allocator), allocator);
+			obj.AddMember("typeID", rapidjson::Value(uuids::to_string(GetTypeID()).c_str(), allocator), allocator);
 
 			SerializeVec3ToJson<glm::vec3>("pos", m_transfrom.pos, obj, allocator);
 			SerializeVec3ToJson<glm::vec3>("rot", m_transfrom.rot, obj, allocator);
@@ -85,7 +83,6 @@ namespace MyosotisFW
 		{
 			m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 			m_name = doc["name"].GetString();
-			m_typeID = uuids::uuid::from_string(doc["typeID"].GetString()).value();
 
 			DeserializeVec3FromJson<glm::vec3>("pos", m_transfrom.pos, doc);
 			DeserializeVec3FromJson<glm::vec3>("rot", m_transfrom.rot, doc);
@@ -107,11 +104,9 @@ namespace MyosotisFW
 	protected:
 		bool m_isReady;
 		std::string m_name;
-		uuids::uuid m_typeID;
 		uuids::uuid m_objectID;
 
 		Transform m_transfrom;
-		ObjectType m_objectType;
 		std::vector<ObjectBase_ptr> m_childen;
 	};
 };

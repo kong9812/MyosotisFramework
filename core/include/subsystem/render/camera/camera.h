@@ -19,6 +19,8 @@ namespace MyosotisFW::System::Render::Camera
         virtual glm::mat4 GetViewMatrix() const;
         virtual glm::mat4 GetProjectionMatrix() const;
         
+        virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
+
         void SetAspectRadio(float aspectRadio) { m_aspectRadio = aspectRadio; }
 
         float GetDistance(glm::vec3 pos) const;

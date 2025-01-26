@@ -8,6 +8,8 @@
 #include "appInfo.h"
 #include "logger.h"
 
+#include "objectFactory.h"
+
 namespace {
 	// デバッグコールバック関数
 	VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -109,8 +111,14 @@ namespace MyosotisFW::System
 		m_renderSubsystem->SetOnPressedLoadGameStageCallback([=]() {m_gameDirector->LoadGameStageFile("TEST.gs"); });
 		m_renderSubsystem->SetOnPressedCreateObjectCallback([=](ObjectType objType, glm::vec3 pos)
 			{
-				ObjectBase_ptr newObject = m_gameDirector->CreateObject(objType);
+				ObjectBase_ptr newObject = ObjectFactory::CreateObject(objType);
 				newObject->SetPos(pos);
+				if (objType == ObjectType::CustomMesh)
+				{
+					Render::CustomMeshInfo customMeshInfo{};
+					customMeshInfo.m_meshPath = "Test\\a.FBX";
+					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
+				}
 				m_renderSubsystem->ResistObject(newObject);
 			});
 
