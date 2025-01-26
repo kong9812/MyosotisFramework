@@ -35,7 +35,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache);
 		virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera);
-		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override {};
+		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
 		virtual void BindDebugGUIElement() override {};
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
@@ -77,9 +77,9 @@ namespace MyosotisFW::System::Render
 		VkPipelineLayout m_pipelineLayout;
 
 		// vertex buffer
-		std::vector<Utility::Vulkan::Struct::Buffer> m_vertexBuffer;
+		std::array<std::vector< Utility::Vulkan::Struct::Buffer>, LOD::Max > m_vertexBuffer;
 		// index buffer
-		std::vector<Utility::Vulkan::Struct::Buffer> m_indexBuffer;
+		std::array<std::vector< Utility::Vulkan::Struct::Buffer>, LOD::Max> m_indexBuffer;
 
 		// lod
 		LOD m_currentLOD;

@@ -7,11 +7,11 @@
 
 namespace MyosotisFW::System::Render::Shape
 {
-    inline Utility::Vulkan::Struct::Vertex createQuad(float size = 1.0f, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }, glm::vec3 center = { 0.0f, 0.0f, 0.0f })
+    inline Utility::Vulkan::Struct::Mesh createQuad(float size = 1.0f, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f }, glm::vec3 center = { 0.0f, 0.0f, 0.0f })
     {
         float halfSize = size * 0.5f;
 
-        Utility::Vulkan::Struct::Vertex vertexAndIndex = {};
+        Utility::Vulkan::Struct::Mesh vertexAndIndex = {};
 
         vertexAndIndex.vertex = {
             -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0  , color.r, color.g, color.b, color.a,    // 0

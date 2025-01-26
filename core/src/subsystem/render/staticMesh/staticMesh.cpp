@@ -12,14 +12,18 @@ namespace MyosotisFW::System::Render
 	StaticMesh::StaticMesh() : ObjectBase(ObjectType::StaticMesh)
 	{
 		m_name = "スタティックメッシュ";
+		m_transfrom.scale = glm::vec3(1.0f);
 	}
 
 	StaticMesh::~StaticMesh()
 	{
-		for (int i = 0; i < m_vertexBuffer.size(); i++)
+		for (uint32_t logType = 0; logType < LOD::Max; logType++)
 		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[i].buffer, m_vertexBuffer[i].allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[i].buffer, m_indexBuffer[i].allocation);
+			for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[m_currentLOD].size(); meshIdx++)
+			{
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[logType][meshIdx].buffer, m_vertexBuffer[logType][meshIdx].allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[logType][meshIdx].buffer, m_indexBuffer[logType][meshIdx].allocation);
+			}
 		}
 
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_uboBuffer.buffer, m_uboBuffer.allocation);
@@ -68,6 +72,22 @@ namespace MyosotisFW::System::Render
 			{
 				m_currentLOD = LOD::Hide;
 			}
+		}
+	}
+
+	void StaticMesh::BindCommandBuffer(VkCommandBuffer commandBuffer)
+	{
+		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
+
+		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+		const VkDeviceSize offsets[1] = { 0 };
+		for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[m_currentLOD].size(); meshIdx++)
+		{
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer[m_currentLOD][meshIdx].buffer, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
 		}
 	}
 
@@ -122,8 +142,8 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh.frag.spv")),
 		};
 
 		// pipelineVertexInputStateCreateInfo

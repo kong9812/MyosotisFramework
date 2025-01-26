@@ -16,10 +16,12 @@ namespace MyosotisFW::System::Render
 		~RenderResources();
 
 		VkShaderModule GetShaderModules(std::string fileName);
+		std::vector<Utility::Vulkan::Struct::Mesh> GetMeshVertex(std::string fileName);
 
 	private:
 		RenderDevice_ptr m_device;
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
+		std::unordered_map<std::string, std::vector<Utility::Vulkan::Struct::Mesh>> m_meshVertexDatas;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
 }

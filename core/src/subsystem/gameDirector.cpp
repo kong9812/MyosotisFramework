@@ -4,6 +4,7 @@
 #include "istduuid.h"
 #include "fpsCamera.h"
 #include "primitiveGeometry.h"
+#include "customMesh.h"
 #include "vkLoader.h"
 
 namespace {
@@ -38,7 +39,6 @@ namespace MyosotisFW::System::GameDirector {
 		//// Test
 		//ObjectBase_ptr camera = CreateObject(ObjectType::Camera);
 		//m_renderSubsystem->ResistObject(camera);
-
 	}
 
 	GameDirector::~GameDirector()
@@ -63,6 +63,8 @@ namespace MyosotisFW::System::GameDirector {
 		case ObjectType::StaticMesh:
 		{
 			object = Render::CreatePrimitiveGeometryPointer();
+
+			//object = Render::CreatePrimitiveGeometryPointer();
 		}
 		break;
 		default:
@@ -74,7 +76,7 @@ namespace MyosotisFW::System::GameDirector {
 	void GameDirector::LoadGameStageFile(std::string fileName)
 	{
 		// todo. load
-		rapidjson::Document doc = Utility::Vulkan::Loader::loadGameStageFile(fileName);
+		rapidjson::Document doc = Utility::Loader::loadGameStageFile(fileName);
 		if (doc.IsArray())
 		{
 			for (auto& obj : doc.GetArray())
@@ -100,6 +102,7 @@ namespace MyosotisFW::System::GameDirector {
 					break;
 					case ObjectType::StaticMesh:
 					{
+						// todo.スタティックメッシュの種類
 						ObjectBase_ptr newObject = Render::CreatePrimitiveGeometryPointer();
 						newObject->Deserialize(obj, [=](ObjectType type, const rapidjson::Value& subDoc) { CreateAndResistObject(this, m_renderSubsystem, type, subDoc); });
 						m_renderSubsystem->ResistObject(newObject);
@@ -123,6 +126,6 @@ namespace MyosotisFW::System::GameDirector {
 			doc.PushBack(object->Serialize(allocator), allocator);
 		}
 		
-		Utility::Vulkan::Loader::saveGameStageFile(fileName, doc);
+		Utility::Loader::saveGameStageFile(fileName, doc);
 	}
 }

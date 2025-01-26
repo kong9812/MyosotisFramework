@@ -41,7 +41,7 @@ namespace Utility::Vulkan::Struct
 	{
 		std::vector<float> vertex;
 		std::vector<uint32_t> index;
-	}Vertex;
+	}Mesh;
 
 	typedef struct
 	{

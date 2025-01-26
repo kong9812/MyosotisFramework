@@ -82,8 +82,10 @@ namespace MyosotisFW::AppInfo
     constexpr char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
     // [フォルダ]フォント
     constexpr char* g_fontFolder = ".\\resources\\font\\";
+    // [フォルダ]モデル
+    constexpr char* g_modelFolder = ".\\resources\\models\\";
     // [フォルダ]ゲームステージ
-    constexpr char* g_GameStageFolder = ".\\resources\\gamestage\\";
+    constexpr char* g_gameStageFolder = ".\\resources\\gamestage\\";
 
     // debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
     constexpr uint32_t g_imguiDescriptorPoolSize = 2;

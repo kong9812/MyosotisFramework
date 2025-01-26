@@ -24,8 +24,19 @@ namespace MyosotisFW::System::Render
 		if (shaderModule == m_shaderModules.end())
 		{
 			// ないなら読み込む
-			m_shaderModules.emplace(fileName, Utility::Vulkan::Loader::loadShader(*m_device, fileName, m_device->GetAllocationCallbacks()));
+			m_shaderModules.emplace(fileName, Utility::Loader::loadShader(*m_device, fileName, m_device->GetAllocationCallbacks()));
 		}
 		return m_shaderModules[fileName];
+	}
+
+	std::vector<Utility::Vulkan::Struct::Mesh> RenderResources::GetMeshVertex(std::string fileName)
+	{
+		auto vertexData = m_meshVertexDatas.find(fileName);
+		if (vertexData == m_meshVertexDatas.end())
+		{
+			// ないなら読み込む
+			m_meshVertexDatas.emplace(fileName, Utility::Loader::loadFbx(fileName));
+		}
+		return m_meshVertexDatas[fileName];
 	}
 }

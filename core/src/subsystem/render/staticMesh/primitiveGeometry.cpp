@@ -46,53 +46,46 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer)
 	{
-		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
-
-		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
-		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-
-		const VkDeviceSize offsets[1] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer[m_currentLOD].buffer, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
+		__super::BindCommandBuffer(commandBuffer);
 	}
 
 	void PrimitiveGeometry::loadAssets()
 	{
-		Utility::Vulkan::Struct::Vertex vertex[LOD::Max] = {
+		Utility::Vulkan::Struct::Mesh vertex[LOD::Max] = {
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)),
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)),
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)),
 		};
 
-		m_vertexBuffer.resize(LOD::Max);
-		m_indexBuffer.resize(LOD::Max);
 		for (int i = 0; i < LOD::Max; i++)
 		{
+			m_vertexBuffer[i].resize(1);
+			m_indexBuffer[i].resize(1);
+
 			{// vertex
 				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(float) * vertex[i].vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer[i].buffer, &m_vertexBuffer[i].allocation, &m_vertexBuffer[i].allocationInfo));
-				m_vertexBuffer[i].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer[i].buffer);
+				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer[i][0].buffer, &m_vertexBuffer[i][0].allocation, &m_vertexBuffer[i][0].allocationInfo));
+				m_vertexBuffer[i][0].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer[i][0].buffer);
 				// mapping
 				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i].allocation, &data));
+				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][0].allocation, &data));
 				memcpy(data, vertex[i].vertex.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i].allocation);
+				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][0].allocation);
 			}
 			{// index
 				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * vertex[i].index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i].buffer, &m_indexBuffer[i].allocation, &m_indexBuffer[i].allocationInfo));
-				m_indexBuffer[i].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer[i].buffer);
+				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i][0].buffer, &m_indexBuffer[i][0].allocation, &m_indexBuffer[i][0].allocationInfo));
+				m_indexBuffer[i][0].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer[i][0].buffer);
 
 				// mapping
 				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i].allocation, &data));
+				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation, &data));
 				memcpy(data, vertex[i].index.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i].allocation);
+				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation);
 			}
 		}
 	}

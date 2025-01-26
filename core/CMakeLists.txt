@@ -60,7 +60,6 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${APP_INFO_RC})
 
 # ライブラリの作成
 add_library(${DLL_PROJECT_NAME} SHARED ${SOURCES})
-# set_target_properties(${DLL_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 GroupSourcesByFolder(${PROJECT_NAME})
 GroupSourcesByFolder(${DLL_PROJECT_NAME})
 
@@ -90,13 +89,25 @@ FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
 
-## ofbx
-#FetchContent_Declare(
-#    ofbx
-#    GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
-#    GIT_TAG master
-#)
-#FetchContent_MakeAvailable(ofbx)
+# ofbx
+FetchContent_Declare(
+   ofbx
+   GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
+   GIT_TAG master
+)
+FetchContent_MakeAvailable(ofbx)
+set(ofbx_SOURCES_DIR ${FETCHCONTENT_BASE_DIR}/ofbx-src)
+set(OFBX_SOURCES
+  ${ofbx_SOURCES_DIR}/src/libdeflate.c
+  ${ofbx_SOURCES_DIR}/src/libdeflate.h
+  ${ofbx_SOURCES_DIR}/src/ofbx.h
+  ${ofbx_SOURCES_DIR}/src/ofbx.cpp
+)
+source_group("external/ofbx" FILES ${OFBX_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
+target_sources(${DLL_PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
+target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
 
 # imgui
 FetchContent_Declare(
@@ -247,3 +258,9 @@ set_target_properties(update_mappings PROPERTIES FOLDER "external")
 set_target_properties(glm PROPERTIES FOLDER "external")
 # travis_doc
 set_target_properties(travis_doc PROPERTIES FOLDER "external")
+# ofbx
+set_target_properties(libdeflate_prog_utils PROPERTIES FOLDER "external")
+set_target_properties(libdeflate_shared PROPERTIES FOLDER "external")
+set_target_properties(libdeflate-gzip PROPERTIES FOLDER "external")
+set_target_properties(libdeflate_static PROPERTIES FOLDER "external")
+set_target_properties(OpenFBX PROPERTIES FOLDER "external")

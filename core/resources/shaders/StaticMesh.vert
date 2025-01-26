@@ -8,6 +8,7 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 projection;
     vec4 color;
+    vec4 cameraPos;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
