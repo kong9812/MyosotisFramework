@@ -142,8 +142,8 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, m_resources->GetShaderModules("StaticMesh_DepthFade.frag.spv")),
 		};
 
 		// pipelineVertexInputStateCreateInfo

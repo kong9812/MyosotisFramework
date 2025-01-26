@@ -21,7 +21,8 @@ namespace MyosotisFW::System::Render
 		prepareDescriptors();
 		prepareRenderPipeline();
 
-		m_transfrom.scale = glm::vec3(0.05f);
+		m_transfrom.scale = glm::vec3(1.0f);
+		m_transfrom.rot = glm::vec3(-90.0f, 0.0f, 0.0f);
 
 		// todo.検証処理
 		m_isReady = true;
@@ -38,6 +39,9 @@ namespace MyosotisFW::System::Render
 			m_ubo.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
 		}
 		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
+		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_transfrom.scale));
 
 		if (!m_isReady) return;
@@ -62,12 +66,18 @@ namespace MyosotisFW::System::Render
 
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
-		return __super::Serialize(allocator);
+		rapidjson::Value obj = __super::Serialize(allocator);
+
+		obj.AddMember("meshPath", rapidjson::Value(m_customMeshInfo.m_meshPath.c_str(), allocator), allocator);
+
+		return obj;
 	}
 
 	void CustomMesh::Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject)
 	{
 		__super::Deserialize(doc, createObject);
+
+		m_customMeshInfo.m_meshPath = doc["meshPath"].GetString();
 	}
 
 	void CustomMesh::loadAssets()

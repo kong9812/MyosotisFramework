@@ -116,7 +116,7 @@ namespace MyosotisFW::System
 				if (objType == ObjectType::CustomMesh)
 				{
 					Render::CustomMeshInfo customMeshInfo{};
-					customMeshInfo.m_meshPath = "Test\\a.FBX";
+					customMeshInfo.m_meshPath = "test.fbx";
 					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
 				}
 				m_renderSubsystem->ResistObject(newObject);
