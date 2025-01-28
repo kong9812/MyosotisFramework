@@ -61,6 +61,8 @@ namespace MyosotisFW::System
 		// リサイズコールバック
 		glfwSetWindowUserPointer(window, this);
 		glfwSetWindowSizeCallback(window, ResizedCallback);
+		// D&D
+		glfwSetDropCallback(window, DropCallback);
 		// キー & マウスコールバック
 		glfwSetKeyCallback(window, KeyCallback);
 		glfwSetCursorPosCallback(window, CursorPosCallback);
@@ -101,7 +103,6 @@ namespace MyosotisFW::System
 		// GLFW サーフェース作成
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 
-
 		// m_renderSubsystem
 		m_renderSubsystem = Render::CreateRenderSubsystemPointer(*window, m_instance, m_surface);
 
@@ -119,7 +120,7 @@ namespace MyosotisFW::System
 					customMeshInfo.m_meshPath = "test.fbx";
 					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
 				}
-				m_renderSubsystem->ResistObject(newObject);
+				m_renderSubsystem->RegisterObject(newObject);
 			});
 
 		m_pause = false;
@@ -220,5 +221,29 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->CursorMotion(glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos)));
+	}
+
+	void SystemManager::DropCallback(GLFWwindow* window, int path_count, const char* paths[])
+	{
+		if (path_count > 1)
+		{
+			Logger::Error("Cant dorp more than one file.");
+			return;
+		}
+		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
+		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
+		Render::RenderSubsystem_ptr renderSubsystem = systemManager->GetRenderSubsystem();
+
+		std::filesystem::path path = paths[0];
+		std::string fileName = path.filename().string();
+		Render::CustomMesh_ptr object = Render::CreateCustomMeshPointer();
+
+		// 座標
+		double x{}, y{};
+		glfwGetCursorPos(window, &x, &y);
+		glm::vec3 worldPos = renderSubsystem->GetMainCamera()->GetWorldPos(glm::vec2(x, y), 10.0f);
+		object->SetPos(worldPos);
+		object->SetCustomMeshInfo({ fileName });
+		renderSubsystem->RegisterObject(Object_Cast<ObjectBase>(object));
 	}
 }

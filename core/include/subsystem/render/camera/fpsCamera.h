@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Render::Camera
 
 		glm::mat4 GetViewMatrix() const override;
 		glm::mat4 GetProjectionMatrix() const override;
+		glm::vec3 GetWorldPos(glm::vec2 pos, float distance) const override;
 
 		virtual const ObjectType GetObjectType() const override { return ObjectType::FPSCamera; }
 

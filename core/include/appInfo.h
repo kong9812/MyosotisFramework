@@ -42,6 +42,7 @@ namespace MyosotisFW::AppInfo
     // 指定Layer
     const std::vector<const char*> g_layer = {
         "VK_LAYER_KHRONOS_validation",
+        "VK_LAYER_LUNARG_monitor"
     };
     // 指定物理デバイスのIndex
     constexpr uint32_t g_physicalIndex = 0;

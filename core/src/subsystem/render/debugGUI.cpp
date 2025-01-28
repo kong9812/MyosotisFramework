@@ -1,10 +1,8 @@
 // Copyright (c) 2025 kong9812
 #include "debugGUI.h"
 #include <sstream>
-#include <GLFW/glfw3.h>
 
 #include "appInfo.h"
-
 #include "vkCreateInfo.h"
 #include "vkValidation.h"
 
@@ -75,8 +73,7 @@ namespace MyosotisFW::System::Render
     void DebugGUI::BindDebugGUIElement() const
     {
 #ifndef RELEASE
-        ImGui::ShowDemoWindow();
-        ImGui::SetNextWindowPos({ 0.0f,0.0f });
+        ImGui::SetNextWindowPos({ 0.0f, 0.0f });
         ImGui::Begin("solution configuration",
             (bool*)true,
             ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |

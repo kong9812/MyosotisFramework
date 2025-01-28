@@ -21,6 +21,11 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
 	}
 
+	glm::vec3 FPSCamera::GetWorldPos(glm::vec2 pos, float distance) const
+	{
+		return __super::GetWorldPos(pos, distance);
+	}
+
 	void FPSCamera::Update(const Utility::Vulkan::Struct::UpdateData& updateData)
 	{
 		if (updateData.pause) return;

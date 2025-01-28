@@ -22,7 +22,9 @@ namespace MyosotisFW::System::Render
 
 		void ResetMousePos(glm::vec2 mousePos);
 
-		void ResistObject(ObjectBase_ptr& object);
+		void RegisterObject(ObjectBase_ptr& object);
+		RenderResources_ptr GetRenderResources() { return m_resources; }
+		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
 		void Update(Utility::Vulkan::Struct::UpdateData updateData);
 		void Render();

@@ -40,6 +40,33 @@ namespace MyosotisFW::System::Render::Camera
         return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
     }
 
+    glm::vec3 CameraBase::GetWorldPos(glm::vec2 pos, float distance) const
+    {
+        // 画面座標を正規化デバイス座標（NDC）に変換
+        glm::vec2 ndcPos;
+        ndcPos.x = pos.x / m_screenSize.x * 2.0f - 1.0f;
+        ndcPos.y = 1.0f - pos.y / m_screenSize.y * 2.0f;
+
+        // 投影・ビュー行列の逆行列を取得
+        glm::mat4 invProjView = glm::inverse(GetProjectionMatrix() * GetViewMatrix());
+
+        // クリップ空間の座標を定義
+        // Z値を調整してカメラからの距離をコントロール (例: 0.5f → カメラの中間距離)
+        glm::vec4 clipPos(ndcPos.x, ndcPos.y, distance, 1.0f);
+
+        // クリップ座標からワールド座標へ変換
+        glm::vec4 worldPos = invProjView * clipPos;
+
+        // wで除算して正規化し、最終的なワールド座標を返す
+        return glm::vec3(worldPos) / worldPos.w;
+    }
+
+    void CameraBase::UpdateScreenSize(glm::vec2 size)
+    {
+        m_screenSize = size;
+        m_aspectRadio = size.x / size.y;
+    }
+
     float CameraBase::GetDistance(glm::vec3 pos) const
     {
         return glm::distance(m_cameraPos, pos);

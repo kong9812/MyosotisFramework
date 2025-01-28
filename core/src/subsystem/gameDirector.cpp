@@ -23,7 +23,7 @@ namespace {
 			});
 
 		// 生成したオブジェクトを登録
-		renderSubsystem->ResistObject(obj);
+		renderSubsystem->RegisterObject(obj);
 	}
 }
 
@@ -34,11 +34,11 @@ namespace MyosotisFW::System::GameDirector {
 
 		//// Test
 		//ObjectBase_ptr staticMesh = CreateObject(ObjectType::StaticMesh);
-		//m_renderSubsystem->ResistObject(staticMesh);
+		//m_renderSubsystem->RegisterObject(staticMesh);
 
 		//// Test
 		//ObjectBase_ptr camera = CreateObject(ObjectType::Camera);
-		//m_renderSubsystem->ResistObject(camera);
+		//m_renderSubsystem->RegisterObject(camera);
 	}
 
 	void GameDirector::LoadGameStageFile(std::string fileName)
@@ -64,7 +64,7 @@ namespace MyosotisFW::System::GameDirector {
 
 					ObjectBase_ptr newObject = ObjectFactory::CreateObject(type);
 					newObject->Deserialize(obj, [=](ObjectType type, const rapidjson::Value& subDoc) { CreateAndResistObject(this, m_renderSubsystem, type, subDoc); });
-					m_renderSubsystem->ResistObject(newObject);
+					m_renderSubsystem->RegisterObject(newObject);
 				}
 			}
 		}

@@ -91,7 +91,7 @@ namespace MyosotisFW::System::Render
 		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
-	void RenderSubsystem::ResistObject(ObjectBase_ptr& object)
+	void RenderSubsystem::RegisterObject(ObjectBase_ptr& object)
 	{
 		switch (object->GetObjectType())
 		{
@@ -186,7 +186,7 @@ namespace MyosotisFW::System::Render
 
 		if (m_mainCamera)
 		{
-			m_mainCamera->SetAspectRadio(static_cast<float>(width / height));
+			m_mainCamera->UpdateScreenSize(glm::vec2(width, height));
 		}
 
 		vkDeviceWaitIdle(*m_device);

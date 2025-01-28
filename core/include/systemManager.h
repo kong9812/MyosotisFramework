@@ -15,6 +15,8 @@ namespace MyosotisFW::System
 		~SystemManager();
 
 		Render::RenderSubsystem_ptr& GetRenderSubsystem() { return m_renderSubsystem; }
+		GameDirector::GameDirector_ptr& GetGameDirector() { return m_gameDirector; }
+
 		VkSurfaceKHR& GetSurface() { return m_surface; }
 
 		void KeyAction(int key, int action);
@@ -47,6 +49,7 @@ namespace MyosotisFW::System
 		static void ResizedCallback(GLFWwindow* window, int width, int height);
 		static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+		static void DropCallback(GLFWwindow* window, int path_count, const char* paths[]);
 
 		// renderSubsystem callback
 		void SaveGameStage();

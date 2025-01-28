@@ -18,10 +18,11 @@ namespace MyosotisFW::System::Render::Camera
 
         virtual glm::mat4 GetViewMatrix() const;
         virtual glm::mat4 GetProjectionMatrix() const;
-        
+        virtual glm::vec3 GetWorldPos(glm::vec2 pos, float distance) const;
+
         virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
 
-        void SetAspectRadio(float aspectRadio) { m_aspectRadio = aspectRadio; }
+        void UpdateScreenSize(glm::vec2 size);
 
         float GetDistance(glm::vec3 pos) const;
         glm::vec3 GetFrontPos(float distance) const;
@@ -53,6 +54,8 @@ namespace MyosotisFW::System::Render::Camera
         float m_cameraNear;
         // アスペクト比
         float m_aspectRadio;
+        // 画面サイズ
+        glm::vec2 m_screenSize;
     };
     TYPEDEF_SHARED_PTR(CameraBase)
     OBJECT_CAST_FUNCTION(CameraBase)
