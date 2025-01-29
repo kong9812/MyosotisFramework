@@ -13,6 +13,7 @@ namespace Utility::Vulkan::Struct
 		bool pause;
 		float deltaTime;
 		std::unordered_map<int, int> keyActions;
+		std::unordered_map<int, int> mouseButtonActions;
 		glm::vec2 mousePos;
 	}UpdateData;
 

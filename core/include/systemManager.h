@@ -20,6 +20,7 @@ namespace MyosotisFW::System
 		VkSurfaceKHR& GetSurface() { return m_surface; }
 
 		void KeyAction(int key, int action);
+		void MouseButtonAction(int key, int action);
 		void CursorMotion(glm::vec2 pos);
 		void Pause(GLFWwindow* window);
 
@@ -38,6 +39,7 @@ namespace MyosotisFW::System
 
 		// 入力
 		std::unordered_map<int, int> m_keyActions;
+		std::unordered_map<int, int> m_mouseButtonActions;
 		glm::vec2 m_mousePos;
 
 		// debug callback
@@ -48,11 +50,9 @@ namespace MyosotisFW::System
 		// glfw callback
 		static void ResizedCallback(GLFWwindow* window, int width, int height);
 		static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+		static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 		static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 		static void DropCallback(GLFWwindow* window, int path_count, const char* paths[]);
-
-		// renderSubsystem callback
-		void SaveGameStage();
 	};
 	TYPEDEF_SHARED_PTR_ARGS(SystemManager)
 }

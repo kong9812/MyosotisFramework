@@ -65,6 +65,7 @@ namespace MyosotisFW::System
 		glfwSetDropCallback(window, DropCallback);
 		// キー & マウスコールバック
 		glfwSetKeyCallback(window, KeyCallback);
+		glfwSetMouseButtonCallback(window, MouseButtonCallback);
 		glfwSetCursorPosCallback(window, CursorPosCallback);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		glfwPollEvents();
@@ -148,6 +149,11 @@ namespace MyosotisFW::System
 		m_keyActions.insert_or_assign(key, action);
 	}
 
+	void SystemManager::MouseButtonAction(int key, int action)
+	{
+		m_mouseButtonActions.insert_or_assign(key, action);
+	}
+
 	void SystemManager::CursorMotion(glm::vec2 pos)
 	{
 		m_mousePos = pos;
@@ -174,9 +180,12 @@ namespace MyosotisFW::System
 
 	void SystemManager::Update()
 	{
+		// update editor here
+
+
 		float currentTime = static_cast<float>(glfwGetTime());
 		float deltaTime = currentTime - m_lastTime;
-		m_renderSubsystem->Update({ m_pause, deltaTime, m_keyActions, m_mousePos });
+		m_renderSubsystem->Update({ m_pause, deltaTime, m_keyActions, m_mouseButtonActions, m_mousePos });
 
 		// 後片付け
 		for (auto it = m_keyActions.begin(); it != m_keyActions.end();)
@@ -195,7 +204,13 @@ namespace MyosotisFW::System
 
 	void SystemManager::Render()
 	{
+		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->Render();
+
+		// draw editor here
+
+
+		m_renderSubsystem->EndRender();
 	}
 
 	void SystemManager::ResizedCallback(GLFWwindow* window, int width, int height)
@@ -210,10 +225,13 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->KeyAction(key, action);
-		if ((key == GLFW_KEY_F2) && (action == GLFW_PRESS))
-		{
-			systemManager->Pause(window);
-		}
+	}
+
+	void SystemManager::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
+		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
+		systemManager->MouseButtonAction(button, action);
 	}
 
 	void SystemManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)

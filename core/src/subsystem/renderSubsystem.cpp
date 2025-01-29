@@ -56,12 +56,7 @@ namespace MyosotisFW::System::Render
 
 		// submit info
 		m_submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.renderComplete);
-	
-		// debug gui
-#ifndef RELEASE
-		m_debugGUI = CreateDebugGUIPointer(glfwWindow, m_instance, m_device, m_queue, m_renderPass, m_swapchain, m_pipelineCache);
-#endif
+		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.renderComplete);	
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -117,15 +112,6 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Update(Utility::Vulkan::Struct::UpdateData updateData)
 	{
-#ifndef RELEASE
-		//if (updateData.pause)
-		//{
-		//	ImGuiIO& io = ImGui::GetIO();
-		//	io.MousePos = { updateData.mousePos.x, updateData.mousePos.y };
-		//}
-		m_debugGUI->Update(updateData);
-#endif // !RELEASE
-
 		if (m_mainCamera)
 		{
 			Object_Cast<Camera::FPSCamera>(m_mainCamera)->Update(updateData);
@@ -140,13 +126,54 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderSubsystem::Render()
+	void RenderSubsystem::BeginRender()
 	{
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
-		buildCommandBuffer(m_currentBufferIndex);
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+
+		std::vector<VkClearValue> clearValues = {
+			AppInfo::g_colorClearValues,
+			AppInfo::g_depthClearValues,
+		};
+
+		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
+
+		// Set target frame buffer
+		renderPassBeginInfo.framebuffer = m_frameBuffers[m_currentBufferIndex];
+
+		VK_VALIDATION(vkBeginCommandBuffer(m_commandBuffers[m_currentBufferIndex], &commandBufferBeginInfo));
+
+		vkCmdBeginRenderPass(m_commandBuffers[m_currentBufferIndex], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
+		vkCmdSetViewport(m_commandBuffers[m_currentBufferIndex], 0, 1, &viewport);
+
+		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		vkCmdSetScissor(m_commandBuffers[m_currentBufferIndex], 0, 1, &scissor);
+	}
+
+	void RenderSubsystem::Render()
+	{
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
+			{
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				staticMesh->BindCommandBuffer(m_commandBuffers[m_currentBufferIndex]);
+			}
+		}
+	}
+
+	void RenderSubsystem::EndRender()
+	{
+		vkCmdEndRenderPass(m_commandBuffers[m_currentBufferIndex]);
+
+		VK_VALIDATION(vkEndCommandBuffer(m_commandBuffers[m_currentBufferIndex]));
 
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &m_commandBuffers[m_currentBufferIndex];
+
 		VK_VALIDATION(vkQueueSubmit(m_queue, 1, &m_submitInfo, VK_NULL_HANDLE));
 		m_swapchain->QueuePresent(m_queue, m_currentBufferIndex, m_semaphores.renderComplete);
 		VK_VALIDATION(vkQueueWaitIdle(m_queue));
@@ -269,129 +296,6 @@ namespace MyosotisFW::System::Render
 		for (VkFence& fence : m_fences) {
 			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
 		}
-	}
-
-	void RenderSubsystem::buildCommandBuffer(uint32_t bufferIndex)
-	{
-		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-
-		std::vector<VkClearValue> clearValues = {
-			AppInfo::g_colorClearValues,
-			AppInfo::g_depthClearValues,
-		};
-
-		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
-
-		// Set target frame buffer
-		renderPassBeginInfo.framebuffer = m_frameBuffers[bufferIndex];
-
-		VK_VALIDATION(vkBeginCommandBuffer(m_commandBuffers[bufferIndex], &commandBufferBeginInfo));
-
-		vkCmdBeginRenderPass(m_commandBuffers[bufferIndex], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-
-		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
-		vkCmdSetViewport(m_commandBuffers[bufferIndex], 0, 1, &viewport);
-
-		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		vkCmdSetScissor(m_commandBuffers[bufferIndex], 0, 1, &scissor);
-
-#ifndef RELEASE
-		m_debugGUI->BeginDebugCommandBuffer();
-#endif // !RELEASE
-
-		// bind here
-		for (ObjectBase_ptr& object : m_objects)
-		{
-			if (IsStaticMesh(object->GetObjectType()))
-			{
-				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				staticMesh->BindCommandBuffer(m_commandBuffers[bufferIndex]);
-			}
-#ifndef RELEASE
-			object->BindDebugGUIElement();
-#endif // !RELEASE
-		}
-#ifndef RELEASE
-		m_debugGUI->BindDebugGUIElement();
-		bindDebugGUIElement();
-		m_debugGUI->EndDebugCommandBuffer(m_commandBuffers[bufferIndex]);
-#endif // !RELEASE
-
-		vkCmdEndRenderPass(m_commandBuffers[bufferIndex]);
-
-		VK_VALIDATION(vkEndCommandBuffer(m_commandBuffers[bufferIndex]));
-	}
-
-	void RenderSubsystem::bindDebugGUIElement()
-	{
-#ifndef RELEASE
-		ImGui::Begin("Game Stage",
-			(bool*)true,
-			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
-			ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar);
-
-		ImGui::Text("name: todo.");
-		ImGui::Text("data: todo.");
-		ImGui::Text("data: todo.");
-		ImGui::Text("data: todo.");
-
-		if (ImGui::Button("Save Game Stage!"))
-		{
-			if (m_onPressedSaveGameStageCallback)
-			{
-				m_onPressedSaveGameStageCallback();
-			}
-		}
-		if (ImGui::Button("Load Game Stage!"))
-		{
-			// todo. 無駄なデータがないように、とりあえずできない
-			if (m_objects.size() > 0) return;
-
-			if (m_onPressedLoadGameStageCallback)
-			{
-				m_onPressedLoadGameStageCallback();
-			}
-		}
-		if (ImGui::Button("Create FPS Camera!"))
-		{
-			if ((!m_mainCamera) && (m_onPressedCreateObjectCallback))
-			{
-				m_onPressedCreateObjectCallback(ObjectType::FPSCamera, glm::vec3(0.0f));
-			}
-		}
-		if (ImGui::Button("Create Cube!"))
-		{
-			if (m_onPressedCreateObjectCallback)
-			{
-				if (m_mainCamera)
-				{
-					// todo. もっと自由に/ 調整 (前*10.0f)
-					m_onPressedCreateObjectCallback(ObjectType::PrimitiveGeometryMesh, m_mainCamera->GetFrontPos(10.0f));
-				}
-				else
-				{
-					m_onPressedCreateObjectCallback(ObjectType::PrimitiveGeometryMesh, glm::vec3(0.0f));
-				}
-			}
-		}
-		if (ImGui::Button("Create Custom Mesh!"))
-		{
-			if (m_onPressedCreateObjectCallback)
-			{
-				if (m_mainCamera)
-				{
-					// todo. もっと自由に/ 調整 (前*10.0f)
-					m_onPressedCreateObjectCallback(ObjectType::CustomMesh, m_mainCamera->GetFrontPos(10.0f));
-				}
-				else
-				{
-					m_onPressedCreateObjectCallback(ObjectType::CustomMesh, glm::vec3(0.0f));
-				}
-			}
-		}
-
-		ImGui::End();
-#endif // !RELEASE
 	}
 
 	void RenderSubsystem::SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback)

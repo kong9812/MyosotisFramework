@@ -27,7 +27,9 @@ namespace MyosotisFW::System::Render
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
 		void Update(Utility::Vulkan::Struct::UpdateData updateData);
+		void BeginRender();
 		void Render();
+		void EndRender();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
 		std::vector<ObjectBase_ptr> GetObjects() { return m_objects; }
@@ -43,7 +45,6 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
-		DebugGUI_ptr m_debugGUI;
 		Camera::CameraBase_ptr m_mainCamera;
 
 		VkSubmitInfo m_submitInfo;
@@ -72,7 +73,6 @@ namespace MyosotisFW::System::Render
 		void prepareCommandBuffers();
 		void prepareFences();
 		void buildCommandBuffer(uint32_t bufferIndex);
-		void bindDebugGUIElement();
 
 	// callback
 	private:

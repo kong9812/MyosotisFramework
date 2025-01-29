@@ -32,13 +32,7 @@ namespace MyosotisFW::System::GameDirector {
 	{
 		m_renderSubsystem = renderSubsystem;
 
-		//// Test
-		//ObjectBase_ptr staticMesh = CreateObject(ObjectType::StaticMesh);
-		//m_renderSubsystem->RegisterObject(staticMesh);
-
-		//// Test
-		//ObjectBase_ptr camera = CreateObject(ObjectType::Camera);
-		//m_renderSubsystem->RegisterObject(camera);
+		LoadGameStageFile("TEST.gs");
 	}
 
 	void GameDirector::LoadGameStageFile(std::string fileName)
