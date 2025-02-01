@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "iglfw.h"
-#include "applicationInterface.h"
+#include "ApplicationInterface.h"
 
 #ifdef DLL_EXPORTS
 #define DLL_CLASS __declspec(dllexport)

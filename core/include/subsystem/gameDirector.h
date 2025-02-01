@@ -1,8 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "classPointer.h"
-#include "objectBase.h"
-#include "renderSubsystem.h"
+#include "ClassPointer.h"
+#include "ObjectBase.h"
+#include "RenderSubsystem.h"
 
 namespace MyosotisFW::System::GameDirector {
 	class GameDirector

@@ -3,8 +3,8 @@
 #include "classPointer.h"
 
 #include "iglfw.h"
-#include "renderSubsystem.h"
-#include "gameDirector.h"
+#include "RenderSubsystem.h"
+#include "GameDirector.h"
 
 namespace MyosotisFW::System
 {

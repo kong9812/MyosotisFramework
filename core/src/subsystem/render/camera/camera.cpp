@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
-#include "camera.h"
-#include "appInfo.h"
+#include "Camera.h"
+#include "AppInfo.h"
 #include "iimgui.h"
 
 namespace MyosotisFW::System::Render::Camera
@@ -77,18 +77,18 @@ namespace MyosotisFW::System::Render::Camera
         return m_cameraPos + (m_cameraFront * distance);
     }
 
-    void CameraBase::BindDebugGUIElement()
-    {
-#ifndef RELEASE
-        ImGui::Begin("Camera Pos",
-            (bool*)true,
-            ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar);
-        ImGui::Text("pos: %.2f %.2f %.2f", m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
-        ImGui::Text("front: %.2f %.2f %.2f", m_cameraFront.x, m_cameraFront.y, m_cameraFront.z);
-        ImGui::End();
-#endif // !RELEASE
-    }
+//    void CameraBase::BindDebugGUIElement()
+//    {
+//#ifndef RELEASE
+//        ImGui::Begin("Camera Pos",
+//            (bool*)true,
+//            ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
+//            ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar);
+//        ImGui::Text("pos: %.2f %.2f %.2f", m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
+//        ImGui::Text("front: %.2f %.2f %.2f", m_cameraFront.x, m_cameraFront.y, m_cameraFront.z);
+//        ImGui::End();
+//#endif // !RELEASE
+//    }
 
     rapidjson::Value CameraBase::Serialize(rapidjson::Document::AllocatorType& allocator) const
     {

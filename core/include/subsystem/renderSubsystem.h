@@ -3,14 +3,14 @@
 #include "classPointer.h"
 
 #include "iglfw.h"
-#include "vkStruct.h"
+#include "Structs.h"
 
-#include "renderDevice.h"
-#include "renderSwapchain.h"
-#include "renderResources.h"
-#include "debugGUI.h"
-#include "staticMesh.h"
-#include "fpsCamera.h"
+#include "RenderDevice.h"
+#include "RenderSwapchain.h"
+#include "RenderResources.h"
+#include "DebugGUI.h"
+#include "StaticMesh.h"
+#include "FpsCamera.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -26,9 +26,10 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
-		void Update(Utility::Vulkan::Struct::UpdateData updateData);
+		void Update(UpdateData updateData);
+		void Compute();
 		void BeginRender();
-		void Render();
+		void TransparentRender();
 		void EndRender();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
@@ -37,6 +38,7 @@ namespace MyosotisFW::System::Render
 	private:
 		struct {
 			VkSemaphore presentComplete;
+			VkSemaphore computeComplete;
 			VkSemaphore renderComplete;
 		}m_semaphores;
 
@@ -50,20 +52,24 @@ namespace MyosotisFW::System::Render
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
 
-		VkCommandPool m_commandPool;
-		std::vector<VkCommandBuffer> m_commandBuffers;
+		VkCommandPool m_renderCommandPool;
+		VkCommandPool m_computeCommandPool;
+		std::vector<VkCommandBuffer> m_renderCommandBuffers;
+		std::vector<VkCommandBuffer> m_computeCommandBuffers;
 		std::vector<VkFramebuffer> m_frameBuffers;
 
 		std::vector<VkFence> m_fences;
 
 		uint32_t m_currentBufferIndex;
 
-		VkPipelineCache m_pipelineCache;
+		VkQueue m_graphicsQueue;
+		VkQueue m_computeQueue;
 
-		VkQueue m_queue;
-		
 		VkRenderPass m_renderPass;
-		Utility::Vulkan::Struct::DeviceImage m_depthStencil;
+		DeviceImage m_depthStencil;
+
+		VkDescriptorPool m_descriptorPool;
+		FrustumCullersShaderObject m_frustumCullerShaderObject;
 
 		std::vector<ObjectBase_ptr> m_objects;
 
@@ -72,7 +78,8 @@ namespace MyosotisFW::System::Render
 		void prepareFrameBuffers();
 		void prepareCommandBuffers();
 		void prepareFences();
-		void buildCommandBuffer(uint32_t bufferIndex);
+
+		void prepareFrustumCuller();
 
 	// callback
 	private:

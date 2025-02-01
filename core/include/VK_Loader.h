@@ -7,9 +7,9 @@
 #include "iRapidJson.h"
 #include "iofbx.h"
 
-#include "appInfo.h"
-#include "logger.h"
-#include "vkValidation.h"
+#include "AppInfo.h"
+#include "Logger.h"
+#include "VK_Validation.h"
 
 namespace Utility::Loader {
 	inline VkShaderModule loadShader(VkDevice device, std::string fileName, const VkAllocationCallbacks* pAllocator = nullptr)
@@ -91,7 +91,7 @@ namespace Utility::Loader {
 		return 3 * triangleCount;
 	}
 
-	inline std::vector<Utility::Vulkan::Struct::Mesh> loadFbx(std::string fileName)
+	inline std::vector<MyosotisFW::Mesh> loadFbx(std::string fileName)
 	{
 		std::ifstream file(MyosotisFW::AppInfo::g_modelFolder + fileName, std::ios::ate | std::ios::binary);
 		ASSERT(file.is_open(), "Failed to open fbx file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
@@ -106,14 +106,14 @@ namespace Utility::Loader {
 			static_cast<ofbx::usize>(fileSize),
 			static_cast<ofbx::u16>(ofbx::LoadFlags::NONE));
 		
-		std::vector<Utility::Vulkan::Struct::Mesh> meshes{};
+		std::vector<MyosotisFW::Mesh> meshes{};
 
 		uint32_t indicesOffset = 0;
 		uint32_t meshCount = scene->getMeshCount();
 		std::vector<int> testList{};
 		for (uint32_t meshIdx = 0; meshIdx < meshCount; meshIdx++)
 		{
-			Utility::Vulkan::Struct::Mesh meshData{};
+			MyosotisFW::Mesh meshData{};
 			const ofbx::Mesh* mesh = scene->getMesh(meshIdx);
 			const ofbx::GeometryData& geomData = mesh->getGeometryData();
 			const ofbx::Vec3Attributes positions = geomData.getPositions();

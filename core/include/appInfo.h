@@ -73,7 +73,7 @@ namespace MyosotisFW::AppInfo
     // [デフォルト]カメラ FOV
     constexpr float g_cameraFov = 60.0f;
     // [デフォルト]カメラ Far
-    constexpr float g_cameraFar = 1000.0f;
+    constexpr float g_cameraFar = 100.0f;
     // [デフォルト]カメラ Near
     constexpr float g_cameraNear = 0.1f;
 

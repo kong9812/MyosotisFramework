@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "objectType.h"
-#include "objectBase.h"
+#include "ObjectType.h"
+#include "ObjectBase.h"
 
 namespace MyosotisFW
 {

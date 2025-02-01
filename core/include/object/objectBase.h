@@ -1,7 +1,7 @@
 #pragma once
-#include "classPointer.h"
-#include "objectType.h"
-#include "vkStruct.h"
+#include "ClassPointer.h"
+#include "ObjectType.h"
+#include "Structs.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
 #include "istduuid.h"
@@ -36,12 +36,12 @@ namespace MyosotisFW
 		// todo.コンポーネント関連の処理
 
 		// Update
-		//virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData) = 0;
+		//virtual void Update(const UpdateData& updateData) = 0;
 		
 		// Render
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) = 0;
-		// Debug
-		virtual void BindDebugGUIElement() = 0;
+		//// Debug
+		//virtual void BindDebugGUIElement() = 0;
 
 		virtual const ObjectType GetObjectType() const { return ObjectType::Undefined; }
 		const std::string GetName() const { return m_name; }

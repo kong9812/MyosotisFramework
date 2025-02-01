@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
-#include "renderResources.h"
-#include "vkLoader.h"
+#include "RenderResources.h"
+#include "VK_Loader.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	std::vector<Utility::Vulkan::Struct::Mesh> RenderResources::GetMeshVertex(std::string fileName)
+	std::vector<Mesh> RenderResources::GetMeshVertex(std::string fileName)
 	{
 		auto vertexData = m_meshVertexDatas.find(fileName);
 		if (vertexData == m_meshVertexDatas.end())

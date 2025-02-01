@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
-#include "fpsCamera.h"
+#include "FpsCamera.h"
 #include "iglfw.h"
-#include "appInfo.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -26,7 +26,7 @@ namespace MyosotisFW::System::Render::Camera
 		return __super::GetWorldPos(pos, distance);
 	}
 
-	void FPSCamera::Update(const Utility::Vulkan::Struct::UpdateData& updateData)
+	void FPSCamera::Update(const UpdateData& updateData)
 	{
 		if (updateData.pause) return;
 
@@ -135,8 +135,8 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraPos += move;
 	}
 
-	void FPSCamera::BindDebugGUIElement()
-	{
-		__super::BindDebugGUIElement();
-	}
+	//void FPSCamera::BindDebugGUIElement()
+	//{
+	//	__super::BindDebugGUIElement();
+	//}
 }

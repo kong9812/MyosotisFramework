@@ -4,8 +4,8 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "classPointer.h"
-#include "vkStruct.h"
-#include "vkValidation.h"
+#include "Structs.h"
+#include "VK_Validation.h"
 #include "ivma.h"
 
 namespace MyosotisFW::System::Render
@@ -28,7 +28,7 @@ namespace MyosotisFW::System::Render
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
 		VmaAllocator GetVmaAllocator() const { return m_allocator; }
 
-		void ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage);
+		void ImageMemoryAllocate(DeviceImage& deviceImage);
 
 	private:
 		VkPhysicalDevice m_physicalDevice;

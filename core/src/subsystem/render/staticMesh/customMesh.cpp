@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
-#include "customMesh.h"
-#include "renderResources.h"
-#include "vkCreateInfo.h"
+#include "CustomMesh.h"
+#include "RenderResources.h"
+#include "VK_CreateInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -10,9 +10,9 @@ namespace MyosotisFW::System::Render
 		m_name = "カスタムメッシュ";
 	}
 
-	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
+	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass)
 	{
-		__super::PrepareForRender(device, resources, renderPass, pipelineCache);
+		__super::PrepareForRender(device, resources, renderPass);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -28,32 +28,32 @@ namespace MyosotisFW::System::Render
 		m_isReady = true;
 	}
 
-	void CustomMesh::Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera)
+	void CustomMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera)
 	{
 		__super::Update(updateData, camera);
 
 		if (camera)
 		{
-			m_ubo.projection = camera->GetProjectionMatrix();
-			m_ubo.view = camera->GetViewMatrix();
-			m_ubo.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
+			m_staticMeshShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
+			m_staticMeshShaderObject.standardUBO.data.view = camera->GetViewMatrix();
+			m_staticMeshShaderObject.standardUBO.data.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
 		}
-		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
-		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_ubo.model = glm::rotate(m_ubo.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_transfrom.scale));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
 
 		if (!m_isReady) return;
-		memcpy(m_uboBuffer.allocationInfo.pMappedData, &m_ubo, sizeof(m_ubo));
+		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
 	void CustomMesh::BindCommandBuffer(VkCommandBuffer commandBuffer)
 	{
 		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
 
-		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
-		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shaderBase.descriptorSet, 0, nullptr);
+		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipeline);
 
 		const VkDeviceSize offsets[1] = { 0 };
 		for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[m_currentLOD].size(); meshIdx++)
@@ -62,6 +62,11 @@ namespace MyosotisFW::System::Render
 			vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
 			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
 		}
+	}
+
+	glm::vec4 CustomMesh::GetCullerData()
+	{
+		return glm::vec4(m_transfrom.pos, 1.0f);
 	}
 
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
@@ -82,8 +87,8 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::loadAssets()
 	{
-		//std::vector<Utility::Vulkan::Struct::Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
-		std::vector<Utility::Vulkan::Struct::Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.m_meshPath);
+		//std::vector<Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
+		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.m_meshPath);
 
 		for (int i = 0; i < LOD::Max; i++)
 		{

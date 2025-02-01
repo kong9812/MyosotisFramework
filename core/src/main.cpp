@@ -6,8 +6,8 @@
 #include <iostream>
 #include <filesystem>
 
-#include "application.h"
-#include "applicationInterface.h"
+#include "Application.h"
+#include "ApplicationInterface.h"
 
 
 #ifdef FWDLL

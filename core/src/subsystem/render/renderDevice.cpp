@@ -1,9 +1,9 @@
 // Copyright (c) 2025 kong9812
 #include "subsystem/render/renderDevice.h"
 
-#include "vkCreateInfo.h"
-#include "appInfo.h"
-#include "logger.h"
+#include "VK_CreateInfo.h"
+#include "AppInfo.h"
+#include "Logger.h"
 
 namespace
 {
@@ -163,7 +163,7 @@ namespace MyosotisFW::System::Render
         vkDestroyDevice(m_device, GetAllocationCallbacks());
     }
 
-    void RenderDevice::ImageMemoryAllocate(Utility::Vulkan::Struct::DeviceImage& deviceImage)
+    void RenderDevice::ImageMemoryAllocate(DeviceImage& deviceImage)
     {
         VkMemoryRequirements memReqs{};
         vkGetImageMemoryRequirements(m_device, deviceImage.image, &memReqs);

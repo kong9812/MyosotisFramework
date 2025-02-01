@@ -2,7 +2,8 @@
 #pragma once
 #include <cstdint>
 #include <vulkan/vulkan.h>
-#include "logger.h"
+#include <string>
+#include "Logger.h"
 
 namespace
 {
@@ -33,6 +34,7 @@ namespace
         case VkResult::VK_ERROR_FORMAT_NOT_SUPPORTED: return "VK_ERROR_FORMAT_NOT_SUPPORTED";
         case VkResult::VK_ERROR_SURFACE_LOST_KHR: return "VK_ERROR_SURFACE_LOST_KHR";
         case VkResult::VK_ERROR_NATIVE_WINDOW_IN_USE_KHR: return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
+        case VkResult::VK_ERROR_OUT_OF_POOL_MEMORY: return "VK_ERROR_OUT_OF_POOL_MEMORY";
         default: return "Unknown VkResult code";
         }
     }

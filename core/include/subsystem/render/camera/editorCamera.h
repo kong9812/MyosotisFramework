@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.h"
+#include "Camera.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -18,8 +18,8 @@ namespace MyosotisFW::System::Render::Camera
 		// 一時停止などマウス座標のリセットが必要な時用
 		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
 
-		void Update(const Utility::Vulkan::Struct::UpdateData& updateData) override;
-		void BindDebugGUIElement() override;
+		void Update(const UpdateData& updateData) override;
+		//void BindDebugGUIElement() override;
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const { return __super::Serialize(allocator); }
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) { __super::Deserialize(doc, createObject); }

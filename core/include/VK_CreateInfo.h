@@ -103,15 +103,15 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkSubmitInfo submitInfo(VkPipelineStageFlags& submitPipelineStages, VkSemaphore& presentComplete, VkSemaphore& renderComplete)
+	inline VkSubmitInfo submitInfo(VkPipelineStageFlags& submitPipelineStages, VkSemaphore& pWaitSemaphores, VkSemaphore& pSignalSemaphores)
 	{
 		VkSubmitInfo si{};
 		si.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		si.pWaitDstStageMask = &submitPipelineStages;
 		si.waitSemaphoreCount = 1;
-		si.pWaitSemaphores = &presentComplete;
+		si.pWaitSemaphores = &pWaitSemaphores;
 		si.signalSemaphoreCount = 1;
-		si.pSignalSemaphores = &renderComplete;
+		si.pSignalSemaphores = &pSignalSemaphores;
 		return si;
 	}
 
@@ -732,6 +732,15 @@ namespace Utility::Vulkan::CreateInfo
 		ci.subpass = 0;																// サブパスのインデックス
 		ci.basePipelineHandle = VK_NULL_HANDLE;										// 派生パイプラインを使用しない
 		ci.basePipelineIndex = -1;
+		return ci;
+	}
+
+	inline VkComputePipelineCreateInfo computePipelineCreateInfo(VkPipelineLayout layout, VkPipelineShaderStageCreateInfo pStage)
+	{
+		VkComputePipelineCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+		ci.layout = layout;
+		ci.stage = pStage;
 		return ci;
 	}
 

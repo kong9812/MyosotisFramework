@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #define DLL_EXPORTS
-#include "application.h"
+#include "Application.h"
 
 #include <crtdbg.h>
 
@@ -8,9 +8,9 @@
 #include <stb_image.h>
 
 #include <memory>
-#include "systemManager.h"
-#include "logger.h"
-#include "appInfo.h"
+#include "SystemManager.h"
+#include "Logger.h"
+#include "AppInfo.h"
 
 Application::Application(bool allowHotReload)
 {

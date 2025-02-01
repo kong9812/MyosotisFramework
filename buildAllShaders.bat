@@ -11,14 +11,8 @@ if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 :: .vert と .frag ファイルを全て検索して変換
 echo Converting shaders in %SHADER_DIR%...
 
-:: .vert ファイルの変換
-for /r "%SHADER_DIR%" %%f in (*.vert) do (
-    echo Converting: %%f
-    glslangValidator -V "%%f" -o "%OUTPUT_DIR%\%%~nxf.spv"
-)
-
-:: .frag ファイルの変換
-for /r "%SHADER_DIR%" %%f in (*.frag) do (
+:: .vert .frag .comp  ファイルの変換
+for /r "%SHADER_DIR%" %%f in (*.vert *.frag *.comp) do (
     echo Converting: %%f
     glslangValidator -V "%%f" -o "%OUTPUT_DIR%\%%~nxf.spv"
 )

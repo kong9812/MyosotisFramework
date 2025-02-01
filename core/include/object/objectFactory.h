@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
-#include "fpsCamera.h"
-#include "primitiveGeometry.h"
-#include "customMesh.h"
+#include "FpsCamera.h"
+#include "PrimitiveGeometry.h"
+#include "CustomMesh.h"
 
 namespace MyosotisFW::System::ObjectFactory
 {

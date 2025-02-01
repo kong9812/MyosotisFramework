@@ -1,8 +1,8 @@
 // Copyright (c) 2025 kong9812
-#include "primitiveGeometry.h"
+#include "PrimitiveGeometry.h"
 
-#include "vkCreateInfo.h"
-#include "primitiveGeometryShape.h"
+#include "VK_CreateInfo.h"
+#include "PrimitiveGeometryShape.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -11,9 +11,9 @@ namespace MyosotisFW::System::Render
 		m_name = "プリミティブジオメトリ";
 	}
 
-	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VkPipelineCache pipelineCache)
+	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass)
 	{
-		__super::PrepareForRender(device, resources, renderPass, pipelineCache);
+		__super::PrepareForRender(device, resources, renderPass);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -27,21 +27,21 @@ namespace MyosotisFW::System::Render
 		m_isReady = true;
 	}
 
-	void PrimitiveGeometry::Update(const Utility::Vulkan::Struct::UpdateData& updateData, const Camera::CameraBase_ptr camera)
+	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera)
 	{
 		__super::Update(updateData, camera);
 
 		if (camera)
 		{
-			m_ubo.projection = camera->GetProjectionMatrix();
-			m_ubo.view = camera->GetViewMatrix();
-			m_ubo.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
+			m_staticMeshShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
+			m_staticMeshShaderObject.standardUBO.data.view = camera->GetViewMatrix();
+			m_staticMeshShaderObject.standardUBO.data.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
 		}
-		m_ubo.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
-		m_ubo.model = glm::scale(m_ubo.model, glm::vec3(m_transfrom.scale));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
 
 		if (!m_isReady) return;
-		memcpy(m_uboBuffer.allocationInfo.pMappedData, &m_ubo, sizeof(m_ubo));
+		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
 	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer)
@@ -49,9 +49,14 @@ namespace MyosotisFW::System::Render
 		__super::BindCommandBuffer(commandBuffer);
 	}
 
+	glm::vec4 PrimitiveGeometry::GetCullerData()
+	{
+		return glm::vec4(m_transfrom.pos, 5.0f);
+	}
+
 	void PrimitiveGeometry::loadAssets()
 	{
-		Utility::Vulkan::Struct::Mesh vertex[LOD::Max] = {
+		Mesh vertex[LOD::Max] = {
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)),
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)),
 			MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)),

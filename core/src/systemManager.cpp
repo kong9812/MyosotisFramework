@@ -3,12 +3,13 @@
 
 #include <vector>
 
-#include "vkCreateInfo.h"
-#include "vkValidation.h"
-#include "appInfo.h"
-#include "logger.h"
+#include "VK_CreateInfo.h"
+#include "VK_Validation.h"
+#include "AppInfo.h"
+#include "Logger.h"
+#include "Structs.h"
 
-#include "objectFactory.h"
+#include "ObjectFactory.h"
 
 namespace {
 	// デバッグコールバック関数
@@ -117,7 +118,7 @@ namespace MyosotisFW::System
 				newObject->SetPos(pos);
 				if (objType == ObjectType::CustomMesh)
 				{
-					Render::CustomMeshInfo customMeshInfo{};
+					CustomMeshInfo customMeshInfo{};
 					customMeshInfo.m_meshPath = "test.fbx";
 					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
 				}
@@ -205,12 +206,11 @@ namespace MyosotisFW::System
 	void SystemManager::Render()
 	{
 		m_renderSubsystem->BeginRender();
-		m_renderSubsystem->Render();
+		m_renderSubsystem->Compute();
+		m_renderSubsystem->TransparentRender();
+		m_renderSubsystem->EndRender();
 
 		// draw editor here
-
-
-		m_renderSubsystem->EndRender();
 	}
 
 	void SystemManager::ResizedCallback(GLFWwindow* window, int width, int height)

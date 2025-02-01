@@ -2,9 +2,9 @@
 #include "debugGUI.h"
 #include <sstream>
 
-#include "appInfo.h"
-#include "vkCreateInfo.h"
-#include "vkValidation.h"
+#include "AppInfo.h"
+#include "VK_CreateInfo.h"
+#include "VK_Validation.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -55,7 +55,7 @@ namespace MyosotisFW::System::Render
         ImGui::DestroyContext();
 	}
 
-    void DebugGUI::Update(Utility::Vulkan::Struct::UpdateData updateData)
+    void DebugGUI::Update(UpdateData updateData)
     {
         m_deltaTime = updateData.deltaTime;
     }

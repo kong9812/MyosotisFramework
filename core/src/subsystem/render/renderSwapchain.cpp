@@ -1,8 +1,8 @@
 // Copyright (c) 2025 kong9812
-#include "subsystem/render/renderSwapchain.h"
-#include "vkValidation.h"
-#include "vkCreateInfo.h"
-#include "appInfo.h"
+#include "RenderSwapchain.h"
+#include "VK_Validation.h"
+#include "VK_CreateInfo.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -59,19 +59,19 @@ namespace MyosotisFW::System::Render
 
 	RenderSwapchain::~RenderSwapchain()
 	{
-		for (Utility::Vulkan::Struct::Image& image : m_swapchainImage)
+		for (Image& image : m_swapchainImage)
 		{
 			vkDestroyImageView(*m_device, image.view, m_device->GetAllocationCallbacks());
 		}	
 		vkDestroySwapchainKHR(*m_device, m_swapchain, m_device->GetAllocationCallbacks());
 	}
 
-	void RenderSwapchain::AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)
+	void RenderSwapchain::AcquireNextImage(VkSemaphore semaphore, uint32_t& imageIndex)
 	{
-		VK_VALIDATION(vkAcquireNextImageKHR(*m_device, m_swapchain, UINT64_MAX, presentCompleteSemaphore, nullptr, &imageIndex));
+		VK_VALIDATION(vkAcquireNextImageKHR(*m_device, m_swapchain, UINT64_MAX, semaphore, nullptr, &imageIndex));
 	}
 
-	void RenderSwapchain::QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore)
+	void RenderSwapchain::QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore pWaitSemaphores)
 	{
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -80,9 +80,9 @@ namespace MyosotisFW::System::Render
 		presentInfo.pSwapchains = &m_swapchain;
 		presentInfo.pImageIndices = &imageIndex;
 		// Check if a wait semaphore has been specified to wait for before presenting the image
-		if (waitSemaphore != VK_NULL_HANDLE)
+		if (pWaitSemaphores != nullptr)
 		{
-			presentInfo.pWaitSemaphores = &waitSemaphore;
+			presentInfo.pWaitSemaphores = &pWaitSemaphores;
 			presentInfo.waitSemaphoreCount = 1;
 		}
 		VK_VALIDATION(vkQueuePresentKHR(queue, &presentInfo));

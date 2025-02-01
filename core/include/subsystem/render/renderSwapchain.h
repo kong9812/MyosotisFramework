@@ -1,9 +1,9 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vulkan/vulkan.h>
-#include "classPointer.h"
-#include "renderDevice.h"
-#include "vkStruct.h"
+#include "ClassPointer.h"
+#include "RenderDevice.h"
+#include "VK_Validation.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -17,10 +17,10 @@ namespace MyosotisFW::System::Render
 		uint32_t GetHeight() { return m_height; }
 		uint32_t GetImageCount() { return static_cast<uint32_t>(m_swapchainImage.size()); }
 		uint32_t GetMinImageCount() { return m_minImageCount; }
-		std::vector<Utility::Vulkan::Struct::Image>& GetSwapchainImage() { return m_swapchainImage; }
+		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }
 
 		void AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex);
-		void QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore);
+		void QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore pWaitSemaphores);
 
 	private:
 		RenderDevice_ptr m_device;
@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		uint32_t m_width;
 		uint32_t m_height;
 
-		std::vector<Utility::Vulkan::Struct::Image> m_swapchainImage;
+		std::vector<Image> m_swapchainImage;
 		uint32_t m_minImageCount;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderSwapchain)

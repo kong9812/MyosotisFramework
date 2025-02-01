@@ -2,11 +2,11 @@
 #pragma once
 #include <string>
 
-#include "objectCast.h"
+#include "ObjectCast.h"
 #include "iglm.h"
-#include "objectBase.h"
-#include "classPointer.h"
-#include "vkStruct.h"
+#include "ObjectBase.h"
+#include "ClassPointer.h"
+#include "Structs.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -29,9 +29,9 @@ namespace MyosotisFW::System::Render::Camera
 
         glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
-        virtual void Update(const Utility::Vulkan::Struct::UpdateData& updateData) {}
+        virtual void Update(const UpdateData& updateData) {}
         void BindCommandBuffer(VkCommandBuffer commandBuffer) override {}  // 必要ない
-        virtual void BindDebugGUIElement() override;
+        //virtual void BindDebugGUIElement() override;
 
         virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
         virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override;

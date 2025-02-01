@@ -1,11 +1,11 @@
 // Copyright (c) 2025 kong9812
-#include "gameDirector.h"
-#include "logger.h"
+#include "GameDirector.h"
+#include "Logger.h"
 #include "istduuid.h"
-#include "customMesh.h"
-#include "vkLoader.h"
+#include "CustomMesh.h"
+#include "VK_Loader.h"
 
-#include "objectFactory.h"
+#include "ObjectFactory.h"
 
 namespace {
 	void CreateAndResistObject(

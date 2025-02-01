@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
-#include "editorCamera.h"
+#include "EditorCamera.h"
 #include "iglfw.h"
-#include "appInfo.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -26,7 +26,7 @@ namespace MyosotisFW::System::Render::Camera
 		return __super::GetWorldPos(pos, distance);
 	}
 
-	void EditorCamera::Update(const Utility::Vulkan::Struct::UpdateData& updateData)
+	void EditorCamera::Update(const UpdateData& updateData)
 	{
 		if (updateData.pause) return;
 
@@ -152,8 +152,8 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraPos += move;
 	}
 
-	void EditorCamera::BindDebugGUIElement()
-	{
-		__super::BindDebugGUIElement();
-	}
+	//void EditorCamera::BindDebugGUIElement()
+	//{
+	//	__super::BindDebugGUIElement();
+	//}
 }

@@ -2,10 +2,10 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include "iimgui.h"
-#include "classPointer.h"
+#include "ClassPointer.h"
 
-#include "renderDevice.h"
-#include "renderSwapchain.h"
+#include "RenderDevice.h"
+#include "RenderSwapchain.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -22,7 +22,7 @@ namespace MyosotisFW::System::Render
 			VkPipelineCache& pipelineCache);
 		~DebugGUI();
 
-		void Update(Utility::Vulkan::Struct::UpdateData updateData);
+		void Update(UpdateData updateData);
 
 		void BeginDebugCommandBuffer();
 		void BindDebugGUIElement() const;

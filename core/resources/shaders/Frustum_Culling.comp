@@ -1,0 +1,39 @@
+#version 450
+// [UBO 0]視錐台平面情報
+layout(std140, binding = 0) uniform FrustumPlanes {
+    vec4 planes[6];
+} frustumPlanes;
+
+// [SSBO 1]オブジェクトデータ
+layout(std430, binding = 1) readonly buffer ObjectData {
+    vec4 objects[];  // (x, y, z, radius)
+} objectData;
+
+// [SSBO 2]可視オブジェクトのインデックス
+layout(std430, binding = 2) buffer VisibleObjects {
+    uint visibleIndices[];
+} visibleObjects;
+
+void main() 
+{
+    uint id = gl_GlobalInvocationID.x;
+    vec3 center = objectData.objects[id].xyz;
+    float radius = objectData.objects[id].w;
+
+    // 画面に入ってるかどうかをチェック
+    bool inside = true;
+    for (int i = 0; i < 6; i++) 
+    {
+        if (dot(frustumPlanes.planes[i].xyz, center) + frustumPlanes.planes[i].w < -radius) 
+        {
+            inside = false;
+            break;
+        }
+    }
+
+    // 画面に入ってる
+    if (inside) 
+    {
+        visibleObjects.visibleIndices[id] = 1;
+    }
+}
