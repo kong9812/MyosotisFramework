@@ -762,4 +762,16 @@ namespace Utility::Vulkan::CreateInfo
 		bufferInfo.range = range;
 		return bufferInfo;
 	}
+
+	inline VkDebugUtilsLabelEXT debugUtilsLabelEXT(glm::vec3 color, const char* labelName)
+	{
+		VkDebugUtilsLabelEXT label{};
+		label.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+		label.color[0] = color.r;
+		label.color[1] = color.g;
+		label.color[2] = color.b;
+		label.color[3] = 1.0f;
+		label.pLabelName = labelName;
+		return label;
+	}
 }

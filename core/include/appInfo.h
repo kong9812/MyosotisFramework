@@ -29,6 +29,7 @@ namespace MyosotisFW::AppInfo
     const std::vector<const char*> g_vkInstanceExtensionProperties = {
         VK_KHR_SURFACE_EXTENSION_NAME,
         VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #ifdef _WIN32
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif __APPLE__

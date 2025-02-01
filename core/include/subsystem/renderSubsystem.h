@@ -81,6 +81,9 @@ namespace MyosotisFW::System::Render
 
 		void prepareFrustumCuller();
 
+
+		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
+		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
 	// callback
 	private:
 		using OnPressedSaveGameStageCallback = std::function<void()>;
@@ -90,9 +93,9 @@ namespace MyosotisFW::System::Render
 		using OnPressedCreateObjectCallback = std::function<void(ObjectType, glm::vec3)>;
 		OnPressedCreateObjectCallback m_onPressedCreateObjectCallback;
 ;	public:
-	void SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback);
-	void SetOnPressedLoadGameStageCallback(OnPressedLoadGameStageCallback callback);
-	void SetOnPressedCreateObjectCallback(OnPressedCreateObjectCallback callback);
+		void SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback);
+		void SetOnPressedLoadGameStageCallback(OnPressedLoadGameStageCallback callback);
+		void SetOnPressedCreateObjectCallback(OnPressedCreateObjectCallback callback);
 
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderSubsystem)

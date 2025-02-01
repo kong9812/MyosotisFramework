@@ -65,6 +65,9 @@ namespace MyosotisFW::System::Render
 		// submit info
 		m_submitPipelineStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.computeComplete, m_semaphores.renderComplete);
+	
+		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
+		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -152,6 +155,7 @@ namespace MyosotisFW::System::Render
 		{
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 			VK_VALIDATION(vkBeginCommandBuffer(m_computeCommandBuffers[0], &commandBufferBeginInfo));
+			m_vkCmdBeginDebugUtilsLabelEXT(m_computeCommandBuffers[0], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.5f, 0.1f, 0.1f), "Compute Pass"));
 			vkCmdBindPipeline(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipeline);
 			vkCmdBindDescriptorSets(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipelineLayout, 0, 1, &m_frustumCullerShaderObject.shaderBase.descriptorSet, 0, 0);
 			
@@ -192,6 +196,7 @@ namespace MyosotisFW::System::Render
 			}
 
 			vkCmdDispatch(m_computeCommandBuffers[0], m_frustumCullerShaderObject.objectDataSSBO.data.objects.size(), 1, 1);
+			m_vkCmdEndDebugUtilsLabelEXT(m_computeCommandBuffers[0]);
 			vkEndCommandBuffer(m_computeCommandBuffers[0]);
 		}
 
@@ -219,6 +224,7 @@ namespace MyosotisFW::System::Render
 		renderPassBeginInfo.framebuffer = m_frameBuffers[m_currentBufferIndex];
 
 		VK_VALIDATION(vkBeginCommandBuffer(m_renderCommandBuffers[m_currentBufferIndex], &commandBufferBeginInfo));
+		m_vkCmdBeginDebugUtilsLabelEXT(m_renderCommandBuffers[m_currentBufferIndex], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.5f, 0.1f), "Transparent Render Pass"));
 
 		vkCmdBeginRenderPass(m_renderCommandBuffers[m_currentBufferIndex], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
@@ -244,6 +250,7 @@ namespace MyosotisFW::System::Render
 				staticMeshCounter++;
 			}
 		}
+		m_vkCmdEndDebugUtilsLabelEXT(m_renderCommandBuffers[m_currentBufferIndex]);
 		vkCmdEndRenderPass(m_renderCommandBuffers[m_currentBufferIndex]);
 		VK_VALIDATION(vkEndCommandBuffer(m_renderCommandBuffers[m_currentBufferIndex]));
 		m_submitInfo.commandBufferCount = 1;
