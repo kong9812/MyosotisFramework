@@ -6,8 +6,10 @@
 
 namespace glm
 {
-	inline glm::vec4 normalizePlane(glm::vec4 plane) {
-        float length = glm::length(glm::vec3(plane));
+    // 面の法線を求める(正規化)
+	inline glm::vec4 normalizePlane(glm::vec4 plane) 
+    {
+        float length = glm::length(plane);
         return plane / length;
     }
 }

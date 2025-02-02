@@ -104,9 +104,4 @@ namespace MyosotisFW
 	{
 		std::string m_meshPath;
 	}CustomMeshInfo;
-
-	typedef struct
-	{
-
-	}MeshInfo;
 }

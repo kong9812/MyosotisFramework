@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "RenderSubsystem.h"
 
+#include <algorithm>
 #include <array>
 #include <backends/imgui_impl_vulkan.h>
 
@@ -8,6 +9,14 @@
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 #include "PrimitiveGeometry.h"
+
+namespace {
+	typedef struct
+	{
+		float distance;
+		MyosotisFW::System::Render::StaticMesh_ptr staticMesh;
+	}TransparentStaticMesh;	// Zソート用
+}
 
 namespace MyosotisFW::System::Render
 {
@@ -214,6 +223,8 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::TransparentRender()
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkFramebuffer currentFramebuffer = m_frameBuffers[m_currentBufferIndex];
 
 		std::vector<VkClearValue> clearValues = {
 			AppInfo::g_colorClearValues,
@@ -221,20 +232,22 @@ namespace MyosotisFW::System::Render
 		};
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
-		renderPassBeginInfo.framebuffer = m_frameBuffers[m_currentBufferIndex];
+		renderPassBeginInfo.framebuffer = currentFramebuffer;
 
-		VK_VALIDATION(vkBeginCommandBuffer(m_renderCommandBuffers[m_currentBufferIndex], &commandBufferBeginInfo));
-		m_vkCmdBeginDebugUtilsLabelEXT(m_renderCommandBuffers[m_currentBufferIndex], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.5f, 0.1f), "Transparent Render Pass"));
+		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.5f, 0.1f), "Transparent Render Pass"));
 
-		vkCmdBeginRenderPass(m_renderCommandBuffers[m_currentBufferIndex], &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
 		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
-		vkCmdSetViewport(m_renderCommandBuffers[m_currentBufferIndex], 0, 1, &viewport);
+		vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
 
 		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		vkCmdSetScissor(m_renderCommandBuffers[m_currentBufferIndex], 0, 1, &scissor);
+		vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
 		memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
+
+		std::vector<TransparentStaticMesh> transparentStaticMeshes{};
 
 		uint32_t staticMeshCounter = 0;
 		for (ObjectBase_ptr& object : m_objects)
@@ -244,17 +257,31 @@ namespace MyosotisFW::System::Render
 				if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
 				{
 					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-					staticMesh->BindCommandBuffer(m_renderCommandBuffers[m_currentBufferIndex]);
-					Logger::Info(std::string("rending: ") + std::to_string(staticMeshCounter));
+
+					// Zソート(簡易)
+					transparentStaticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
 				}
 				staticMeshCounter++;
 			}
 		}
-		m_vkCmdEndDebugUtilsLabelEXT(m_renderCommandBuffers[m_currentBufferIndex]);
-		vkCmdEndRenderPass(m_renderCommandBuffers[m_currentBufferIndex]);
-		VK_VALIDATION(vkEndCommandBuffer(m_renderCommandBuffers[m_currentBufferIndex]));
+
+		// 距離ソート
+		std::sort(transparentStaticMeshes.begin(), transparentStaticMeshes.end(),
+			[](const TransparentStaticMesh& a, const TransparentStaticMesh& b) {
+				return a.distance > b.distance;
+			});
+
+		for (TransparentStaticMesh staticMeshesPair : transparentStaticMeshes)
+		{
+			staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer);
+			Logger::Info(std::string("rending: ") + std::to_string(staticMeshCounter));
+		}
+
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+		vkCmdEndRenderPass(currentCommandBuffer);
+		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
-		m_submitInfo.pCommandBuffers = &m_renderCommandBuffers[m_currentBufferIndex];
+		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
 		VK_VALIDATION(vkQueueSubmit(m_graphicsQueue, 1, &m_submitInfo, VK_NULL_HANDLE));
 	}
 
