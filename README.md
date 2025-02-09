@@ -80,7 +80,9 @@ Once the environment setup is complete, you can use the following batch file to 
 - **Pause Functionality (In Progress)**  
   Press the `F2 key` to pause the update process.
 
-- **Frustum Culling**  
+- **Frustum Culling**
+
+- **Deferred Rending**
 
 ---
 
