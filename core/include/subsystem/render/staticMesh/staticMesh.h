@@ -36,36 +36,22 @@ namespace MyosotisFW::System::Render
 
 		virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
 
-		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass);
+		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera);
-		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
+		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false);
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override { __super::Deserialize(doc, createObject); }
 		virtual glm::vec4 GetCullerData() { return glm::vec4(0.0f); }
 	protected:
 		virtual void loadAssets() {};
-		virtual void prepareUniformBuffers();
 		virtual void prepareShaderStorageBuffers() {};
-
-		// todo. descriptorsManagerに移す
-		// todo. descriptorsはfactoryで作るのがいいかも
-		virtual void prepareDescriptors();
-
-		// todo. renderpipelineはfactoryで作るのがいいかも
-		virtual void prepareRenderPipeline();
 
 		// render device
 		RenderDevice_ptr m_device;
 
 		// render resources
 		RenderResources_ptr m_resources;
-
-		// render pass
-		VkRenderPass m_renderPass;
-
-		// todo.この辺はfactoryで作るといいかも
-		VkDescriptorPool m_descriptorPool;
 
 		// vertex buffer
 		std::array<std::vector<Buffer>, LOD::Max > m_vertexBuffer;

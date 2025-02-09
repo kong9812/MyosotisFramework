@@ -30,7 +30,6 @@ namespace MyosotisFW::System::Render::Camera
         glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
         virtual void Update(const UpdateData& updateData) {}
-        void BindCommandBuffer(VkCommandBuffer commandBuffer) override {}  // 必要ない
         //virtual void BindDebugGUIElement() override;
 
         virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;

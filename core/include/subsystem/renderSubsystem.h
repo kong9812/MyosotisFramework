@@ -12,6 +12,10 @@
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
+#include "DeferredRenderPipeline.h"
+#include "CompositionRenderPipeline.h"
+#include "TransparentRenderPipeline.h"
+
 namespace MyosotisFW::System::Render
 {
 	class RenderSubsystem
@@ -81,9 +85,19 @@ namespace MyosotisFW::System::Render
 
 		void prepareFrustumCuller();
 
-
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
+
+	private:
+		VMAImage m_position;
+		VMAImage m_baseColor;
+		ShaderBase m_compositionShaderBase;
+		void prepareDeferredRendering();
+
+		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
+		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
+		TransparentRenderPipeline_ptr m_transparentRenderPipeline;
+
 	// callback
 	private:
 		using OnPressedSaveGameStageCallback = std::function<void()>;

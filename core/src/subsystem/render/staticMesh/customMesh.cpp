@@ -10,16 +10,13 @@ namespace MyosotisFW::System::Render
 		m_name = "カスタムメッシュ";
 	}
 
-	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass)
+	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject)
 	{
-		__super::PrepareForRender(device, resources, renderPass);
+		__super::PrepareForRender(device, resources, shaderObject);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareUniformBuffers();
 		prepareShaderStorageBuffers();
-		prepareDescriptors();
-		prepareRenderPipeline();
 
 		m_transfrom.scale = glm::vec3(1.0f);
 		m_transfrom.rot = glm::vec3(-90.0f, 0.0f, 0.0f);
@@ -48,20 +45,9 @@ namespace MyosotisFW::System::Render
 		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
-	void CustomMesh::BindCommandBuffer(VkCommandBuffer commandBuffer)
+	void CustomMesh::BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent)
 	{
-		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
-
-		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shaderBase.descriptorSet, 0, nullptr);
-		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipeline);
-
-		const VkDeviceSize offsets[1] = { 0 };
-		for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[m_currentLOD].size(); meshIdx++)
-		{
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer[m_currentLOD][meshIdx].buffer, offsets);
-			vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
-		}
+		__super::BindCommandBuffer(commandBuffer, transparent);
 	}
 
 	glm::vec4 CustomMesh::GetCullerData()
@@ -125,20 +111,5 @@ namespace MyosotisFW::System::Render
 				}
 			}
 		}
-	}
-
-	void CustomMesh::prepareUniformBuffers()
-	{
-		__super::prepareUniformBuffers();
-	}
-
-	void CustomMesh::prepareDescriptors()
-	{
-		__super::prepareDescriptors();
-	}
-
-	void CustomMesh::prepareRenderPipeline()
-	{
-		__super::prepareRenderPipeline();
 	}
 }

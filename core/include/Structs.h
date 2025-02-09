@@ -32,6 +32,14 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		VkImage image;
+		VkImageView view;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
+	}VMAImage;
+
+	typedef struct
+	{
 		VkBuffer buffer;
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
@@ -47,14 +55,20 @@ namespace MyosotisFW
 	typedef struct
 	{
 		VkDescriptorSet descriptorSet;
-		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
 	}ShaderBase;
 
 	typedef struct
 	{
-		ShaderBase shaderBase;
+		struct
+		{
+			VkDescriptorSet descriptorSet;
+			VkPipelineLayout pipelineLayout;
+			VkDescriptorSetLayout descriptorSetLayout;
+			VkPipeline pipeline;
+		}shaderBase;		// todo.
+
 		struct
 		{
 			Buffer buffer;
@@ -85,9 +99,11 @@ namespace MyosotisFW
 
 	typedef struct
 	{
-		ShaderBase shaderBase;
+		ShaderBase deferredRenderShaderBase;
+		ShaderBase transparentRenderShaderBase;
 		struct
 		{
+			bool ready;
 			Buffer buffer;
 			struct
 			{
@@ -98,7 +114,7 @@ namespace MyosotisFW
 				glm::vec4 cameraPos;
 			}data;
 		}standardUBO;			// UBO
-	}StaticMeshShaderObject;	
+	}StaticMeshShaderObject;
 
 	typedef struct
 	{

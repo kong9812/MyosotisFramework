@@ -160,6 +160,23 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkImageCreateInfo imageCreateInfoForAttachment(VkFormat format, uint32_t width, uint32_t height)
+	{
+		VkImageCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		ci.imageType = VkImageType::VK_IMAGE_TYPE_2D;
+		ci.format = format;
+		ci.extent.width = width;
+		ci.extent.height = height;
+		ci.extent.depth = 1;
+		ci.mipLevels = 1;
+		ci.arrayLayers = 1;
+		ci.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ci.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+		ci.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+		return ci;
+	}
+
 	inline VkImageViewCreateInfo imageViewCreateInfoForDepthStencil(VkImage image, VkFormat format)
 	{
 		VkImageViewCreateInfo ci{};
@@ -177,6 +194,22 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkImageViewCreateInfo imageViewCreateInfoForAttachment(VkImage image, VkFormat format)
+	{
+		VkImageViewCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		ci.image = image;
+		ci.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+		ci.format = format;
+		ci.components = {
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
+		};
+		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		return ci;
+	}
 	inline VkMemoryAllocateInfo memoryAllocateInfo(VkDeviceSize allocationSize, uint32_t memoryTypeIndex)
 	{
 		VkMemoryAllocateInfo ai{};
@@ -197,6 +230,20 @@ namespace Utility::Vulkan::CreateInfo
 		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		return ad;
+	}
+
+	inline VkAttachmentDescription attachmentDescriptionForAttachment(VkFormat format)
+	{
+		VkAttachmentDescription ad{};
+		ad.format = format;
+		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ad.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		return ad;
 	}
 
@@ -222,41 +269,51 @@ namespace Utility::Vulkan::CreateInfo
 		return ar;
 	}
 
-	inline VkSubpassDescription subpassDescription(VkAttachmentReference& color, VkAttachmentReference& depth)
+	inline VkSubpassDescription subpassDescription(
+		std::vector<VkAttachmentReference>& colorAttachments,
+		VkAttachmentReference& depthStencilAttachment,
+		std::vector<VkAttachmentReference>& inputAttachments)
 	{
 		VkSubpassDescription sd{};
 		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-		sd.colorAttachmentCount = 1;
-		sd.pColorAttachments = &color;
-		sd.pDepthStencilAttachment = &depth;
-		sd.inputAttachmentCount = 0;
-		sd.preserveAttachmentCount = 0;
+		sd.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
+		sd.pColorAttachments = colorAttachments.data();
+		sd.pDepthStencilAttachment = &depthStencilAttachment;
+		sd.inputAttachmentCount = static_cast<uint32_t>(inputAttachments.size());
+		sd.pInputAttachments = inputAttachments.data();
 		return sd;
 	}
 
-	inline VkSubpassDependency subpassDependencyForColor()
+	inline VkSubpassDescription subpassDescription(
+		std::vector<VkAttachmentReference>& colorAttachments,
+		VkAttachmentReference& depthStencilAttachment)
 	{
-		VkSubpassDependency sd{};
-		sd.srcSubpass = VK_SUBPASS_EXTERNAL;
-		sd.dstSubpass = 0;
-		sd.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		sd.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		sd.srcAccessMask = VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		sd.dstAccessMask = VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-		sd.dependencyFlags = 0;
+		VkSubpassDescription sd{};
+		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+		sd.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
+		sd.pColorAttachments = colorAttachments.data();
+		sd.pDepthStencilAttachment = &depthStencilAttachment;
 		return sd;
 	}
 
-	inline VkSubpassDependency subpassDependencyForDepthStencil()
+	inline VkSubpassDependency subpassDependency(
+		uint32_t srcSubpass,
+		uint32_t dstSubpass,
+		VkPipelineStageFlags srcStageMask,
+		VkPipelineStageFlags dstStageMask,
+		VkAccessFlags srcAccessMask,
+		VkAccessFlags dstAccessMask,
+		VkDependencyFlags dependencyFlags
+	)
 	{
 		VkSubpassDependency sd{};
-		sd.srcSubpass = VK_SUBPASS_EXTERNAL;
-		sd.dstSubpass = 0;
-		sd.srcStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		sd.dstStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		sd.srcAccessMask = 0;
-		sd.dstAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-		sd.dependencyFlags = 0;
+		sd.srcSubpass = srcSubpass;				// ソースサブパスインデックス
+		sd.dstSubpass = dstSubpass;				// 宛先サブパスインデックス
+		sd.srcStageMask = srcStageMask;			// ソースサブパスの開始条件
+		sd.dstStageMask = dstStageMask;			// 宛先サブパスの開始条件
+		sd.srcAccessMask = srcAccessMask;		// ソースサブパスが持っているアクセスタイプ
+		sd.dstAccessMask = dstAccessMask;		// 宛先サブパスが持っているアクセスタイプ
+		sd.dependencyFlags = dependencyFlags;	// 依存関係の挙動を制御するフラグ
 		return sd;
 	}
 
@@ -326,7 +383,7 @@ namespace Utility::Vulkan::CreateInfo
 		bi.renderArea.offset.y = 0;
 		bi.renderArea.extent.width = width;
 		bi.renderArea.extent.height = height;
-		bi.clearValueCount = 2;
+		bi.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		bi.pClearValues = clearValues.data();
 		return bi;
 	}
@@ -416,6 +473,32 @@ namespace Utility::Vulkan::CreateInfo
 		return wds;
 	}
 
+	inline VkWriteDescriptorSet writeDescriptorSet(
+		VkDescriptorSet descriptorSet,
+		uint32_t dstBinding,
+		VkDescriptorType descriptorType,
+		const VkDescriptorImageInfo* pImageInfo,
+		uint32_t descriptorCount = 1)
+	{
+		VkWriteDescriptorSet wds{};
+		wds.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		wds.dstSet = descriptorSet;
+		wds.dstBinding = dstBinding;
+		wds.descriptorCount = descriptorCount;
+		wds.descriptorType = descriptorType;
+		wds.pImageInfo = pImageInfo;
+		return wds;
+	}
+
+	inline VkDescriptorImageInfo descriptorImageInfo(VkSampler sampler, VkImageView imageView, VkImageLayout imageLayout)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.sampler = sampler;
+		imageInfo.imageView = imageView;
+		imageInfo.imageLayout = imageLayout;
+		return imageInfo;
+	}
+
 	inline VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(const VkDescriptorSetLayout* pSetLayouts, uint32_t setLayoutCount = 1)
 	{
 		VkPipelineLayoutCreateInfo ci{};
@@ -476,14 +559,14 @@ namespace Utility::Vulkan::CreateInfo
 		return as;
 	}
 
-	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(const VkPipelineColorBlendAttachmentState* pAttachments, uint32_t attachmentCount = 1)
+	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(std::vector<VkPipelineColorBlendAttachmentState>& attachments)
 	{
 		VkPipelineColorBlendStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		ci.logicOpEnable = VK_FALSE;					// 論理演算の有効化
-		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;		// 論理演算の種類
-		ci.attachmentCount = attachmentCount;			// アタッチメントの数
-		ci.pAttachments = pAttachments;					// 各アタッチメントの設定
+		ci.logicOpEnable = VK_FALSE;										// 論理演算の有効化
+		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;							// 論理演算の種類
+		ci.attachmentCount = static_cast<uint32_t>(attachments.size());		// アタッチメントの数
+		ci.pAttachments = attachments.data();								// 各アタッチメントの設定
 		return ci;
 	}
 

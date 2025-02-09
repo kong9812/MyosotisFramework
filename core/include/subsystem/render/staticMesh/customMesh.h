@@ -12,9 +12,9 @@ namespace MyosotisFW::System::Render
 
 		const ObjectType GetObjectType() const override { return ObjectType::CustomMesh; }
 
-		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass) override;
+		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera) override;
-		void BindCommandBuffer(VkCommandBuffer commandBuffer) override;
+		void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false) override;
 		//void BindDebugGUIElement() override {};
 
 		void SetCustomMeshInfo(CustomMeshInfo customMeshInfo) { m_customMeshInfo = customMeshInfo; }
@@ -24,11 +24,7 @@ namespace MyosotisFW::System::Render
 		void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override;
 	private:
 		void loadAssets() override;
-		void prepareUniformBuffers() override;
 		void prepareShaderStorageBuffers() override {};
-
-		void prepareDescriptors() override;
-		void prepareRenderPipeline() override;
 
 		CustomMeshInfo m_customMeshInfo;
 	};

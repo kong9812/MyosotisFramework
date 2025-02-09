@@ -11,16 +11,13 @@ namespace MyosotisFW::System::Render
 		m_name = "プリミティブジオメトリ";
 	}
 
-	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass)
+	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject)
 	{
-		__super::PrepareForRender(device, resources, renderPass);
+		__super::PrepareForRender(device, resources, shaderObject);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareUniformBuffers();
 		prepareShaderStorageBuffers();
-		prepareDescriptors();
-		prepareRenderPipeline();
 		m_transfrom.scale = glm::vec3(5.0f);
 
 		// todo.検証処理
@@ -44,9 +41,9 @@ namespace MyosotisFW::System::Render
 		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
-	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer)
+	void PrimitiveGeometry::BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent)
 	{
-		__super::BindCommandBuffer(commandBuffer);
+		__super::BindCommandBuffer(commandBuffer, transparent);
 	}
 
 	glm::vec4 PrimitiveGeometry::GetCullerData()
@@ -93,20 +90,5 @@ namespace MyosotisFW::System::Render
 				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation);
 			}
 		}
-	}
-
-	void PrimitiveGeometry::prepareUniformBuffers()
-	{
-		__super::prepareUniformBuffers();
-	}
-
-	void PrimitiveGeometry::prepareDescriptors()
-	{
-		__super::prepareDescriptors();
-	}
-
-	void PrimitiveGeometry::prepareRenderPipeline()
-	{
-		__super::prepareRenderPipeline();
 	}
 }

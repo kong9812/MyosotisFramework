@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
 #include "ObjectType.h"
@@ -39,7 +40,7 @@ namespace MyosotisFW
 		//virtual void Update(const UpdateData& updateData) = 0;
 		
 		// Render
-		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) = 0;
+		//virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) = 0;
 		//// Debug
 		//virtual void BindDebugGUIElement() = 0;
 

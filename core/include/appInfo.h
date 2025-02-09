@@ -48,18 +48,22 @@ namespace MyosotisFW::AppInfo
     // 指定物理デバイスのIndex
     constexpr uint32_t g_physicalIndex = 0;
     // 指定画像フォーマット
-    constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_SRGB, VkColorSpaceKHR ::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+    constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_SRGB, VkColorSpaceKHR ::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }; // 表示用に最適化されており、多くのディスプレイがsRGBカラースペースでカラーを直接表示できる
     // 指定プレゼントモード
     constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
     // 指定DepthFormat
     constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+    // 指定画像フォーマット ([deferred] position)
+    constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
+    // 指定画像フォーマット ([deferred] base color)
+    constexpr VkFormat g_deferredBaseColorFormat = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;  // 0.0～1.0
     // 指定スワップチェーン画像数
     constexpr uint32_t g_minImageCount = 3;
 
     // 背景色
     constexpr VkClearValue g_colorClearValues = { 0.1f, 0.1f, 0.1f, 1.0f };
     // depth
-    constexpr VkClearValue g_depthClearValues = { 1.0f, 0 };
+    constexpr VkClearValue g_depthClearValues = { 1.0f, 0.0f };
 
     // [デフォルト]カメラ位置
     constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 2.0f, -5.0f);
@@ -102,4 +106,7 @@ namespace MyosotisFW::AppInfo
     // 移動
     constexpr float g_moveSpeed = 1.0f;
     constexpr float g_moveBoostSpeed = 10.0f;
+
+    // render pipeline
+    constexpr uint32_t g_descriptorCount = 10;
 }
