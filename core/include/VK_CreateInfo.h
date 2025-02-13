@@ -6,13 +6,13 @@
 namespace Utility::Vulkan::CreateInfo
 {
 	typedef enum VertexAttributeBit {
-		POSITION_VEC3	= 0x00000001,
-		POSITION_VEC4	= 0x00000002,
-		NORMAL			= 0x00000004,
-		UV				= 0x00000008,
-		TANGENT			= 0x00000010,
-		COLOR_VEC3		= 0x00000020,
-		COLOR_VEC4		= 0x00000040,
+		POSITION_VEC3 = 0x00000001,
+		POSITION_VEC4 = 0x00000002,
+		NORMAL = 0x00000004,
+		UV = 0x00000008,
+		TANGENT = 0x00000010,
+		COLOR_VEC3 = 0x00000020,
+		COLOR_VEC4 = 0x00000040,
 		VERTEX_ATTRIBUTE_BITS_MAX_ENUM = 0x7FFFFFFF
 	} VertexAttributeBit;
 	typedef uint32_t VertexAttributeBits;
@@ -520,7 +520,7 @@ namespace Utility::Vulkan::CreateInfo
 	}
 
 	inline VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(
-		VkPolygonMode polygonMode, 
+		VkPolygonMode polygonMode,
 		VkCullModeFlags cullMode,
 		VkFrontFace frontFace)
 	{
@@ -570,7 +570,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(uint32_t viewportCount = 1,uint32_t scissorCount =1)
+	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(uint32_t viewportCount = 1, uint32_t scissorCount = 1)
 	{
 		VkPipelineViewportStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -780,6 +780,13 @@ namespace Utility::Vulkan::CreateInfo
 		ci.pVertexBindingDescriptions = vertexBindingDescriptions.data();
 		ci.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescription.size());
 		ci.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
+		return ci;
+	}
+
+	inline VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo()
+	{
+		VkPipelineVertexInputStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		return ci;
 	}
 

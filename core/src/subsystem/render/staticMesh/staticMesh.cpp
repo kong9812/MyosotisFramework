@@ -28,14 +28,22 @@ namespace MyosotisFW::System::Render
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_staticMeshShaderObject.standardUBO.buffer.buffer, m_staticMeshShaderObject.standardUBO.buffer.allocation);
 	}
 
-	void StaticMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject)
+	void StaticMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources)
 	{
-		m_staticMeshShaderObject = shaderObject;
-
 		m_device = device;
 		m_resources = resources;
 		m_currentLOD = LOD::Hide;
 		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
+
+		vmaTools::ShaderBufferAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			m_staticMeshShaderObject.standardUBO.data,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			m_staticMeshShaderObject.standardUBO.buffer.buffer,
+			m_staticMeshShaderObject.standardUBO.buffer.allocation,
+			m_staticMeshShaderObject.standardUBO.buffer.allocationInfo,
+			m_staticMeshShaderObject.standardUBO.buffer.descriptor);
 	}
 
 	void StaticMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera)
@@ -78,7 +86,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		const VkDeviceSize offsets[1] = { 0 };
-		for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[m_currentLOD].size(); meshIdx++)
+		for (uint32_t meshIdx = 0; meshIdx < static_cast<uint32_t>(m_vertexBuffer[m_currentLOD].size()); meshIdx++)
 		{
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer[m_currentLOD][meshIdx].buffer, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);

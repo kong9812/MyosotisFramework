@@ -36,7 +36,9 @@ namespace MyosotisFW::System::Render
 
 		virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
 
-		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject);
+		StaticMeshShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
+
+		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera);
 		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false);
 
@@ -66,5 +68,5 @@ namespace MyosotisFW::System::Render
 		StaticMeshShaderObject m_staticMeshShaderObject;
 	};
 	TYPEDEF_SHARED_PTR(StaticMesh)
-	OBJECT_CAST_FUNCTION(StaticMesh)
+		OBJECT_CAST_FUNCTION(StaticMesh)
 }

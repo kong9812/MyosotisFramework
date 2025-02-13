@@ -33,7 +33,7 @@ namespace MyosotisFW::System::Render
 		void Update(UpdateData updateData);
 		void Compute();
 		void BeginRender();
-		void TransparentRender();
+		void MeshRender();
 		void EndRender();
 		void Resize(VkSurfaceKHR& surface, uint32_t width, uint32_t height);
 
@@ -98,7 +98,7 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		TransparentRenderPipeline_ptr m_transparentRenderPipeline;
 
-	// callback
+		// callback
 	private:
 		using OnPressedSaveGameStageCallback = std::function<void()>;
 		OnPressedSaveGameStageCallback m_onPressedSaveGameStageCallback;
@@ -106,7 +106,7 @@ namespace MyosotisFW::System::Render
 		OnPressedLoadGameStageCallback m_onPressedLoadGameStageCallback;
 		using OnPressedCreateObjectCallback = std::function<void(ObjectType, glm::vec3)>;
 		OnPressedCreateObjectCallback m_onPressedCreateObjectCallback;
-;	public:
+	;	public:
 		void SetOnPressedSaveGameStageCallback(OnPressedSaveGameStageCallback callback);
 		void SetOnPressedLoadGameStageCallback(OnPressedLoadGameStageCallback callback);
 		void SetOnPressedCreateObjectCallback(OnPressedCreateObjectCallback callback);

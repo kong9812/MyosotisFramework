@@ -13,7 +13,7 @@ namespace MyosotisFW::System::Render
 
 		virtual const ObjectType GetObjectType() const override { return ObjectType::PrimitiveGeometryMesh; }
 
-		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject);
+		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources)override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false) override;
 
@@ -25,5 +25,5 @@ namespace MyosotisFW::System::Render
 		void prepareShaderStorageBuffers() override {};
 	};
 	TYPEDEF_SHARED_PTR(PrimitiveGeometry)
-	OBJECT_CAST_FUNCTION(PrimitiveGeometry)
+		OBJECT_CAST_FUNCTION(PrimitiveGeometry)
 }

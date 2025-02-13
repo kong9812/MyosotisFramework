@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 
 		// RenderDevice
 		m_device = CreateRenderDevicePointer(m_instance);
-		
+
 		// Swapchain
 		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
 
@@ -77,10 +77,10 @@ namespace MyosotisFW::System::Render
 		// submit info
 		m_submitPipelineStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.computeComplete, m_semaphores.renderComplete);
-	
+
 		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
-	
+
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass);
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass);
 		m_compositionRenderPipeline->CreateShaderObject(m_compositionShaderBase, m_position, m_baseColor);
@@ -148,10 +148,11 @@ namespace MyosotisFW::System::Render
 		case ObjectType::PrimitiveGeometryMesh:
 		case ObjectType::CustomMesh:
 		{
-			StaticMeshShaderObject shaderObject{};
+			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+			staticMesh->PrepareForRender(m_device, m_resources);
+			StaticMeshShaderObject& shaderObject = staticMesh->GetStaticMeshShaderObject();
 			m_transparentRenderPipeline->CreateShaderObject(shaderObject);
 			m_deferredRenderPipeline->CreateShaderObject(shaderObject);
-			Object_CastToStaticMesh(object)->PrepareForRender(m_device, m_resources, shaderObject);
 		}
 		break;
 		default:
@@ -185,7 +186,7 @@ namespace MyosotisFW::System::Render
 			m_vkCmdBeginDebugUtilsLabelEXT(m_computeCommandBuffers[0], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.5f, 0.1f, 0.1f), "Compute Pass"));
 			vkCmdBindPipeline(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipeline);
 			vkCmdBindDescriptorSets(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipelineLayout, 0, 1, &m_frustumCullerShaderObject.shaderBase.descriptorSet, 0, 0);
-			
+
 			{// Data setup
 				{// frustumPlanesUBO
 					glm::mat4 vp = m_mainCamera->GetProjectionMatrix() * m_mainCamera->GetViewMatrix();
@@ -238,7 +239,7 @@ namespace MyosotisFW::System::Render
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
 	}
 
-	void RenderSubsystem::TransparentRender()
+	void RenderSubsystem::MeshRender()
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
@@ -291,11 +292,10 @@ namespace MyosotisFW::System::Render
 
 		{// Deferred Render Pass
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.5f, 0.1f), "Deferred Render Pass"));
-
-			for (TransparentStaticMesh staticMeshesPair : transparentStaticMeshes)
+			for (TransparentStaticMesh& staticMeshesPair : transparentStaticMeshes)
 			{
 				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer);
-				Logger::Info(std::string("rending: ") + std::to_string(staticMeshCounter));
+				Logger::Info(std::string("rending: ") + std::to_string(transparentStaticMeshes.size()));
 			}
 
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
@@ -418,7 +418,7 @@ namespace MyosotisFW::System::Render
 
 		// [deferred]composition
 		std::vector<VkAttachmentReference> compositionColorAttachments = { Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) };
-		std::vector<VkAttachmentReference> compositionInputAttachments = { 
+		std::vector<VkAttachmentReference> compositionInputAttachments = {
 			Utility::Vulkan::CreateInfo::attachmentReference(1, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),			// [1] position
 			Utility::Vulkan::CreateInfo::attachmentReference(2, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),			// [2] base color
 		};
@@ -439,42 +439,42 @@ namespace MyosotisFW::System::Render
 				0,
 				VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
 				0),
-			// start -> deferred
-			Utility::Vulkan::CreateInfo::subpassDependency(
-				VK_SUBPASS_EXTERNAL,
-				0,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				0,
-				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-				0),
-			// deferred -> composition
-			Utility::Vulkan::CreateInfo::subpassDependency(
-				0,
-				1,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-				VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-			// composition -> transparent
-			Utility::Vulkan::CreateInfo::subpassDependency(
-				1,
-				2,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-				VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-			// transparent -> end
-			Utility::Vulkan::CreateInfo::subpassDependency(
-				2,
-				VK_SUBPASS_EXTERNAL,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-				VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT,
-				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
+				// start -> deferred
+				Utility::Vulkan::CreateInfo::subpassDependency(
+					VK_SUBPASS_EXTERNAL,
+					0,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					0,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					0),
+				// deferred -> composition
+				Utility::Vulkan::CreateInfo::subpassDependency(
+					0,
+					1,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
+				// composition -> transparent
+				Utility::Vulkan::CreateInfo::subpassDependency(
+					1,
+					2,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
+				// transparent -> end
+				Utility::Vulkan::CreateInfo::subpassDependency(
+					2,
+					VK_SUBPASS_EXTERNAL,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 		};
 
 		VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);

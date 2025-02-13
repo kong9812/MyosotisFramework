@@ -28,21 +28,6 @@ namespace MyosotisFW::System::Render
 			shaderObject.deferredRenderShaderBase.pipeline = m_pipeline;
 		}
 
-		// 必要に応じてuboを用意
-		if (!shaderObject.standardUBO.ready)
-		{
-			vmaTools::ShaderBufferAllocate(
-				*m_device,
-				m_device->GetVmaAllocator(),
-				shaderObject.standardUBO.data,
-				VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				shaderObject.standardUBO.buffer.buffer,
-				shaderObject.standardUBO.buffer.allocation,
-				shaderObject.standardUBO.buffer.allocationInfo,
-				shaderObject.standardUBO.buffer.descriptor);
-			shaderObject.standardUBO.ready = true;
-		}
-
 		// layout allocate
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.deferredRenderShaderBase.descriptorSet));

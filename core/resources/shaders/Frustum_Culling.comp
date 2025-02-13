@@ -19,6 +19,7 @@ void main()
     uint id = gl_GlobalInvocationID.x;
     vec3 center = objectData.objects[id].xyz;
     float radius = objectData.objects[id].w;
+    visibleObjects.visibleIndices[id] = 0;
 
     // 画面に入ってるかどうかをチェック
     bool inside = true;

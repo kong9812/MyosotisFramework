@@ -12,7 +12,7 @@ namespace MyosotisFW::System::Render
 
 		const ObjectType GetObjectType() const override { return ObjectType::CustomMesh; }
 
-		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject) override;
+		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera) override;
 		void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false) override;
 		//void BindDebugGUIElement() override {};
@@ -29,5 +29,5 @@ namespace MyosotisFW::System::Render
 		CustomMeshInfo m_customMeshInfo;
 	};
 	TYPEDEF_SHARED_PTR(CustomMesh)
-	OBJECT_CAST_FUNCTION(CustomMesh)
+		OBJECT_CAST_FUNCTION(CustomMesh)
 }

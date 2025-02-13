@@ -10,9 +10,9 @@ namespace MyosotisFW::System::Render
 		m_name = "カスタムメッシュ";
 	}
 
-	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject)
+	void CustomMesh::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources)
 	{
-		__super::PrepareForRender(device, resources, shaderObject);
+		__super::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();

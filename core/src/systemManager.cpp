@@ -90,7 +90,7 @@ namespace MyosotisFW::System
 		}
 
 		// vulkan instance
-		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, AppInfo::g_layer);		
+		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, AppInfo::g_layer);
 		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
 
 		// prepare for VK_EXT_DEBUG_REPORT_EXTENSION
@@ -176,7 +176,7 @@ namespace MyosotisFW::System
 			glfwGetCursorPos(window, &x, &y);
 			m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
 			m_renderSubsystem->ResetMousePos(m_mousePos);
-		}	
+		}
 	}
 
 	void SystemManager::Update()
@@ -207,7 +207,7 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->Compute();
-		m_renderSubsystem->TransparentRender();
+		m_renderSubsystem->MeshRender();
 		m_renderSubsystem->EndRender();
 
 		// draw editor here

@@ -11,9 +11,9 @@ namespace MyosotisFW::System::Render
 		m_name = "プリミティブジオメトリ";
 	}
 
-	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources, StaticMeshShaderObject shaderObject)
+	void PrimitiveGeometry::PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources)
 	{
-		__super::PrepareForRender(device, resources, shaderObject);
+		__super::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -48,7 +48,7 @@ namespace MyosotisFW::System::Render
 
 	glm::vec4 PrimitiveGeometry::GetCullerData()
 	{
-		return glm::vec4(m_transfrom.pos, 5.0f);
+		return glm::vec4(m_transfrom.pos, 2.5f);
 	}
 
 	void PrimitiveGeometry::loadAssets()
