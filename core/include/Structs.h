@@ -25,6 +25,12 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		Image image;
+		VkSampler sampler;
+	}ImageWithSampler;
+
+	typedef struct
+	{
 		VkImage image;
 		VkDeviceMemory memory;
 		VkImageView view;
@@ -103,6 +109,7 @@ namespace MyosotisFW
 		ShaderBase transparentRenderShaderBase;
 		struct
 		{
+			ImageWithSampler normalMap;
 			Buffer buffer;
 			struct
 			{

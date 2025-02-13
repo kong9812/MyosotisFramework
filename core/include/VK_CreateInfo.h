@@ -103,6 +103,13 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkSubmitInfo submitInfo()
+	{
+		VkSubmitInfo si{};
+		si.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		return si;
+	}
+
 	inline VkSubmitInfo submitInfo(VkPipelineStageFlags& submitPipelineStages, VkSemaphore& pWaitSemaphores, VkSemaphore& pSignalSemaphores)
 	{
 		VkSubmitInfo si{};
@@ -126,20 +133,20 @@ namespace Utility::Vulkan::CreateInfo
 		return sr;
 	}
 
-	inline VkImageViewCreateInfo imageViewCreateInfoForSwapchain(VkImage image, VkFormat format)
+	inline VkImageCreateInfo imageCreateInfo(VkFormat format, uint32_t width, uint32_t height)
 	{
-		VkImageViewCreateInfo ci{};
-		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		ci.image = image;
-		ci.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+		VkImageCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		ci.imageType = VkImageType::VK_IMAGE_TYPE_2D;
 		ci.format = format;
-		ci.components = {
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
-		};
-		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		ci.extent.width = width;
+		ci.extent.height = height;
+		ci.extent.depth = 1;
+		ci.mipLevels = 1;
+		ci.arrayLayers = 1;
+		ci.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ci.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+		ci.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		return ci;
 	}
 
@@ -174,6 +181,40 @@ namespace Utility::Vulkan::CreateInfo
 		ci.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		ci.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
 		ci.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+		return ci;
+	}
+
+	inline VkImageViewCreateInfo imageViewCreateInfoForSwapchain(VkImage image, VkFormat format)
+	{
+		VkImageViewCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		ci.image = image;
+		ci.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+		ci.format = format;
+		ci.components = {
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
+		};
+		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		return ci;
+	}
+
+	inline VkImageViewCreateInfo imageViewCreateInfo(VkImage image, VkFormat format)
+	{
+		VkImageViewCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		ci.image = image;
+		ci.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+		ci.format = format;
+		ci.components = {
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
+		};
+		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		return ci;
 	}
 
@@ -863,5 +904,36 @@ namespace Utility::Vulkan::CreateInfo
 		label.color[3] = 1.0f;
 		label.pLabelName = labelName;
 		return label;
+	}
+
+	inline VkBufferImageCopy bufferImageCopy(uint32_t width, uint32_t height)
+	{
+		VkBufferImageCopy imageCopy{};
+		imageCopy.bufferOffset = 0;
+		imageCopy.bufferRowLength = 0;
+		imageCopy.bufferImageHeight = 0;
+
+		imageCopy.imageSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+		imageCopy.imageSubresource.mipLevel = 0;
+		imageCopy.imageSubresource.baseArrayLayer = 0;
+		imageCopy.imageSubresource.layerCount = 1;
+		imageCopy.imageExtent.depth = 1;
+		imageCopy.imageExtent.width = width;
+		imageCopy.imageExtent.height = height;
+		return imageCopy;
+	}
+
+	inline VkSamplerCreateInfo samplerCreateInfo()
+	{
+		VkSamplerCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		ci.magFilter = VkFilter::VK_FILTER_LINEAR;
+		ci.minFilter = VkFilter::VK_FILTER_LINEAR;
+		ci.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		ci.addressModeU = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		ci.addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		ci.addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		ci.mipLodBias = 0.0f;
+		return ci;
 	}
 }

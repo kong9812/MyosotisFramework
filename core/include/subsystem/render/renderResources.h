@@ -17,11 +17,13 @@ namespace MyosotisFW::System::Render
 
 		VkShaderModule GetShaderModules(std::string fileName);
 		std::vector<Mesh> GetMeshVertex(std::string fileName);
+		ImageWithSampler GetImage(std::string fileName);
 
 	private:
 		RenderDevice_ptr m_device;
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexDatas;
+		std::unordered_map<std::string, VMAImage> m_images;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
 }

@@ -17,6 +17,11 @@ namespace MyosotisFW::System::Render
 
 	StaticMesh::~StaticMesh()
 	{
+		if (m_staticMeshShaderObject.standardUBO.normalMap.sampler)
+		{
+			vkDestroySampler(*m_device, m_staticMeshShaderObject.standardUBO.normalMap.sampler, m_device->GetAllocationCallbacks());
+		}
+
 		for (uint32_t logType = 0; logType < LOD::Max; logType++)
 		{
 			for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[logType].size(); meshIdx++)
