@@ -302,6 +302,20 @@ namespace Utility::Vulkan::CreateInfo
 		return ad;
 	}
 
+	inline VkAttachmentDescription attachmentDescriptionForShadowMap(VkFormat format)
+	{
+		VkAttachmentDescription ad{};
+		ad.format = format;
+		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ad.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		return ad;
+	}
+
 	inline VkAttachmentReference attachmentReference(uint32_t attachment, VkImageLayout layout)
 	{
 		VkAttachmentReference ar{};
@@ -333,6 +347,15 @@ namespace Utility::Vulkan::CreateInfo
 		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		sd.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
 		sd.pColorAttachments = colorAttachments.data();
+		sd.pDepthStencilAttachment = &depthStencilAttachment;
+		return sd;
+	}
+
+	inline VkSubpassDescription subpassDescriptionDepthStencilOnly(
+		VkAttachmentReference& depthStencilAttachment)
+	{
+		VkSubpassDescription sd{};
+		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		sd.pDepthStencilAttachment = &depthStencilAttachment;
 		return sd;
 	}
@@ -598,6 +621,15 @@ namespace Utility::Vulkan::CreateInfo
 		as.alphaBlendOp = VkBlendOp::VK_BLEND_OP_ADD;						// アルファブレンドの演算方法
 		as.colorWriteMask = colorComponentFlags;							// 書き込むカラーチャンネル
 		return as;
+	}
+
+	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo()
+	{
+		VkPipelineColorBlendStateCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		ci.logicOpEnable = VK_FALSE;										// 論理演算の有効化
+		ci.logicOp = VkLogicOp::VK_LOGIC_OP_CLEAR;							// 論理演算の種類
+		return ci;
 	}
 
 	inline VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(std::vector<VkPipelineColorBlendAttachmentState>& attachments)

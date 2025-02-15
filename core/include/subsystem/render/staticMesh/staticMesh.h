@@ -11,6 +11,7 @@
 #include "RenderDevice.h"
 #include "RenderResources.h"
 #include "Camera.h"
+#include "RenderPieplineList.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -40,7 +41,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera);
-		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false);
+		virtual void BindCommandBuffer(VkCommandBuffer commandBuffer, RenderPipelineType pipelineType);
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) override { __super::Deserialize(doc, createObject); }

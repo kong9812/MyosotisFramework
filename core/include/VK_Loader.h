@@ -176,7 +176,7 @@ namespace Utility::Loader {
 			VK_VALIDATION(vkCreateImageView(device, &imageViewCreateInfo, pAllocationCallbacks, &image.view));
 		}
 
-		MyosotisFW::Buffer stagingBuffer;
+		MyosotisFW::Buffer stagingBuffer{};
 		{// CPU buffer (staging buffer)
 			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(imageSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 			VmaAllocationCreateInfo allocationCreateInfo{};
@@ -205,7 +205,7 @@ namespace Utility::Loader {
 			imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			imageMemoryBarrier.image = image.image;
-			imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			imageMemoryBarrier.subresourceRange.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 			imageMemoryBarrier.subresourceRange.baseMipLevel = 0;
 			imageMemoryBarrier.subresourceRange.levelCount = 1;
 			imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
@@ -242,7 +242,6 @@ namespace Utility::Loader {
 			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 			vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 		}
-
 		return image;
 	}
 }

@@ -40,7 +40,7 @@ namespace MyosotisFW::System::Render
 		m_currentLOD = LOD::Hide;
 		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
 
-		vmaTools::ShaderBufferAllocate(
+		vmaTools::ShaderBufferObjectAllocate(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			m_staticMeshShaderObject.standardUBO.data,
@@ -75,19 +75,32 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void StaticMesh::BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent)
+	void StaticMesh::BindCommandBuffer(VkCommandBuffer commandBuffer, RenderPipelineType pipelineType)
 	{
 		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
 
-		if (transparent)
+		switch (pipelineType)
+		{
+		case RenderPipelineType::ShadowMap:
+		{
+			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shadowMapRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shadowMapRenderShaderBase.descriptorSet, 0, nullptr);
+			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shadowMapRenderShaderBase.pipeline);
+		}
+		break;
+		case RenderPipelineType::Deferred:
+		{
+			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.deferredRenderShaderBase.descriptorSet, 0, nullptr);
+			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipeline);
+		}
+		break;
+		case RenderPipelineType::Transparent:
 		{
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.transparentRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.transparentRenderShaderBase.descriptorSet, 0, nullptr);
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.transparentRenderShaderBase.pipeline);
 		}
-		else
-		{
-			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.deferredRenderShaderBase.descriptorSet, 0, nullptr);
-			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipeline);
+		break;
+		default:
+			break;
 		}
 
 		const VkDeviceSize offsets[1] = { 0 };

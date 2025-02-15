@@ -10,6 +10,12 @@ namespace MyosotisFW
 {
 	typedef struct
 	{
+		VkRenderPass renderPass;
+		std::vector<VkFramebuffer> framebuffer;
+	}RenderPass;
+
+	typedef struct
+	{
 		bool pause;
 		float deltaTime;
 		std::unordered_map<int, int> keyActions;
@@ -105,8 +111,10 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		ShaderBase shadowMapRenderShaderBase;
 		ShaderBase deferredRenderShaderBase;
 		ShaderBase transparentRenderShaderBase;
+
 		struct
 		{
 			ImageWithSampler normalMap;
@@ -121,6 +129,18 @@ namespace MyosotisFW
 			}data;
 		}standardUBO;			// UBO
 	}StaticMeshShaderObject;
+
+	typedef struct
+	{
+		struct
+		{
+			Buffer buffer;
+			struct
+			{
+				glm::mat4 lightViewProjection;
+			}data;
+		}lightUBO;			// UBO
+	}ShadowMapShaderObject;
 
 	typedef struct
 	{

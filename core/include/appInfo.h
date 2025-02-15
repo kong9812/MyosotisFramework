@@ -57,6 +57,8 @@ namespace MyosotisFW::AppInfo
 	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
 	// 指定画像フォーマット ([deferred] base color)
 	constexpr VkFormat g_deferredBaseColorFormat = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;  // 0.0～1.0
+	// 指定画像フォーマット (shadow map)
+	constexpr VkFormat g_shadowMapFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
 

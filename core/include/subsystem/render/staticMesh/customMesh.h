@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render
 
 		void PrepareForRender(RenderDevice_ptr device, RenderResources_ptr resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr camera) override;
-		void BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent = false) override;
+		void BindCommandBuffer(VkCommandBuffer commandBuffer, RenderPipelineType pipelineType) override;
 		//void BindDebugGUIElement() override {};
 
 		void SetCustomMeshInfo(CustomMeshInfo customMeshInfo) { m_customMeshInfo = customMeshInfo; }

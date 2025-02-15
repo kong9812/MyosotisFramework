@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "classPointer.h"
+#include "ClassPointer.h"
 
 #include "iglfw.h"
 #include "Structs.h"
@@ -12,6 +12,7 @@
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
+#include "ShadowMapRenderPipeline.h"
 #include "DeferredRenderPipeline.h"
 #include "CompositionRenderPipeline.h"
 #include "TransparentRenderPipeline.h"
@@ -46,6 +47,11 @@ namespace MyosotisFW::System::Render
 			VkSemaphore renderComplete;
 		}m_semaphores;
 
+		struct {
+			RenderPass lighting;
+			RenderPass staticMesh;
+		}m_renderPass;
+
 		VkInstance m_instance;
 
 		RenderDevice_ptr m_device;
@@ -60,7 +66,6 @@ namespace MyosotisFW::System::Render
 		VkCommandPool m_computeCommandPool;
 		std::vector<VkCommandBuffer> m_renderCommandBuffers;
 		std::vector<VkCommandBuffer> m_computeCommandBuffers;
-		std::vector<VkFramebuffer> m_frameBuffers;
 
 		std::vector<VkFence> m_fences;
 
@@ -69,7 +74,6 @@ namespace MyosotisFW::System::Render
 		VkQueue m_graphicsQueue;
 		VkQueue m_computeQueue;
 
-		VkRenderPass m_renderPass;
 		DeviceImage m_depthStencil;
 
 		VkDescriptorPool m_descriptorPool;
@@ -91,9 +95,11 @@ namespace MyosotisFW::System::Render
 	private:
 		VMAImage m_position;
 		VMAImage m_baseColor;
+		VMAImage m_shadowMap;
 		ShaderBase m_compositionShaderBase;
 		void prepareDeferredRendering();
 
+		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		TransparentRenderPipeline_ptr m_transparentRenderPipeline;

@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "debugGUI.h"
+#include "DebugGUI.h"
 #include <sstream>
 
 #include "AppInfo.h"

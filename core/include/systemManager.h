@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "classPointer.h"
+#include "ClassPointer.h"
 
 #include "iglfw.h"
 #include "RenderSubsystem.h"
@@ -30,7 +30,7 @@ namespace MyosotisFW::System
 	private:
 		Render::RenderSubsystem_ptr m_renderSubsystem;
 		GameDirector::GameDirector_ptr m_gameDirector;
-		
+
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;
 

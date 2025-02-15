@@ -45,9 +45,9 @@ namespace MyosotisFW::System::Render
 		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
-	void CustomMesh::BindCommandBuffer(VkCommandBuffer commandBuffer, bool transparent)
+	void CustomMesh::BindCommandBuffer(VkCommandBuffer commandBuffer, RenderPipelineType pipelineType)
 	{
-		__super::BindCommandBuffer(commandBuffer, transparent);
+		__super::BindCommandBuffer(commandBuffer, pipelineType);
 	}
 
 	glm::vec4 CustomMesh::GetCullerData()
