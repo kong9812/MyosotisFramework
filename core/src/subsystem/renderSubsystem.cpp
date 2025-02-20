@@ -19,6 +19,9 @@ namespace {
 	}TransparentStaticMesh;	// Zソート用
 
 	uint32_t g_shadowMapSize = 2048;
+
+	float g_debugTimer = 0.0f;
+	float g_debugSpeed = 50.0f;
 }
 
 namespace MyosotisFW::System::Render
@@ -183,16 +186,26 @@ namespace MyosotisFW::System::Render
 			Object_Cast<Camera::FPSCamera>(m_mainCamera)->Update(updateData);
 		}
 
+		StaticMesh_ptr firstStaticMesh = nullptr;
 		for (ObjectBase_ptr& object : m_objects)
 		{
 			if (IsStaticMesh(object->GetObjectType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				// TEST
-				// TEST
 				staticMesh->Update(updateData, m_mainCamera);
+				if (!firstStaticMesh) firstStaticMesh = staticMesh;
 			}
 		}
+
+		// TEST
+		g_debugTimer += updateData.deltaTime * g_debugSpeed;
+		if (g_debugTimer >= 360.0f)
+		{
+			g_debugTimer -= 360.0f;
+		}
+		firstStaticMesh->SetRot(glm::vec3(g_debugTimer, 0.0f, 0.0f));
+		firstStaticMesh->Update(updateData, m_mainCamera);
+		// TEST
 	}
 
 	void RenderSubsystem::Compute()

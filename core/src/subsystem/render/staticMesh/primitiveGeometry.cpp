@@ -34,6 +34,9 @@ namespace MyosotisFW::System::Render
 			m_staticMeshShaderObject.standardUBO.data.cameraPos = glm::vec4(camera->GetCameraPos(), 0.0f);
 		}
 		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
 
 		if (!m_isReady) return;
