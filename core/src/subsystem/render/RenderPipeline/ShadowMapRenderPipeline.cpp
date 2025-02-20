@@ -5,32 +5,38 @@
 
 namespace {
 	// todo. 外部から取って来れるように変更
-	constexpr glm::vec3 g_lightPos = glm::vec3(24.5f, 33.1f, -34.2f);
+	constexpr glm::vec3 g_lightPos = glm::vec3(0.0f, 30.0f, 0.1f);
 	constexpr glm::vec3 g_lightUp = glm::vec3(0.0f, -1.0f, 0.0f);
 	constexpr float g_lightFOV = 60.0f;
 	constexpr float g_lightFar = 1000.0f;
 	constexpr float g_lightNear = 1.0f;
-	constexpr float g_aspectRadio = 1.7f;
+	constexpr float g_aspectRadio = 1.0f;
 	constexpr glm::vec3 g_lightLookAt = glm::vec3(0.0f);
 
 	inline glm::mat4 GetLightViewProject()
 	{
-		glm::mat4 view = glm::lookAt(g_lightPos, g_lightLookAt, g_lightUp);
 		glm::mat4 projection = glm::perspective(glm::radians(g_lightFOV), g_aspectRadio, g_lightNear, g_lightFar);
+		glm::mat4 view = glm::lookAt(g_lightPos, g_lightLookAt, g_lightUp);
 		return projection * view;
 	}
 }
 
 namespace MyosotisFW::System::Render
 {
-	ShadowMapRenderPipeline::ShadowMapRenderPipeline(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass)
+	ShadowMapRenderPipeline::ShadowMapRenderPipeline(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VMAImage shadowMap)
 	{
 		m_device = device;
 		m_descriptorCount = AppInfo::g_descriptorCount;
 		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 
-		m_shadowMapShaderObject.lightUBO.data.lightViewProjection = GetLightViewProject();
+		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
+		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, shadowMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_shadowMapShaderObject.lightUBO.data.position = glm::vec4(g_lightPos, 1.0f);
+		m_shadowMapShaderObject.lightUBO.data.viewProjection = GetLightViewProject();
+		m_shadowMapShaderObject.lightUBO.data.pcfCount = 2;
 		vmaTools::ShaderBufferObjectAllocate(
 			*m_device,
 			m_device->GetVmaAllocator(),
@@ -45,6 +51,7 @@ namespace MyosotisFW::System::Render
 
 	ShadowMapRenderPipeline::~ShadowMapRenderPipeline()
 	{
+		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_shadowMapShaderObject.lightUBO.buffer.buffer, m_shadowMapShaderObject.lightUBO.buffer.allocation);
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
@@ -59,11 +66,14 @@ namespace MyosotisFW::System::Render
 			shaderObject.shadowMapRenderShaderBase.pipeline = m_pipeline;
 		}
 
+		shaderObject.standardUBO.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
+		shaderObject.standardUBO.shadowMapBufferDescriptor = m_shadowMapShaderObject.lightUBO.buffer.descriptor;
+
 		// layout allocate
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.shadowMapRenderShaderBase.descriptorSet));
 
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		VkDescriptorImageInfo normalMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
@@ -103,12 +113,16 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("ShadowMap.vert.spv")),
 		};
 
+		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+
 		// pipelineVertexInputStateCreateInfo
 		std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {
-			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4)
+			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, vertexAttributeBits)
 		};
-		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0,
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4);
+		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0, vertexAttributeBits);
 		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo(vertexInputBindingDescription, vertexInputAttributeDescriptiones);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
@@ -117,8 +131,10 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo();
-		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };
+		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR, VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS };
 		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDynamicStateCreateInfo(dynamicStates);
+
+		rasterizationStateCreateInfo.depthBiasEnable = true;
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = Utility::Vulkan::CreateInfo::graphicsPipelineCreateInfo(
 			shaderStageCreateInfo,									// シェーダーステージ

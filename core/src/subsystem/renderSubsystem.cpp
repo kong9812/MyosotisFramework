@@ -17,6 +17,8 @@ namespace {
 		float distance;
 		MyosotisFW::System::Render::StaticMesh_ptr staticMesh;
 	}TransparentStaticMesh;	// Zソート用
+
+	uint32_t g_shadowMapSize = 2048;
 }
 
 namespace MyosotisFW::System::Render
@@ -82,7 +84,7 @@ namespace MyosotisFW::System::Render
 		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass);
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_shadowMap);
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_compositionRenderPipeline->CreateShaderObject(m_compositionShaderBase, m_position, m_baseColor);
@@ -185,7 +187,10 @@ namespace MyosotisFW::System::Render
 		{
 			if (IsStaticMesh(object->GetObjectType()))
 			{
-				Object_CastToStaticMesh(object)->Update(updateData, m_mainCamera);
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				// TEST
+				// TEST
+				staticMesh->Update(updateData, m_mainCamera);
 			}
 		}
 	}
@@ -265,16 +270,22 @@ namespace MyosotisFW::System::Render
 			std::vector<VkClearValue> clearValues(1);
 			clearValues[0] = AppInfo::g_depthClearValues;
 
-			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.lighting.renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
+			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.lighting.renderPass, g_shadowMapSize, g_shadowMapSize, clearValues);
 			renderPassBeginInfo.framebuffer = m_renderPass.lighting.framebuffer[0];
 
 			vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
+			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(g_shadowMapSize), static_cast<float>(g_shadowMapSize));
 			vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
 
-			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
+			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(g_shadowMapSize, g_shadowMapSize);
 			vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
+
+			vkCmdSetDepthBias(
+				currentCommandBuffer,
+				0.5f,
+				0.0f,
+				1.0f);
 
 			m_frustumCullerShaderObject.objectDataSSBO.data.objects.clear();
 			for (ObjectBase_ptr& object : m_objects)
@@ -448,12 +459,14 @@ namespace MyosotisFW::System::Render
 
 		{// Lighting pass
 			// image
-			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_shadowMapFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
+			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_shadowMapFormat, g_shadowMapSize, g_shadowMapSize);
+			imageCreateInfoForDepthStencil.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfoForDepthStencil, &allocationCreateInfo, &m_shadowMap.image, &m_shadowMap.allocation, &m_shadowMap.allocationInfo);
 
 			// image view
 			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_shadowMap.image, AppInfo::g_shadowMapFormat);
+			imageViewCreateInfoForDepthStencil.subresourceRange.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_shadowMap.view));
 		}
 	}
@@ -622,8 +635,8 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.renderPass = m_renderPass.lighting.renderPass;
 			frameBufferCreateInfo.attachmentCount = 1;
 			frameBufferCreateInfo.pAttachments = &attachment;
-			frameBufferCreateInfo.width = m_swapchain->GetWidth();
-			frameBufferCreateInfo.height = m_swapchain->GetHeight();
+			frameBufferCreateInfo.width = g_shadowMapSize;
+			frameBufferCreateInfo.height = g_shadowMapSize;
 			frameBufferCreateInfo.layers = 1;
 			m_renderPass.lighting.framebuffer.resize(1);
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_renderPass.lighting.framebuffer[0]));

@@ -111,6 +111,20 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		struct
+		{
+			Buffer buffer;
+			struct
+			{
+				glm::mat4 viewProjection;
+				glm::vec4 position;
+				int32_t pcfCount;
+			}data;
+		}lightUBO;			// UBO
+	}ShadowMapShaderObject;
+
+	typedef struct
+	{
 		ShaderBase shadowMapRenderShaderBase;
 		ShaderBase deferredRenderShaderBase;
 		ShaderBase transparentRenderShaderBase;
@@ -118,6 +132,8 @@ namespace MyosotisFW
 		struct
 		{
 			ImageWithSampler normalMap;
+			VkDescriptorImageInfo shadowMapImageInfo;
+			VkDescriptorBufferInfo shadowMapBufferDescriptor;
 			Buffer buffer;
 			struct
 			{
@@ -130,17 +146,6 @@ namespace MyosotisFW
 		}standardUBO;			// UBO
 	}StaticMeshShaderObject;
 
-	typedef struct
-	{
-		struct
-		{
-			Buffer buffer;
-			struct
-			{
-				glm::mat4 lightViewProjection;
-			}data;
-		}lightUBO;			// UBO
-	}ShadowMapShaderObject;
 
 	typedef struct
 	{

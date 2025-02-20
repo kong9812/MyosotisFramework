@@ -38,6 +38,8 @@ namespace MyosotisFW::System::Render
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &descriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
@@ -45,8 +47,8 @@ namespace MyosotisFW::System::Render
 	void DeferredRenderPipeline::prepareDescriptors()
 	{
 		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),
+			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2)
 		};
 		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize, m_descriptorCount);
 		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
@@ -57,6 +59,10 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
 			// binding: 1
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+			// binding: 2
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+			// binding: 3
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		};
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
 		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
@@ -74,12 +80,16 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("StaticMesh_Deferred.frag.spv")),
 		};
 
+		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+
 		// pipelineVertexInputStateCreateInfo
 		std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {
-			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4)
+			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, vertexAttributeBits)
 		};
-		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0,
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4);
+		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0, vertexAttributeBits);
 		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo(vertexInputBindingDescription, vertexInputAttributeDescriptiones);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);

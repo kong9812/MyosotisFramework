@@ -312,7 +312,7 @@ namespace Utility::Vulkan::CreateInfo
 		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
 		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		return ad;
 	}
 
@@ -958,14 +958,19 @@ namespace Utility::Vulkan::CreateInfo
 	inline VkSamplerCreateInfo samplerCreateInfo()
 	{
 		VkSamplerCreateInfo ci{};
-		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		ci.magFilter = VkFilter::VK_FILTER_LINEAR;
-		ci.minFilter = VkFilter::VK_FILTER_LINEAR;
-		ci.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		ci.addressModeU = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		ci.addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		ci.addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		ci.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		ci.maxAnisotropy = 1.0f;
+		ci.magFilter = VK_FILTER_LINEAR;
+		ci.minFilter = VK_FILTER_LINEAR;
+		ci.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		ci.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		ci.addressModeV = ci.addressModeU;
+		ci.addressModeW = ci.addressModeU;
 		ci.mipLodBias = 0.0f;
+		ci.maxAnisotropy = 1.0f;
+		ci.minLod = 0.0f;
+		ci.maxLod = 1.0f;
+		ci.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		return ci;
 	}
 }

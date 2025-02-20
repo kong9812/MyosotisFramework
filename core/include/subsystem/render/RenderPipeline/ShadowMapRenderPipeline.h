@@ -8,7 +8,7 @@ namespace MyosotisFW::System::Render
 	class ShadowMapRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		ShadowMapRenderPipeline(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass);
+		ShadowMapRenderPipeline(RenderDevice_ptr device, RenderResources_ptr resources, VkRenderPass renderPass, VMAImage shadowMap);
 		~ShadowMapRenderPipeline();
 
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
@@ -18,6 +18,8 @@ namespace MyosotisFW::System::Render
 		void prepareRenderPipeline(RenderResources_ptr resources, VkRenderPass renderPass) override;
 
 		ShadowMapShaderObject m_shadowMapShaderObject;
+		VkSampler m_shadowMapSampler;
+		VkDescriptorImageInfo m_shadowMapDescriptorImageInfo;
 	};
 	TYPEDEF_UNIQUE_PTR_ARGS(ShadowMapRenderPipeline)
 }

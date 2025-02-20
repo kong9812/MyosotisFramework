@@ -18,7 +18,6 @@ namespace MyosotisFW::System::Render
 		// プリミティブジオメトリの作成
 		loadAssets();
 		prepareShaderStorageBuffers();
-		m_transfrom.scale = glm::vec3(5.0f);
 
 		// todo.検証処理
 		m_isReady = true;
