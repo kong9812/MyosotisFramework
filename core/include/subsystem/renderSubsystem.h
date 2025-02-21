@@ -94,6 +94,7 @@ namespace MyosotisFW::System::Render
 
 	private:
 		VMAImage m_position;
+		VMAImage m_normal;
 		VMAImage m_baseColor;
 		VMAImage m_shadowMap;
 		ShaderBase m_compositionShaderBase;

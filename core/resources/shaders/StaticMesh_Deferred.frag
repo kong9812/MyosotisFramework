@@ -1,8 +1,10 @@
 #version 450
+// #extension GL_EXT_debug_printf : enable
 
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec4 inBaseColor;
-layout (location = 2) in vec3 inNormal;
+layout (location = 2) in vec4 inNormal;
+layout (location = 3) in vec4 inCameraPosition;
 
 layout (binding = 1) uniform sampler2D normalMap;
 layout (binding = 2) uniform sampler2D shadowMap;
@@ -14,39 +16,8 @@ layout (binding = 3) uniform LightUBO {
 
 layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec4 outPosition;
-layout (location = 2) out vec4 outBaseColor;
-
-float hardShadow(vec4 lightSpacePosition, vec2 offsetPosition)
-{
-	float shadow = 1.0;
-	if ( lightSpacePosition.z > 0.0 && lightSpacePosition.z < 1.0 ) 
-	{
-		float dist = texture( shadowMap, lightSpacePosition.st + offsetPosition).r;
-		if (lightSpacePosition.w > 0.0 && dist < lightSpacePosition.z) 
-		{
-			shadow = 0.1;
-		}
-	}
-	return shadow;
-}
-
-float softShadow(vec4 lightSpacePosition, int pcfCount)
-{
-	ivec2 shadowMapTextureSize = textureSize(shadowMap, 0);
-	float dx = 1.0 / shadowMapTextureSize.x;
-	float dy = 1.0 / shadowMapTextureSize.y;
-	float shadow = 1.0;
-	int count = 0;
-	for (int x = -pcfCount; x <= pcfCount; x++)
-	{
-		for (int y = -pcfCount; y <= pcfCount; y++)
-		{
-			shadow += hardShadow(lightSpacePosition, vec2(dx*x, dy*y));
-			count++;
-		}
-	}
-	return shadow / count;
-}
+layout (location = 2) out vec4 outNormal;
+layout (location = 3) out vec4 outBaseColor;
 
 float PCFShadow(vec3 shadowCoord, int pcfCount) 
 {
@@ -72,10 +43,25 @@ const mat4 biasMat = mat4(
 
 void main() 
 {
-    vec4 lightSpace = biasMat * lightUbo.viewProjection * inPosition;
+	vec4 lightSpace = biasMat * lightUbo.viewProjection * inPosition;
     float shadow = PCFShadow(vec3((lightSpace / lightSpace.w).xyz), lightUbo.pcfCount);
     outPosition = inPosition;
-    vec3 color = inBaseColor.rgb * shadow;
+
+    vec3 lightDir = normalize(lightUbo.position.xyz);
+    float diff = max(dot(inNormal.xyz, lightDir), 0.0);
+    vec3 reflectDir = reflect(-lightDir, inNormal.xyz);
+    vec3 viewDir = normalize(inCameraPosition.xyz - inPosition.xyz);
+    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 ambient  = 0.2 * inBaseColor.rgb;
+    vec3 diffuse  = 0.1 * diff * inBaseColor.rgb * shadow;
+    // vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    vec3 color = ambient + diffuse;
+    
+    // debugPrintfEXT("normal %f %f %f", inNormal.x, inNormal.y, inNormal.z);
+
+    outNormal = inNormal;
+
+    // vec3 color = inBaseColor.rgb * shadow;
 
     outBaseColor = vec4(color, inBaseColor.a);
     outColor = vec4(0.0);

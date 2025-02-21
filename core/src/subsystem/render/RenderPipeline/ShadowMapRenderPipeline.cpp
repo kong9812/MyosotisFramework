@@ -5,11 +5,11 @@
 
 namespace {
 	// todo. 外部から取って来れるように変更
-	constexpr glm::vec3 g_lightPos = glm::vec3(0.0f, 30.0f, 0.1f);
+	constexpr glm::vec3 g_lightPos = glm::vec3(-20.0f, 40.0f, -20.0f);
 	constexpr glm::vec3 g_lightUp = glm::vec3(0.0f, -1.0f, 0.0f);
 	constexpr float g_lightFOV = 60.0f;
-	constexpr float g_lightFar = 1000.0f;
-	constexpr float g_lightNear = 1.0f;
+	constexpr float g_lightNear = 20.0f;
+	constexpr float g_lightFar = 100.0f;
 	constexpr float g_aspectRadio = 1.0f;
 	constexpr glm::vec3 g_lightLookAt = glm::vec3(0.0f);
 

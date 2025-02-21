@@ -966,6 +966,7 @@ namespace Utility::Vulkan::CreateInfo
 		ci.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 		ci.addressModeV = ci.addressModeU;
 		ci.addressModeW = ci.addressModeU;
+		ci.compareEnable = VK_TRUE;
 		ci.mipLodBias = 0.0f;
 		ci.maxAnisotropy = 1.0f;
 		ci.minLod = 0.0f;

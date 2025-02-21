@@ -14,12 +14,14 @@ layout (binding = 0) uniform StandardUBO {
 
 layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outBaseColor;
-layout (location = 2) out vec3 outNormal;
+layout (location = 2) out vec4 outNormal;
+layout (location = 3) out vec4 outCameraPosition;
 
 void main() 
 {
     outPosition = objectUbo.model * inPosition;
     outBaseColor = inColor;
-    outNormal = inNormal;
+    outNormal = normalize(objectUbo.model * vec4(inNormal, 0.0));
+    outCameraPosition = objectUbo.cameraPos;
     gl_Position = objectUbo.projection * objectUbo.view * outPosition;
 }
