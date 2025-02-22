@@ -97,7 +97,6 @@ namespace MyosotisFW::System::Render
 		VMAImage m_normal;
 		VMAImage m_baseColor;
 		VMAImage m_shadowMap;
-		ShaderBase m_compositionShaderBase;
 		void prepareDeferredRendering();
 
 		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;

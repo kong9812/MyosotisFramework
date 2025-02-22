@@ -12,6 +12,7 @@ namespace {
 	constexpr float g_lightFar = 100.0f;
 	constexpr float g_aspectRadio = 1.0f;
 	constexpr glm::vec3 g_lightLookAt = glm::vec3(0.0f);
+	constexpr uint32_t g_pcfCount = 3;
 
 	inline glm::mat4 GetLightViewProject()
 	{
@@ -36,7 +37,7 @@ namespace MyosotisFW::System::Render
 
 		m_shadowMapShaderObject.lightUBO.data.position = glm::vec4(g_lightPos, 1.0f);
 		m_shadowMapShaderObject.lightUBO.data.viewProjection = GetLightViewProject();
-		m_shadowMapShaderObject.lightUBO.data.pcfCount = 2;
+		m_shadowMapShaderObject.lightUBO.data.pcfCount = g_pcfCount;
 		vmaTools::ShaderBufferObjectAllocate(
 			*m_device,
 			m_device->GetVmaAllocator(),
@@ -81,6 +82,15 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+	}
+
+	DirectionalLightInfo ShadowMapRenderPipeline::GetDirectionalLightInfo()
+	{
+		DirectionalLightInfo lightInfo{};
+		lightInfo.viewProjection = GetLightViewProject();
+		lightInfo.position = glm::vec4(g_lightPos, 1.0f);
+		lightInfo.pcfCount = g_pcfCount;
+		return lightInfo;
 	}
 
 	void ShadowMapRenderPipeline::prepareDescriptors()
@@ -131,10 +141,8 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo();
-		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR, VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS };
+		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };
 		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDynamicStateCreateInfo(dynamicStates);
-
-		rasterizationStateCreateInfo.depthBiasEnable = true;
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = Utility::Vulkan::CreateInfo::graphicsPipelineCreateInfo(
 			shaderStageCreateInfo,									// シェーダーステージ

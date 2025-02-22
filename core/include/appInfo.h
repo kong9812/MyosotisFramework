@@ -54,7 +54,7 @@ namespace MyosotisFW::AppInfo
 	// 指定DepthFormat
 	constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 	// 指定画像フォーマット ([deferred] position)
-	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R8G8B8A8_SRGB; // HDR&精密な色管理が可能
+	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
 	// 指定画像フォーマット ([deferred] normal)
 	constexpr VkFormat g_deferredNormalFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
 	// 指定画像フォーマット ([deferred] base color)

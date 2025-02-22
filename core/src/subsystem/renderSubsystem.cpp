@@ -90,7 +90,8 @@ namespace MyosotisFW::System::Render
 		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_shadowMap);
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_compositionRenderPipeline->CreateShaderObject(m_compositionShaderBase, m_position, m_baseColor);
+		m_compositionRenderPipeline->CreateShaderObject(m_position, m_normal, m_baseColor, m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		m_compositionRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_transparentRenderPipeline = CreateTransparentRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 	}
 
@@ -185,7 +186,9 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera)
 		{
-			Object_Cast<Camera::FPSCamera>(m_mainCamera)->Update(updateData);
+			Camera::FPSCamera_ptr cameraPtr = Object_Cast<Camera::FPSCamera>(m_mainCamera);
+			cameraPtr->Update(updateData);
+			m_compositionRenderPipeline->UpdateCameraPosition(glm::vec4(cameraPtr->GetCameraPos(), 0.0f));
 		}
 
 		std::vector<StaticMesh_ptr> firstStaticMesh{};
@@ -296,12 +299,6 @@ namespace MyosotisFW::System::Render
 			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(g_shadowMapSize, g_shadowMapSize);
 			vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
-			vkCmdSetDepthBias(
-				currentCommandBuffer,
-				0.002f,
-				0.0f,
-				1.5f);
-
 			m_frustumCullerShaderObject.objectDataSSBO.data.objects.clear();
 			for (ObjectBase_ptr& object : m_objects)
 			{
@@ -378,9 +375,7 @@ namespace MyosotisFW::System::Render
 			{// Composition Render Pass
 				m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.4f, 0.1f), "Composition SubPass"));
 
-				vkCmdBindPipeline(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositionShaderBase.pipeline);
-				vkCmdBindDescriptorSets(currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_compositionShaderBase.pipelineLayout, 0, 1, &m_compositionShaderBase.descriptorSet, 0, NULL);
-				vkCmdDraw(currentCommandBuffer, 3, 1, 0, 0);
+				m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
 				m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 			}

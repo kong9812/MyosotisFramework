@@ -73,6 +73,28 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		glm::mat4 viewProjection;
+		glm::vec4 position;
+		int32_t pcfCount;
+	}DirectionalLightInfo;
+
+	typedef struct
+	{
+		Buffer buffer;
+		DirectionalLightInfo data;
+	}DirectionalLightUBO;
+
+	typedef struct
+	{
+		Buffer buffer;
+		struct
+		{
+			glm::vec4 position;
+		}data;
+	}CameraUBO;
+
+	typedef struct
+	{
 		struct
 		{
 			VkDescriptorSet descriptorSet;
@@ -111,17 +133,16 @@ namespace MyosotisFW
 
 	typedef struct
 	{
-		struct
-		{
-			Buffer buffer;
-			struct
-			{
-				glm::mat4 viewProjection;
-				glm::vec4 position;
-				int32_t pcfCount;
-			}data;
-		}lightUBO;			// UBO
+		DirectionalLightUBO lightUBO;
 	}ShadowMapShaderObject;
+
+	typedef struct
+	{
+		ShaderBase shaderBase;
+
+		CameraUBO cameraUBO;
+		DirectionalLightUBO lightUBO;
+	}CompositionShaderObject;
 
 	typedef struct
 	{
@@ -141,11 +162,9 @@ namespace MyosotisFW
 				glm::mat4 view;
 				glm::mat4 projection;
 				glm::vec4 color;
-				glm::vec4 cameraPos;
 			}data;
 		}standardUBO;			// UBO
 	}StaticMeshShaderObject;
-
 
 	typedef struct
 	{
