@@ -152,6 +152,7 @@ namespace MyosotisFW
 
 		struct
 		{
+			bool useNormalMap;
 			ImageWithSampler normalMap;
 			VkDescriptorImageInfo shadowMapImageInfo;
 			VkDescriptorBufferInfo shadowMapBufferDescriptor;
@@ -165,6 +166,23 @@ namespace MyosotisFW
 			}data;
 		}standardUBO;			// UBO
 	}StaticMeshShaderObject;
+
+	typedef struct
+	{
+		ShaderBase skyboxRenderShaderBase;
+		struct
+		{
+			ImageWithSampler cubemap;
+			Buffer buffer;
+			struct
+			{
+				glm::mat4 model;
+				glm::mat4 view;
+				glm::mat4 projection;
+				glm::vec4 color;
+			}data;
+		}standardUBO;			// UBO
+	}SkyboxShaderObject;
 
 	typedef struct
 	{

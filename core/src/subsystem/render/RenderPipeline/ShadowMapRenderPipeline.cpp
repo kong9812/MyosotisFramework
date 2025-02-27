@@ -74,8 +74,6 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.shadowMapRenderShaderBase.descriptorSet));
 
-		VkDescriptorImageInfo normalMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&m_shadowMapShaderObject.lightUBO.buffer.descriptor),

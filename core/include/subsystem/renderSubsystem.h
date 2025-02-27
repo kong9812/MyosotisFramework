@@ -12,6 +12,7 @@
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
+#include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
 #include "DeferredRenderPipeline.h"
 #include "CompositionRenderPipeline.h"
@@ -99,6 +100,7 @@ namespace MyosotisFW::System::Render
 		VMAImage m_shadowMap;
 		void prepareDeferredRendering();
 
+		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
 		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;

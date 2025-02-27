@@ -225,6 +225,11 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->KeyAction(key, action);
+
+		if (key == GLFW_KEY_F3)
+		{
+			systemManager->GetGameDirector()->SaveGameStageFile("TEST.gs", systemManager->GetRenderSubsystem()->GetObjects());
+		}
 	}
 
 	void SystemManager::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

@@ -24,6 +24,12 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), image.second.image, image.second.allocation);
 			vkDestroyImageView(*m_device, image.second.view, m_device->GetAllocationCallbacks());
 		}
+
+		for (std::pair<std::string, VMAImage> image : m_cubeImages)
+		{
+			vmaDestroyImage(m_device->GetVmaAllocator(), image.second.image, image.second.allocation);
+			vkDestroyImageView(*m_device, image.second.view, m_device->GetAllocationCallbacks());
+		}
 	}
 
 	VkShaderModule RenderResources::GetShaderModules(std::string fileName)
@@ -73,5 +79,32 @@ namespace MyosotisFW::System::Render
 			vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
 		}
 		return { m_images[fileName].image,  m_images[fileName].view };
+	}
+
+	ImageWithSampler RenderResources::GetCubeImage(std::vector<std::string> fileNames)
+	{
+		auto image = m_cubeImages.find(fileNames[0]);
+		if (image == m_cubeImages.end())
+		{
+			// todo.　実装場所を変える
+			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferFamilyIndex());
+			VkCommandPool pool{};
+			VkQueue queue{};
+			vkGetDeviceQueue(*m_device, m_device->GetTransferFamilyIndex(), 0, &queue);
+			VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
+
+			// ないなら読み込む
+			m_cubeImages.emplace(fileNames[0], Utility::Loader::loadCubeImage(
+				*m_device,
+				queue,
+				pool,
+				m_device->GetVmaAllocator(),
+				fileNames,
+				m_device->GetAllocationCallbacks()));
+
+			// 後片付け
+			vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
+		}
+		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
 }

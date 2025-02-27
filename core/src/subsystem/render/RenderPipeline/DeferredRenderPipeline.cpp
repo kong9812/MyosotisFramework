@@ -32,15 +32,29 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.deferredRenderShaderBase.descriptorSet));
 
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {};
+		VkDescriptorImageInfo descriptorImageInfo{};
+		if (shaderObject.standardUBO.useNormalMap)
+		{
+			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		// write descriptor set
-		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &descriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
-		};
+			// write descriptor set
+			writeDescriptorSet = {
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &descriptorImageInfo),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
+			};
+		}
+		else
+		{
+			// write descriptor set
+			writeDescriptorSet = {
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
+			};
+		}
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
 

@@ -2,11 +2,12 @@
 #include "FpsCamera.h"
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
+#include "Skybox.h"
 
 namespace MyosotisFW::System::ObjectFactory
 {
-    inline ObjectBase_ptr CreateObject(ObjectType objectType)
-    {
+	inline ObjectBase_ptr CreateObject(ObjectType objectType)
+	{
 		ObjectBase_ptr object{};
 		switch (objectType)
 		{
@@ -25,9 +26,14 @@ namespace MyosotisFW::System::ObjectFactory
 			object = Render::CreateCustomMeshPointer();
 		}
 		break;
+		case ObjectType::Skybox:
+		{
+			object = Render::CreateSkyboxPointer();
+		}
+		break;
 		default:
 			break;
 		}
 		return object;
-    }
+	}
 }

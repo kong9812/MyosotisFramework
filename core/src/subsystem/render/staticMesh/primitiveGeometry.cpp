@@ -93,6 +93,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		// 実験
+		m_staticMeshShaderObject.standardUBO.useNormalMap = true;
 		m_staticMeshShaderObject.standardUBO.normalMap = m_resources->GetImage("NormalMap.png");
 		// sampler
 		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();

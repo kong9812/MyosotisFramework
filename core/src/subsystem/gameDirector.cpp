@@ -33,6 +33,21 @@ namespace MyosotisFW::System::GameDirector {
 		m_renderSubsystem = renderSubsystem;
 
 		LoadGameStageFile("TEST.gs");
+
+		// TEST
+		//MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::CustomMesh);
+		//System::Render::CustomMesh_ptr customMesh = System::Render::Object_CastToCustomMesh(obj);
+		//CustomMeshInfo customMeshInfo{};
+		//customMeshInfo.m_meshPath = "test.fbx";
+		//customMesh->SetCustomMeshInfo(customMeshInfo);
+		//renderSubsystem->RegisterObject(obj);
+		MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::Skybox);
+		System::Render::Skybox_ptr skybox = System::Render::Object_CastToSkybox(obj);
+		/*CustomMeshInfo customMeshInfo{};
+		customMeshInfo.m_meshPath = "test.fbx";
+		customMesh->SetCustomMeshInfo(customMeshInfo);*/
+		renderSubsystem->RegisterObject(obj);
+		// TEST
 	}
 
 	void GameDirector::LoadGameStageFile(std::string fileName)
@@ -73,7 +88,7 @@ namespace MyosotisFW::System::GameDirector {
 		{
 			doc.PushBack(object->Serialize(allocator), allocator);
 		}
-		
+
 		Utility::Loader::saveGameStageFile(fileName, doc);
 	}
 }

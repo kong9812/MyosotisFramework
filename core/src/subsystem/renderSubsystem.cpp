@@ -9,6 +9,7 @@
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 #include "PrimitiveGeometry.h"
+#include "Skybox.h"
 #include "RenderPieplineList.h"
 
 namespace {
@@ -87,6 +88,7 @@ namespace MyosotisFW::System::Render
 		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 
+		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_shadowMap);
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
@@ -176,6 +178,14 @@ namespace MyosotisFW::System::Render
 			m_deferredRenderPipeline->CreateShaderObject(shaderObject);
 		}
 		break;
+		case ObjectType::Skybox:
+		{
+			Skybox_ptr skybox = Object_CastToSkybox(object);
+			skybox->PrepareForRender(m_device, m_resources);
+			SkyboxShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
+			m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
+		}
+		break;
 		default:
 			break;
 		}
@@ -199,6 +209,11 @@ namespace MyosotisFW::System::Render
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
 				staticMesh->Update(updateData, m_mainCamera);
 				firstStaticMesh.push_back(staticMesh);
+			}
+			else if (object->GetObjectType() == ObjectType::Skybox)
+			{
+				Skybox_ptr staticMesh = Object_CastToSkybox(object);
+				staticMesh->Update(updateData, m_mainCamera);
 			}
 		}
 
@@ -350,6 +365,11 @@ namespace MyosotisFW::System::Render
 					transparentStaticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
 					//}
 					staticMeshCounter++;
+				}
+				else if (object->GetObjectType() == ObjectType::Skybox)
+				{
+					Skybox_ptr staticMesh = Object_CastToSkybox(object);
+					staticMesh->BindCommandBuffer(currentCommandBuffer);
 				}
 			}
 

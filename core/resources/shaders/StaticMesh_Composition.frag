@@ -42,19 +42,26 @@ const mat4 biasMat = mat4(
 void main() 
 {
 	vec4 position = subpassLoad(inputPosition);
-	vec4 normal = subpassLoad(inputNormal);
-	vec4 baseColor = subpassLoad(inputBaseColor);
+    if (position.w > 0.0)
+    {    
+	    vec4 normal = subpassLoad(inputNormal);
+	    vec4 baseColor = subpassLoad(inputBaseColor);
 
-	vec4 lightSpace = biasMat * lightUbo.viewProjection * position;
-	float shadow = PCFShadow(vec3((lightSpace / lightSpace.w).xyz), lightUbo.pcfCount);
+	    vec4 lightSpace = biasMat * lightUbo.viewProjection * position;
+	    float shadow = PCFShadow(vec3((lightSpace / lightSpace.w).xyz), lightUbo.pcfCount);
 
-	vec3 lightDir = normalize(lightUbo.position.xyz);
-    float diff = max(dot(normal.xyz, lightDir), 0.0);
-    vec3 reflectDir = reflect(-lightDir, normal.xyz);
-    vec3 viewDir = normalize(cameraUbo.position.xyz - position.xyz);
-	vec3 ambient  = 0.5 * baseColor.rgb;
-    vec3 diffuse  = 0.3 * diff * baseColor.rgb * shadow;
-	vec3 color = ambient + diffuse;
+	    vec3 lightDir = normalize(lightUbo.position.xyz);
+        float diff = max(dot(normal.xyz, lightDir), 0.0);
+        vec3 reflectDir = reflect(-lightDir, normal.xyz);
+        vec3 viewDir = normalize(cameraUbo.position.xyz - position.xyz);
+	    vec3 ambient  = 0.5 * baseColor.rgb;
+        vec3 diffuse  = 0.3 * diff * baseColor.rgb * shadow;
+	    vec3 color = ambient + diffuse;
 
-	outColor = vec4(color, baseColor.a);
+	    outColor = vec4(color, baseColor.a);
+    }
+    else
+    {
+        outColor = vec4(0.0);
+    }
 }
