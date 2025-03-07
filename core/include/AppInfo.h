@@ -64,6 +64,9 @@ namespace MyosotisFW::AppInfo
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
 
+	// シャドウマップサイズ
+	constexpr uint32_t g_shadowMapSize = 2048;
+
 	// 背景色
 	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 1.0f };
 	// depth

@@ -4,13 +4,26 @@
 
 namespace MyosotisFW::System::Render
 {
-	RenderResources::RenderResources(RenderDevice_ptr device)
+	RenderResources::RenderResources(const RenderDevice_ptr& device, const uint32_t width, const uint32_t height)
 	{
 		m_device = device;
+
+		prepareAttachments(width, height);
 	}
 
 	RenderResources::~RenderResources()
 	{
+		{// attachment
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
+			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
+		}
+
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
 		{
 			vkDestroyShaderModule(*m_device, shaderMoudle.second, m_device->GetAllocationCallbacks());
@@ -32,7 +45,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	VkShaderModule RenderResources::GetShaderModules(std::string fileName)
+	VkShaderModule RenderResources::GetShaderModules(const std::string& fileName)
 	{
 		auto shaderModule = m_shaderModules.find(fileName);
 		if (shaderModule == m_shaderModules.end())
@@ -43,7 +56,7 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	std::vector<Mesh> RenderResources::GetMeshVertex(std::string fileName)
+	std::vector<Mesh> RenderResources::GetMeshVertex(const std::string& fileName)
 	{
 		auto vertexData = m_meshVertexDatas.find(fileName);
 		if (vertexData == m_meshVertexDatas.end())
@@ -54,7 +67,7 @@ namespace MyosotisFW::System::Render
 		return m_meshVertexDatas[fileName];
 	}
 
-	ImageWithSampler RenderResources::GetImage(std::string fileName)
+	ImageWithSampler RenderResources::GetImage(const std::string& fileName)
 	{
 		auto image = m_images.find(fileName);
 		if (image == m_images.end())
@@ -106,5 +119,41 @@ namespace MyosotisFW::System::Render
 			vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
 		}
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
+	}
+
+	void RenderResources::prepareAttachments(const uint32_t width, const uint32_t height)
+	{
+		{// shadow map
+			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_shadowMapFormat, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
+			imageCreateInfoForDepthStencil.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfoForDepthStencil, &allocationCreateInfo, &m_shadowMap.image, &m_shadowMap.allocation, &m_shadowMap.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_shadowMap.image, AppInfo::g_shadowMapFormat);
+			imageViewCreateInfoForDepthStencil.subresourceRange.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_shadowMap.view));
+		}
+
+		{// attachments position
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredPositionFormat, width, height);
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_position.image, &m_position.allocation, &m_position.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_position.image, AppInfo::g_deferredPositionFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_position.view));
+		}
+		{// attachments normal
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredNormalFormat, width, height);
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_normal.image, &m_normal.allocation, &m_normal.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_normal.image, AppInfo::g_deferredNormalFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_normal.view));
+		}
+		{// attachments base color
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredBaseColorFormat, width, height);
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_baseColor.image, &m_baseColor.allocation, &m_baseColor.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_baseColor.image, AppInfo::g_deferredBaseColorFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_baseColor.view));
+		}
+
 	}
 }

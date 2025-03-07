@@ -19,8 +19,6 @@ namespace {
 		MyosotisFW::System::Render::StaticMesh_ptr staticMesh;
 	}TransparentStaticMesh;	// Zソート用
 
-	uint32_t g_shadowMapSize = 4096;
-
 	float g_debugTimer = 0.0f;
 	float g_debugSpeed = 50.0f;
 }
@@ -39,13 +37,10 @@ namespace MyosotisFW::System::Render
 		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
 
 		// Resources
-		m_resources = CreateRenderResourcesPointer(m_device);
+		m_resources = CreateRenderResourcesPointer(m_device, m_swapchain->GetWidth(), m_swapchain->GetHeight());
 
 		// depth/stencil
 		prepareDepthStencil();
-
-		// deferred rendering attachments
-		prepareDeferredRendering();
 
 		// render pass
 		prepareRenderPass();
@@ -89,25 +84,16 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 
 		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_shadowMap);
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_resources->GetShadowMap());
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_compositionRenderPipeline->CreateShaderObject(m_position, m_normal, m_baseColor, m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		m_compositionRenderPipeline->CreateShaderObject(m_resources->GetPosition(), m_resources->GetNormal(), m_resources->GetBaseColor(), m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_compositionRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_transparentRenderPipeline = CreateTransparentRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
 	}
 
 	RenderSubsystem::~RenderSubsystem()
 	{
-		{// attachment
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
-			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
-		}
-
 		{// furstum culler
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer, m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation);
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.objectDataSSBO.buffer.buffer, m_frustumCullerShaderObject.objectDataSSBO.buffer.allocation);
@@ -116,11 +102,6 @@ namespace MyosotisFW::System::Render
 			vkDestroyPipelineLayout(*m_device, m_frustumCullerShaderObject.shaderBase.pipelineLayout, m_device->GetAllocationCallbacks());
 			vkDestroyDescriptorSetLayout(*m_device, m_frustumCullerShaderObject.shaderBase.descriptorSetLayout, m_device->GetAllocationCallbacks());
 			vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
-		}
-
-		{// shadow map
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
-			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
 		}
 
 		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
@@ -303,15 +284,15 @@ namespace MyosotisFW::System::Render
 			std::vector<VkClearValue> clearValues(1);
 			clearValues[0] = AppInfo::g_depthClearValues;
 
-			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.lighting.renderPass, g_shadowMapSize, g_shadowMapSize, clearValues);
+			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.lighting.renderPass, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize, clearValues);
 			renderPassBeginInfo.framebuffer = m_renderPass.lighting.framebuffer[0];
 
 			vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(g_shadowMapSize), static_cast<float>(g_shadowMapSize));
+			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(AppInfo::g_shadowMapSize), static_cast<float>(AppInfo::g_shadowMapSize));
 			vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
 
-			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(g_shadowMapSize, g_shadowMapSize);
+			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
 			vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
 
 			vkCmdSetDepthBias(
@@ -492,18 +473,6 @@ namespace MyosotisFW::System::Render
 			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_depthStencil.image, AppInfo::g_depthFormat);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.view));
 		}
-
-		{// Lighting pass
-			// image
-			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_shadowMapFormat, g_shadowMapSize, g_shadowMapSize);
-			imageCreateInfoForDepthStencil.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfoForDepthStencil, &allocationCreateInfo, &m_shadowMap.image, &m_shadowMap.allocation, &m_shadowMap.allocationInfo));
-			// image view
-			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_shadowMap.image, AppInfo::g_shadowMapFormat);
-			imageViewCreateInfoForDepthStencil.subresourceRange.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_shadowMap.view));
-		}
 	}
 
 	void RenderSubsystem::prepareRenderPass()
@@ -657,16 +626,16 @@ namespace MyosotisFW::System::Render
 			for (uint32_t i = 0; i < m_renderPass.staticMesh.framebuffer.size(); i++)
 			{
 				attachments[0] = m_swapchain->GetSwapchainImage()[i].view;
-				attachments[1] = m_position.view;
-				attachments[2] = m_normal.view;
-				attachments[3] = m_baseColor.view;
+				attachments[1] = m_resources->GetPosition().view;
+				attachments[2] = m_resources->GetNormal().view;
+				attachments[3] = m_resources->GetBaseColor().view;
 				VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_renderPass.staticMesh.framebuffer[i]));
 			}
 		}
 
 		{// Lighting pass
 			// Depth/Stencil
-			VkImageView attachment = m_shadowMap.view;
+			VkImageView attachment = m_resources->GetShadowMap().view;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -674,8 +643,8 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.renderPass = m_renderPass.lighting.renderPass;
 			frameBufferCreateInfo.attachmentCount = 1;
 			frameBufferCreateInfo.pAttachments = &attachment;
-			frameBufferCreateInfo.width = g_shadowMapSize;
-			frameBufferCreateInfo.height = g_shadowMapSize;
+			frameBufferCreateInfo.width = AppInfo::g_shadowMapSize;
+			frameBufferCreateInfo.height = AppInfo::g_shadowMapSize;
 			frameBufferCreateInfo.layers = 1;
 			m_renderPass.lighting.framebuffer.resize(1);
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_renderPass.lighting.framebuffer[0]));
@@ -705,38 +674,17 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderSubsystem::prepareDeferredRendering()
-	{
-		{// attachments position
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredPositionFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_position.image, &m_position.allocation, &m_position.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_position.image, AppInfo::g_deferredPositionFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_position.view));
-		}
-		{// attachments normal
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredNormalFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_normal.image, &m_normal.allocation, &m_normal.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_normal.image, AppInfo::g_deferredNormalFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_normal.view));
-		}
-		{// attachments base color
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredBaseColorFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_baseColor.image, &m_baseColor.allocation, &m_baseColor.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_baseColor.image, AppInfo::g_deferredBaseColorFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_baseColor.view));
-		}
-	}
-
 	void RenderSubsystem::prepareFrustumCuller()
 	{
+		// todo.　動的に変更できるように
+		const uint32_t staticMeshCount = 1000;
+
 		{// frustumPlanesUBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.frustumPlanesUBO.data,
+				static_cast<uint32_t>(sizeof(glm::vec4) * 6),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer,
 				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation,
@@ -748,6 +696,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.objectDataSSBO.data,
+				static_cast<uint32_t>(sizeof(glm::vec4) * staticMeshCount),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.objectDataSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.objectDataSSBO.buffer.allocation,
@@ -759,6 +708,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.visibleObjectsSSBO.data,
+				static_cast<uint32_t>(sizeof(glm::vec4) * staticMeshCount),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation,

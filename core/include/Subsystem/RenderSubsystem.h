@@ -94,12 +94,6 @@ namespace MyosotisFW::System::Render
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
 
 	private:
-		VMAImage m_position;
-		VMAImage m_normal;
-		VMAImage m_baseColor;
-		VMAImage m_shadowMap;
-		void prepareDeferredRendering();
-
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
 		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
