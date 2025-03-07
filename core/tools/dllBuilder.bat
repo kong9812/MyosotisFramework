@@ -6,7 +6,7 @@ for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Stu
 )
 
 :: ソリューションファイルのパスを設定
-set SOLUTION_PATH="..\bin\MyosotisFW.sln"
+set SOLUTION_PATH="..\..\bin\MyosotisFW.sln"
 
 :: ビルド構成
 set CONFIGURATION=FWDLL
