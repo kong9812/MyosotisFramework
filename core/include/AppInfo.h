@@ -54,11 +54,11 @@ namespace MyosotisFW::AppInfo
 	// 指定DepthFormat
 	constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 	// 指定画像フォーマット ([deferred] position)
-	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
+	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT; // HDR&精密な色管理が可能
 	// 指定画像フォーマット ([deferred] normal)
-	constexpr VkFormat g_deferredNormalFormat = VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT; // HDR&精密な色管理が可能
-	// 指定画像フォーマット ([deferred] base color)
-	constexpr VkFormat g_deferredBaseColorFormat = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;  // 0.0～1.0
+	constexpr VkFormat g_deferredNormalFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT; // HDR&精密な色管理が可能
+	// 指定画像フォーマット
+	constexpr VkFormat g_colorFormat = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;  // 0.0～1.0
 	// 指定画像フォーマット (shadow map)
 	constexpr VkFormat g_shadowMapFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定スワップチェーン画像数
@@ -68,7 +68,7 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_shadowMapSize = 2048;
 
 	// 背景色
-	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 1.0f };
+	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 0.0f };
 	// depth
 	constexpr VkClearValue g_depthClearValues = { 1.0f, 0.0f };
 

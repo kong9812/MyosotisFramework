@@ -39,12 +39,6 @@ namespace MyosotisFW::System::Render
 		// Resources
 		m_resources = CreateRenderResourcesPointer(m_device, m_swapchain->GetWidth(), m_swapchain->GetHeight());
 
-		// depth/stencil
-		prepareDepthStencil();
-
-		// render pass
-		prepareRenderPass();
-
 		// graphics queue
 		vkGetDeviceQueue(*m_device, m_device->GetGraphicsFamilyIndex(), 0, &m_graphicsQueue);
 		// compute queue
@@ -64,9 +58,6 @@ namespace MyosotisFW::System::Render
 		// fences
 		prepareFences();
 
-		// framebuffers
-		prepareFrameBuffers();
-
 		// frustum culler
 		prepareFrustumCuller();
 
@@ -83,13 +74,17 @@ namespace MyosotisFW::System::Render
 		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_renderPass.lighting.renderPass, m_resources->GetShadowMap());
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
-		m_compositionRenderPipeline->CreateShaderObject(m_resources->GetPosition(), m_resources->GetNormal(), m_resources->GetBaseColor(), m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		m_compositionRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
-		m_transparentRenderPipeline = CreateTransparentRenderPipelinePointer(m_device, m_resources, m_renderPass.staticMesh.renderPass);
+		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
+		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain, m_swapchain->GetWidth(), m_swapchain->GetHeight());
+
+		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_shadowMapRenderPass->GetRenderPass(), m_resources->GetShadowMap());
+		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
+		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
+		m_compositionRenderPipeline->CreateShaderObject(m_resources->GetLightingResult());
+		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
+		m_lightingRenderPipeline->CreateShaderObject(m_resources->GetPosition(), m_resources->GetNormal(), m_resources->GetBaseColor(), m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -107,14 +102,6 @@ namespace MyosotisFW::System::Render
 		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.computeComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
-		for (VkFramebuffer& framebuffer : m_renderPass.staticMesh.framebuffer)
-		{
-			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
-		}
-		for (VkFramebuffer& framebuffer : m_renderPass.lighting.framebuffer)
-		{
-			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
-		}
 		for (VkFence& fence : m_fences) {
 			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
@@ -122,11 +109,6 @@ namespace MyosotisFW::System::Render
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
 		vkDestroyCommandPool(*m_device, m_renderCommandPool, m_device->GetAllocationCallbacks());
 		vkDestroyCommandPool(*m_device, m_computeCommandPool, m_device->GetAllocationCallbacks());
-		vkDestroyRenderPass(*m_device, m_renderPass.staticMesh.renderPass, m_device->GetAllocationCallbacks());
-		vkDestroyRenderPass(*m_device, m_renderPass.lighting.renderPass, m_device->GetAllocationCallbacks());
-		vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
-		vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
-		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 	}
 
 	void RenderSubsystem::ResetMousePos(const glm::vec2& mousePos)
@@ -155,7 +137,7 @@ namespace MyosotisFW::System::Render
 			staticMesh->PrepareForRender(m_device, m_resources);
 			StaticMeshShaderObject& shaderObject = staticMesh->GetStaticMeshShaderObject();
 			m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
-			m_transparentRenderPipeline->CreateShaderObject(shaderObject);
+			//m_transparentRenderPipeline->CreateShaderObject(shaderObject);
 			m_deferredRenderPipeline->CreateShaderObject(shaderObject);
 		}
 		break;
@@ -179,7 +161,7 @@ namespace MyosotisFW::System::Render
 		{
 			Camera::FPSCamera_ptr cameraPtr = Object_Cast<Camera::FPSCamera>(m_mainCamera);
 			cameraPtr->Update(updateData);
-			m_compositionRenderPipeline->UpdateCameraPosition(glm::vec4(cameraPtr->GetCameraPos(), 0.0f));
+			m_lightingRenderPipeline->UpdateCameraPosition(glm::vec4(cameraPtr->GetCameraPos(), 0.0f));
 		}
 
 		std::vector<StaticMesh_ptr> firstStaticMesh{};
@@ -281,27 +263,8 @@ namespace MyosotisFW::System::Render
 			// todo. Change to run when loading .gs
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "ShadowMap Prender Pass"));
 
-			std::vector<VkClearValue> clearValues(1);
-			clearValues[0] = AppInfo::g_depthClearValues;
+			m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.lighting.renderPass, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize, clearValues);
-			renderPassBeginInfo.framebuffer = m_renderPass.lighting.framebuffer[0];
-
-			vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-
-			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(AppInfo::g_shadowMapSize), static_cast<float>(AppInfo::g_shadowMapSize));
-			vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
-
-			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
-			vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
-
-			vkCmdSetDepthBias(
-				currentCommandBuffer,
-				2.25f,
-				0.0f,
-				2.75f);
-
-			m_frustumCullerShaderObject.objectDataSSBO.data.objects.clear();
 			for (ObjectBase_ptr& object : m_objects)
 			{
 				if (IsStaticMesh(object->GetObjectType()))
@@ -310,35 +273,17 @@ namespace MyosotisFW::System::Render
 				}
 			}
 
-			vkCmdEndRenderPass(currentCommandBuffer);
+			m_shadowMapRenderPass->EndRender(currentCommandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
 
-		{// Static Mesh Render Pass
-			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.8f, 0.1f), "Static Mesh Render Pass"));
+		{// main render pass
+			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.8f, 0.1f), "Static Mesh Deferred Render Pass"));
 
-			std::vector<VkClearValue> clearValues(5);
-			clearValues[0] = AppInfo::g_colorClearValues;
-			clearValues[1] = AppInfo::g_colorClearValues;
-			clearValues[2] = AppInfo::g_colorClearValues;
-			clearValues[3] = AppInfo::g_colorClearValues;
-			clearValues[4] = AppInfo::g_depthClearValues;
-
-			VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass.staticMesh.renderPass, m_swapchain->GetWidth(), m_swapchain->GetHeight(), clearValues);
-			renderPassBeginInfo.framebuffer = m_renderPass.staticMesh.framebuffer[m_currentBufferIndex];
-
-			vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-
-			VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight()));
-			vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
-
-			VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			vkCmdSetScissor(currentCommandBuffer, 0, 1, &scissor);
-
+			m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 			memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
 
 			std::vector<TransparentStaticMesh> transparentStaticMeshes{};
-
 			uint32_t staticMeshCounter = 0;
 			for (ObjectBase_ptr& object : m_objects)
 			{
@@ -379,31 +324,17 @@ namespace MyosotisFW::System::Render
 
 			vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-			{// Composition Render Pass
-				m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.4f, 0.1f), "Composition SubPass"));
-
-				m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-
-				m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-			}
+			m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
 			vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-			{// Transparent Render Pass
-				m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.6f, 0.1f), "Transparent SubPass"));
+			m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
-				//for (TransparentStaticMesh staticMeshesPair : transparentStaticMeshes)
-				//{
-				//	staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Transparent);
-				//	Logger::Info(std::string("rending: ") + std::to_string(staticMeshCounter));
-				//}
+			m_mainRenderPass->EndRender(currentCommandBuffer);
 
-				m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-			}
-
-			vkCmdEndRenderPass(currentCommandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
+
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
@@ -425,30 +356,14 @@ namespace MyosotisFW::System::Render
 		m_swapchain.reset();
 		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
 
-		// depth/stencil
-		vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
-		vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
-		vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
-		prepareDepthStencil();
-
-		// framebuffers
-		for (VkFramebuffer& framebuffer : m_renderPass.staticMesh.framebuffer)
-		{
-			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
-		}
-		for (VkFramebuffer& framebuffer : m_renderPass.lighting.framebuffer)
-		{
-			vkDestroyFramebuffer(*m_device, framebuffer, m_device->GetAllocationCallbacks());
-		}
-		prepareFrameBuffers();
-
 		// command buffers
 		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
 		prepareCommandBuffers();
 
 		// fences
-		for (VkFence& fence : m_fences) {
+		for (VkFence& fence : m_fences)
+		{
 			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 		prepareFences();
@@ -459,196 +374,6 @@ namespace MyosotisFW::System::Render
 		}
 
 		vkDeviceWaitIdle(*m_device);
-	}
-
-	void RenderSubsystem::prepareDepthStencil()
-	{
-		{// StaticMesh pass
-			// image
-			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-			VK_VALIDATION(vkCreateImage(*m_device, &imageCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.image));
-			// allocate
-			m_device->ImageMemoryAllocate(m_depthStencil);
-			// image view
-			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_depthStencil.image, AppInfo::g_depthFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.view));
-		}
-	}
-
-	void RenderSubsystem::prepareRenderPass()
-	{
-		{// StaticMesh Pass
-			// attachments
-			std::vector<VkAttachmentDescription> attachments = {
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format),			// color
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredPositionFormat),		// position
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat),		// normal
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredBaseColorFormat),	// base color
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForDepthStencil(AppInfo::g_depthFormat),				// depth/stencil
-			};
-
-			std::vector<VkSubpassDescription> subpassDescriptions{};
-
-			VkAttachmentReference depthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(4, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-			// deferred
-			std::vector<VkAttachmentReference> deferredColorAttachments = {
-				Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),			// [0] color
-				Utility::Vulkan::CreateInfo::attachmentReference(1, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),			// [1] position
-				Utility::Vulkan::CreateInfo::attachmentReference(2, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),			// [2] normal
-				Utility::Vulkan::CreateInfo::attachmentReference(3, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),			// [3] base color
-			};
-			subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(deferredColorAttachments, depthAttachmentReference));
-
-			// [deferred]composition
-			std::vector<VkAttachmentReference> compositionColorAttachments = { Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) };
-			std::vector<VkAttachmentReference> compositionInputAttachments = {
-				Utility::Vulkan::CreateInfo::attachmentReference(1, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),			// [1] position
-				Utility::Vulkan::CreateInfo::attachmentReference(2, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),			// [2] normal
-				Utility::Vulkan::CreateInfo::attachmentReference(3, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),			// [3] base color
-			};
-			subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(compositionColorAttachments, depthAttachmentReference, compositionInputAttachments));
-
-			// transparent
-			std::vector<VkAttachmentReference> transparentColorAttachments = { Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) };
-			subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(transparentColorAttachments, depthAttachmentReference));
-
-			// dependency
-			std::vector<VkSubpassDependency> dependencies = {
-				// start -> deferred
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					VK_SUBPASS_EXTERNAL,
-					0,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					0,
-					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-					0),
-					// start -> deferred
-					Utility::Vulkan::CreateInfo::subpassDependency(
-						VK_SUBPASS_EXTERNAL,
-						0,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-						0,
-						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-						0),
-					// deferred -> composition
-					Utility::Vulkan::CreateInfo::subpassDependency(
-						0,
-						1,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-						VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-					// composition -> transparent
-					Utility::Vulkan::CreateInfo::subpassDependency(
-						1,
-						2,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-						VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-					// transparent -> end
-					Utility::Vulkan::CreateInfo::subpassDependency(
-						2,
-						VK_SUBPASS_EXTERNAL,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-						VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT,
-						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-			};
-
-			VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);
-			VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass.staticMesh.renderPass));
-		}
-
-		{// Lighting Pass
-			// attachments
-			std::vector<VkAttachmentDescription> attachments = {
-				Utility::Vulkan::CreateInfo::attachmentDescriptionForShadowMap(AppInfo::g_shadowMapFormat),			// shadow map
-			};
-
-			std::vector<VkSubpassDescription> subpassDescriptions{};
-
-			// deferred
-			VkAttachmentReference depthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-			subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescriptionDepthStencilOnly(depthAttachmentReference));
-
-			// dependency
-			std::vector<VkSubpassDependency> dependencies = {
-				// start -> deferred
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					VK_SUBPASS_EXTERNAL,
-					0,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
-					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-					// start -> deferred
-					Utility::Vulkan::CreateInfo::subpassDependency(
-						0,
-						VK_SUBPASS_EXTERNAL,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-						VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-						VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
-						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-			};
-
-			VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);
-			VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass.lighting.renderPass));
-		}
-	}
-
-	void RenderSubsystem::prepareFrameBuffers()
-	{
-		{// StaticMesh pass
-			std::array<VkImageView, 5> attachments = {};
-
-			// Depth/Stencil
-			attachments[4] = m_depthStencil.view;
-
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.pNext = NULL;
-			frameBufferCreateInfo.renderPass = m_renderPass.staticMesh.renderPass;
-			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = m_swapchain->GetWidth();
-			frameBufferCreateInfo.height = m_swapchain->GetHeight();
-			frameBufferCreateInfo.layers = 1;
-			m_renderPass.staticMesh.framebuffer.resize(m_swapchain->GetImageCount());
-			for (uint32_t i = 0; i < m_renderPass.staticMesh.framebuffer.size(); i++)
-			{
-				attachments[0] = m_swapchain->GetSwapchainImage()[i].view;
-				attachments[1] = m_resources->GetPosition().view;
-				attachments[2] = m_resources->GetNormal().view;
-				attachments[3] = m_resources->GetBaseColor().view;
-				VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_renderPass.staticMesh.framebuffer[i]));
-			}
-		}
-
-		{// Lighting pass
-			// Depth/Stencil
-			VkImageView attachment = m_resources->GetShadowMap().view;
-
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.pNext = NULL;
-			frameBufferCreateInfo.renderPass = m_renderPass.lighting.renderPass;
-			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.pAttachments = &attachment;
-			frameBufferCreateInfo.width = AppInfo::g_shadowMapSize;
-			frameBufferCreateInfo.height = AppInfo::g_shadowMapSize;
-			frameBufferCreateInfo.layers = 1;
-			m_renderPass.lighting.framebuffer.resize(1);
-			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_renderPass.lighting.framebuffer[0]));
-		}
 	}
 
 	void RenderSubsystem::prepareCommandBuffers()

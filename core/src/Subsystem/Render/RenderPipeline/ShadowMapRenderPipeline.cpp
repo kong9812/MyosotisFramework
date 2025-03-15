@@ -12,7 +12,7 @@ namespace {
 	constexpr float g_lightFar = 100.0f;
 	constexpr float g_aspectRadio = 1.0f;
 	constexpr glm::vec3 g_lightLookAt = glm::vec3(0.0f);
-	constexpr uint32_t g_pcfCount = 1;
+	constexpr uint32_t g_pcfCount = 2;
 
 	inline glm::mat4 GetLightViewProject()
 	{

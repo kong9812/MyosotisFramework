@@ -17,6 +17,10 @@
 #include "DeferredRenderPipeline.h"
 #include "CompositionRenderPipeline.h"
 #include "TransparentRenderPipeline.h"
+#include "LightingRenderPipeline.h"
+
+#include "ShadowMapRenderPass.h"
+#include "MainRenderPass.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -48,11 +52,6 @@ namespace MyosotisFW::System::Render
 			VkSemaphore renderComplete;
 		}m_semaphores;
 
-		struct {
-			RenderPass lighting;
-			RenderPass staticMesh;
-		}m_renderPass;
-
 		VkInstance m_instance;
 
 		RenderDevice_ptr m_device;
@@ -75,16 +74,11 @@ namespace MyosotisFW::System::Render
 		VkQueue m_graphicsQueue;
 		VkQueue m_computeQueue;
 
-		DeviceImage m_depthStencil;
-
 		VkDescriptorPool m_descriptorPool;
 		FrustumCullersShaderObject m_frustumCullerShaderObject;
 
 		std::vector<ObjectBase_ptr> m_objects;
 
-		void prepareDepthStencil();
-		void prepareRenderPass();
-		void prepareFrameBuffers();
 		void prepareCommandBuffers();
 		void prepareFences();
 
@@ -94,11 +88,16 @@ namespace MyosotisFW::System::Render
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
 
 	private:
+		ShadowMapRenderPass_ptr m_shadowMapRenderPass;
+		MainRenderPass_ptr m_mainRenderPass;
+
+	private:
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
 		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
+		LightingRenderPipeline_ptr m_lightingRenderPipeline;
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
-		TransparentRenderPipeline_ptr m_transparentRenderPipeline;
+		//TransparentRenderPipeline_ptr m_transparentRenderPipeline;
 
 		// callback
 	private:

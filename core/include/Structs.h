@@ -142,7 +142,7 @@ namespace MyosotisFW
 
 		CameraUBO cameraUBO;
 		DirectionalLightUBO lightUBO;
-	}CompositionShaderObject;
+	}LightingShaderObject;
 
 	typedef struct
 	{

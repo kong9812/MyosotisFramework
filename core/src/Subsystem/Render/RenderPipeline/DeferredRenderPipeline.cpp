@@ -115,7 +115,6 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),		// todo.背景色がある場合はblendが必要
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 		};
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(colorBlendAttachmentStates);
 		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };

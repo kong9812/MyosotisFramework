@@ -13,15 +13,13 @@ namespace MyosotisFW::System::Render
 		~CompositionRenderPipeline();
 
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		void UpdateDirectionalLightInfo(const DirectionalLightInfo& lightInfo);
-		void UpdateCameraPosition(const glm::vec4& position);
-		void CreateShaderObject(const VMAImage& position, const VMAImage& normal, const VMAImage& baseColor, const VkDescriptorImageInfo& shadowMapImageInfo);
+		void CreateShaderObject(const VMAImage& lightingResult);
 
 	private:
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
-		CompositionShaderObject m_compositionShaderObject;
+		ShaderBase m_shaderBase;
 	};
 	TYPEDEF_UNIQUE_PTR_ARGS(CompositionRenderPipeline)
 }

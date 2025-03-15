@@ -28,20 +28,24 @@ namespace MyosotisFW::System::Render
 		std::unordered_map<std::string, VMAImage> m_cubeImages;
 
 	public:
-		void prepareAttachments(const uint32_t width, const uint32_t height);
-
+		DeviceImage& GetDepthStencil() { return m_depthStencil; }
 		VMAImage& GetPosition() { return m_position; }
 		VMAImage& GetNormal() { return m_normal; }
 		VMAImage& GetBaseColor() { return m_baseColor; }
 		VMAImage& GetShadowMap() { return m_shadowMap; }
+		VMAImage& GetLightingResult() { return m_lightingResult; }
 
 	private:
+		void prepareAttachments(const uint32_t width, const uint32_t height);
+
 		// attachments
+		DeviceImage m_depthStencil;
+
 		VMAImage m_position;
 		VMAImage m_normal;
 		VMAImage m_baseColor;
 		VMAImage m_shadowMap;
-
+		VMAImage m_lightingResult;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
 }

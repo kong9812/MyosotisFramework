@@ -94,7 +94,6 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),		// todo.背景色がある場合はblendが必要
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),

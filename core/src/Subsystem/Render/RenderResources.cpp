@@ -18,10 +18,16 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
+
+			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
+			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 		}
 
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
@@ -123,6 +129,16 @@ namespace MyosotisFW::System::Render
 
 	void RenderResources::prepareAttachments(const uint32_t width, const uint32_t height)
 	{
+		{// StaticMesh pass
+			// image
+			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, width, height);
+			VK_VALIDATION(vkCreateImage(*m_device, &imageCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.image));
+			// allocate
+			m_device->ImageMemoryAllocate(m_depthStencil);
+			// image view
+			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_depthStencil.image, AppInfo::g_depthFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.view));
+		}
 		{// shadow map
 			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_shadowMapFormat, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
 			imageCreateInfoForDepthStencil.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -148,12 +164,18 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_normal.view));
 		}
 		{// attachments base color
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredBaseColorFormat, width, height);
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_colorFormat, width, height);
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_baseColor.image, &m_baseColor.allocation, &m_baseColor.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_baseColor.image, AppInfo::g_deferredBaseColorFormat);
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_baseColor.image, AppInfo::g_colorFormat);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_baseColor.view));
 		}
-
+		{// attachments lighting result
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, width, height);
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_lightingResult.image, &m_lightingResult.allocation, &m_lightingResult.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_lightingResult.image, AppInfo::g_surfaceFormat.format);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_lightingResult.view));
+		}
 	}
 }
