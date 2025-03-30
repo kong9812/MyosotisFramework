@@ -59,14 +59,14 @@ namespace MyosotisFW
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
 		{
-			rapidjson::Value obj(rapidjson::Type::kObjectType);
-			obj.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
-			obj.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
-			obj.AddMember("typeID", rapidjson::Value(uuids::to_string(GetTypeID()).c_str(), allocator), allocator);
+			rapidjson::Value json(rapidjson::Type::kObjectType);
+			json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
+			json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
+			json.AddMember("typeID", rapidjson::Value(uuids::to_string(GetTypeID()).c_str(), allocator), allocator);
 
-			SerializeVec3ToJson<glm::vec3>("pos", m_transfrom.pos, obj, allocator);
-			SerializeVec3ToJson<glm::vec3>("rot", m_transfrom.rot, obj, allocator);
-			SerializeVec3ToJson<glm::vec3>("scale", m_transfrom.scale, obj, allocator);
+			SerializeVec3ToJson<glm::vec3>("pos", m_transfrom.pos, json, allocator);
+			SerializeVec3ToJson<glm::vec3>("rot", m_transfrom.rot, json, allocator);
+			SerializeVec3ToJson<glm::vec3>("scale", m_transfrom.scale, json, allocator);
 
 			// もし子要素があれば
 			rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
@@ -74,9 +74,9 @@ namespace MyosotisFW
 			{
 				childrenArray.PushBack(childrenArray.PushBack(child->Serialize(allocator), allocator), allocator);
 			}
-			obj.AddMember("children", childrenArray, allocator);
+			json.AddMember("children", childrenArray, allocator);
 
-			return obj;
+			return json;
 		}
 
 		// デシリアルライズ

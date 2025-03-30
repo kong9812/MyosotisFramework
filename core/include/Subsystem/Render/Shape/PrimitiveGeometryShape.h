@@ -16,6 +16,15 @@
 
 namespace MyosotisFW::System::Render::Shape
 {
+	enum class PrimitiveGeometryShape
+	{
+		UNDEFINED,
+		Quad,
+		Plane,
+		Circle,
+		Sphere,
+	};
+
 	inline Mesh createQuad(const float& size = 1.0f, const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f }, const glm::vec3& center = { 0.0f, 0.0f, 0.0f })
 	{
 		float halfSize = size * 0.5f;
@@ -77,11 +86,11 @@ namespace MyosotisFW::System::Render::Shape
 		Mesh mesh = {};
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
-			// 前面 (0, 0, -1)
-			-halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 0
-			 halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 1
-			 halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 2
-			-halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 3
+			// 上面 (0, 1, 0)
+			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
+			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
+			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
+			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
 		};
 		mesh.index = {
 			0,	2,	1,	0,	3,	2,	// 前面
@@ -89,7 +98,7 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
-	inline Mesh createCircle(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, uint32_t side = 12, glm::vec3 center = { 0.0f,0.0f,0.0f })
+	inline Mesh createCircle(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, glm::vec3 center = { 0.0f,0.0f,0.0f }, uint32_t side = 12)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
@@ -124,14 +133,14 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
-	inline Mesh createSphere(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, uint32_t side = 12, glm::vec3 center = { 0.0f,0.0f,0.0f })
+	inline Mesh createSphere(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, glm::vec3 center = { 0.0f,0.0f,0.0f }, uint32_t side = 96)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
 		ASSERT(side > 3, "sphere's side must be more than 3");
 
-		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
-		for (uint32_t i = 1; i <= side; i++)
+		// 頂点データ (x, y, z, w, r, g, b, a, uvx, uvy, nx, ny, nz)
+		for (uint32_t i = 0; i <= side; i++)
 		{
 			float phi = glm::pi<float>() * static_cast<float>(i) / static_cast<float>(side);
 
@@ -154,9 +163,9 @@ namespace MyosotisFW::System::Render::Shape
 			}
 		}
 
-		for (uint32_t i = 1; i <= side; i++)
+		for (uint32_t i = 0; i < side; i++)
 		{
-			for (uint32_t j = 0; j <= side; j++)
+			for (uint32_t j = 0; j < side; j++)
 			{
 				uint32_t idx = i * (side + 1) + j;
 				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 1, idx });
@@ -164,6 +173,27 @@ namespace MyosotisFW::System::Render::Shape
 			}
 		}
 		return mesh;
+	}
+
+	inline Mesh createShape(PrimitiveGeometryShape shape,
+		float size = 1.0f,
+		glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f },
+		glm::vec3 center = { 0.0f, 0.0f, 0.0f })
+	{
+		switch (shape)
+		{
+		case PrimitiveGeometryShape::Quad:
+			return createQuad(size, color, center);
+		case PrimitiveGeometryShape::Plane:
+			return createPlane(size, color, center);
+		case PrimitiveGeometryShape::Circle:
+			return createCircle(size, color, center);
+		case PrimitiveGeometryShape::Sphere:
+			return createSphere(size, color, center);
+		default:
+			ASSERT(false, "Invalid shape");
+			return {};
+		}
 	}
 }
 

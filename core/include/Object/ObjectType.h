@@ -16,6 +16,7 @@ namespace MyosotisFW
 		PrimitiveGeometryMesh,
 		CustomMesh,
 		Skybox,
+		InteriorObjectMesh,
 		Max
 	}ObjectType;
 
@@ -31,6 +32,7 @@ namespace MyosotisFW
 		{ ObjectType::PrimitiveGeometryMesh,	uuids::uuid::from_string("7f3512b5-4cc9-4caa-a8a9-76d05723e415") },
 		{ ObjectType::CustomMesh,				uuids::uuid::from_string("6eeb286b-2352-4a66-92f6-6c8b75736337") },
 		{ ObjectType::Skybox,					uuids::uuid::from_string("80173349-494e-42fc-9142-1f9a4f550d3c") },
+		{ ObjectType::InteriorObjectMesh,		uuids::uuid::from_string("f3b3b3b4-3b3b-4b3b-8b3b-3b3b3b3b3b3b") },
 		{ ObjectType::Max,						uuids::uuid::from_string("") },
 	};
 

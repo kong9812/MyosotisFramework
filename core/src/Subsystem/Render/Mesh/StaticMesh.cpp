@@ -113,10 +113,4 @@ namespace MyosotisFW::System::Render
 			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
 		}
 	}
-
-	rapidjson::Value StaticMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
-	{
-		rapidjson::Value obj = __super::Serialize(allocator);
-		return obj;
-	}
 }

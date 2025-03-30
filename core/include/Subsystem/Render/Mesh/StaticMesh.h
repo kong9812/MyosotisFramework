@@ -43,7 +43,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
 
-		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
+		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override { return __super::Serialize(allocator); }
 		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override { __super::Deserialize(doc, createObject); }
 		virtual glm::vec4 GetCullerData() { return glm::vec4(0.0f); }
 	protected:

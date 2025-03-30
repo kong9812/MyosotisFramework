@@ -5,13 +5,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	class PrimitiveGeometry : public StaticMesh
+	class InteriorObject : public StaticMesh
 	{
 	public:
-		PrimitiveGeometry();
-		~PrimitiveGeometry() {};
+		InteriorObject();
+		~InteriorObject() {};
 
-		virtual const ObjectType GetObjectType() const override { return ObjectType::PrimitiveGeometryMesh; }
+		virtual const ObjectType GetObjectType() const override { return ObjectType::InteriorObjectMesh; }
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
@@ -24,6 +24,6 @@ namespace MyosotisFW::System::Render
 		void loadAssets() override;
 		void prepareShaderStorageBuffers() override {};
 	};
-	TYPEDEF_SHARED_PTR(PrimitiveGeometry)
-		OBJECT_CAST_FUNCTION(PrimitiveGeometry)
+	TYPEDEF_SHARED_PTR(InteriorObject)
+		OBJECT_CAST_FUNCTION(InteriorObject)
 }

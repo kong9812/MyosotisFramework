@@ -63,7 +63,7 @@ namespace vmaTools
 		VkDescriptorBufferInfo& descriptor)
 	{
 		{// m_staticMeshUniformBufferObject
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(data), usage);
+			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size, usage);
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
 			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング

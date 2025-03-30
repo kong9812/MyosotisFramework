@@ -424,14 +424,14 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::prepareFrustumCuller()
 	{
 		// todo.　動的に変更できるように
-		const uint32_t staticMeshCount = 1000;
+		const uint32_t staticMeshCount = 10000;
 
 		{// frustumPlanesUBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.frustumPlanesUBO.data,
-				static_cast<uint32_t>(sizeof(glm::vec4) * 6),
+				static_cast<uint32_t>(sizeof(m_frustumCullerShaderObject.frustumPlanesUBO.data.planes)),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer,
 				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation,
@@ -443,7 +443,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.objectDataSSBO.data,
-				static_cast<uint32_t>(sizeof(glm::vec4) * staticMeshCount),
+				static_cast<uint32_t>(sizeof(glm::vec4)) * staticMeshCount,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.objectDataSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.objectDataSSBO.buffer.allocation,
@@ -455,7 +455,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.visibleObjectsSSBO.data,
-				static_cast<uint32_t>(sizeof(glm::vec4) * staticMeshCount),
+				static_cast<uint32_t>(sizeof(uint32_t)) * staticMeshCount,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation,

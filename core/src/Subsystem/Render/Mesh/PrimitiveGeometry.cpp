@@ -2,7 +2,6 @@
 #include "PrimitiveGeometry.h"
 
 #include "VK_CreateInfo.h"
-#include "PrimitiveGeometryShape.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -52,9 +51,22 @@ namespace MyosotisFW::System::Render
 		return glm::vec4(m_transfrom.pos, 2.5f);
 	}
 
+	rapidjson::Value PrimitiveGeometry::Serialize(rapidjson::Document::AllocatorType& allocator) const
+	{
+		rapidjson::Value json = __super::Serialize(allocator);
+		json.AddMember("primitiveGeometryShape", static_cast<uint32_t>(m_primitiveGeometryShape), allocator);
+		return json;
+	}
+
+	void PrimitiveGeometry::Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject)
+	{
+		__super::Deserialize(doc, createObject);
+		m_primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
+	}
+
 	void PrimitiveGeometry::loadAssets()
 	{
-		Mesh vertex = MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape, 1.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 		for (int i = 0; i < LOD::Max; i++)
 		{
