@@ -41,12 +41,19 @@ namespace MyosotisFW::System::GameDirector {
 		//customMeshInfo.m_meshPath = "test.fbx";
 		//customMesh->SetCustomMeshInfo(customMeshInfo);
 		//renderSubsystem->RegisterObject(obj);
-		MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::Skybox);
-		System::Render::Skybox_ptr skybox = System::Render::Object_CastToSkybox(obj);
+
+		//MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::Skybox);
+		//System::Render::Skybox_ptr skybox = System::Render::Object_CastToSkybox(obj);
+
 		/*CustomMeshInfo customMeshInfo{};
 		customMeshInfo.m_meshPath = "test.fbx";
 		customMesh->SetCustomMeshInfo(customMeshInfo);*/
-		renderSubsystem->RegisterObject(obj);
+
+		//MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::InteriorObjectMesh);
+		//System::Render::InteriorObject_ptr interiorObject = System::Render::Object_CastToInteriorObject(obj);
+		//interiorObject->SetPos(glm::vec3(0.0f, 5.0f, 0.0f));
+		//renderSubsystem->RegisterObject(obj);
+
 		// TEST
 	}
 

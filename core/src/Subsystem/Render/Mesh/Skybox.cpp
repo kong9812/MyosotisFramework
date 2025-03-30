@@ -42,7 +42,6 @@ namespace MyosotisFW::System::Render
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareShaderStorageBuffers();
 
 		// todo.検証処理
 		m_isReady = true;
@@ -67,24 +66,13 @@ namespace MyosotisFW::System::Render
 
 	void Skybox::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.skyboxRenderShaderBase.pipelineLayout, 0, 1, &m_skyboxShaderObject.skyboxRenderShaderBase.descriptorSet, 0, nullptr);
-		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.skyboxRenderShaderBase.pipeline);
+		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipelineLayout, 0, 1, &m_skyboxShaderObject.shaderBase.descriptorSet, 0, nullptr);
+		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipeline);
 
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, m_indexBuffer.allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
-	}
-
-	rapidjson::Value Skybox::Serialize(rapidjson::Document::AllocatorType& allocator) const
-	{
-		rapidjson::Value obj = __super::Serialize(allocator);
-		return obj;
-	}
-
-	void Skybox::Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject)
-	{
-		__super::Deserialize(doc, createObject);
 	}
 
 	void Skybox::loadAssets()

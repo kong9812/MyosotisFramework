@@ -1,6 +1,6 @@
 #version 450
 
-layout (binding = 1) uniform samplerCube colorMap;
+layout (binding = 2) uniform samplerCube colorMap;
 
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec4 inNormal;
@@ -22,7 +22,7 @@ void main()
     vec3 rayDir = normalize(inRayDir.xyz);
     vec3 dist3 = (step(0.0, rayDir) - uvw) / rayDir;
     float dist = min(min(dist3.x, dist3.y), dist3.z);
-    vec3 rayHit = uvw + rayDir + dist;
+    vec3 rayHit = uvw + rayDir * dist;
     vec3 uv = (rayHit - 0.5) * 2.0;
 
     outBaseColor = texture(colorMap, uv);

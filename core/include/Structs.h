@@ -165,7 +165,7 @@ namespace MyosotisFW
 
 	typedef struct
 	{
-		ShaderBase skyboxRenderShaderBase;
+		ShaderBase shaderBase;
 		struct
 		{
 			Image cubemap;
@@ -179,6 +179,26 @@ namespace MyosotisFW
 			}data;
 		}standardUBO;			// UBO
 	}SkyboxShaderObject;
+
+	typedef struct
+	{
+		ShaderBase shaderBase;
+
+		CameraUBO cameraUBO;
+
+		struct
+		{
+			Image cubemap;
+			Buffer buffer;
+			struct
+			{
+				glm::mat4 model;
+				glm::mat4 view;
+				glm::mat4 projection;
+				glm::vec4 color;
+			}data;
+		}standardUBO;			// UBO
+	}InteriorObjectShaderObject;
 
 	typedef struct
 	{

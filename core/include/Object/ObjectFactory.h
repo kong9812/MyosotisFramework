@@ -3,6 +3,7 @@
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
 #include "Skybox.h"
+#include "InteriorObject.h"
 
 namespace MyosotisFW::System::ObjectFactory
 {
@@ -31,6 +32,10 @@ namespace MyosotisFW::System::ObjectFactory
 			object = Render::CreateSkyboxPointer();
 		}
 		break;
+		case ObjectType::InteriorObjectMesh:
+		{
+			object = Render::CreateInteriorObjectPointer();
+		}
 		default:
 			break;
 		}

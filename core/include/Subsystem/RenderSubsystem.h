@@ -19,6 +19,7 @@
 #include "TransparentRenderPipeline.h"
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
+#include "InteriorObjectDeferredRenderPipeline.h"
 
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
@@ -103,6 +104,7 @@ namespace MyosotisFW::System::Render
 		LightingRenderPipeline_ptr m_lightingRenderPipeline;
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
+		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
 
 		// callback
 	private:

@@ -23,7 +23,7 @@ namespace MyosotisFW
 	{
 	public:
 		ObjectBase() :
-			m_transfrom({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) }),
+			m_transfrom({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
 			m_objectID(),
 			m_isReady(false),
 			m_name()

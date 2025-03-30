@@ -21,11 +21,10 @@ namespace MyosotisFW::System::Render
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		SkyboxShaderObject& GetSkyboxShaderObject() { return m_skyboxShaderObject; }
-		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const;
-		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject);
+		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override { return __super::Serialize(allocator); };
+		void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override { __super::Deserialize(doc, createObject); };
 	private:
 		void loadAssets();
-		void prepareShaderStorageBuffers() {};
 
 		// render device
 		RenderDevice_ptr m_device;

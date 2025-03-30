@@ -10,6 +10,7 @@
 #include "AppInfo.h"
 #include "PrimitiveGeometry.h"
 #include "Skybox.h"
+#include "InteriorObject.h"
 #include "RenderPieplineList.h"
 
 namespace {
@@ -88,6 +89,7 @@ namespace MyosotisFW::System::Render
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_resources, m_finalCompositionRenderPass->GetRenderPass());
 		m_finalCompositionRenderPipeline->CreateShaderObject(m_resources->GetMainRenderTarget());
+		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -152,6 +154,14 @@ namespace MyosotisFW::System::Render
 			m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
 		}
 		break;
+		case ObjectType::InteriorObjectMesh:
+		{
+			InteriorObject_ptr interiorObject = Object_CastToInteriorObject(object);
+			interiorObject->PrepareForRender(m_device, m_resources);
+			InteriorObjectShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
+			m_interiorObjectDeferredRenderPipeline->CreateShaderObject(shaderObject);
+		}
+		break;
 		default:
 			break;
 		}
@@ -179,6 +189,11 @@ namespace MyosotisFW::System::Render
 			else if (object->GetObjectType() == ObjectType::Skybox)
 			{
 				Skybox_ptr staticMesh = Object_CastToSkybox(object);
+				staticMesh->Update(updateData, m_mainCamera);
+			}
+			else if (object->GetObjectType() == ObjectType::InteriorObjectMesh)
+			{
+				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
 				staticMesh->Update(updateData, m_mainCamera);
 			}
 		}
@@ -290,7 +305,7 @@ namespace MyosotisFW::System::Render
 		m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 		memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
 
-		std::vector<TransparentStaticMesh> transparentStaticMeshes{};
+		std::vector<TransparentStaticMesh> staticMeshes{};
 		uint32_t staticMeshCounter = 0;
 		for (ObjectBase_ptr& object : m_objects)
 		{
@@ -301,7 +316,7 @@ namespace MyosotisFW::System::Render
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
 
 				// Zソート(簡易)
-				transparentStaticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
+				staticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
 				//}
 				staticMeshCounter++;
 			}
@@ -310,20 +325,25 @@ namespace MyosotisFW::System::Render
 				Skybox_ptr staticMesh = Object_CastToSkybox(object);
 				staticMesh->BindCommandBuffer(currentCommandBuffer);
 			}
+			else if (object->GetObjectType() == ObjectType::InteriorObjectMesh)
+			{
+				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
+				staticMesh->BindCommandBuffer(currentCommandBuffer);
+			}
 		}
 
 		// 距離ソート
-		std::sort(transparentStaticMeshes.begin(), transparentStaticMeshes.end(),
+		std::sort(staticMeshes.begin(), staticMeshes.end(),
 			[](const TransparentStaticMesh& a, const TransparentStaticMesh& b) {
 				return a.distance > b.distance;
 			});
 
 		{// Deferred Render Pass
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.2f, 0.1f), "Deferred SubPass"));
-			for (TransparentStaticMesh& staticMeshesPair : transparentStaticMeshes)
+			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
 				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
-				Logger::Info(std::string("rending: ") + std::to_string(transparentStaticMeshes.size()));
+				Logger::Info(std::string("rending: ") + std::to_string(staticMeshes.size()));
 			}
 
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
@@ -424,7 +444,7 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::prepareFrustumCuller()
 	{
 		// todo.　動的に変更できるように
-		const uint32_t staticMeshCount = 10000;
+		const uint32_t staticMeshCount = 100;
 
 		{// frustumPlanesUBO
 			vmaTools::ShaderBufferObjectAllocate(

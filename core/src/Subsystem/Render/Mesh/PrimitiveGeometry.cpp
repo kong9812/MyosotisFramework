@@ -66,7 +66,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::loadAssets()
 	{
-		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape, 1.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape, 5.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 
 		for (int i = 0; i < LOD::Max; i++)
 		{
