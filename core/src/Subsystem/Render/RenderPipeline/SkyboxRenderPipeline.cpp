@@ -79,6 +79,7 @@ namespace MyosotisFW::System::Render
 		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 
 		// pipelineVertexInputStateCreateInfo

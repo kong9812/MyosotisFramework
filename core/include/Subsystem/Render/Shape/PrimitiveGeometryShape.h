@@ -21,43 +21,43 @@ namespace MyosotisFW::System::Render::Shape
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
 
-		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
+		// 頂点データ (x, y, z, w, nx, ny, nz, uvx, uvy, r, g, b, a,)
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
-			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 0
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 1
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 2
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 3
+			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 0
+			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 1
+			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 2
+			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 3
 
 			// 背面 (0, 0, 1)
-			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, color.r, color.g, color.b, color.a,	// 4
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, color.r, color.g, color.b, color.a,	// 5
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, color.r, color.g, color.b, color.a,	// 6
-			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, color.r, color.g, color.b, color.a,	// 7
+			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 4
+			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 5
+			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 6
+			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 7
 
 			// 上面 (0, 1, 0)
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, color.r, color.g, color.b, color.a,	// 8
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, color.r, color.g, color.b, color.a,	// 9
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, color.r, color.g, color.b, color.a,	// 10
-			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, color.r, color.g, color.b, color.a,	// 11
+			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
+			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
+			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
+			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
 
 			// 下面 (0, -1, 0)
-			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, color.r, color.g, color.b, color.a,	// 12
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, color.r, color.g, color.b, color.a,	// 13
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, color.r, color.g, color.b, color.a,	// 14
-			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, color.r, color.g, color.b, color.a,	// 15
+			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 12
+			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 13
+			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 14
+			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 15
 
 			// 右面 (1, 0, 0)
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 16
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 17
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 18
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 19
+			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 16
+			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 17
+			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 18
+			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 19
 
 			 // 左面 (-1, 0, 0)
-			 -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 20
-			 -halfSize + center.x,  halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 21
-			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 22
-			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, color.r, color.g, color.b, color.a,	// 23
+			 -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 20
+			 -halfSize + center.x,  halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 21
+			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 22
+			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 23
 		};
 		mesh.index = {
 			0,	2,	1,	0,	3,	2,	// 前面
@@ -78,10 +78,10 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
-			-halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 0
-			 halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 1
-			 halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 2
-			-halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, color.r, color.g, color.b, color.a,	// 3
+			-halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 0
+			 halfSize + center.x, -halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 1
+			 halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 2
+			-halfSize + center.x,  halfSize + center.y, 0.0f + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 3
 		};
 		mesh.index = {
 			0,	2,	1,	0,	3,	2,	// 前面
