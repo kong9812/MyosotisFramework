@@ -84,6 +84,8 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Deferred Rending**
 
+- **Interior Mapping**
+
 ---
 
 ## License
