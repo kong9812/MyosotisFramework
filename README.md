@@ -84,7 +84,8 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Deferred Rending**
 
-- **Interior Mapping**
+- **Interior Mapping**  
+![interiorMapping](https://github.com/kong9812/MyosotisFramework/blob/main/demo/interiorMapping.gif)
 
 ---
 
