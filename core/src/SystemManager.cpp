@@ -207,7 +207,9 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->Compute();
-		m_renderSubsystem->MeshRender();
+		m_renderSubsystem->ShadowRender();
+		m_renderSubsystem->MainRender();
+		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
 
 		// draw editor here

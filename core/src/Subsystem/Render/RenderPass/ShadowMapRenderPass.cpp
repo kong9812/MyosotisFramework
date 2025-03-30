@@ -21,7 +21,7 @@ namespace MyosotisFW::System::Render
 
 		VkAttachmentReference depthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(0, VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-		VkSubpassDescription subpassDescriptions = Utility::Vulkan::CreateInfo::subpassDescriptionDepthStencilOnly(depthAttachmentReference);
+		VkSubpassDescription subpassDescriptions = Utility::Vulkan::CreateInfo::subpassDescription_depth(depthAttachmentReference);
 
 		// start -> deferred
 		std::vector<VkSubpassDependency> dependencies =

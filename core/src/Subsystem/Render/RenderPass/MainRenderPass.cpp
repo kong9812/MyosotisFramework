@@ -11,14 +11,18 @@ namespace MyosotisFW::System::Render
 	MainRenderPass::MainRenderPass(
 		const RenderDevice_ptr& device,
 		const RenderResources_ptr& resources,
-		const RenderSwapchain_ptr& swapchain,
 		const uint32_t& width, const uint32_t& height) :
-		RenderPassBase(device, resources, width, height),
-		m_swapchain(swapchain)
+		RenderPassBase(device, resources, width, height)
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format),			// [0] swapchain images
+			// [0] main render target
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
+				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format),		// [1] lighting result image
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredPositionFormat),		// [2] [g-buffer] position
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat),		// [3] [g-buffer] normal
@@ -35,7 +39,7 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferBaseColor), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 		};
 		VkAttachmentReference gBufferFillSubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthStencil), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(gBufferFillSubpassColorAttachmentReferences, gBufferFillSubpassDepthAttachmentReference));
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_colors_depth(gBufferFillSubpassColorAttachmentReferences, gBufferFillSubpassDepthAttachmentReference));
 
 		// Lighting subpass
 		VkAttachmentReference lightingSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::LightingResultImage), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -44,12 +48,12 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferNormal), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferBaseColor), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
 		};
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(lightingSubpassColorAttachmentReferences, lightingInputAttachmentReferences));
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_inputs(lightingSubpassColorAttachmentReferences, lightingInputAttachmentReferences));
 
 		// Composition subpass
-		VkAttachmentReference compositionSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::SwapchainImages), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkAttachmentReference compositionSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkAttachmentReference compositionSubpassInputAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::LightingResultImage), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription(compositionSubpassColorAttachmentReferences, compositionSubpassInputAttachmentReferences));
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_input(compositionSubpassColorAttachmentReferences, compositionSubpassInputAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// start -> G-Buffer fill subpass
@@ -104,8 +108,9 @@ namespace MyosotisFW::System::Render
 
 		{// StaticMesh pass
 			std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-			m_framebuffers.resize(m_swapchain->GetImageCount());
+			m_framebuffers.resize(1);
 
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = resources->GetMainRenderTarget().view;
 			attachments[static_cast<uint32_t>(Attachments::LightingResultImage)] = resources->GetLightingResult().view;
 			attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = resources->GetPosition().view;
 			attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = resources->GetNormal().view;
@@ -121,11 +126,7 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.width = width;
 			frameBufferCreateInfo.height = height;
 			frameBufferCreateInfo.layers = 1;
-			for (uint32_t i = 0; i < m_framebuffers.size(); i++)
-			{
-				attachments[static_cast<uint32_t>(Attachments::SwapchainImages)] = swapchain->GetSwapchainImage()[i].view;
-				VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
-			}
+			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
 		}
 	}
 
@@ -141,7 +142,7 @@ namespace MyosotisFW::System::Render
 	void MainRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::SwapchainImages)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::LightingResultImage)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::GBufferPosition)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::GBufferNormal)] = AppInfo::g_colorClearValues;
@@ -149,7 +150,7 @@ namespace MyosotisFW::System::Render
 		clearValues[static_cast<uint32_t>(Attachments::DepthStencil)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
-		renderPassBeginInfo.framebuffer = m_framebuffers[currentBufferIndex];
+		renderPassBeginInfo.framebuffer = m_framebuffers[0];
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 

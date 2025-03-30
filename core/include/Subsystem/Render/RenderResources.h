@@ -17,8 +17,8 @@ namespace MyosotisFW::System::Render
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
 		std::vector<Mesh> GetMeshVertex(const std::string& fileName);
-		ImageWithSampler GetImage(const std::string& fileName);
-		ImageWithSampler GetCubeImage(const std::vector<std::string>& fileNames);
+		Image GetImage(const std::string& fileName);
+		Image GetCubeImage(const std::vector<std::string>& fileNames);
 
 	private:
 		RenderDevice_ptr m_device;
@@ -34,6 +34,7 @@ namespace MyosotisFW::System::Render
 		VMAImage& GetBaseColor() { return m_baseColor; }
 		VMAImage& GetShadowMap() { return m_shadowMap; }
 		VMAImage& GetLightingResult() { return m_lightingResult; }
+		VMAImage& GetMainRenderTarget() { return m_mainRenderTarget; }
 
 	private:
 		void prepareAttachments(const uint32_t width, const uint32_t height);
@@ -46,6 +47,7 @@ namespace MyosotisFW::System::Render
 		VMAImage m_baseColor;
 		VMAImage m_shadowMap;
 		VMAImage m_lightingResult;
+		VMAImage m_mainRenderTarget;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
 }

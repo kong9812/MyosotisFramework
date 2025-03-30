@@ -276,17 +276,19 @@ namespace Utility::Vulkan::CreateInfo
 
 	inline VkAttachmentDescription attachmentDescriptionForAttachment(const VkFormat& format,
 		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
+		const VkAttachmentStoreOp& storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+		const VkImageLayout& finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 	{
 		VkAttachmentDescription ad{};
 		ad.format = format;
 		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		ad.loadOp = loadOp;
-		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.storeOp = storeOp;
 		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		ad.initialLayout = initialLayout;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		ad.finalLayout = finalLayout;
 		return ad;
 	}
 
@@ -326,7 +328,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ar;
 	}
 
-	inline VkSubpassDescription subpassDescription(
+	inline VkSubpassDescription subpassDescription_colors_inputs_depth(
 		const std::vector<VkAttachmentReference>& colorAttachments,
 		const VkAttachmentReference& depthStencilAttachment,
 		const std::vector<VkAttachmentReference>& inputAttachments)
@@ -341,20 +343,20 @@ namespace Utility::Vulkan::CreateInfo
 		return sd;
 	}
 
-	inline VkSubpassDescription subpassDescription(
-		const VkAttachmentReference& colorAttachments,
-		const VkAttachmentReference& inputAttachments)
+	inline VkSubpassDescription subpassDescription_color_input(
+		const VkAttachmentReference& colorAttachment,
+		const VkAttachmentReference& inputAttachment)
 	{
 		VkSubpassDescription sd{};
 		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		sd.colorAttachmentCount = 1;
-		sd.pColorAttachments = &colorAttachments;
+		sd.pColorAttachments = &colorAttachment;
 		sd.inputAttachmentCount = 1;
-		sd.pInputAttachments = &inputAttachments;
+		sd.pInputAttachments = &inputAttachment;
 		return sd;
 	}
 
-	inline VkSubpassDescription subpassDescription(
+	inline VkSubpassDescription subpassDescription_colors_depth(
 		const std::vector<VkAttachmentReference>& colorAttachments,
 		const VkAttachmentReference& depthStencilAttachment)
 	{
@@ -366,25 +368,35 @@ namespace Utility::Vulkan::CreateInfo
 		return sd;
 	}
 
-	inline VkSubpassDescription subpassDescription(
-		const VkAttachmentReference& colorAttachments,
+	inline VkSubpassDescription subpassDescription_color_inputs(
+		const VkAttachmentReference& colorAttachment,
 		const std::vector<VkAttachmentReference>& inputAttachments)
 	{
 		VkSubpassDescription sd{};
 		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		sd.colorAttachmentCount = 1;
-		sd.pColorAttachments = &colorAttachments;
+		sd.pColorAttachments = &colorAttachment;
 		sd.inputAttachmentCount = static_cast<uint32_t>(inputAttachments.size());
 		sd.pInputAttachments = inputAttachments.data();
 		return sd;
 	}
 
-	inline VkSubpassDescription subpassDescriptionDepthStencilOnly(
+	inline VkSubpassDescription subpassDescription_depth(
 		const VkAttachmentReference& depthStencilAttachment)
 	{
 		VkSubpassDescription sd{};
 		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
 		sd.pDepthStencilAttachment = &depthStencilAttachment;
+		return sd;
+	}
+
+	inline VkSubpassDescription subpassDescription_color(
+		const VkAttachmentReference& colorAttachment)
+	{
+		VkSubpassDescription sd{};
+		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+		sd.colorAttachmentCount = 1;
+		sd.pColorAttachments = &colorAttachment;
 		return sd;
 	}
 

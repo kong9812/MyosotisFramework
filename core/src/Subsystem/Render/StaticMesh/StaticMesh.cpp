@@ -72,7 +72,7 @@ namespace MyosotisFW::System::Render
 			}
 			else
 			{
-				m_currentLOD = LOD::Hide;
+				//m_currentLOD = LOD::Hide;
 			}
 		}
 	}

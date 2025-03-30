@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 		VkDescriptorImageInfo descriptorImageInfo{};
 		if (shaderObject.standardUBO.useNormalMap)
 		{
-			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.image.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 			// write descriptor set
 			writeDescriptorSet = {
@@ -112,7 +112,7 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),		// todo.背景色がある場合はblendが必要
+			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 		};

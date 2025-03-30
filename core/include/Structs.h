@@ -27,13 +27,8 @@ namespace MyosotisFW
 	{
 		VkImage image;
 		VkImageView view;
-	}Image;
-
-	typedef struct
-	{
-		Image image;
 		VkSampler sampler;
-	}ImageWithSampler;
+	}Image;
 
 	typedef struct
 	{
@@ -46,6 +41,7 @@ namespace MyosotisFW
 	{
 		VkImage image;
 		VkImageView view;
+		VkSampler sampler;
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
 	}VMAImage;
@@ -153,7 +149,7 @@ namespace MyosotisFW
 		struct
 		{
 			bool useNormalMap;
-			ImageWithSampler normalMap;
+			Image normalMap;
 			VkDescriptorImageInfo shadowMapImageInfo;
 			VkDescriptorBufferInfo shadowMapBufferDescriptor;
 			Buffer buffer;
@@ -172,7 +168,7 @@ namespace MyosotisFW
 		ShaderBase skyboxRenderShaderBase;
 		struct
 		{
-			ImageWithSampler cubemap;
+			Image cubemap;
 			Buffer buffer;
 			struct
 			{

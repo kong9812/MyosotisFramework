@@ -75,16 +75,19 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
 
 		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
-		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain, m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
 
 		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_shadowMapRenderPass->GetRenderPass(), m_resources->GetShadowMap());
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_shadowMapRenderPass->GetRenderPass());
 		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
 		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
 		m_compositionRenderPipeline->CreateShaderObject(m_resources->GetLightingResult());
 		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
 		m_lightingRenderPipeline->CreateShaderObject(m_resources->GetPosition(), m_resources->GetNormal(), m_resources->GetBaseColor(), m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
+		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_resources, m_finalCompositionRenderPass->GetRenderPass());
+		m_finalCompositionRenderPipeline->CreateShaderObject(m_resources->GetMainRenderTarget());
 	}
 
 	RenderSubsystem::~RenderSubsystem()
@@ -251,98 +254,117 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::BeginRender()
 	{
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
-	}
-
-	void RenderSubsystem::MeshRender()
-	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
+	}
 
-		{// ShadowMap Prender Pass
-			// todo. Change to run when loading .gs
-			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "ShadowMap Prender Pass"));
+	void RenderSubsystem::ShadowRender()
+	{
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
-			m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		// ShadowMap Prender Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "ShadowMap Prender Pass"));
 
-			for (ObjectBase_ptr& object : m_objects)
+		m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
 			{
-				if (IsStaticMesh(object->GetObjectType()))
-				{
-					Object_CastToStaticMesh(object)->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
-				}
+				Object_CastToStaticMesh(object)->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
 			}
-
-			m_shadowMapRenderPass->EndRender(currentCommandBuffer);
-			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
 
-		{// main render pass
-			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.8f, 0.1f), "Static Mesh Deferred Render Pass"));
+		m_shadowMapRenderPass->EndRender(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
 
-			m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-			memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
+	void RenderSubsystem::MainRender()
+	{
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
-			std::vector<TransparentStaticMesh> transparentStaticMeshes{};
-			uint32_t staticMeshCounter = 0;
-			for (ObjectBase_ptr& object : m_objects)
+		// main render pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.8f, 0.1f), "Static Mesh Deferred Render Pass"));
+
+		m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
+
+		std::vector<TransparentStaticMesh> transparentStaticMeshes{};
+		uint32_t staticMeshCounter = 0;
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
 			{
-				if (IsStaticMesh(object->GetObjectType()))
-				{
-					//if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
-					//{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				//if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
+				//{
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
 
-					// Zソート(簡易)
-					transparentStaticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
-					//}
-					staticMeshCounter++;
-				}
-				else if (object->GetObjectType() == ObjectType::Skybox)
-				{
-					Skybox_ptr staticMesh = Object_CastToSkybox(object);
-					staticMesh->BindCommandBuffer(currentCommandBuffer);
-				}
+				// Zソート(簡易)
+				transparentStaticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
+				//}
+				staticMeshCounter++;
 			}
-
-			// 距離ソート
-			std::sort(transparentStaticMeshes.begin(), transparentStaticMeshes.end(),
-				[](const TransparentStaticMesh& a, const TransparentStaticMesh& b) {
-					return a.distance > b.distance;
-				});
-
-			{// Deferred Render Pass
-				m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.2f, 0.1f), "Deferred SubPass"));
-				for (TransparentStaticMesh& staticMeshesPair : transparentStaticMeshes)
-				{
-					staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
-					Logger::Info(std::string("rending: ") + std::to_string(transparentStaticMeshes.size()));
-				}
-
-				m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+			else if (object->GetObjectType() == ObjectType::Skybox)
+			{
+				Skybox_ptr staticMesh = Object_CastToSkybox(object);
+				staticMesh->BindCommandBuffer(currentCommandBuffer);
 			}
+		}
 
-			vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+		// 距離ソート
+		std::sort(transparentStaticMeshes.begin(), transparentStaticMeshes.end(),
+			[](const TransparentStaticMesh& a, const TransparentStaticMesh& b) {
+				return a.distance > b.distance;
+			});
 
-			m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-
-			vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
-
-			m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-
-			m_mainRenderPass->EndRender(currentCommandBuffer);
+		{// Deferred Render Pass
+			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.2f, 0.1f), "Deferred SubPass"));
+			for (TransparentStaticMesh& staticMeshesPair : transparentStaticMeshes)
+			{
+				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
+				Logger::Info(std::string("rending: ") + std::to_string(transparentStaticMeshes.size()));
+			}
 
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
 
-		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
-		m_submitInfo.commandBufferCount = 1;
-		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
-		VK_VALIDATION(vkQueueSubmit(m_graphicsQueue, 1, &m_submitInfo, VK_NULL_HANDLE));
+		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
+		m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+
+		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
+		m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+
+		m_mainRenderPass->EndRender(currentCommandBuffer);
+
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
+	void RenderSubsystem::FinalCompositionRender()
+	{
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+
+		// final composition Prender Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Final Composition Prender Pass"));
+
+		m_finalCompositionRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+
+		m_finalCompositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+
+		m_finalCompositionRenderPass->EndRender(currentCommandBuffer);
+
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
 	void RenderSubsystem::EndRender()
 	{
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
+		m_submitInfo.commandBufferCount = 1;
+		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
+		VK_VALIDATION(vkQueueSubmit(m_graphicsQueue, 1, &m_submitInfo, VK_NULL_HANDLE));
 		m_swapchain->QueuePresent(m_graphicsQueue, m_currentBufferIndex, m_semaphores.renderComplete);
 		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
 	}

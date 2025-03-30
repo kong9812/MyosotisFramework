@@ -18,9 +18,11 @@
 #include "CompositionRenderPipeline.h"
 #include "TransparentRenderPipeline.h"
 #include "LightingRenderPipeline.h"
+#include "FinalCompositionRenderPipeline.h"
 
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
+#include "FinalCompositionRenderPass.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -39,7 +41,9 @@ namespace MyosotisFW::System::Render
 		void Update(const UpdateData& updateData);
 		void Compute();
 		void BeginRender();
-		void MeshRender();
+		void ShadowRender();
+		void MainRender();
+		void FinalCompositionRender();
 		void EndRender();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);
 
@@ -90,6 +94,7 @@ namespace MyosotisFW::System::Render
 	private:
 		ShadowMapRenderPass_ptr m_shadowMapRenderPass;
 		MainRenderPass_ptr m_mainRenderPass;
+		FinalCompositionRenderPass_ptr m_finalCompositionRenderPass;
 
 	private:
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
@@ -97,7 +102,7 @@ namespace MyosotisFW::System::Render
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
 		LightingRenderPipeline_ptr m_lightingRenderPipeline;
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
-		//TransparentRenderPipeline_ptr m_transparentRenderPipeline;
+		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 
 		// callback
 	private:

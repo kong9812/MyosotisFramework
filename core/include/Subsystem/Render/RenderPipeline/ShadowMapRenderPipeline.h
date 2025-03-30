@@ -8,7 +8,7 @@ namespace MyosotisFW::System::Render
 	class ShadowMapRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass, const VMAImage& shadowMap);
+		ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
 		~ShadowMapRenderPipeline();
 
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);

@@ -152,18 +152,6 @@ namespace MyosotisFW::System::Render::Shape
 					uv.x, uv.y,
 					color.r, color.g, color.b, color.a });
 			}
-
-			uint32_t idx = i + 1;
-			idx = idx > side ? idx - side : idx;
-			mesh.vertex.insert(mesh.vertex.end(), {
-				center.x + radius * sinf(b * static_cast<float>(i)) * sinf(a * static_cast<float>(idx)),
-				center.y + radius * sinf(b * static_cast<float>(i)) * cosf(a * static_cast<float>(idx)),
-				center.z + radius * cosf(b * static_cast<float>(i)),
-				1.0f,
-				0.0f, 0.0f, -1.0f,
-				0.0f, 0.0f,
-				color.r, color.g, color.b, color.a });
-			mesh.index.insert(mesh.index.end(), { 0, i, idx });
 		}
 
 		for (uint32_t i = 1; i <= side; i++)

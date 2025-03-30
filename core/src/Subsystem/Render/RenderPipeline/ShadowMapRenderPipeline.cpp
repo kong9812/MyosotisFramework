@@ -24,7 +24,7 @@ namespace {
 
 namespace MyosotisFW::System::Render
 {
-	ShadowMapRenderPipeline::ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass, const VMAImage& shadowMap)
+	ShadowMapRenderPipeline::ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		m_device = device;
 		m_descriptorCount = AppInfo::g_descriptorCount;
@@ -33,7 +33,7 @@ namespace MyosotisFW::System::Render
 
 		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
 		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
-		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, shadowMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_shadowMapShaderObject.lightUBO.data.position = glm::vec4(g_lightPos, 1.0f);
 		m_shadowMapShaderObject.lightUBO.data.viewProjection = GetLightViewProject();
