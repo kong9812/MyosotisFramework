@@ -1,24 +1,23 @@
 // Copyright (c) 2025 kong9812
 #include "CompositionRenderPipeline.h"
 #include "VK_CreateInfo.h"
-#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
-	CompositionRenderPipeline::CompositionRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass)
-	{
-		m_device = device;
-		m_descriptorCount = AppInfo::g_descriptorCount;
-		prepareDescriptors();
-		prepareRenderPipeline(resources, renderPass);
-	}
-
 	CompositionRenderPipeline::~CompositionRenderPipeline()
 	{
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+	}
+
+	void CompositionRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	{
+		prepareDescriptors();
+		prepareRenderPipeline(resources, renderPass);
+
+		m_lightingResultDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetLightingResult().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void CompositionRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
@@ -28,7 +27,7 @@ namespace MyosotisFW::System::Render
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
-	void CompositionRenderPipeline::CreateShaderObject(const VMAImage& lightingResult)
+	void CompositionRenderPipeline::CreateShaderObject()
 	{
 		{// pipeline
 			m_shaderBase.pipelineLayout = m_pipelineLayout;
@@ -39,11 +38,9 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_shaderBase.descriptorSet));
 
-		VkDescriptorImageInfo lightingResultDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, lightingResult.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &lightingResultDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_lightingResultDescriptorImageInfo),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}

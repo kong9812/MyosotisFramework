@@ -5,20 +5,18 @@
 
 namespace MyosotisFW::System::Render
 {
-	InteriorObjectDeferredRenderPipeline::InteriorObjectDeferredRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass)
-	{
-		m_device = device;
-		m_descriptorCount = AppInfo::g_descriptorCount;
-		prepareDescriptors();
-		prepareRenderPipeline(resources, renderPass);
-	}
-
 	InteriorObjectDeferredRenderPipeline::~InteriorObjectDeferredRenderPipeline()
 	{
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+	}
+
+	void InteriorObjectDeferredRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	{
+		prepareDescriptors();
+		prepareRenderPipeline(resources, renderPass);
 	}
 
 	void InteriorObjectDeferredRenderPipeline::CreateShaderObject(InteriorObjectShaderObject& shaderObject)

@@ -24,10 +24,18 @@ namespace {
 
 namespace MyosotisFW::System::Render
 {
-	ShadowMapRenderPipeline::ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	ShadowMapRenderPipeline::~ShadowMapRenderPipeline()
 	{
-		m_device = device;
-		m_descriptorCount = AppInfo::g_descriptorCount;
+		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_shadowMapShaderObject.lightUBO.buffer.buffer, m_shadowMapShaderObject.lightUBO.buffer.allocation);
+		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
+		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+	}
+
+	void ShadowMapRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	{
 		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 
@@ -48,16 +56,6 @@ namespace MyosotisFW::System::Render
 			m_shadowMapShaderObject.lightUBO.buffer.allocationInfo,
 			m_shadowMapShaderObject.lightUBO.buffer.descriptor);
 		memcpy(m_shadowMapShaderObject.lightUBO.buffer.allocationInfo.pMappedData, &m_shadowMapShaderObject.lightUBO.data, sizeof(m_shadowMapShaderObject.lightUBO.data));
-	}
-
-	ShadowMapRenderPipeline::~ShadowMapRenderPipeline()
-	{
-		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_shadowMapShaderObject.lightUBO.buffer.buffer, m_shadowMapShaderObject.lightUBO.buffer.allocation);
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
-		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
-		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
 	void ShadowMapRenderPipeline::CreateShaderObject(StaticMeshShaderObject& shaderObject)

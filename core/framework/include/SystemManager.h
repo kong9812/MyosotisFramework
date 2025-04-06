@@ -11,7 +11,18 @@ namespace MyosotisFW::System
 	class SystemManager
 	{
 	public:
-		SystemManager(GLFWwindow* window);
+		SystemManager() :
+			m_renderSubsystem(nullptr),
+			m_gameDirector(nullptr),
+			m_instance(VK_NULL_HANDLE),
+			m_surface(VK_NULL_HANDLE),
+			m_pause(false),
+			m_lastTime(0.0f),
+			m_vkDebugReportCallback(VK_NULL_HANDLE),
+			m_vkCreateDebugReportCallbackEXT(nullptr),
+			m_vkDestroyDebugReportCallbackEXT(nullptr),
+			m_mousePos(glm::vec2(0.0f)) {
+		};
 		~SystemManager();
 
 		Render::RenderSubsystem_ptr& GetRenderSubsystem() { return m_renderSubsystem; }
@@ -24,10 +35,17 @@ namespace MyosotisFW::System
 		void CursorMotion(glm::vec2 pos);
 		void Pause(GLFWwindow* window);
 
-		void Update();
-		void Render();
+		virtual void Initialize(GLFWwindow* window);
+		virtual void Update();
+		virtual void Render();
 
-	private:
+	protected:
+		void initializeGLFW(GLFWwindow* window);
+		void initializeVulkanApplication(GLFWwindow* window);
+		virtual void initializeRenderSubsystem(GLFWwindow* window);
+		virtual void initializeGameDirector();
+
+	protected:
 		Render::RenderSubsystem_ptr m_renderSubsystem;
 		GameDirector::GameDirector_ptr m_gameDirector;
 
@@ -48,11 +66,11 @@ namespace MyosotisFW::System
 		PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugReportCallbackEXT;
 
 		// glfw callback
-		static void ResizedCallback(GLFWwindow* window, int width, int height);
-		static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-		static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-		static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-		static void DropCallback(GLFWwindow* window, int path_count, const char* paths[]);
+		static void resizedCallback(GLFWwindow* window, int width, int height);
+		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+		static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+		static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+		static void dropCallback(GLFWwindow* window, int path_count, const char* paths[]);
 	};
 	TYPEDEF_SHARED_PTR_ARGS(SystemManager)
 }

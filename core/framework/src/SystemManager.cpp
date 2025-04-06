@@ -55,83 +55,6 @@ namespace {
 
 namespace MyosotisFW::System
 {
-	SystemManager::SystemManager(GLFWwindow* window)
-	{
-		m_lastTime = {};
-
-		// リサイズコールバック
-		glfwSetWindowUserPointer(window, this);
-		glfwSetWindowSizeCallback(window, ResizedCallback);
-		// D&D
-		glfwSetDropCallback(window, DropCallback);
-		// キー & マウスコールバック
-		glfwSetKeyCallback(window, KeyCallback);
-		glfwSetMouseButtonCallback(window, MouseButtonCallback);
-		glfwSetCursorPosCallback(window, CursorPosCallback);
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		glfwPollEvents();
-
-		// applicationInfo
-		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(AppInfo::g_applicationName, AppInfo::g_engineName, AppInfo::g_apiVersion, AppInfo::g_engineVersion);
-
-		// extension
-		std::vector<VkExtensionProperties> extensionProperties{};
-		{
-			uint32_t count = 0;
-			vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-			extensionProperties.resize(count);
-			vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
-#ifdef DEBUG
-			for (const auto& extensionPropertie : extensionProperties)
-			{
-				Logger::Info(std::string("extensionName: ") + extensionPropertie.extensionName + "(" + std::to_string(extensionPropertie.specVersion) + ")");
-			}
-#endif
-		}
-
-		// vulkan instance
-		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, AppInfo::g_layer);
-		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
-
-		// prepare for VK_EXT_DEBUG_REPORT_EXTENSION
-		m_vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT"));
-		m_vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT"));
-		VkDebugReportCallbackCreateInfoEXT vebugReportCallbackCreateInfo{};
-		vebugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-		vebugReportCallbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-		vebugReportCallbackCreateInfo.pfnCallback = &debugCallback;
-		m_vkCreateDebugReportCallbackEXT(m_instance, &vebugReportCallbackCreateInfo, nullptr, &m_vkDebugReportCallback);
-
-		// GLFW サーフェース作成
-		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
-
-		// m_renderSubsystem
-		m_renderSubsystem = Render::CreateRenderSubsystemPointer(*window, m_instance, m_surface);
-
-		// m_gameDirector
-		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
-		m_renderSubsystem->SetOnPressedSaveGameStageCallback([=]() {m_gameDirector->SaveGameStageFile("TEST.gs", m_renderSubsystem->GetObjects()); });
-		m_renderSubsystem->SetOnPressedLoadGameStageCallback([=]() {m_gameDirector->LoadGameStageFile("TEST.gs"); });
-		m_renderSubsystem->SetOnPressedCreateObjectCallback([=](ObjectType objType, glm::vec3 pos)
-			{
-				ObjectBase_ptr newObject = ObjectFactory::CreateObject(objType);
-				newObject->SetPos(pos);
-				if (objType == ObjectType::CustomMesh)
-				{
-					CustomMeshInfo customMeshInfo{};
-					customMeshInfo.m_meshPath = "test.fbx";
-					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
-				}
-				m_renderSubsystem->RegisterObject(newObject);
-			});
-
-		m_pause = false;
-
-		double x{}, y{};
-		glfwGetCursorPos(window, &x, &y);
-		m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
-	}
-
 	SystemManager::~SystemManager()
 	{
 		m_gameDirector.reset();
@@ -179,11 +102,28 @@ namespace MyosotisFW::System
 		}
 	}
 
+	void SystemManager::Initialize(GLFWwindow* window)
+	{
+		// GLFW初期化
+		initializeGLFW(window);
+
+		// Vulkan初期化
+		initializeVulkanApplication(window);
+
+		// RenderSubsystem初期化
+		initializeRenderSubsystem(window);
+
+		// GameDirector初期化
+		initializeGameDirector();
+
+		// マウス初期化
+		double x{}, y{};
+		glfwGetCursorPos(window, &x, &y);
+		m_mousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+	}
+
 	void SystemManager::Update()
 	{
-		// update editor here
-
-
 		float currentTime = static_cast<float>(glfwGetTime());
 		float deltaTime = currentTime - m_lastTime;
 		m_renderSubsystem->Update({ m_pause, deltaTime, m_keyActions, m_mouseButtonActions, m_mousePos });
@@ -211,18 +151,94 @@ namespace MyosotisFW::System
 		m_renderSubsystem->MainRender();
 		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
-
-		// draw editor here
 	}
 
-	void SystemManager::ResizedCallback(GLFWwindow* window, int width, int height)
+	void SystemManager::initializeGLFW(GLFWwindow* window)
+	{
+		// リサイズコールバック
+		glfwSetWindowUserPointer(window, this);
+		glfwSetWindowSizeCallback(window, resizedCallback);
+		// D&D
+		glfwSetDropCallback(window, dropCallback);
+		// キー & マウスコールバック
+		glfwSetKeyCallback(window, keyCallback);
+		glfwSetMouseButtonCallback(window, mouseButtonCallback);
+		glfwSetCursorPosCallback(window, cursorPosCallback);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwPollEvents();
+	}
+
+	void SystemManager::initializeVulkanApplication(GLFWwindow* window)
+	{
+		// applicationInfo
+		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(AppInfo::g_applicationName, AppInfo::g_engineName, AppInfo::g_apiVersion, AppInfo::g_engineVersion);
+
+		// extension
+		std::vector<VkExtensionProperties> extensionProperties{};
+		{
+			uint32_t count = 0;
+			vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+			extensionProperties.resize(count);
+			vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
+#ifdef DEBUG
+			for (const auto& extensionPropertie : extensionProperties)
+			{
+				Logger::Info(std::string("extensionName: ") + extensionPropertie.extensionName + "(" + std::to_string(extensionPropertie.specVersion) + ")");
+			}
+#endif
+		}
+
+		// vulkan instance
+		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, AppInfo::g_layer);
+		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
+
+		// prepare for VK_EXT_DEBUG_REPORT_EXTENSION
+		m_vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT"));
+		m_vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT"));
+		VkDebugReportCallbackCreateInfoEXT vebugReportCallbackCreateInfo{};
+		vebugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+		vebugReportCallbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+		vebugReportCallbackCreateInfo.pfnCallback = &debugCallback;
+		m_vkCreateDebugReportCallbackEXT(m_instance, &vebugReportCallbackCreateInfo, nullptr, &m_vkDebugReportCallback);
+
+		// GLFW サーフェース作成
+		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
+	}
+
+	void SystemManager::initializeRenderSubsystem(GLFWwindow* window)
+	{
+		m_renderSubsystem = Render::CreateRenderSubsystemPointer();
+		m_renderSubsystem->Initialize(*window, m_instance, m_surface);
+	}
+
+	void SystemManager::initializeGameDirector()
+	{
+		// m_gameDirector
+		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
+		m_renderSubsystem->SetOnPressedSaveGameStageCallback([=]() {m_gameDirector->SaveGameStageFile("TEST.gs", m_renderSubsystem->GetObjects()); });
+		m_renderSubsystem->SetOnPressedLoadGameStageCallback([=]() {m_gameDirector->LoadGameStageFile("TEST.gs"); });
+		m_renderSubsystem->SetOnPressedCreateObjectCallback([=](ObjectType objType, glm::vec3 pos)
+			{
+				ObjectBase_ptr newObject = ObjectFactory::CreateObject(objType);
+				newObject->SetPos(pos);
+				if (objType == ObjectType::CustomMesh)
+				{
+					CustomMeshInfo customMeshInfo{};
+					customMeshInfo.m_meshPath = "test.fbx";
+					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
+				}
+				m_renderSubsystem->RegisterObject(newObject);
+			});
+	}
+
+	void SystemManager::resizedCallback(GLFWwindow* window, int width, int height)
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->GetRenderSubsystem()->Resize(systemManager->GetSurface(), width, height);
 	}
 
-	void SystemManager::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	void SystemManager::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
@@ -234,21 +250,21 @@ namespace MyosotisFW::System
 		}
 	}
 
-	void SystemManager::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	void SystemManager::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->MouseButtonAction(button, action);
 	}
 
-	void SystemManager::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+	void SystemManager::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		systemManager->CursorMotion(glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos)));
 	}
 
-	void SystemManager::DropCallback(GLFWwindow* window, int path_count, const char* paths[])
+	void SystemManager::dropCallback(GLFWwindow* window, int path_count, const char* paths[])
 	{
 		if (path_count > 1)
 		{

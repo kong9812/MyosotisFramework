@@ -26,72 +26,6 @@ namespace {
 
 namespace MyosotisFW::System::Render
 {
-	RenderSubsystem::RenderSubsystem(const GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface)
-	{
-		m_instance = instance;
-		m_onPressedSaveGameStageCallback = nullptr;
-
-		// RenderDevice
-		m_device = CreateRenderDevicePointer(m_instance);
-
-		// Swapchain
-		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
-
-		// Resources
-		m_resources = CreateRenderResourcesPointer(m_device, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-
-		// graphics queue
-		vkGetDeviceQueue(*m_device, m_device->GetGraphicsFamilyIndex(), 0, &m_graphicsQueue);
-		// compute queue
-		vkGetDeviceQueue(*m_device, m_device->GetComputeFamilyIndex(), 0, &m_computeQueue);
-
-		// command pool
-		{// render
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_renderCommandPool));
-		}
-		{// compute
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_computeCommandPool));
-		}
-		prepareCommandBuffers();
-
-		// fences
-		prepareFences();
-
-		// frustum culler
-		prepareFrustumCuller();
-
-		// semaphore(present/render)
-		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.presentComplete));
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.computeComplete));
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.renderComplete));
-
-		// submit info
-		m_submitPipelineStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.computeComplete, m_semaphores.renderComplete);
-
-		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
-		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
-
-		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
-		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
-
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_resources, m_shadowMapRenderPass->GetRenderPass());
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-		m_compositionRenderPipeline->CreateShaderObject(m_resources->GetLightingResult());
-		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-		m_lightingRenderPipeline->CreateShaderObject(m_resources->GetPosition(), m_resources->GetNormal(), m_resources->GetBaseColor(), m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
-		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_resources, m_finalCompositionRenderPass->GetRenderPass());
-		m_finalCompositionRenderPipeline->CreateShaderObject(m_resources->GetMainRenderTarget());
-		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_resources, m_mainRenderPass->GetRenderPass());
-	}
-
 	RenderSubsystem::~RenderSubsystem()
 	{
 		{// furstum culler
@@ -107,9 +41,6 @@ namespace MyosotisFW::System::Render
 		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.computeComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
-		for (VkFence& fence : m_fences) {
-			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
-		}
 		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
 		vkDestroyCommandPool(*m_device, m_renderCommandPool, m_device->GetAllocationCallbacks());
@@ -166,6 +97,44 @@ namespace MyosotisFW::System::Render
 			break;
 		}
 		m_objects.push_back(object);
+	}
+
+	void RenderSubsystem::Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface)
+	{
+		// Vulkan Instance
+		initializeRenderDevice(instance, surface);
+
+		// Swapchain
+		initializeRenderSwapchain(surface);
+
+		// Resources
+		initializeRenderResources();
+
+		// graphics queue
+		vkGetDeviceQueue(*m_device, m_device->GetGraphicsFamilyIndex(), 0, &m_graphicsQueue);
+		// compute queue
+		vkGetDeviceQueue(*m_device, m_device->GetComputeFamilyIndex(), 0, &m_computeQueue);
+
+		// Command pool
+		initializeCommandPool();
+
+		// Frustum Culler
+		initializeFrustumCuller();
+
+		// Semaphore
+		initializeSemaphore();
+
+		// Submit info
+		initializeSubmitInfo();
+
+		// Debug Utils
+		initializeDebugUtils(instance);
+
+		// Render Pass
+		initializeRenderPass();
+
+		// Render Pipelines
+		initializeRenderPipeline();
 	}
 
 	void RenderSubsystem::Update(const UpdateData& updateData)
@@ -343,7 +312,6 @@ namespace MyosotisFW::System::Render
 			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
 				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
-				Logger::Info(std::string("rending: ") + std::to_string(staticMeshes.size()));
 			}
 
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
@@ -401,14 +369,6 @@ namespace MyosotisFW::System::Render
 		// command buffers
 		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
-		prepareCommandBuffers();
-
-		// fences
-		for (VkFence& fence : m_fences)
-		{
-			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
-		}
-		prepareFences();
 
 		if (m_mainCamera)
 		{
@@ -418,30 +378,57 @@ namespace MyosotisFW::System::Render
 		vkDeviceWaitIdle(*m_device);
 	}
 
-	void RenderSubsystem::prepareCommandBuffers()
+	void RenderSubsystem::SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback)
 	{
-		{// graphics
+		m_onPressedSaveGameStageCallback = callback;
+	}
+	void RenderSubsystem::SetOnPressedLoadGameStageCallback(const OnPressedLoadGameStageCallback& callback)
+	{
+		m_onPressedLoadGameStageCallback = callback;
+	}
+	void RenderSubsystem::SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback)
+	{
+		m_onPressedCreateObjectCallback = callback;
+	}
+
+	void RenderSubsystem::initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface)
+	{
+		m_device = CreateRenderDevicePointer(instance);
+	}
+
+	void RenderSubsystem::initializeRenderSwapchain(const VkSurfaceKHR& surface)
+	{
+		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
+	}
+
+	void RenderSubsystem::initializeRenderResources()
+	{
+		m_resources = CreateRenderResourcesPointer(m_device);
+		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
+	}
+
+	void RenderSubsystem::initializeCommandPool()
+	{
+		// command pool
+		{// render
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsFamilyIndex());
+			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_renderCommandPool));
+
 			m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_renderCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
 		}
 		{// compute
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeFamilyIndex());
+			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_computeCommandPool));
+
 			m_computeCommandBuffers.resize(1);	// Frustum Culler
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
 		}
 	}
 
-	void RenderSubsystem::prepareFences()
-	{
-		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo(VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT);
-		m_fences.resize(m_renderCommandBuffers.size());
-		for (VkFence& fence : m_fences) {
-			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
-		}
-	}
-
-	void RenderSubsystem::prepareFrustumCuller()
+	void RenderSubsystem::initializeFrustumCuller()
 	{
 		// todo.　動的に変更できるように
 		const uint32_t staticMeshCount = 100;
@@ -522,16 +509,65 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullerShaderObject.shaderBase.pipeline));
 	}
 
-	void RenderSubsystem::SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback)
+	void RenderSubsystem::initializeSemaphore()
 	{
-		m_onPressedSaveGameStageCallback = callback;
+		// semaphore(present/render)
+		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
+		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.presentComplete));
+		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.computeComplete));
+		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.renderComplete));
 	}
-	void RenderSubsystem::SetOnPressedLoadGameStageCallback(const OnPressedLoadGameStageCallback& callback)
+
+	void RenderSubsystem::initializeSubmitInfo()
 	{
-		m_onPressedLoadGameStageCallback = callback;
+		m_submitPipelineStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.computeComplete, m_semaphores.renderComplete);
 	}
-	void RenderSubsystem::SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback)
+
+	void RenderSubsystem::initializeDebugUtils(const VkInstance& instance)
 	{
-		m_onPressedCreateObjectCallback = callback;
+		m_vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT"));
+		m_vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT"));
+	}
+
+	void RenderSubsystem::initializeRenderPass()
+	{
+		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
+		m_shadowMapRenderPass->Initialize();
+
+		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		m_mainRenderPass->Initialize();
+
+		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_finalCompositionRenderPass->Initialize();
+	}
+
+	void RenderSubsystem::initializeRenderPipeline()
+	{
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device);
+		m_shadowMapRenderPipeline->Initialize(m_resources, m_shadowMapRenderPass->GetRenderPass());
+
+		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device);
+		m_skyboxRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+
+		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device);
+		m_deferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+
+		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device);
+		m_lightingRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+
+		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device);
+		m_compositionRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+
+		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device);
+		m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+
+		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device);
+		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
+
+		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
+		m_compositionRenderPipeline->CreateShaderObject();
+		m_finalCompositionRenderPipeline->CreateShaderObject();
 	}
 }

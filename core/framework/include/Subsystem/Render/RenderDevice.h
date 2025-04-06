@@ -13,7 +13,7 @@ namespace MyosotisFW::System::Render
 	class RenderDevice
 	{
 	public:
-		RenderDevice(VkInstance& vkInstance);
+		RenderDevice(const VkInstance& vkInstance);
 		~RenderDevice();
 
 		operator VkDevice() const
@@ -47,7 +47,7 @@ namespace MyosotisFW::System::Render
 		uint32_t getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
 		uint32_t getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const;
 		void prepareAllocationCallbacks();
-		void prepareVMA(VkInstance& vkInstance);
+		void prepareVMA(const VkInstance& vkInstance);
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderDevice)
 }

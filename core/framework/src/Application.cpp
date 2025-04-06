@@ -13,7 +13,12 @@
 #include "Logger.h"
 #include "AppInfo.h"
 
-Application::Application(const bool& allowHotReload)
+Application::~Application()
+{
+	glfwTerminate();
+}
+
+void Application::Initialize(const bool& allowHotReload)
 {
 #ifdef DEBUG
 	Logger::ClearLog();
@@ -54,15 +59,11 @@ Application::Application(const bool& allowHotReload)
 	m_allowHotReload = allowHotReload;
 }
 
-Application::~Application()
-{
-	glfwTerminate();
-}
-
 int Application::Run()
 {
 	// System Manager 初期化
-	MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer(m_glfwWindow);
+	MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer();
+	systemManager->Initialize(m_glfwWindow);
 	while (glfwWindowShouldClose(m_glfwWindow) == GLFW_FALSE)
 	{
 		glfwPollEvents();
@@ -85,6 +86,6 @@ int Application::Run()
 
 extern "C" __declspec(dllexport) IApplication* GetInstance()
 {
-	return new Application(true);
+	return new Application();
 }
 #endif

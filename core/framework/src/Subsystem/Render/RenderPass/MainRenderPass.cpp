@@ -8,11 +8,16 @@
 
 namespace MyosotisFW::System::Render
 {
-	MainRenderPass::MainRenderPass(
-		const RenderDevice_ptr& device,
-		const RenderResources_ptr& resources,
-		const uint32_t& width, const uint32_t& height) :
-		RenderPassBase(device, resources, width, height)
+	MainRenderPass::~MainRenderPass()
+	{
+		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
+		for (VkFramebuffer& m_framebuffer : m_framebuffers)
+		{
+			vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
+		}
+	}
+
+	void MainRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
@@ -110,12 +115,12 @@ namespace MyosotisFW::System::Render
 			std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
 			m_framebuffers.resize(1);
 
-			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = resources->GetMainRenderTarget().view;
-			attachments[static_cast<uint32_t>(Attachments::LightingResultImage)] = resources->GetLightingResult().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = resources->GetPosition().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = resources->GetNormal().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = resources->GetBaseColor().view;
-			attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = resources->GetDepthStencil().view;
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
+			attachments[static_cast<uint32_t>(Attachments::LightingResultImage)] = m_resources->GetLightingResult().view;
+			attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = m_resources->GetPosition().view;
+			attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = m_resources->GetNormal().view;
+			attachments[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = m_resources->GetBaseColor().view;
+			attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = m_resources->GetDepthStencil().view;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -123,19 +128,10 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.renderPass = m_renderPass;
 			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
 			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = width;
-			frameBufferCreateInfo.height = height;
+			frameBufferCreateInfo.width = m_width;
+			frameBufferCreateInfo.height = m_height;
 			frameBufferCreateInfo.layers = 1;
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
-		}
-	}
-
-	MainRenderPass::~MainRenderPass()
-	{
-		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
-		for (VkFramebuffer& m_framebuffer : m_framebuffers)
-		{
-			vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
 		}
 	}
 

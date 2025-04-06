@@ -15,9 +15,12 @@ namespace MyosotisFW::System::Render
 			m_resources(resources),
 			m_width(width),
 			m_height(height),
-			m_renderPass(VK_NULL_HANDLE) {
+			m_renderPass(VK_NULL_HANDLE),
+			m_framebuffers{} {
 		};
 		virtual ~RenderPassBase() = default;
+
+		virtual void Initialize() = 0;
 
 		VkRenderPass GetRenderPass() { return m_renderPass; }
 

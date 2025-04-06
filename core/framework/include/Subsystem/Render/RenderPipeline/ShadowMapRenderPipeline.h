@@ -8,9 +8,12 @@ namespace MyosotisFW::System::Render
 	class ShadowMapRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		ShadowMapRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device) {
+		}
 		~ShadowMapRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
 
 		DirectionalLightInfo GetDirectionalLightInfo();

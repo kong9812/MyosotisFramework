@@ -1,4 +1,5 @@
 // Copyright (c) 2025 kong9812
+#pragma once
 #include "RenderPassBase.h"
 #include "RenderSwapchain.h"
 
@@ -21,13 +22,17 @@ namespace MyosotisFW::System::Render
 		};
 
 	public:
-		FinalCompositionRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain);
+		FinalCompositionRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
+			RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()),
+			m_swapchain(swapchain) {
+		}
 		~FinalCompositionRenderPass();
 
+		void Initialize() override;
 		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) override;
 		void EndRender(const VkCommandBuffer& commandBuffer) override;
 
-	private:
+	protected:
 		RenderSwapchain_ptr m_swapchain;
 
 	};

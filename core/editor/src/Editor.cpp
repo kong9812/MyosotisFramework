@@ -9,11 +9,16 @@
 #include "istb_image.h"
 
 #include <memory>
-#include "SystemManager.h"
+#include "EditorManager.h"
 #include "Logger.h"
 #include "AppInfo.h"
 
-Editor::Editor(const bool& allowHotReload)
+Editor::~Editor()
+{
+	glfwTerminate();
+}
+
+void Editor::Initialize(const bool& allowHotReload)
 {
 #ifdef DEBUG
 	Logger::ClearLog();
@@ -30,7 +35,7 @@ Editor::Editor(const bool& allowHotReload)
 	m_glfwWindow = glfwCreateWindow(
 		MyosotisFW::AppInfo::g_windowWidth,
 		MyosotisFW::AppInfo::g_windowHeight,
-		MyosotisFW::AppInfo::g_applicationName,
+		MyosotisFW::AppInfo::g_editorName,
 		nullptr, nullptr);
 
 	int width, height, channels;
@@ -54,15 +59,11 @@ Editor::Editor(const bool& allowHotReload)
 	m_allowHotReload = allowHotReload;
 }
 
-Editor::~Editor()
-{
-	glfwTerminate();
-}
-
 int Editor::Run()
 {
 	// System Manager 初期化
-	MyosotisFW::System::SystemManager_ptr systemManager = MyosotisFW::System::CreateSystemManagerPointer(m_glfwWindow);
+	MyosotisFW::System::EditorManager_ptr systemManager = MyosotisFW::System::CreateEditorManagerPointer();
+	systemManager->Initialize(m_glfwWindow);
 	while (glfwWindowShouldClose(m_glfwWindow) == GLFW_FALSE)
 	{
 		glfwPollEvents();
@@ -85,6 +86,6 @@ int Editor::Run()
 
 extern "C" __declspec(dllexport) IApplication* GetInstance()
 {
-	return new Editor(true);
+	return new Editor();
 }
 #endif

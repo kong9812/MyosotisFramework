@@ -20,6 +20,7 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_windowHeight = 810;
 	constexpr uint32_t g_montorIndex = 0;
 	constexpr char* g_applicationName = "MyosotisFW";
+	constexpr char* g_editorName = "MyosotisEditor";
 	constexpr char* g_engineName = "MyosotisFW";
 	constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
 	constexpr uint32_t g_engineVersion = VK_MAKE_VERSION(0, 0, 1);

@@ -9,16 +9,22 @@ namespace MyosotisFW::System::Render
 	class FinalCompositionRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		FinalCompositionRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		FinalCompositionRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device),
+			m_shaderBase{},
+			m_mainRenderTargetDescriptorImageInfo{} {
+		}
 		~FinalCompositionRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		void CreateShaderObject(const VMAImage& mainRenderTarget);
+		virtual void CreateShaderObject();
 
-	private:
+	protected:
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
+		VkDescriptorImageInfo m_mainRenderTargetDescriptorImageInfo;
 		ShaderBase m_shaderBase;
 	};
 	TYPEDEF_UNIQUE_PTR_ARGS(FinalCompositionRenderPipeline)

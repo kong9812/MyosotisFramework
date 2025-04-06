@@ -5,10 +5,18 @@
 
 namespace MyosotisFW::System::Render
 {
-	LightingRenderPipeline::LightingRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	LightingRenderPipeline::~LightingRenderPipeline()
 	{
-		m_device = device;
-		m_descriptorCount = AppInfo::g_descriptorCount;
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.cameraUBO.buffer.buffer, m_lightingShaderObject.cameraUBO.buffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.lightUBO.buffer.buffer, m_lightingShaderObject.lightUBO.buffer.allocation);
+		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
+		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
+		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+	}
+
+	void LightingRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	{
 		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 
@@ -30,16 +38,10 @@ namespace MyosotisFW::System::Render
 			m_lightingShaderObject.lightUBO.buffer.allocation,
 			m_lightingShaderObject.lightUBO.buffer.allocationInfo,
 			m_lightingShaderObject.lightUBO.buffer.descriptor);
-	}
 
-	LightingRenderPipeline::~LightingRenderPipeline()
-	{
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.cameraUBO.buffer.buffer, m_lightingShaderObject.cameraUBO.buffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.lightUBO.buffer.buffer, m_lightingShaderObject.lightUBO.buffer.allocation);
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
-		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
-		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+		m_positionDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetPosition().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_normalDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetNormal().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_baseColorDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetBaseColor().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void LightingRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
@@ -61,7 +63,7 @@ namespace MyosotisFW::System::Render
 		memcpy(m_lightingShaderObject.cameraUBO.buffer.allocationInfo.pMappedData, &m_lightingShaderObject.cameraUBO.data, sizeof(m_lightingShaderObject.cameraUBO.data));
 	}
 
-	void LightingRenderPipeline::CreateShaderObject(const VMAImage& position, const VMAImage& normal, const VMAImage& baseColor, const VkDescriptorImageInfo& shadowMapImageInfo)
+	void LightingRenderPipeline::CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo)
 	{
 		{// pipeline
 			m_lightingShaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
@@ -72,15 +74,11 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_lightingShaderObject.shaderBase.descriptorSet));
 
-		VkDescriptorImageInfo positionDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, position.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		VkDescriptorImageInfo normalDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, normal.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		VkDescriptorImageInfo baseColorDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, baseColor.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &positionDescriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &normalDescriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &baseColorDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_positionDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_normalDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_baseColorDescriptorImageInfo),
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowMapImageInfo),
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 4, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_lightingShaderObject.cameraUBO.buffer.descriptor),
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 5, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_lightingShaderObject.lightUBO.buffer.descriptor),

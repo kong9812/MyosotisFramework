@@ -8,9 +8,12 @@ namespace MyosotisFW::System::Render
 	class SkyboxRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		SkyboxRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		SkyboxRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device) {
+		}
 		~SkyboxRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(SkyboxShaderObject& shaderObject);
 
 	private:

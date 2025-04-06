@@ -96,7 +96,7 @@ namespace
 
 namespace MyosotisFW::System::Render
 {
-	RenderDevice::RenderDevice(VkInstance& vkInstance)
+	RenderDevice::RenderDevice(const VkInstance& vkInstance)
 	{
 		// prepare allocation callbacks
 		prepareAllocationCallbacks();
@@ -235,7 +235,7 @@ namespace MyosotisFW::System::Render
 		m_allocationCallbacks.pfnInternalFree = &vkInternalFreeNotification;
 	}
 
-	void RenderDevice::prepareVMA(VkInstance& vkInstance)
+	void RenderDevice::prepareVMA(const VkInstance& vkInstance)
 	{
 		VmaVulkanFunctions vulkanFunctions{};
 		vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;

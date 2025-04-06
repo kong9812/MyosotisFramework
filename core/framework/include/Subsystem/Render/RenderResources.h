@@ -12,15 +12,26 @@ namespace MyosotisFW::System::Render
 	class RenderResources
 	{
 	public:
-		RenderResources(const RenderDevice_ptr& device, const uint32_t width, const uint32_t height);
+		RenderResources::RenderResources(const RenderDevice_ptr& device)
+			:m_device(device),
+			m_depthStencil{},
+			m_position{},
+			m_normal{},
+			m_baseColor{},
+			m_shadowMap{},
+			m_lightingResult{},
+			m_mainRenderTarget{} {
+		}
 		~RenderResources();
+
+		virtual void Initialize(const uint32_t width, const uint32_t height);
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
 		std::vector<Mesh> GetMeshVertex(const std::string& fileName);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
 
-	private:
+	protected:
 		RenderDevice_ptr m_device;
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexDatas;
@@ -36,9 +47,7 @@ namespace MyosotisFW::System::Render
 		VMAImage& GetLightingResult() { return m_lightingResult; }
 		VMAImage& GetMainRenderTarget() { return m_mainRenderTarget; }
 
-	private:
-		void prepareAttachments(const uint32_t width, const uint32_t height);
-
+	protected:
 		// attachments
 		DeviceImage m_depthStencil;
 

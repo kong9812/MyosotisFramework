@@ -11,8 +11,6 @@ class DLL_CLASS IApplication
 {
 public:
 	virtual ~IApplication() = default;
+	virtual void Initialize(const bool& allowHotReload) = 0;
 	virtual int Run() = 0;
-
-private:
-
 };

@@ -8,12 +8,16 @@
 
 namespace MyosotisFW::System::Render
 {
-	FinalCompositionRenderPass::FinalCompositionRenderPass(
-		const RenderDevice_ptr& device,
-		const RenderResources_ptr& resources,
-		const RenderSwapchain_ptr& swapchain) :
-		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()),
-		m_swapchain(swapchain)
+	FinalCompositionRenderPass::~FinalCompositionRenderPass()
+	{
+		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
+		for (VkFramebuffer& m_framebuffer : m_framebuffers)
+		{
+			vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
+		}
+	}
+
+	void FinalCompositionRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
@@ -67,7 +71,7 @@ namespace MyosotisFW::System::Render
 
 		{// StaticMesh pass
 			std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = resources->GetMainRenderTarget().view;
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
 
 			m_framebuffers.resize(m_swapchain->GetImageCount());
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
@@ -76,23 +80,14 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.renderPass = m_renderPass;
 			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
 			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = swapchain->GetWidth();
-			frameBufferCreateInfo.height = swapchain->GetHeight();
+			frameBufferCreateInfo.width = m_swapchain->GetWidth();
+			frameBufferCreateInfo.height = m_swapchain->GetHeight();
 			frameBufferCreateInfo.layers = 1;
 			for (uint32_t i = 0; i < m_framebuffers.size(); i++)
 			{
-				attachments[static_cast<uint32_t>(Attachments::SwapchainImages)] = swapchain->GetSwapchainImage()[i].view;
+				attachments[static_cast<uint32_t>(Attachments::SwapchainImages)] = m_swapchain->GetSwapchainImage()[i].view;
 				VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
 			}
-		}
-	}
-
-	FinalCompositionRenderPass::~FinalCompositionRenderPass()
-	{
-		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
-		for (VkFramebuffer& m_framebuffer : m_framebuffers)
-		{
-			vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
 		}
 	}
 

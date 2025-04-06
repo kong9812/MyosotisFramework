@@ -13,10 +13,11 @@
 class DLL_CLASS Application : public IApplication
 {
 public:
-	Application(const bool& allowHotReload);
+	Application() : m_glfwWindow(nullptr), m_allowHotReload(false) {};
 	~Application();
 
-	int Run();
+	void Initialize(const bool& allowHotReload) override;
+	int Run() override;
 
 private:
 	GLFWwindow* m_glfwWindow;

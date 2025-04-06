@@ -1,0 +1,35 @@
+// Copyright (c) 2025 kong9812
+#pragma once
+#include "RenderPassBase.h"
+#include "RenderSwapchain.h"
+
+namespace MyosotisFW::System::Render
+{
+	class EditorRenderPass : public RenderPassBase
+	{
+	public:
+		enum class SubPass : uint32_t
+		{
+			EditorGUI,
+			COUNT
+		};
+
+		enum class Attachments : uint32_t
+		{
+			EditorRenderTarget,
+			COUNT
+		};
+
+	public:
+		EditorRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const uint32_t& width, const uint32_t& height) :
+			RenderPassBase(device, resources, width, height) {
+		}
+		~EditorRenderPass();
+
+		void Initialize() override;
+		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) override;
+		void EndRender(const VkCommandBuffer& commandBuffer) override;
+
+	};
+	TYPEDEF_SHARED_PTR_ARGS(EditorRenderPass)
+}

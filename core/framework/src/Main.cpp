@@ -62,6 +62,7 @@ int main()
 	if (!hModule) return 1;
 
 	IApplication* application = GetApplication(hModule);
+	application->Initialize(true);
 	while (true)
 	{
 		int result = application->Run();
@@ -88,9 +89,11 @@ int main()
 {
 	std::cout << std::filesystem::current_path() << std::endl;
 #ifdef EDITOR
-	Editor* application = new Editor(false);
+	Editor* application = new Editor();
+	application->Initialize(false);
 #else
-	Application* application = new Application(false);
+	Application* application = new Application();
+	application->Initialize(false);
 #endif
 	int result = application->Run();
 	delete application;

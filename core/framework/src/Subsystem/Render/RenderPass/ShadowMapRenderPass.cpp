@@ -8,11 +8,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	ShadowMapRenderPass::ShadowMapRenderPass(
-		const RenderDevice_ptr& device,
-		const RenderResources_ptr& resources,
-		const uint32_t& width, const uint32_t& height) :
-		RenderPassBase(device, resources, width, height)
+	ShadowMapRenderPass::~ShadowMapRenderPass()
+	{
+		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
+		vkDestroyFramebuffer(*m_device, m_framebuffers[0], m_device->GetAllocationCallbacks());
+	}
+
+	void ShadowMapRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
@@ -57,18 +59,12 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.pNext = NULL;
 			frameBufferCreateInfo.renderPass = m_renderPass;
 			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.pAttachments = &resources->GetShadowMap().view;
+			frameBufferCreateInfo.pAttachments = &m_resources->GetShadowMap().view;
 			frameBufferCreateInfo.width = AppInfo::g_shadowMapSize;
 			frameBufferCreateInfo.height = AppInfo::g_shadowMapSize;
 			frameBufferCreateInfo.layers = 1;
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
 		}
-	}
-
-	ShadowMapRenderPass::~ShadowMapRenderPass()
-	{
-		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
-		vkDestroyFramebuffer(*m_device, m_framebuffers[0], m_device->GetAllocationCallbacks());
 	}
 
 	void ShadowMapRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)

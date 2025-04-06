@@ -13,10 +13,11 @@
 class DLL_CLASS Editor : public IApplication
 {
 public:
-	Editor(const bool& allowHotReload);
+	Editor() : m_glfwWindow(nullptr), m_allowHotReload(false) {};
 	~Editor();
 
-	int Run();
+	void Initialize(const bool& allowHotReload) override;
+	int Run() override;
 
 private:
 	GLFWwindow* m_glfwWindow;

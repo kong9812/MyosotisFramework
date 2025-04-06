@@ -8,9 +8,12 @@ namespace MyosotisFW::System::Render
 	class InteriorObjectDeferredRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		InteriorObjectDeferredRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		InteriorObjectDeferredRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device) {
+		}
 		~InteriorObjectDeferredRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(InteriorObjectShaderObject& shaderObject);
 
 	private:

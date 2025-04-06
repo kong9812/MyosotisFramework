@@ -8,9 +8,12 @@ namespace MyosotisFW::System::Render
 	class TransparentRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		TransparentRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		TransparentRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device) {
+		}
 		~TransparentRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
 
 	private:

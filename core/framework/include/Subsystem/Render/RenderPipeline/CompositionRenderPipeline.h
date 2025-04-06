@@ -3,23 +3,30 @@
 #include "RenderPipelineBase.h"
 #include "Structs.h"
 #include "Camera.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
 	class CompositionRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		CompositionRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		CompositionRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device),
+			m_shaderBase{},
+			m_lightingResultDescriptorImageInfo{} {
+		}
 		~CompositionRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		void CreateShaderObject(const VMAImage& lightingResult);
+		void CreateShaderObject();
 
 	private:
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		ShaderBase m_shaderBase;
+		VkDescriptorImageInfo m_lightingResultDescriptorImageInfo;
 	};
 	TYPEDEF_UNIQUE_PTR_ARGS(CompositionRenderPipeline)
 }

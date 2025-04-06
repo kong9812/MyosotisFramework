@@ -30,7 +30,39 @@ namespace MyosotisFW::System::Render
 	class RenderSubsystem
 	{
 	public:
-		RenderSubsystem(const GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface);
+		RenderSubsystem() :
+			m_device(nullptr),
+			m_swapchain(nullptr),
+			m_resources(nullptr),
+			m_mainCamera(nullptr),
+			m_submitPipelineStages(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
+			m_renderCommandPool(VK_NULL_HANDLE),
+			m_computeCommandPool(VK_NULL_HANDLE),
+			m_currentBufferIndex(0),
+			m_graphicsQueue(VK_NULL_HANDLE),
+			m_computeQueue(VK_NULL_HANDLE),
+			m_descriptorPool(VK_NULL_HANDLE),
+			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
+			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
+			m_shadowMapRenderPass(nullptr),
+			m_mainRenderPass(nullptr),
+			m_finalCompositionRenderPass(nullptr),
+			m_skyboxRenderPipeline(nullptr),
+			m_shadowMapRenderPipeline(nullptr),
+			m_deferredRenderPipeline(nullptr),
+			m_lightingRenderPipeline(nullptr),
+			m_compositionRenderPipeline(nullptr),
+			m_finalCompositionRenderPipeline(nullptr),
+			m_interiorObjectDeferredRenderPipeline(nullptr),
+			m_onPressedSaveGameStageCallback(nullptr),
+			m_onPressedLoadGameStageCallback(nullptr),
+			m_onPressedCreateObjectCallback(nullptr) {
+			m_semaphores.presentComplete = VK_NULL_HANDLE;
+			m_semaphores.computeComplete = VK_NULL_HANDLE;
+			m_semaphores.renderComplete = VK_NULL_HANDLE;
+			m_submitInfo = {};
+			m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		}
 		~RenderSubsystem();
 
 		void ResetMousePos(const glm::vec2& mousePos);
@@ -39,7 +71,8 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
-		void Update(const UpdateData& updateData);
+		virtual void Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface);
+		virtual void Update(const UpdateData& updateData);
 		void Compute();
 		void BeginRender();
 		void ShadowRender();
@@ -50,14 +83,24 @@ namespace MyosotisFW::System::Render
 
 		std::vector<ObjectBase_ptr> GetObjects() { return m_objects; }
 
-	private:
+	protected:
+		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);
+		void initializeRenderSwapchain(const VkSurfaceKHR& surface);
+		virtual void initializeRenderResources();
+		void initializeCommandPool();
+		void initializeFrustumCuller();
+		void initializeSemaphore();
+		void initializeSubmitInfo();
+		void initializeDebugUtils(const VkInstance& instance);
+		virtual void initializeRenderPass();
+		virtual void initializeRenderPipeline();
+
+	protected:
 		struct {
 			VkSemaphore presentComplete;
 			VkSemaphore computeComplete;
 			VkSemaphore renderComplete;
 		}m_semaphores;
-
-		VkInstance m_instance;
 
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
@@ -84,20 +127,15 @@ namespace MyosotisFW::System::Render
 
 		std::vector<ObjectBase_ptr> m_objects;
 
-		void prepareCommandBuffers();
-		void prepareFences();
-
-		void prepareFrustumCuller();
-
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
 
-	private:
+	protected:
 		ShadowMapRenderPass_ptr m_shadowMapRenderPass;
 		MainRenderPass_ptr m_mainRenderPass;
 		FinalCompositionRenderPass_ptr m_finalCompositionRenderPass;
 
-	private:
+	protected:
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
 		ShadowMapRenderPipeline_ptr m_shadowMapRenderPipeline;
 		DeferredRenderPipeline_ptr m_deferredRenderPipeline;
@@ -107,14 +145,14 @@ namespace MyosotisFW::System::Render
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
 
 		// callback
-	private:
+	protected:
 		using OnPressedSaveGameStageCallback = std::function<void()>;
 		OnPressedSaveGameStageCallback m_onPressedSaveGameStageCallback;
 		using OnPressedLoadGameStageCallback = std::function<void()>;
 		OnPressedLoadGameStageCallback m_onPressedLoadGameStageCallback;
 		using OnPressedCreateObjectCallback = std::function<void(ObjectType, glm::vec3)>;
 		OnPressedCreateObjectCallback m_onPressedCreateObjectCallback;
-	;	public:
+	public:
 		void SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback);
 		void SetOnPressedLoadGameStageCallback(const OnPressedLoadGameStageCallback& callback);
 		void SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback);

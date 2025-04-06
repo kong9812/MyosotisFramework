@@ -8,9 +8,12 @@ namespace MyosotisFW::System::Render
 	class DeferredRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		DeferredRenderPipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const VkRenderPass& renderPass);
+		DeferredRenderPipeline(const RenderDevice_ptr& device) :
+			RenderPipelineBase(device) {
+		}
 		~DeferredRenderPipeline();
 
+		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
 
 	private:
