@@ -74,7 +74,7 @@ namespace MyosotisFW::AppInfo
 	constexpr VkClearValue g_depthClearValues = { 1.0f, 0.0f };
 
 	// [デフォルト]カメラ位置
-	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 2.0f, -5.0f);
+	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 0.0f, -20.0f);
 	// [デフォルト]カメラ視点
 	constexpr glm::vec3 g_cameraLookAt = glm::vec3(0.0f, 0.0f, 0.0f);
 	// [デフォルト]カメラ　前ベクトル
@@ -86,7 +86,7 @@ namespace MyosotisFW::AppInfo
 	// [デフォルト]カメラ FOV
 	constexpr float g_cameraFov = 60.0f;
 	// [デフォルト]カメラ Far
-	constexpr float g_cameraFar = 100.0f;
+	constexpr float g_cameraFar = 1000.0f;
 	// [デフォルト]カメラ Near
 	constexpr float g_cameraNear = 0.1f;
 

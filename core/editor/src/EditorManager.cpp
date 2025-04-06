@@ -8,6 +8,8 @@ namespace MyosotisFW::System
 	void EditorManager::Initialize(GLFWwindow* window)
 	{
 		__super::Initialize(window);
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	void EditorManager::Update()

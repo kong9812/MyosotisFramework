@@ -4,6 +4,7 @@
 
 #include "EditorFinalCompositionRenderPass.h"
 #include "EditorFinalCompositionRenderPipeline.h"
+#include "EditorCamera.h"
 
 #include "AppInfo.h"
 
@@ -15,29 +16,28 @@ namespace MyosotisFW::System::Render
 
 		// EditorGUIの初期化
 		m_editorGUI = CreateEditorGUIPointer(const_cast<GLFWwindow&>(glfwWindow), instance, m_device, m_graphicsQueue, m_editorRenderPass->GetRenderPass(), m_swapchain);
+
+		// EditorCameraの初期化
+		m_mainCamera = Camera::CreateEditorCameraPointer();
 	}
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
 	{
-		ImGui_ImplGlfw_NewFrame();
-		ImGui_ImplVulkan_NewFrame();
-		ImGui::NewFrame();
+		m_editorGUI->NewFrame();
+		ImGui::ShowDemoWindow();
 
-		__super::Update(updateData);
-
-		ImGui::SetNextWindowPos({ 0.0f, 0.0f });
-		ImGui::Begin("solution configuration",
-			(bool*)true,
-			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
-			ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar |
-			ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
+		ImGui::Begin("MainEditorWindow");
 #ifdef DEBUG
 		ImGui::Text("Model: Debug");
 #elif FWDLL
 		ImGui::Text("Model: DLL\nF5: Hot reload");
+#elif RELEASE
+		ImGui::Text("Model: Release");
 #endif
 		ImGui::Text("FPS: %.2f(%.2fms)", (1.0f / updateData.deltaTime), updateData.deltaTime * 1000.0f);
 		ImGui::End();
+
+		__super::Update(updateData);
 	}
 
 	void EditorRenderSubsystem::EditorRender()

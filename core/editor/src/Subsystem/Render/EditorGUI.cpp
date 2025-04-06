@@ -46,6 +46,21 @@ namespace MyosotisFW::System::Render
 		ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 	}
 
+	void EditorGUI::NewFrame()
+	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::SetNextWindowPos({ 0.0f, 0.0f });
+		ImGui::Begin("MainEditorWindow",
+			(bool*)true,
+			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysAutoResize |
+			ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
+		ImGui::End();
+	}
+
 	EditorGUI::~EditorGUI()
 	{
 		ImGui_ImplVulkan_Shutdown();

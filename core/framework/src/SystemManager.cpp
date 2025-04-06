@@ -140,6 +140,17 @@ namespace MyosotisFW::System
 				it++;
 			}
 		}
+		for (auto it = m_mouseButtonActions.begin(); it != m_mouseButtonActions.end();)
+		{
+			if (it->second == GLFW_RELEASE)
+			{
+				it = m_mouseButtonActions.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
 		m_lastTime = currentTime;
 	}
 

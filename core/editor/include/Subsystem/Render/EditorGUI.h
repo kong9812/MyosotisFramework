@@ -21,6 +21,7 @@ namespace MyosotisFW::System::Render
 			const RenderSwapchain_ptr renderSwapchain);
 		~EditorGUI();
 
+		void NewFrame();
 	private:
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;

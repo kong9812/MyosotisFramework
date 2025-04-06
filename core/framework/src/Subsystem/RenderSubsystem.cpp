@@ -141,9 +141,8 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera)
 		{
-			Camera::FPSCamera_ptr cameraPtr = Object_Cast<Camera::FPSCamera>(m_mainCamera);
-			cameraPtr->Update(updateData);
-			m_lightingRenderPipeline->UpdateCameraPosition(glm::vec4(cameraPtr->GetCameraPos(), 0.0f));
+			m_mainCamera->Update(updateData);
+			m_lightingRenderPipeline->UpdateCameraPosition(glm::vec4(m_mainCamera->GetCameraPos(), 0.0f));
 		}
 
 		std::vector<StaticMesh_ptr> firstStaticMesh{};

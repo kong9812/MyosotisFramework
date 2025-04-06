@@ -19,13 +19,14 @@ namespace MyosotisFW::System::Render::Camera
 		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
 
 		void Update(const UpdateData& updateData) override;
-		//void BindDebugGUIElement() override;
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const { return __super::Serialize(allocator); }
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) { __super::Deserialize(doc, createObject); }
 
 	private:
 		glm::vec2 m_lastMousePos;
+
+		void editorGUI();
 	};
 	TYPEDEF_SHARED_PTR(EditorCamera)
 		OBJECT_CAST_FUNCTION(EditorCamera)
