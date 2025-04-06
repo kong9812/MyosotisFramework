@@ -9,13 +9,19 @@ project(MyosotisFW)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(DLL_PROJECT_NAME "myosotis")
+set(EDITOR_PROJECT_NAME "MyosotisEditor")
 set(CMAKE_CONFIGURATION_TYPES "Debug;FWDLL;Release" CACHE STRING "" FORCE)
 
 set(APP_INFO_RC ${PROJECT_SOURCE_DIR}/resources/appInfo/appInfo.rc)
 
 FILE(GLOB_RECURSE SOURCES 
-  "${PROJECT_SOURCE_DIR}/include/*.h"
-  "${PROJECT_SOURCE_DIR}/src/*.cpp"
+  "${PROJECT_SOURCE_DIR}/framework/include/*.h"
+  "${PROJECT_SOURCE_DIR}/framework/src/*.cpp"
+)
+
+FILE(GLOB_RECURSE EDITOR_SOURCES 
+  "${PROJECT_SOURCE_DIR}/editor/include/*.h"
+  "${PROJECT_SOURCE_DIR}/editor/src/*.cpp"
 )
 
 # Ref: https://github.com/TheLartians/GroupSourcesByFolder.cmake
@@ -58,10 +64,15 @@ endfunction()
 # 実行プロジェクトの作成
 add_executable(${PROJECT_NAME} ${SOURCES} ${APP_INFO_RC})
 
+# エディタ実行プロジェクトの作成
+add_executable(${EDITOR_PROJECT_NAME} ${SOURCES} ${EDITOR_SOURCES} ${APP_INFO_RC})
+
 # ライブラリの作成
 add_library(${DLL_PROJECT_NAME} SHARED ${SOURCES})
+
 GroupSourcesByFolder(${PROJECT_NAME})
 GroupSourcesByFolder(${DLL_PROJECT_NAME})
+GroupSourcesByFolder(${EDITOR_PROJECT_NAME})
 
 # GLFW
 FetchContent_Declare(
@@ -76,6 +87,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${EDITOR_PROJECT_NAME} PRIVATE glfw)
 
 # GLM
 FetchContent_Declare(
@@ -88,6 +100,7 @@ set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE glm::glm)
+target_link_libraries(${EDITOR_PROJECT_NAME} PRIVATE glm::glm)
 
 # ofbx
 FetchContent_Declare(
@@ -106,8 +119,10 @@ set(OFBX_SOURCES
 source_group("external/ofbx" FILES ${OFBX_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
 
 # imgui
 FetchContent_Declare(
@@ -140,8 +155,10 @@ set(IMGUI_SOURCES
 source_group("external/imgui" FILES ${IMGUI_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
 
 # VMA(VulkanMemoryAllocator)
 FetchContent_Declare(
@@ -164,8 +181,10 @@ set(VMA_SOURCES
 source_group("external/vma" FILES ${VMA_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 
 # RapidJSON
 FetchContent_Declare(
@@ -179,6 +198,7 @@ set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(RapidJSON)
 target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
 
 # stduuid
 FetchContent_Declare(
@@ -191,8 +211,10 @@ set(UUID_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(stduuid)
 target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/include)
 
 # stb
 FetchContent_Declare(
@@ -207,8 +229,10 @@ set(STB_SOURCES
 source_group("external/stb" FILES ${STB_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${STB_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${STB_SOURCES})
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${STB_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
 
 # Vulkan
 find_package(Vulkan REQUIRED)
@@ -216,9 +240,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${EDITOR_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 
 # work directory
 set_target_properties(${PROJECT_NAME} PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+)
+set_target_properties(${DLL_PROJECT_NAME} PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+)
+set_target_properties(${EDITOR_PROJECT_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 )
 
@@ -249,6 +281,11 @@ target_compile_definitions(${DLL_PROJECT_NAME} PRIVATE
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:RELEASE>
     $<$<CONFIG:FWDLL>:FWDLL>
+)
+target_compile_definitions(${EDITOR_PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:DEBUG;EDITOR>
+    $<$<CONFIG:Release>:RELEASE;EDITOR>
+    $<$<CONFIG:FWDLL>:FWDLL;EDITOR>
 )
 
 # GLFW

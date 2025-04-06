@@ -1,4 +1,5 @@
 // Copyright (c) 2025 kong9812
+#ifndef EDITOR
 #define DLL_EXPORTS
 #include "Application.h"
 
@@ -86,3 +87,4 @@ extern "C" __declspec(dllexport) IApplication* GetInstance()
 {
 	return new Application(true);
 }
+#endif

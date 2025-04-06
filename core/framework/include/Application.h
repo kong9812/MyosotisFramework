@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#ifndef EDITOR
 #include "iglfw.h"
 #include "ApplicationInterface.h"
 
@@ -23,3 +24,4 @@ private:
 };
 
 extern "C" DLL_CLASS IApplication* GetInstance();
+#endif
