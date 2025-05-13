@@ -76,6 +76,7 @@ int main()
 			hModule = GetDllModule();
 			if (!hModule) return 1;
 			application = GetApplication(hModule);
+			application->Initialize(true);
 			continue;
 		}
 		break;
