@@ -33,15 +33,15 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 :: ジャンクション(resources)
-mklink /J "bin\Debug\resources" "core\resources"
-mklink /J "bin\Release\resources" "core\resources"
-mklink /J "bin\FWDLL\resources" "core\resources"
+mklink /J "bin\myosotis\Debug\resources" "core\resources"
+mklink /J "bin\myosotis\Release\resources" "core\resources"
+mklink /J "bin\myosotis\FWDLL\resources" "core\resources"
 :: ジャンクション(log)
-mklink /J "bin\Debug\log" "core\log"
-mklink /J "bin\Release\log" "core\log"
-mklink /J "bin\FWDLL\log" "core\log"
+mklink /J "bin\myosotis\Debug\log" "core\log"
+mklink /J "bin\myosotis\Release\log" "core\log"
+mklink /J "bin\myosotis\FWDLL\log" "core\log"
 :: ジャンクション(tools)
-mklink /J "bin\Debug\tools" "core\tools"
-mklink /J "bin\Release\tools" "core\tools"
-mklink /J "bin\FWDLL\tools" "core\tools"
+mklink /J "bin\myosotis\Debug\tools" "core\tools"
+mklink /J "bin\myosotis\Release\tools" "core\tools"
+mklink /J "bin\myosotis\FWDLL\tools" "core\tools"
 pause

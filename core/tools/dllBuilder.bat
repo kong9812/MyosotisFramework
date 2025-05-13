@@ -6,16 +6,13 @@ for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Stu
 )
 
 :: ソリューションファイルのパスを設定
-set SOLUTION_PATH="..\..\bin\MyosotisFW.sln"
+set SOLUTION_PATH="..\bin\MyosotisEngine.sln"
 
 :: ビルド構成
-set CONFIGURATION=FWDLL
+set CONFIGURATION=Debug
 
 :: ビルドしたいプロジェクトの名前を設定
-set PROJECT_NAME=myosotis
-
-:: 出力先ディレクトリを設定
-set BUILD_DIR="..\core"
+set PROJECT_NAME=MyosotisDLL
 
 :: ビルド
-"%MSBUILD_PATH%" %SOLUTION_PATH% /p:Configuration=%CONFIGURATION% /p:OutDir=%BUILD_DIR%\ /t:%PROJECT_NAME%
+"%MSBUILD_PATH%" %SOLUTION_PATH% /p:Configuration=%CONFIGURATION% /t:%PROJECT_NAME%
