@@ -398,6 +398,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-core/myosotis.dll
+core/MyosotisDLL.dll
 core/imgui.ini
 build

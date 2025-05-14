@@ -6,13 +6,8 @@
 #include <iostream>
 #include <filesystem>
 
-#ifdef EDITOR
-#include "Editor.h"
-#else
 #include "Application.h"
-#endif
 #include "ApplicationInterface.h"
-
 
 #ifdef FWDLL
 namespace {
@@ -72,7 +67,10 @@ int main()
 			delete application;
 			FreeLibrary(hModule);
 
+			std::filesystem::rename("MyosotisDLL.pdb", "MyosotisDLL_.pdb");
 			if (!BuildDLL(true)) return 1;
+			std::filesystem::remove("MyosotisDLL_.pdb");
+
 			hModule = GetDllModule();
 			if (!hModule) return 1;
 			application = GetApplication(hModule);
@@ -89,13 +87,8 @@ int main()
 int main()
 {
 	std::cout << std::filesystem::current_path() << std::endl;
-#ifdef EDITOR
-	Editor* application = new Editor();
-	application->Initialize(false);
-#else
 	Application* application = new Application();
 	application->Initialize(false);
-#endif
 	int result = application->Run();
 	delete application;
 	return result;

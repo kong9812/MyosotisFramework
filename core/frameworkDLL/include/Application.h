@@ -1,14 +1,9 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#ifndef EDITOR
 #include "iglfw.h"
 #include "ApplicationInterface.h"
 
-#ifdef DLL_EXPORTS
 #define DLL_CLASS __declspec(dllexport)
-#else
-#define DLL_CLASS __declspec(dllimport)
-#endif
 
 class DLL_CLASS Application : public IApplication
 {
@@ -25,4 +20,3 @@ private:
 };
 
 extern "C" DLL_CLASS IApplication* GetInstance();
-#endif
