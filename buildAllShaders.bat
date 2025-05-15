@@ -1,5 +1,7 @@
 @echo off
-setlocal enabledelayedexpansion
+chcp 65001
+:: Copyright (c) 2025 kong9812
+setlocal
 
 :: カレントディレクトリを使用
 set "SHADER_DIR=%cd%\core\resources\shaders"
@@ -19,3 +21,4 @@ for /r "%SHADER_DIR%" %%f in (*.vert *.frag *.comp) do (
 
 echo Shader conversion completed!
 pause
+endlocal
