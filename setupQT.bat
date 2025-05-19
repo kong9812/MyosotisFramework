@@ -27,7 +27,7 @@ if not exist "%QT_BUILD_DIR%" (
     mkdir "%QT_BUILD_DIR%"
     pushd "%QT_BUILD_DIR%"
 
-    :: Load Visual Studio environment for 64-bit builds
+    :: Load Visual Studio environment for 64-bit builds (todo. vswhereでvcvarsallを探す)
     echo Setting up Visual Studio environment
     call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
