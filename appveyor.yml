@@ -8,7 +8,8 @@ configuration:
 image: Visual Studio 2022
 
 build:
-  project: bin\MyosotisFW.vcxproj
+  # todo. MyosotisFW & MyosotisDLL & MyosotisEngineの追加
+  project: bin\vs22\Myosotis.vcxproj
   parallel: true
   verbosity: minimal
 

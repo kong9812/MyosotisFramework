@@ -46,6 +46,9 @@ if %ERRORLEVEL% EQU 0 (
 :: shaders
 call "buildAllShaders.bat"
 
+:: QT
+call "setupQT.bat"
+
 :: build ninja project
 call "buildNinjaProject.bat"
 

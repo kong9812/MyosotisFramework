@@ -234,3 +234,6 @@ add_subdirectory(frameworkDLL)
 
 # game project
 add_subdirectory(myosotis)
+
+# editor project
+add_subdirectory(editor)

@@ -401,3 +401,7 @@ FodyWeavers.xsd
 core/MyosotisDLL.dll
 core/imgui.ini
 build
+
+# qt
+.qt
+qt
