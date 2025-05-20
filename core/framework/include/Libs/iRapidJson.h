@@ -37,7 +37,7 @@ inline void SerializeVec2ToJson(const char* key, const T& vec, rapidjson::Value&
 }
 
 template <typename T>
-inline void DeserializeVec4FromJson(const char* key, T& vec, const rapidjson::Value& ob)
+inline void DeserializeVec4FromJson(const char* key, T& vec, const rapidjson::Value& doc)
 {
 	const auto& vecArray = doc[key].GetArray();
 	vec.x = vecArray[0].GetFloat();

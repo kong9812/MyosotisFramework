@@ -4,6 +4,7 @@
 #include <vk_mem_alloc.h>
 #include <string_view>
 #include "VK_Validation.h"
+#include "VK_CreateInfo.h"
 
 namespace vmaTools
 {

@@ -19,12 +19,12 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_windowWidth = 1440;
 	constexpr uint32_t g_windowHeight = 810;
 	constexpr uint32_t g_montorIndex = 0;
-	constexpr char* g_applicationName = "MyosotisFW";
-	constexpr char* g_editorName = "MyosotisEditor";
-	constexpr char* g_engineName = "MyosotisFW";
+	constexpr const char* g_applicationName = "MyosotisFW";
+	constexpr const char* g_editorName = "MyosotisEditor";
+	constexpr const char* g_engineName = "MyosotisFW";
 	constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
 	constexpr uint32_t g_engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	constexpr char* g_applicationIcon = ".\\resources\\appInfo\\MyosotisFW.png";
+	constexpr const char* g_applicationIcon = ".\\resources\\appInfo\\MyosotisFW.png";
 
 	// 指定VkExtensionProperties
 	const std::vector<const char*> g_vkInstanceExtensionProperties = {
@@ -91,22 +91,22 @@ namespace MyosotisFW::AppInfo
 	constexpr float g_cameraNear = 0.1f;
 
 	// [フォルダ]リソース
-	constexpr char* g_resourcesFolder = ".\\resources\\";
+	constexpr const char* g_resourcesFolder = ".\\resources\\";
 	// [フォルダ]シェーダー
-	constexpr char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
+	constexpr const char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
 	// [フォルダ]テクスチャ
-	constexpr char* g_textureFolder = ".\\resources\\texture\\";
+	constexpr const char* g_textureFolder = ".\\resources\\texture\\";
 	// [フォルダ]フォント
-	constexpr char* g_fontFolder = ".\\resources\\font\\";
+	constexpr const char* g_fontFolder = ".\\resources\\font\\";
 	// [フォルダ]モデル
-	constexpr char* g_modelFolder = ".\\resources\\models\\";
+	constexpr const char* g_modelFolder = ".\\resources\\models\\";
 	// [フォルダ]ゲームステージ
-	constexpr char* g_gameStageFolder = ".\\resources\\gamestage\\";
+	constexpr const char* g_gameStageFolder = ".\\resources\\gamestage\\";
 
 	// debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
 	constexpr uint32_t g_imguiDescriptorPoolSize = 2;
 	constexpr float g_imguiFontSize = 16.0f;
-	constexpr char* g_imguiFontFileName = "msgothic.ttc";
+	constexpr const char* g_imguiFontFileName = "msgothic.ttc";
 
 	// [デフォルト]LOD距離
 	constexpr float g_defaultLODVeryClose = 10.0f;

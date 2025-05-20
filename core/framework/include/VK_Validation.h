@@ -12,7 +12,7 @@ namespace
     /// </summary>
     /// <param name="result">vulkan結果</param>
     /// <returns>文字列</returns>
-    inline constexpr char* vkResultToString(VkResult result) 
+    inline constexpr const char* vkResultToString(VkResult result) 
     {
         switch (result) {
         case VkResult::VK_SUCCESS: return "VK_SUCCESS";

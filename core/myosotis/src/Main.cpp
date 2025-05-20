@@ -11,8 +11,8 @@
 
 #ifdef FWDLL
 namespace {
-	constexpr char* g_dll = "MyosotisDLL.dll";
-	constexpr char* g_dllBuilder = "tools\\vs22BuildMyosotisDLL_debug.bat";
+	constexpr const char* g_dll = "MyosotisDLL.dll";
+	constexpr const char* g_dllBuilder = "tools\\vs22BuildMyosotisDLL_debug.bat";
 	typedef IApplication* (*GetInstanceFunction)();
 }
 

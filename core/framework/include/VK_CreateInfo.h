@@ -2,6 +2,7 @@
 #pragma once
 #include <vector>
 #include <vulkan/vulkan.h>
+#include "iglm.h"
 
 namespace Utility::Vulkan::CreateInfo
 {

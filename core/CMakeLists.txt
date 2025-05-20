@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 cmake_policy(SET CMP0091 NEW)
 
 include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
 
 project(MyosotisEngine)
 
@@ -196,7 +197,7 @@ FILE(GLOB_RECURSE FRAMEWORK_SOURCES
 )
 GroupSourcesByFolder(${FRAMEWORK_SOURCES})
 
-add_library(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES})
+add_library(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES} ${APP_INFO_RC})
 AddIncludeDirectories(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES})
 
 # glfw

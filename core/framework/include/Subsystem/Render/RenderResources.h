@@ -12,7 +12,7 @@ namespace MyosotisFW::System::Render
 	class RenderResources
 	{
 	public:
-		RenderResources::RenderResources(const RenderDevice_ptr& device)
+		RenderResources(const RenderDevice_ptr& device)
 			:m_device(device),
 			m_depthStencil{},
 			m_position{},

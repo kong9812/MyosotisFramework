@@ -7,7 +7,7 @@ FILE(GLOB_RECURSE GAME_SOURCES
 )
 GroupSourcesByFolder(${GAME_SOURCES})
 
-add_executable(${GAME_PROJECT_NAME} ${GAME_SOURCES})
+add_executable(${GAME_PROJECT_NAME} ${GAME_SOURCES} ${APP_INFO_RC})
 target_link_libraries(${GAME_PROJECT_NAME} PRIVATE ${FRAMEWORK_PROJECT_NAME})
 
 AddIncludeDirectories(${GAME_PROJECT_NAME} ${GAME_SOURCES})

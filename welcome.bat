@@ -44,6 +44,7 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 :: shaders
+set SKIP_PAUSE=1
 call "buildAllShaders.bat"
 
 :: QT

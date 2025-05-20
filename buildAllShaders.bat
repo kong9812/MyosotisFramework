@@ -20,5 +20,5 @@ for /r "%SHADER_DIR%" %%f in (*.vert *.frag *.comp) do (
 )
 
 echo Shader conversion completed!
-pause
+if not defined SKIP_PAUSE pause 
 endlocal

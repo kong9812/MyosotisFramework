@@ -5,7 +5,6 @@
 
 #include <crtdbg.h>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "istb_image.h"
 
 #include <memory>

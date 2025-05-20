@@ -8,8 +8,7 @@ configuration:
 image: Visual Studio 2022
 
 build:
-  # todo. MyosotisFW & MyosotisDLL & MyosotisEngineの追加
-  project: bin\vs22\Myosotis.vcxproj
+  project: MyosotisFramework
   parallel: true
   verbosity: minimal
 
@@ -31,7 +30,7 @@ install:
 before_build:
   # CMakeでビルド
   - ps: |
-      .\cmakeBuild.bat
+      .\welcome.bat
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）
