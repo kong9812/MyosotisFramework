@@ -8,7 +8,7 @@
 class DLL_CLASS Application : public IApplication
 {
 public:
-	Application() : m_glfwWindow(nullptr), m_allowHotReload(false) {};
+	Application() : m_glfwWindow(nullptr), m_allowHotReload(false) {}
 	~Application();
 
 	void Initialize(const bool& allowHotReload) override;

@@ -1,28 +1,23 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#ifdef EDITOR
-#include "iglfw.h"
-#include "ApplicationInterface.h"
+#include "iqt.h"
+#include "MainWindow.h"
 
-#ifdef DLL_EXPORTS
-#define DLL_CLASS __declspec(dllexport)
-#else
-#define DLL_CLASS __declspec(dllimport)
-#endif
-
-class DLL_CLASS Editor : public IApplication
+class Editor
 {
 public:
-	Editor() : m_glfwWindow(nullptr), m_allowHotReload(false) {};
-	~Editor();
+	Editor(int argc, char* argv[]) :
+		m_application(argc, argv),
+		m_mainWindow(new MyosotisFW::System::Editor::MainWindow()),
+		m_allowHotReload(false) {
+	}
+	~Editor() {}
 
-	void Initialize(const bool& allowHotReload) override;
-	int Run() override;
+	void Initialize(const bool& allowHotReload);
+	int Run();
 
 private:
-	GLFWwindow* m_glfwWindow;
+	QApplication m_application;
+	QScopedPointer<MyosotisFW::System::Editor::MainWindow> m_mainWindow;
 	bool m_allowHotReload;
 };
-
-extern "C" DLL_CLASS IApplication* GetInstance();
-#endif

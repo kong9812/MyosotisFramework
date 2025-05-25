@@ -7,14 +7,18 @@
 #include <filesystem>
 
 #include "iqt.h"
+#include "Logger.h"
+#include "Editor.h"
 
 int main(int argc, char* argv[])
 {
-	std::cout << std::filesystem::current_path() << std::endl;
-	QApplication app(argc, argv);
-	QMainWindow* mainWindow = new QMainWindow();
-	mainWindow->show();
-	int result = app.exec();
-	delete mainWindow;
+#ifdef DEBUG
+	Logger::ClearLog();
+#endif
+	Logger::Info(std::filesystem::current_path().string());
+	Editor* editor = new Editor(argc, argv);
+	editor->Initialize(false);
+	int result = editor->Run();
+	delete editor;
 	return result;
 }

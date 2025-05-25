@@ -131,6 +131,20 @@ namespace Logger
 #endif
 
 	/// <summary>
+	/// ログファイル名
+	/// </summary>
+	/// <returns></returns>
+	inline std::string GetLogFileName()
+	{
+		// 現在時刻を取得
+		std::time_t now = std::time(nullptr);
+		std::tm localTime = *std::localtime(&now); // ローカルタイムに変換
+		char dateBuffer[20]; // "YYYY-MM-DD" 用
+		std::strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d", &localTime);
+		return "log/" + std::string(dateBuffer) + ".log";
+	}
+
+	/// <summary>
 	/// [Log]Info
 	/// </summary>
 	/// <param name="logMessage">メッセージ</param>
