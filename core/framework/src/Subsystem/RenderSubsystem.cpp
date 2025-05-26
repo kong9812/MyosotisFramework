@@ -99,7 +99,7 @@ namespace MyosotisFW::System::Render
 		m_objects.push_back(object);
 	}
 
-	void RenderSubsystem::Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface)
+	void RenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
 		// Vulkan Instance
 		initializeRenderDevice(instance, surface);

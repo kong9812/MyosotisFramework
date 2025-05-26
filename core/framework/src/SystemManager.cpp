@@ -219,7 +219,7 @@ namespace MyosotisFW::System
 	void SystemManager::initializeRenderSubsystem(GLFWwindow* window)
 	{
 		m_renderSubsystem = Render::CreateRenderSubsystemPointer();
-		m_renderSubsystem->Initialize(*window, m_instance, m_surface);
+		m_renderSubsystem->Initialize(m_instance, m_surface);
 	}
 
 	void SystemManager::initializeGameDirector()

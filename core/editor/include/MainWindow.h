@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "iqt.h"
+#include "VulkanWindow.h"
 #include "ContentBrowserDockWidget.h"
 #include "LoggerDockWidget.h"
 
@@ -12,6 +13,7 @@ namespace MyosotisFW::System::Editor
 		MainWindow(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
 
 	private:
+		VulkanWindow* m_vulkanWindow;
 		ContentBrowserDockWidget* m_contentBrowser;
 		LoggerDockWidget* m_logger;
 

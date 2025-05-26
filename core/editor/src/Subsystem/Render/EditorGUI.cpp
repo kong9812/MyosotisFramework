@@ -9,7 +9,6 @@
 namespace MyosotisFW::System::Render
 {
 	EditorGUI::EditorGUI(
-		GLFWwindow& glfwWindow,
 		const VkInstance& instance,
 		const RenderDevice_ptr renderDevice,
 		const VkQueue& queue,
@@ -43,7 +42,6 @@ namespace MyosotisFW::System::Render
 		//initinfo.CheckVkResultFn =  // todo.
 
 		ImGui_ImplVulkan_Init(&initinfo);
-		ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 	}
 
 	void EditorGUI::NewFrame()

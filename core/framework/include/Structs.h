@@ -21,6 +21,7 @@ namespace MyosotisFW
 		std::unordered_map<int, int> keyActions;
 		std::unordered_map<int, int> mouseButtonActions;
 		glm::vec2 mousePos;
+		glm::vec2 screenSize;
 	}UpdateData;
 
 	typedef struct

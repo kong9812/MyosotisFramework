@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render
 		}
 		~EditorRenderSubsystem() {};
 
-		void Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface) override;
+		void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface) override;
 		void Update(const UpdateData& updateData) override;
 		void EditorRender();
 

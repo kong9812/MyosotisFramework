@@ -31,7 +31,8 @@ namespace MyosotisFW::System
 	void EditorManager::initializeRenderSubsystem(GLFWwindow* window)
 	{
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
-		m_renderSubsystem->Initialize(*window, m_instance, m_surface);
+		m_renderSubsystem->Initialize(m_instance, m_surface);
+		ImGui_ImplGlfw_InitForVulkan(window, true);
 	}
 
 	void EditorManager::initializeGameDirector()

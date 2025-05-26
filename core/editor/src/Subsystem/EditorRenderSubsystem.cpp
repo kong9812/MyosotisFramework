@@ -10,12 +10,12 @@
 
 namespace MyosotisFW::System::Render
 {
-	void EditorRenderSubsystem::Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface)
+	void EditorRenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
-		__super::Initialize(glfwWindow, instance, surface);
+		__super::Initialize(instance, surface);
 
 		// EditorGUIの初期化
-		m_editorGUI = CreateEditorGUIPointer(const_cast<GLFWwindow&>(glfwWindow), instance, m_device, m_graphicsQueue, m_editorRenderPass->GetRenderPass(), m_swapchain);
+		m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_graphicsQueue, m_editorRenderPass->GetRenderPass(), m_swapchain);
 
 		// EditorCameraの初期化
 		m_mainCamera = Camera::CreateEditorCameraPointer();

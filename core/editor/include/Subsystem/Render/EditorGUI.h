@@ -13,7 +13,6 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		EditorGUI(
-			GLFWwindow& glfwWindow,
 			const VkInstance& instance,
 			const RenderDevice_ptr renderDevice,
 			const VkQueue& queue,

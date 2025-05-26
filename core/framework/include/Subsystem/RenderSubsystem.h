@@ -71,7 +71,7 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
-		virtual void Initialize(GLFWwindow& glfwWindow, const VkInstance& instance, const VkSurfaceKHR& surface);
+		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
 		void Compute();
 		void BeginRender();
@@ -158,5 +158,5 @@ namespace MyosotisFW::System::Render
 		void SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback);
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(RenderSubsystem)
+	TYPEDEF_SHARED_PTR(RenderSubsystem)
 }
