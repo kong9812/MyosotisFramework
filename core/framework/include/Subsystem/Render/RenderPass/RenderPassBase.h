@@ -26,8 +26,20 @@ namespace MyosotisFW::System::Render
 
 		virtual void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) = 0;
 		virtual void EndRender(const VkCommandBuffer& commandBuffer) = 0;
+		virtual void Resize(const uint32_t& width, const uint32_t& height)
+		{
+			m_width = width;
+			m_height = height;
+			for (VkFramebuffer& m_framebuffer : m_framebuffers)
+			{
+				vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
+			}
+			createFrameBuffers();
+		}
 
 	protected:
+		virtual void createFrameBuffers() = 0;
+
 		RenderDevice_ptr m_device;
 		RenderResources_ptr m_resources;
 

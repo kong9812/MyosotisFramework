@@ -30,8 +30,12 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.shaderBase.descriptorSet));
 
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.cubemap.sampler, shaderObject.standardUBO.cubemap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		UpdateDescriptors(shaderObject);
+	}
 
+	void InteriorObjectDeferredRenderPipeline::UpdateDescriptors(InteriorObjectShaderObject& shaderObject)
+	{
+		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.cubemap.sampler, shaderObject.standardUBO.cubemap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),

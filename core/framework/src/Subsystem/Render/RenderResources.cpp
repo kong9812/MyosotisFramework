@@ -177,4 +177,28 @@ namespace MyosotisFW::System::Render
 		}
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
+
+	void RenderResources::Resize(const uint32_t width, const uint32_t height)
+	{
+		{// attachment
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
+
+			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
+
+			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
+			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
+		}
+		Initialize(width, height);
+	}
 }

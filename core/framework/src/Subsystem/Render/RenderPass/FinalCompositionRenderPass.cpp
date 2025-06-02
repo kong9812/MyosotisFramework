@@ -69,26 +69,7 @@ namespace MyosotisFW::System::Render
 		VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);
 		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass));
 
-		{// StaticMesh pass
-			std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
-
-			m_framebuffers.resize(m_swapchain->GetImageCount());
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.pNext = NULL;
-			frameBufferCreateInfo.renderPass = m_renderPass;
-			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
-			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = m_swapchain->GetWidth();
-			frameBufferCreateInfo.height = m_swapchain->GetHeight();
-			frameBufferCreateInfo.layers = 1;
-			for (uint32_t i = 0; i < m_framebuffers.size(); i++)
-			{
-				attachments[static_cast<uint32_t>(Attachments::SwapchainImages)] = m_swapchain->GetSwapchainImage()[i].view;
-				VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
-			}
-		}
+		createFrameBuffers();
 	}
 
 	void FinalCompositionRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
@@ -112,5 +93,27 @@ namespace MyosotisFW::System::Render
 	void FinalCompositionRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdEndRenderPass(commandBuffer);
+	}
+
+	void FinalCompositionRenderPass::createFrameBuffers()
+	{
+		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
+		attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
+
+		m_framebuffers.resize(m_swapchain->GetImageCount());
+		VkFramebufferCreateInfo frameBufferCreateInfo = {};
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frameBufferCreateInfo.pNext = NULL;
+		frameBufferCreateInfo.renderPass = m_renderPass;
+		frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
+		frameBufferCreateInfo.pAttachments = attachments.data();
+		frameBufferCreateInfo.width = m_swapchain->GetWidth();
+		frameBufferCreateInfo.height = m_swapchain->GetHeight();
+		frameBufferCreateInfo.layers = 1;
+		for (uint32_t i = 0; i < m_framebuffers.size(); i++)
+		{
+			attachments[static_cast<uint32_t>(Attachments::SwapchainImages)] = m_swapchain->GetSwapchainImage()[i].view;
+			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
+		}
 	}
 }

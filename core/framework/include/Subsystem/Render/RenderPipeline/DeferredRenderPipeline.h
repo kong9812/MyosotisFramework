@@ -15,6 +15,7 @@ namespace MyosotisFW::System::Render
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
+		void UpdateDescriptors(StaticMeshShaderObject& shaderObject);
 
 	private:
 		void prepareDescriptors() override;

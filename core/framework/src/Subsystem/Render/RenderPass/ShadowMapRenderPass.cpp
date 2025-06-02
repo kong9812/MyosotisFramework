@@ -51,20 +51,7 @@ namespace MyosotisFW::System::Render
 		VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);
 		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass));
 
-		{// StaticMesh pass
-			m_framebuffers.resize(1);
-
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.pNext = NULL;
-			frameBufferCreateInfo.renderPass = m_renderPass;
-			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.pAttachments = &m_resources->GetShadowMap().view;
-			frameBufferCreateInfo.width = AppInfo::g_shadowMapSize;
-			frameBufferCreateInfo.height = AppInfo::g_shadowMapSize;
-			frameBufferCreateInfo.layers = 1;
-			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
-		}
+		createFrameBuffers();
 	}
 
 	void ShadowMapRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
@@ -90,5 +77,21 @@ namespace MyosotisFW::System::Render
 	{
 		vkCmdEndRenderPass(commandBuffer);
 		//m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+	}
+
+	void ShadowMapRenderPass::createFrameBuffers()
+	{
+		m_framebuffers.resize(1);
+
+		VkFramebufferCreateInfo frameBufferCreateInfo = {};
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frameBufferCreateInfo.pNext = NULL;
+		frameBufferCreateInfo.renderPass = m_renderPass;
+		frameBufferCreateInfo.attachmentCount = 1;
+		frameBufferCreateInfo.pAttachments = &m_resources->GetShadowMap().view;
+		frameBufferCreateInfo.width = AppInfo::g_shadowMapSize;
+		frameBufferCreateInfo.height = AppInfo::g_shadowMapSize;
+		frameBufferCreateInfo.layers = 1;
+		VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
 	}
 }

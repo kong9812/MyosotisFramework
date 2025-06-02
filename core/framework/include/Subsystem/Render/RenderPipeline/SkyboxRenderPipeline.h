@@ -15,6 +15,7 @@ namespace MyosotisFW::System::Render
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(SkyboxShaderObject& shaderObject);
+		void UpdateDescriptors(SkyboxShaderObject& shaderObject);
 
 	private:
 		void prepareDescriptors() override;

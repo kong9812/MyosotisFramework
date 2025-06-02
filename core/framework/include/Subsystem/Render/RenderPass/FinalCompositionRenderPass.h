@@ -32,6 +32,9 @@ namespace MyosotisFW::System::Render
 		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) override;
 		void EndRender(const VkCommandBuffer& commandBuffer) override;
 
+	private:
+		void createFrameBuffers() override;
+
 	protected:
 		RenderSwapchain_ptr m_swapchain;
 

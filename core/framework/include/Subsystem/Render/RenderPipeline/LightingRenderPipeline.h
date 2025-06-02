@@ -23,6 +23,8 @@ namespace MyosotisFW::System::Render
 		void UpdateDirectionalLightInfo(const DirectionalLightInfo& lightInfo);
 		void UpdateCameraPosition(const glm::vec4& position);
 		void CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo);
+		void UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo);
+		void Resize(const RenderResources_ptr& resources) override;
 
 	private:
 		void prepareDescriptors() override;

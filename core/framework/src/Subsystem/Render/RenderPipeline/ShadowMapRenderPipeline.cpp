@@ -65,19 +65,31 @@ namespace MyosotisFW::System::Render
 			shaderObject.shadowMapRenderShaderBase.pipeline = m_pipeline;
 		}
 
-		shaderObject.standardUBO.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
-		shaderObject.standardUBO.shadowMapBufferDescriptor = m_shadowMapShaderObject.lightUBO.buffer.descriptor;
-
 		// layout allocate
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.shadowMapRenderShaderBase.descriptorSet));
 
+		UpdateDescriptors(shaderObject);
+	}
+
+	void ShadowMapRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
+	{
+		shaderObject.standardUBO.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
+		shaderObject.standardUBO.shadowMapBufferDescriptor = m_shadowMapShaderObject.lightUBO.buffer.descriptor;
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&m_shadowMapShaderObject.lightUBO.buffer.descriptor),
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+	}
+
+	void ShadowMapRenderPipeline::Resize(const RenderResources_ptr& resources)
+	{
+		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
+		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
+		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	DirectionalLightInfo ShadowMapRenderPipeline::GetDirectionalLightInfo()

@@ -20,7 +20,8 @@ namespace MyosotisFW::System::Render
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		void CreateShaderObject();
-
+		void UpdateDescriptors();
+		void Resize(const RenderResources_ptr& resources) override;
 	private:
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;

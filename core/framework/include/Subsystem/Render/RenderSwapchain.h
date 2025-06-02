@@ -22,7 +22,11 @@ namespace MyosotisFW::System::Render
 		void AcquireNextImage(VkSemaphore& presentCompleteSemaphore, uint32_t& imageIndex);
 		void QueuePresent(const VkQueue& queue, const uint32_t& imageIndex, const VkSemaphore& pWaitSemaphores);
 
+		void Resize(const VkSurfaceKHR& vkSurface);
+
 	private:
+		void createSwapchain(const VkSurfaceKHR& vkSurface);
+
 		RenderDevice_ptr m_device;
 		VkSwapchainKHR m_swapchain;
 

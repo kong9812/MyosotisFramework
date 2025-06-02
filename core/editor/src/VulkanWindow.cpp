@@ -76,11 +76,6 @@ namespace MyosotisFW::System::Editor
 			requestUpdate();
 			m_initialized = true;
 		}
-		else
-		{
-			m_gameDirector.reset();
-			m_renderSubsystem.reset();
-		}
 	}
 
 	void VulkanWindow::keyPressEvent(QKeyEvent* event)
@@ -100,9 +95,10 @@ namespace MyosotisFW::System::Editor
 			QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 			if ((mouseEvent->button() == Qt::MouseButton::LeftButton) && (m_resizing))
 			{
-				Initialize();
+				m_renderSubsystem->Resize(m_surface, width(), height());
 				requestUpdate();
 				m_initialized = false;
+				m_resizing = false;
 			}
 		}
 		return __super::eventFilter(watched, event);
@@ -124,6 +120,7 @@ namespace MyosotisFW::System::Editor
 		{
 			float currentTime = static_cast<float>(m_timer.elapsed()) / 1000.0f;
 			float deltaTime = currentTime - m_lastTime;
+			m_lastTime = currentTime;
 
 			UpdateData updateData{};
 			updateData.pause = false;

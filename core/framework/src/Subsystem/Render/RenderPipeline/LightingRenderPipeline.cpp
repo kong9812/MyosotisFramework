@@ -74,6 +74,11 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_lightingShaderObject.shaderBase.descriptorSet));
 
+		UpdateDescriptors(shadowMapImageInfo);
+	}
+
+	void LightingRenderPipeline::UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo)
+	{
 		// write descriptor set
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_positionDescriptorImageInfo),
@@ -84,6 +89,13 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 5, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_lightingShaderObject.lightUBO.buffer.descriptor),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+	}
+
+	void LightingRenderPipeline::Resize(const RenderResources_ptr& resources)
+	{
+		m_positionDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetPosition().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_normalDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetNormal().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_baseColorDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetBaseColor().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void LightingRenderPipeline::prepareDescriptors()

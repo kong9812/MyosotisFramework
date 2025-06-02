@@ -111,28 +111,7 @@ namespace MyosotisFW::System::Render
 		VkRenderPassCreateInfo renderPassInfo = Utility::Vulkan::CreateInfo::renderPassCreateInfo(attachments, dependencies, subpassDescriptions);
 		VK_VALIDATION(vkCreateRenderPass(*m_device, &renderPassInfo, m_device->GetAllocationCallbacks(), &m_renderPass));
 
-		{// StaticMesh pass
-			std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-			m_framebuffers.resize(1);
-
-			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
-			attachments[static_cast<uint32_t>(Attachments::LightingResultImage)] = m_resources->GetLightingResult().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = m_resources->GetPosition().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = m_resources->GetNormal().view;
-			attachments[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = m_resources->GetBaseColor().view;
-			attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = m_resources->GetDepthStencil().view;
-
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.pNext = NULL;
-			frameBufferCreateInfo.renderPass = m_renderPass;
-			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
-			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = m_width;
-			frameBufferCreateInfo.height = m_height;
-			frameBufferCreateInfo.layers = 1;
-			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
-		}
+		createFrameBuffers();
 	}
 
 	void MainRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
@@ -160,5 +139,29 @@ namespace MyosotisFW::System::Render
 	void MainRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdEndRenderPass(commandBuffer);
+	}
+
+	void MainRenderPass::createFrameBuffers()
+	{
+		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
+		m_framebuffers.resize(1);
+
+		attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
+		attachments[static_cast<uint32_t>(Attachments::LightingResultImage)] = m_resources->GetLightingResult().view;
+		attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = m_resources->GetPosition().view;
+		attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = m_resources->GetNormal().view;
+		attachments[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = m_resources->GetBaseColor().view;
+		attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = m_resources->GetDepthStencil().view;
+
+		VkFramebufferCreateInfo frameBufferCreateInfo = {};
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frameBufferCreateInfo.pNext = NULL;
+		frameBufferCreateInfo.renderPass = m_renderPass;
+		frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
+		frameBufferCreateInfo.pAttachments = attachments.data();
+		frameBufferCreateInfo.width = m_width;
+		frameBufferCreateInfo.height = m_height;
+		frameBufferCreateInfo.layers = 1;
+		VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
 	}
 }

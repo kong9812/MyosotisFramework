@@ -63,6 +63,7 @@ namespace MyosotisFW::System::Render
 			if (!m_mainCamera)
 			{
 				m_mainCamera = Camera::Object_CastToCameraBase(object);
+				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
 			}
 		}
 		break;
@@ -362,17 +363,56 @@ namespace MyosotisFW::System::Render
 		vkDeviceWaitIdle(*m_device);
 
 		// swapchain
-		m_swapchain.reset();
-		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
+		m_swapchain->Resize(surface);
+
+		// resources
+		m_resources->Resize(width, height);
 
 		// command buffers
 		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
+		{// render
+			m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
+			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_renderCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
+			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
+		}
+		{// compute
+			m_computeCommandBuffers.resize(1);	// Frustum Culler
+			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
+		}
 
 		if (m_mainCamera)
 		{
 			m_mainCamera->UpdateScreenSize(glm::vec2(width, height));
 		}
+
+		// Render Pass
+		m_shadowMapRenderPass->Resize(width, height);
+		m_mainRenderPass->Resize(width, height);
+		m_finalCompositionRenderPass->Resize(width, height);
+
+		// pipeline
+		m_skyboxRenderPipeline->Resize(m_resources);
+		m_shadowMapRenderPipeline->Resize(m_resources);
+		m_deferredRenderPipeline->Resize(m_resources);
+		m_lightingRenderPipeline->Resize(m_resources);
+		m_compositionRenderPipeline->Resize(m_resources);
+		m_finalCompositionRenderPipeline->Resize(m_resources);
+		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+
+		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
+			{
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
+				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+			}
+		}
+		m_currentBufferIndex = 0;
 
 		vkDeviceWaitIdle(*m_device);
 	}

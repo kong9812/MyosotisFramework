@@ -242,8 +242,6 @@ namespace MyosotisFW::System::Render
 		vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
 		VmaAllocatorCreateInfo allocatorCreateInfo{};
-		allocatorCreateInfo.flags = VmaAllocatorCreateFlagBits::VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
-		allocatorCreateInfo.vulkanApiVersion = AppInfo::g_apiVersion;
 		allocatorCreateInfo.physicalDevice = m_physicalDevice;
 		allocatorCreateInfo.device = m_device;
 		allocatorCreateInfo.instance = vkInstance;
