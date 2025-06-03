@@ -35,7 +35,7 @@ namespace MyosotisFW::System::Render
 			m_swapchain(nullptr),
 			m_resources(nullptr),
 			m_mainCamera(nullptr),
-			m_submitPipelineStages(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
+			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
 			m_renderCommandPool(VK_NULL_HANDLE),
 			m_computeCommandPool(VK_NULL_HANDLE),
 			m_currentBufferIndex(0),

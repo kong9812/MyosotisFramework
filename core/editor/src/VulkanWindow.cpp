@@ -75,6 +75,7 @@ namespace MyosotisFW::System::Editor
 			Initialize();
 			requestUpdate();
 			m_initialized = true;
+			m_resizing = false;
 		}
 	}
 
@@ -97,8 +98,14 @@ namespace MyosotisFW::System::Editor
 			{
 				m_renderSubsystem->Resize(m_surface, width(), height());
 				requestUpdate();
-				m_initialized = false;
 				m_resizing = false;
+			}
+			else if (event->type() == QEvent::Type::WindowStateChange)
+			{
+				m_renderSubsystem->Resize(m_surface, width(), height());
+				requestUpdate();
+				m_resizing = false;
+				return true;
 			}
 		}
 		return __super::eventFilter(watched, event);

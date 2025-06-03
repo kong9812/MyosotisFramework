@@ -42,7 +42,11 @@ namespace MyosotisFW::System::Render
 			presentInfo.pWaitSemaphores = &pWaitSemaphores;
 			presentInfo.waitSemaphoreCount = 1;
 		}
-		VK_VALIDATION(vkQueuePresentKHR(queue, &presentInfo));
+		VkResult result = vkQueuePresentKHR(queue, &presentInfo);
+		if (result != VkResult::VK_ERROR_OUT_OF_DATE_KHR)	// resize
+		{
+			VK_VALIDATION(result);
+		}
 	}
 
 	void RenderSwapchain::Resize(const VkSurfaceKHR& vkSurface)

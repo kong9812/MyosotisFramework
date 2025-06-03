@@ -360,7 +360,9 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
 	{
 		// デバイスの処理を待つ
-		vkDeviceWaitIdle(*m_device);
+		VK_VALIDATION(vkQueueWaitIdle(m_computeQueue));
+		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
+		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
 
 		// swapchain
 		m_swapchain->Resize(surface);
@@ -412,6 +414,7 @@ namespace MyosotisFW::System::Render
 				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
 			}
 		}
+		m_submitPipelineStages = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_currentBufferIndex = 0;
 
 		vkDeviceWaitIdle(*m_device);
