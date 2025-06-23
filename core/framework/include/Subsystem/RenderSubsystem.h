@@ -94,6 +94,8 @@ namespace MyosotisFW::System::Render
 		void initializeDebugUtils(const VkInstance& instance);
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
+		virtual void resizeRenderPass(const uint32_t& width, const uint32_t& height);
+		virtual void resizeRenderPipeline();
 
 	protected:
 		struct {

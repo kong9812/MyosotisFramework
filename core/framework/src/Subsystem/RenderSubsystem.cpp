@@ -390,30 +390,11 @@ namespace MyosotisFW::System::Render
 		}
 
 		// Render Pass
-		m_shadowMapRenderPass->Resize(width, height);
-		m_mainRenderPass->Resize(width, height);
-		m_finalCompositionRenderPass->Resize(width, height);
+		resizeRenderPass(width, height);
 
 		// pipeline
-		m_skyboxRenderPipeline->Resize(m_resources);
-		m_shadowMapRenderPipeline->Resize(m_resources);
-		m_deferredRenderPipeline->Resize(m_resources);
-		m_lightingRenderPipeline->Resize(m_resources);
-		m_compositionRenderPipeline->Resize(m_resources);
-		m_finalCompositionRenderPipeline->Resize(m_resources);
-		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+		resizeRenderPipeline();
 
-		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-
-		for (ObjectBase_ptr& object : m_objects)
-		{
-			if (IsStaticMesh(object->GetObjectType()))
-			{
-				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
-				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
-			}
-		}
 		m_submitPipelineStages = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_currentBufferIndex = 0;
 
@@ -611,5 +592,36 @@ namespace MyosotisFW::System::Render
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+	}
+
+	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	{
+		m_shadowMapRenderPass->Resize(width, height);
+		m_mainRenderPass->Resize(width, height);
+		m_finalCompositionRenderPass->Resize(width, height);
+	}
+
+	void RenderSubsystem::resizeRenderPipeline()
+	{
+		// update pipeline
+		m_skyboxRenderPipeline->Resize(m_resources);
+		m_shadowMapRenderPipeline->Resize(m_resources);
+		m_deferredRenderPipeline->Resize(m_resources);
+		m_lightingRenderPipeline->Resize(m_resources);
+		m_compositionRenderPipeline->Resize(m_resources);
+		m_finalCompositionRenderPipeline->Resize(m_resources);
+		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+
+		// update descriptors
+		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
+			{
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
+				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+			}
+		}
 	}
 }

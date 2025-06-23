@@ -9,7 +9,7 @@
 namespace MyosotisFW::System::Render
 {
 	DebugGUI::DebugGUI(
-		GLFWwindow& glfwWindow,
+		//GLFWwindow& glfwWindow,
 		VkInstance& instance,
 		RenderDevice_ptr renderDevice,
 		VkQueue& queue,
@@ -45,13 +45,13 @@ namespace MyosotisFW::System::Render
 		//initinfo.CheckVkResultFn =  // todo.
 
 		ImGui_ImplVulkan_Init(&initinfo);
-		ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
+		//ImGui_ImplGlfw_InitForVulkan(&glfwWindow, true);
 	}
 
 	DebugGUI::~DebugGUI()
 	{
 		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}
 
@@ -64,7 +64,7 @@ namespace MyosotisFW::System::Render
 	{
 #ifndef RELEASE
 		ImGuiIO& io = ImGui::GetIO();
-		ImGui_ImplGlfw_NewFrame();
+		//ImGui_ImplGlfw_NewFrame();
 		ImGui_ImplVulkan_NewFrame();
 		ImGui::NewFrame();
 #endif // !RELEASE

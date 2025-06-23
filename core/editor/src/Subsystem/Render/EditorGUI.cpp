@@ -44,10 +44,11 @@ namespace MyosotisFW::System::Render
 		ImGui_ImplVulkan_Init(&initinfo);
 	}
 
-	void EditorGUI::NewFrame()
+	void EditorGUI::Update(const UpdateData& updateData)
 	{
 		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		//ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
 		ImGui::SetNextWindowPos({ 0.0f, 0.0f });
@@ -62,7 +63,8 @@ namespace MyosotisFW::System::Render
 	EditorGUI::~EditorGUI()
 	{
 		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}
 }

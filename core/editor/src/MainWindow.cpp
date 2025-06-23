@@ -37,6 +37,18 @@ namespace MyosotisFW::System::Editor
 		if (!m_vulkanWindow) return;
 	}
 
+	void MainWindow::keyPressEvent(QKeyEvent* event)
+	{
+		m_vulkanWindow->keyPressEvent(event);
+		__super::keyPressEvent(event);
+	}
+
+	void MainWindow::keyReleaseEvent(QKeyEvent* event)
+	{
+		m_vulkanWindow->keyReleaseEvent(event);
+		__super::keyReleaseEvent(event);
+	}
+
 	void MainWindow::closeWindow()
 	{
 		close();

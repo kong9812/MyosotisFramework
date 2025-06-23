@@ -126,15 +126,18 @@ set(IMGUI_SOURCES
 
   ${imgui_SOURCES_DIR}/imconfig.h
   ${imgui_SOURCES_DIR}/imgui.h
+  ${imgui_SOURCES_DIR}/imgui_internal.h
   ${imgui_SOURCES_DIR}/imstb_rectpack.h
   ${imgui_SOURCES_DIR}/imstb_textedit.h
   ${imgui_SOURCES_DIR}/imstb_truetype.h
 
   ${imgui_SOURCES_DIR}/backends/imgui_impl_vulkan.cpp
-  ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.cpp
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_win32.cpp
+  # ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.cpp
 
   ${imgui_SOURCES_DIR}/backends/imgui_impl_vulkan.h
-  ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.h
+  ${imgui_SOURCES_DIR}/backends/imgui_impl_win32.h
+  # ${imgui_SOURCES_DIR}/backends/imgui_impl_glfw.h
 )
 
 # VMA(VulkanMemoryAllocator)

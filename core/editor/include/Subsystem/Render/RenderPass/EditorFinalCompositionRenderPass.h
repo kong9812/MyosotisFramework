@@ -29,6 +29,10 @@ namespace MyosotisFW::System::Render
 
 		void Initialize() override;
 		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) override;
+
+	private:
+		void createFrameBuffers() override;
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorFinalCompositionRenderPass)
 }

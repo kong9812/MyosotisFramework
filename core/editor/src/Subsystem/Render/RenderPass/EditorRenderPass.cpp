@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
+				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};

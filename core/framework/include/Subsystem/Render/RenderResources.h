@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 		std::vector<Mesh> GetMeshVertex(const std::string& fileName);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
-		void Resize(const uint32_t width, const uint32_t height);
+		virtual void Resize(const uint32_t width, const uint32_t height);
 
 	protected:
 		RenderDevice_ptr m_device;

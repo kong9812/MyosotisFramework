@@ -19,12 +19,13 @@ namespace MyosotisFW::System::Render
 
 		// EditorCameraの初期化
 		m_mainCamera = Camera::CreateEditorCameraPointer();
+		m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
 	}
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
 	{
-		m_editorGUI->NewFrame();
-		ImGui::ShowDemoWindow();
+		m_editorGUI->Update(updateData);
+		//ImGui::ShowDemoWindow();
 
 		ImGui::Begin("MainEditorWindow");
 #ifdef DEBUG
@@ -97,5 +98,37 @@ namespace MyosotisFW::System::Render
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+	}
+
+	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	{
+		m_shadowMapRenderPass->Resize(width, height);
+		m_mainRenderPass->Resize(width, height);
+		m_finalCompositionRenderPass->Resize(width, height);
+		m_editorRenderPass->Resize(width, height);
+	}
+
+	void EditorRenderSubsystem::resizeRenderPipeline()
+	{
+		// pipeline
+		m_skyboxRenderPipeline->Resize(m_resources);
+		m_shadowMapRenderPipeline->Resize(m_resources);
+		m_deferredRenderPipeline->Resize(m_resources);
+		m_lightingRenderPipeline->Resize(m_resources);
+		m_compositionRenderPipeline->Resize(m_resources);
+		m_finalCompositionRenderPipeline->Resize(m_resources);
+		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+
+		// update descriptors
+		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
+		for (ObjectBase_ptr& object : m_objects)
+		{
+			if (IsStaticMesh(object->GetObjectType()))
+			{
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
+				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+			}
+		}
 	}
 }

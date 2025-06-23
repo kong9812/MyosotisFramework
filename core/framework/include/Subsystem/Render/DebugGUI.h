@@ -13,7 +13,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		DebugGUI(
-			GLFWwindow& glfwWindow,
+			//GLFWwindow& glfwWindow,
 			VkInstance& instance,
 			RenderDevice_ptr renderDevice,
 			VkQueue& queue,

@@ -3,6 +3,8 @@
 #include "AppInfo.h"
 #include "VK_Validation.h"
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
+
 namespace MyosotisFW::System::Editor
 {
 	VulkanWindow::VulkanWindow(QWindow* parent) :
@@ -16,6 +18,7 @@ namespace MyosotisFW::System::Editor
 		m_lastTime(0.0f),
 		m_timer()
 	{
+		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
 		QCoreApplication::instance()->installEventFilter(this);
 	}
@@ -45,16 +48,24 @@ namespace MyosotisFW::System::Editor
 
 		// create surface
 #ifdef Q_OS_WIN
+		HWND hwnd = reinterpret_cast<HWND>(winId());
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.hwnd = reinterpret_cast<HWND>(winId());
+		surfaceCreateInfo.hwnd = hwnd;
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 		VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
 #endif
 
 		// create render subsystem
-		m_renderSubsystem = Render::CreateRenderSubsystemPointer();
+		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
 		m_renderSubsystem->Initialize(m_instance, m_surface);
+
+		// Imgui
+#ifdef _WIN32
+		ASSERT(ImGui_ImplWin32_Init(hwnd), "Failed to init imgui win32.");
+		ImGui::GetIO().WantCaptureKeyboard = true;
+		ImGui::GetIO().WantCaptureMouse = true;
+#endif
 
 		// create game director
 		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
@@ -86,7 +97,14 @@ namespace MyosotisFW::System::Editor
 		{
 			emit closeWindow();
 		}
+		m_keyActions.insert_or_assign(event->key(), GLFW_PRESS);
 		__super::keyPressEvent(event);
+	}
+
+	void VulkanWindow::keyReleaseEvent(QKeyEvent* event)
+	{
+		m_keyActions.insert_or_assign(event->key(), GLFW_RELEASE);
+		__super::keyReleaseEvent(event);
 	}
 
 	bool VulkanWindow::eventFilter(QObject* watched, QEvent* event)
@@ -121,6 +139,16 @@ namespace MyosotisFW::System::Editor
 		return __super::event(event);
 	}
 
+	bool VulkanWindow::nativeEvent(const QByteArray& eventType, void* message, qintptr* result)
+	{
+		if (m_initialized)
+		{
+			MSG* msg = static_cast<MSG*>(message);
+			ImGui_ImplWin32_WndProcHandlerEx(msg->hwnd, msg->message, msg->wParam, msg->lParam, ImGui::GetIO());
+		}
+		return __super::nativeEvent(eventType, message, result);
+	}
+
 	void VulkanWindow::updateRender()
 	{
 		if (!m_resizing)
@@ -133,12 +161,17 @@ namespace MyosotisFW::System::Editor
 			updateData.pause = false;
 			updateData.deltaTime = deltaTime;
 			updateData.screenSize = glm::vec2(static_cast<float>(width()), static_cast<float>(height()));
+
+			QPoint globalPos = QCursor::pos();
+			QPointF localPos = mapFromGlobal(globalPos);
+			updateData.mousePos = glm::vec2(static_cast<float>(localPos.x(), static_cast<float>(localPos.y())));
 			m_renderSubsystem->Update(updateData);
 
 			m_renderSubsystem->BeginRender();
 			m_renderSubsystem->Compute();
 			m_renderSubsystem->ShadowRender();
 			m_renderSubsystem->MainRender();
+			m_renderSubsystem->EditorRender();
 			m_renderSubsystem->FinalCompositionRender();
 			m_renderSubsystem->EndRender();
 		}

@@ -26,4 +26,13 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_editorRenderTarget.view));
 		}
 	}
+
+	void EditorRenderResources::Resize(const uint32_t width, const uint32_t height)
+	{
+		{// attachment
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_editorRenderTarget.image, m_editorRenderTarget.allocation);
+			vkDestroyImageView(*m_device, m_editorRenderTarget.view, m_device->GetAllocationCallbacks());
+		}
+		__super::Resize(width, height);
+	}
 }

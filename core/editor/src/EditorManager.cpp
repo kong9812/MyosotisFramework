@@ -32,7 +32,7 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
 		m_renderSubsystem->Initialize(m_instance, m_surface);
-		ImGui_ImplGlfw_InitForVulkan(window, true);
+		//ImGui_ImplGlfw_InitForVulkan(window, true);
 	}
 
 	void EditorManager::initializeGameDirector()
