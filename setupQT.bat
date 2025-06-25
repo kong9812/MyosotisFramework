@@ -12,7 +12,6 @@ if not exist "%QT_BUILD_DIR%" (
 
     :: Clone Qt source if not already present
     if not exist "%QT_SRC_DIR%" (
-        echo Cloning Qt source into %QT_SRC_DIR%
         mkdir "%QT_SRC_DIR%"
         :: Hide the folder
         attrib +h "%QT_SRC_DIR%"

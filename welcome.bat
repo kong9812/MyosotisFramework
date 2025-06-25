@@ -9,7 +9,7 @@ if %ERRORLEVEL% EQU 0 (
     echo Git is installed.
 ) else (
     echo Start install git.
-    :: なければインストール
+    :: go install
     winget install --id Git.Git -e --source winget
 )
 
@@ -19,7 +19,7 @@ if %ERRORLEVEL% EQU 0 (
     echo Cmake is installed.
 ) else (
     echo Start install cmake.
-    :: なければインストール
+    :: go install
     winget install --id Kitware.CMake --source winget
 )
 
@@ -29,7 +29,7 @@ if %ERRORLEVEL% EQU 0 (
     echo Microsoft.VisualStudio.Locator is installed.
 ) else (
     echo Start install Microsoft.VisualStudio.Locator.
-    :: なければインストール
+    :: go install
     winget install --id Microsoft.VisualStudio.Locator -e --source winget
 )
 
@@ -39,7 +39,7 @@ if %ERRORLEVEL% EQU 0 (
     echo Ninja is installed.
 ) else (
     echo Start install Ninja.
-    :: なければインストール
+    :: go install
     winget install --id Ninja-build.Ninja -e --source winget
 )
 
@@ -67,5 +67,5 @@ call "tools\vs22BuildMyosotis_release.bat"
 popd
 
 echo welcome!!
-pause
+if not defined SKIP_PAUSE pause 
 endlocal

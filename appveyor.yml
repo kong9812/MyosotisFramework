@@ -17,6 +17,7 @@ environment:
   VK_SDK_PATH: C:\VulkanSDK\1.4.304.0
   Vulkan_INCLUDE_DIR: C:\VulkanSDK\1.4.304.0\include  # Vulkanヘッダファイルのパス
   Vulkan_LIBRARY: C:\VulkanSDK\1.4.304.0\Lib\vulkan-1.lib  # Vulkanライブラリのパス
+  SKIP_PAUSE: 1 # bat停止の回避策
 
 # 必要なツールのインストール
 install:
@@ -26,11 +27,11 @@ install:
       Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/1.4.304.0/windows/vulkan-sdk -OutFile vulkan_sdk.exe
       ./vulkan_sdk.exe --accept-licenses --default-answer --confirm-command install
       Remove-Item vulkan_sdk.exe -Force
+      $env:PATH = "C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\VulkanSDK\1.4.304.0\Bin;$env:PATH"
+      git config --global advice.detachedHead false
 
 before_build:
-  # CMakeでビルド
-  - ps: |
-      .\welcome.bat
+  - cmd: .\welcome.bat
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）

@@ -3,17 +3,16 @@ chcp 65001
 :: Copyright (c) 2025 kong9812
 setlocal
 
-:: カレントディレクトリを使用
+:: Use current directory
 set "SHADER_DIR=%cd%\core\resources\shaders"
 
-:: 出力ディレクトリ（SPIR-Vファイルを保存）
+:: Output directory for SPIR-V files
 set "OUTPUT_DIR=%SHADER_DIR%\spv"
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 
-:: .vert と .frag ファイルを全て検索して変換
+:: Convert all .vert, .frag, and .comp shader files
 echo Converting shaders in %SHADER_DIR%...
 
-:: .vert .frag .comp  ファイルの変換
 for /r "%SHADER_DIR%" %%f in (*.vert *.frag *.comp) do (
     echo Converting: %%f
     glslangValidator -V "%%f" -o "%OUTPUT_DIR%\%%~nxf.spv"
