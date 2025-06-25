@@ -74,6 +74,7 @@ namespace MyosotisFW::System::Render
 	{
 		//std::vector<Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
 		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.m_meshPath);
+		bool firstDataForAABB = true;
 
 		for (int i = 0; i < LOD::Max; i++)
 		{
@@ -107,6 +108,27 @@ namespace MyosotisFW::System::Render
 					memcpy(data, meshes[meshIdx].index.data(), bufferCreateInfo.size);
 					vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][meshIdx].allocation);
 
+				}
+
+				{// aabb
+					if (firstDataForAABB)
+					{
+						m_aabbMin.x = meshes[meshIdx].min.x;
+						m_aabbMin.y = meshes[meshIdx].min.y;
+						m_aabbMin.z = meshes[meshIdx].min.z;
+						m_aabbMax.x = meshes[meshIdx].max.x;
+						m_aabbMax.y = meshes[meshIdx].max.y;
+						m_aabbMax.z = meshes[meshIdx].max.z;
+					}
+					else
+					{
+						m_aabbMin.x = m_aabbMin.x < meshes[meshIdx].min.x ? m_aabbMin.x : meshes[meshIdx].min.x;
+						m_aabbMin.y = m_aabbMin.y < meshes[meshIdx].min.y ? m_aabbMin.y : meshes[meshIdx].min.y;
+						m_aabbMin.z = m_aabbMin.z < meshes[meshIdx].min.z ? m_aabbMin.z : meshes[meshIdx].min.z;
+						m_aabbMax.x = m_aabbMax.x > meshes[meshIdx].max.x ? m_aabbMax.x : meshes[meshIdx].max.x;
+						m_aabbMax.y = m_aabbMax.y > meshes[meshIdx].max.y ? m_aabbMax.y : meshes[meshIdx].max.y;
+						m_aabbMax.z = m_aabbMax.z > meshes[meshIdx].max.z ? m_aabbMax.z : meshes[meshIdx].max.z;
+					}
 				}
 			}
 		}

@@ -76,7 +76,8 @@ namespace MyosotisFW::System::Render::Shape
 			16, 17,	18,	16,	18,	19,	// 右面
 			20, 22,	21,	20,	23,	22	// 左面
 		};
-
+		mesh.min = center - glm::vec3(halfSize);
+		mesh.max = center + glm::vec3(halfSize);
 		return mesh;
 	}
 
@@ -87,14 +88,16 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
 			// 上面 (0, 1, 0)
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
-			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
+			-halfSize + center.x,  center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
+			 halfSize + center.x,  center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
+			 halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
+			-halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
 		};
 		mesh.index = {
-			0,	2,	1,	0,	3,	2,	// 前面
+			0,	2,	1,	0,	3,	2,	// 上面
 		};
+		mesh.min = center - glm::vec3(halfSize, 0.0f, halfSize);
+		mesh.max = center + glm::vec3(halfSize, 0.0f, halfSize);
 		return mesh;
 	}
 
@@ -130,6 +133,8 @@ namespace MyosotisFW::System::Render::Shape
 				color.r, color.g, color.b, color.a });
 			mesh.index.insert(mesh.index.end(), { 0, i, idx });
 		}
+		mesh.min = center - glm::vec3(radius, radius, 0.0f);
+		mesh.max = center + glm::vec3(radius, radius, 0.0f);
 		return mesh;
 	}
 
@@ -172,6 +177,8 @@ namespace MyosotisFW::System::Render::Shape
 				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 2, idx + side + 1 });
 			}
 		}
+		mesh.min = center - glm::vec3(radius);
+		mesh.max = center + glm::vec3(radius);
 		return mesh;
 	}
 

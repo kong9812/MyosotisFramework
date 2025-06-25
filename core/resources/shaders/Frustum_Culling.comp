@@ -4,37 +4,47 @@ layout(std140, binding = 0) uniform FrustumPlanes {
     vec4 planes[6];
 } frustumPlanes;
 
-// [SSBO 1]オブジェクトデータ
-layout(std430, binding = 1) readonly buffer ObjectData {
-    vec4 objects[];  // (x, y, z, radius)
-} objectData;
+// [SSBO 1] Min
+layout(std430, binding = 1) readonly buffer MinPosition {
+    vec4 minPosition[];  // (x, y, z, 0)
+};
 
-// [SSBO 2]可視オブジェクトのインデックス
-layout(std430, binding = 2) buffer VisibleObjects {
+// [SSBO 2] Max
+layout(std430, binding = 2) readonly buffer MaxPosition {
+    vec4 maxPosition[];  // (x, y, z, 0)
+};
+
+// [SSBO 3]可視オブジェクトのインデックス
+layout(std430, binding = 3) buffer VisibleObjects {
     uint visibleIndices[];
-} visibleObjects;
+};
 
 void main() 
 {
     uint id = gl_GlobalInvocationID.x;
-    vec3 center = objectData.objects[id].xyz;
-    float radius = objectData.objects[id].w;
-    visibleObjects.visibleIndices[id] = 0;
+    vec3 aabbMin = minPosition[id].xyz;
+    vec3 aabbMax = maxPosition[id].xyz;
 
-    // 画面に入ってるかどうかをチェック
-    bool inside = true;
+    // Frustum Culling判定 (AABB)
+    bool visible = true;
     for (int i = 0; i < 6; i++) 
     {
-        if (dot(frustumPlanes.planes[i].xyz, center) + frustumPlanes.planes[i].w < -radius) 
+        vec4 plane = frustumPlanes.planes[i];
+        // AABBの最も外側の点を求める
+        vec3 pVertex = vec3(
+            (plane.x >= 0.0) ? aabbMax.x : aabbMin.x,
+            (plane.y >= 0.0) ? aabbMax.y : aabbMin.y,
+            (plane.z >= 0.0) ? aabbMax.z : aabbMin.z           
+        );
+        if (dot(plane.xyz, pVertex) + plane.w < 0.0) 
         {
-            inside = false;
+            visible = false;
             break;
         }
     }
-
     // 画面に入ってる
-    if (inside) 
+    if (visible) 
     {
-        visibleObjects.visibleIndices[id] = 1;
+        visibleIndices[id] = 1;
     }
 }

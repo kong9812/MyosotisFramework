@@ -19,6 +19,8 @@ namespace MyosotisFW::System::Editor
 
 		void keyPressEvent(QKeyEvent* event) override;
 		void keyReleaseEvent(QKeyEvent* event) override;
+		void mousePressEvent(QMouseEvent* event) override;
+		void mouseReleaseEvent(QMouseEvent* event) override;
 
 	protected:
 		bool eventFilter(QObject* watched, QEvent* event) override;
@@ -42,7 +44,6 @@ namespace MyosotisFW::System::Editor
 		// 入力
 		std::unordered_map<int, int> m_keyActions;
 		std::unordered_map<int, int> m_mouseButtonActions;
-		glm::vec2 m_mousePos;
 
 	signals:
 		void closeWindow();

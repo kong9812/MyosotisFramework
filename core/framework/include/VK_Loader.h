@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <fstream>
 #include <vector>
+#include <chrono>
 
 #include "iRapidJson.h"
 #include "iofbx.h"
@@ -17,6 +18,10 @@
 namespace Utility::Loader {
 	inline VkShaderModule loadShader(VkDevice device, std::string fileName, const VkAllocationCallbacks* pAllocator = nullptr)
 	{
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] Start load: " + fileName);
+		auto start = std::chrono::high_resolution_clock::now();
+#endif
 		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_shaderFolder + fileName);
 
 		std::ifstream file(absolutePath.string().c_str(), std::ios::ate | std::ios::binary);
@@ -35,6 +40,10 @@ namespace Utility::Loader {
 
 		VkShaderModule shaderModule{};
 		VK_VALIDATION(vkCreateShaderModule(device, &shaderModuleCreateInfo, pAllocator, &shaderModule));
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] End load: " + fileName +
+			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
+#endif
 		return shaderModule;
 	}
 
@@ -95,6 +104,11 @@ namespace Utility::Loader {
 
 	inline std::vector<MyosotisFW::Mesh> loadFbx(std::string fileName)
 	{
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] Start load: " + fileName);
+		auto start = std::chrono::high_resolution_clock::now();
+#endif
+
 		std::ifstream file(MyosotisFW::AppInfo::g_modelFolder + fileName, std::ios::ate | std::ios::binary);
 		ASSERT(file.is_open(), "Failed to open fbx file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
 		size_t fileSize = static_cast<size_t>(file.tellg());
@@ -116,6 +130,7 @@ namespace Utility::Loader {
 		for (uint32_t meshIdx = 0; meshIdx < meshCount; meshIdx++)
 		{
 			MyosotisFW::Mesh meshData{};
+			bool firstDataForAABB = true;
 			const ofbx::Mesh* mesh = scene->getMesh(meshIdx);
 			const ofbx::GeometryData& geomData = mesh->getGeometryData();
 			const ofbx::Vec3Attributes positions = geomData.getPositions();
@@ -138,6 +153,26 @@ namespace Utility::Loader {
 						meshData.vertex.push_back(1.0f);
 						meshData.vertex.push_back(1.0f);
 						meshData.vertex.push_back(1.0f);
+
+						// aabb
+						if (firstDataForAABB)
+						{
+							meshData.min.x = v.x;
+							meshData.min.y = v.y;
+							meshData.min.z = v.z;
+							meshData.max.x = v.x;
+							meshData.max.y = v.y;
+							meshData.max.z = v.z;
+						}
+						else
+						{
+							meshData.min.x = meshData.min.x < v.x ? meshData.min.x : v.x;
+							meshData.min.y = meshData.min.y < v.y ? meshData.min.y : v.y;
+							meshData.min.z = meshData.min.z < v.z ? meshData.min.z : v.z;
+							meshData.max.x = meshData.max.x > v.x ? meshData.max.x : v.x;
+							meshData.max.y = meshData.max.y > v.y ? meshData.max.y : v.y;
+							meshData.max.z = meshData.max.z > v.z ? meshData.max.z : v.z;
+						}
 					}
 				}
 
@@ -151,6 +186,10 @@ namespace Utility::Loader {
 			meshes.push_back(meshData);
 		}
 		scene->destroy();
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] End load: " + fileName +
+			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
+#endif
 		return meshes;
 	}
 

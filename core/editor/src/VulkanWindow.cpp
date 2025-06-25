@@ -2,6 +2,7 @@
 #include "VulkanWindow.h"
 #include "AppInfo.h"
 #include "VK_Validation.h"
+#include "KeyConverter.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 
@@ -21,6 +22,9 @@ namespace MyosotisFW::System::Editor
 		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
 		QCoreApplication::instance()->installEventFilter(this);
+
+		// KeyConverter初期化
+		KeyConverter::Instance();
 	}
 
 	VulkanWindow::~VulkanWindow()
@@ -97,14 +101,48 @@ namespace MyosotisFW::System::Editor
 		{
 			emit closeWindow();
 		}
-		m_keyActions.insert_or_assign(event->key(), GLFW_PRESS);
+		int glfwKey = KeyConverter::Instance().QtToGlfw(event->key());
+		auto key = m_keyActions.find(glfwKey);
+		if (key != m_keyActions.end())
+		{
+			// 既に存在
+			m_keyActions[glfwKey] = GLFW_REPEAT;
+		}
+		else
+		{
+			// 新規
+			m_keyActions.insert_or_assign(glfwKey, GLFW_PRESS);
+		}
 		__super::keyPressEvent(event);
 	}
 
 	void VulkanWindow::keyReleaseEvent(QKeyEvent* event)
 	{
-		m_keyActions.insert_or_assign(event->key(), GLFW_RELEASE);
+		m_keyActions.insert_or_assign(KeyConverter::Instance().QtToGlfw(event->key()), GLFW_RELEASE);
 		__super::keyReleaseEvent(event);
+	}
+
+	void VulkanWindow::mousePressEvent(QMouseEvent* event)
+	{
+		int glfwKey = KeyConverter::Instance().QtToGlfwMouse(event->button());
+		auto key = m_mouseButtonActions.find(glfwKey);
+		if (key != m_mouseButtonActions.end())
+		{
+			// 既に存在
+			m_mouseButtonActions[glfwKey] = GLFW_REPEAT;
+		}
+		else
+		{
+			// 新規
+			m_mouseButtonActions.insert_or_assign(glfwKey, GLFW_PRESS);
+		}
+		__super::mousePressEvent(event);
+	}
+
+	void VulkanWindow::mouseReleaseEvent(QMouseEvent* event)
+	{
+		m_mouseButtonActions.insert_or_assign(KeyConverter::Instance().QtToGlfwMouse(event->button()), GLFW_RELEASE);
+		__super::mouseReleaseEvent(event);
 	}
 
 	bool VulkanWindow::eventFilter(QObject* watched, QEvent* event)
@@ -164,7 +202,9 @@ namespace MyosotisFW::System::Editor
 
 			QPoint globalPos = QCursor::pos();
 			QPointF localPos = mapFromGlobal(globalPos);
-			updateData.mousePos = glm::vec2(static_cast<float>(localPos.x(), static_cast<float>(localPos.y())));
+			updateData.mousePos = glm::vec2(static_cast<float>(localPos.x()), static_cast<float>(localPos.y()));
+			updateData.mouseButtonActions = m_mouseButtonActions;
+			updateData.keyActions = m_keyActions;
 			m_renderSubsystem->Update(updateData);
 
 			m_renderSubsystem->BeginRender();
@@ -176,5 +216,29 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->EndRender();
 		}
 		requestUpdate();
+
+		// 後片付け
+		for (auto it = m_keyActions.begin(); it != m_keyActions.end();)
+		{
+			if (it->second == GLFW_RELEASE)
+			{
+				it = m_keyActions.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto it = m_mouseButtonActions.begin(); it != m_mouseButtonActions.end();)
+		{
+			if (it->second == GLFW_RELEASE)
+			{
+				it = m_mouseButtonActions.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
 	}
 }

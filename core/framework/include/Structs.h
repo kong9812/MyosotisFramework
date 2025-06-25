@@ -59,6 +59,8 @@ namespace MyosotisFW
 	{
 		std::vector<float> vertex;
 		std::vector<uint32_t> index;
+		glm::vec3 min;
+		glm::vec3 max;
 	}Mesh;
 
 	typedef struct
@@ -114,9 +116,17 @@ namespace MyosotisFW
 			Buffer buffer;
 			struct
 			{
-				std::vector<glm::vec4> objects;	// (x, y, z, radius)
+				std::vector<glm::vec4> objects;	// (x, y, z, 0)
 			}data;
-		}objectDataSSBO;						// SSBO
+		}objectMinSSBO;						// SSBO
+		struct
+		{
+			Buffer buffer;
+			struct
+			{
+				std::vector<glm::vec4> objects;	// (x, y, z, 0)
+			}data;
+		}objectMaxSSBO;						// SSBO
 
 		struct
 		{

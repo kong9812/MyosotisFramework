@@ -67,6 +67,7 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::loadAssets()
 	{
 		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape, 5.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+		bool firstDataForAABB = true;
 
 		for (int i = 0; i < LOD::Max; i++)
 		{
@@ -100,6 +101,26 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
+		{// aabb
+			if (firstDataForAABB)
+			{
+				m_aabbMin.x = vertex.min.x;
+				m_aabbMin.y = vertex.min.y;
+				m_aabbMin.z = vertex.min.z;
+				m_aabbMax.x = vertex.max.x;
+				m_aabbMax.y = vertex.max.y;
+				m_aabbMax.z = vertex.max.z;
+			}
+			else
+			{
+				m_aabbMin.x = m_aabbMin.x < vertex.min.x ? m_aabbMin.x : vertex.min.x;
+				m_aabbMin.y = m_aabbMin.y < vertex.min.y ? m_aabbMin.y : vertex.min.y;
+				m_aabbMin.z = m_aabbMin.z < vertex.min.z ? m_aabbMin.z : vertex.min.z;
+				m_aabbMax.x = m_aabbMax.x > vertex.max.x ? m_aabbMax.x : vertex.max.x;
+				m_aabbMax.y = m_aabbMax.y > vertex.max.y ? m_aabbMax.y : vertex.max.y;
+				m_aabbMax.z = m_aabbMax.z > vertex.max.z ? m_aabbMax.z : vertex.max.z;
+			}
+		}
 		// 実験
 		m_staticMeshShaderObject.standardUBO.useNormalMap = true;
 		m_staticMeshShaderObject.standardUBO.normalMap = m_resources->GetImage("NormalMap.png");

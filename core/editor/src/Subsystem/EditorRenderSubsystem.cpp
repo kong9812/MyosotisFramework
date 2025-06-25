@@ -36,6 +36,9 @@ namespace MyosotisFW::System::Render
 		ImGui::Text("Model: Release");
 #endif
 		ImGui::Text("FPS: %.2f(%.2fms)", (1.0f / updateData.deltaTime), updateData.deltaTime * 1000.0f);
+		ImGui::Text("Mouse Pos: %.2f %.2f", updateData.mousePos.x, updateData.mousePos.y);
+		ImGui::Text("Pressed key count (Keyboard): %d", updateData.keyActions.size());
+		ImGui::Text("Pressed key count (Mouse): %d", updateData.mouseButtonActions.size());
 		ImGui::End();
 
 		__super::Update(updateData);

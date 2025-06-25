@@ -204,6 +204,13 @@ GroupSourcesByFolder(${FRAMEWORK_SOURCES})
 add_library(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES} ${APP_INFO_RC})
 AddIncludeDirectories(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES})
 
+# build switch
+target_compile_definitions(${FRAMEWORK_PROJECT_NAME} PRIVATE
+  $<$<CONFIG:Debug>:DEBUG>
+  $<$<CONFIG:FWDLL>:FWDLL>
+  $<$<CONFIG:Release>:RELEASE>
+)
+
 # glfw
 target_link_libraries(${FRAMEWORK_PROJECT_NAME} PRIVATE glfw)
 # glm
