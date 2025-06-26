@@ -50,9 +50,9 @@ set_target_properties(${EDITOR_PROJECT_NAME} PROPERTIES
 
 # build switch
 target_compile_definitions(${EDITOR_PROJECT_NAME} PRIVATE
-  $<$<CONFIG:Debug>:DEBUG>
-  $<$<CONFIG:FWDLL>:FWDLL>
-  $<$<CONFIG:Release>:RELEASE>
+  $<$<CONFIG:Debug>:DEBUG;EDITOR>
+  $<$<CONFIG:FWDLL>:FWDLL;EDITOR>
+  $<$<CONFIG:Release>:RELEASE;EDITOR>
 )
 
 # FWDLL構成にデバッグ用のフラグを設定

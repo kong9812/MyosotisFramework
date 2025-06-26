@@ -308,7 +308,7 @@ namespace MyosotisFW::System::Render
 				staticMesh->BindCommandBuffer(currentCommandBuffer);
 			}
 		}
-#ifdef DEBUG
+#ifdef EDITOR
 		ImGui::Begin("MainEditorWindow");
 		ImGui::Text("Rendered StaticMeshes: %d", renderdStaticMesh);
 		ImGui::End();
