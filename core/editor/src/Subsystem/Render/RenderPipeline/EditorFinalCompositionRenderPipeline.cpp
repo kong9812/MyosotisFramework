@@ -43,6 +43,7 @@ namespace MyosotisFW::System::Render
 	{
 		m_mainRenderTargetDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetMainRenderTarget().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_editorRenderTargetDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, std::dynamic_pointer_cast<EditorRenderResources>(resources)->GetEditorRenderTarget().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		UpdateDescriptors();
 	}
 
 	void EditorFinalCompositionRenderPipeline::prepareDescriptors()

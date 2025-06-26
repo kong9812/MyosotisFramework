@@ -59,15 +59,15 @@ namespace MyosotisFW::System::Render
 		std::vector<VkClearValue> clearValues(1);
 		clearValues[0] = AppInfo::g_depthClearValues;
 
-		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
+		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_width), static_cast<float>(m_height));
+		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(AppInfo::g_shadowMapSize), static_cast<float>(AppInfo::g_shadowMapSize));
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_width, m_height);
+		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 		vkCmdSetDepthBias(commandBuffer, 2.25f, 0.0f, 2.75f);

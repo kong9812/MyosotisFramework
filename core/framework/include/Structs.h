@@ -94,6 +94,20 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		glm::vec4 min;
+		glm::vec4 max;
+	}AABBData;
+
+	typedef struct
+	{
+		glm::vec4 center;
+		glm::vec4 axisX;
+		glm::vec4 axisY;
+		glm::vec4 axisZ;
+	}OBBData;
+
+	typedef struct
+	{
 		struct
 		{
 			VkDescriptorSet descriptorSet;
@@ -116,17 +130,9 @@ namespace MyosotisFW
 			Buffer buffer;
 			struct
 			{
-				std::vector<glm::vec4> objects;	// (x, y, z, 0)
+				std::vector<OBBData> obbDatas;
 			}data;
-		}objectMinSSBO;						// SSBO
-		struct
-		{
-			Buffer buffer;
-			struct
-			{
-				std::vector<glm::vec4> objects;	// (x, y, z, 0)
-			}data;
-		}objectMaxSSBO;						// SSBO
+		}obbDatasSSBO;						// SSBO
 
 		struct
 		{

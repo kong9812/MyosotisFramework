@@ -113,4 +113,24 @@ namespace MyosotisFW::System::Render
 			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
 		}
 	}
+
+	OBBData StaticMesh::GetWorldOBBData()
+	{
+		OBBData obbData{};
+
+		glm::vec3 localExtent = (m_aabbMax - m_aabbMin) * 0.5f;		// ローカルAABBの半径
+		glm::vec3 centerLocal = (m_aabbMax + m_aabbMin) * 0.5f;		// ローカルAABBの中心
+		glm::vec3 scaleExtent = localExtent * m_transfrom.scale;	// スケール適用
+
+		// 回転を適用
+		glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transfrom.rot)));
+		obbData.axisX = glm::vec4(rotMat * glm::vec3(1.0f, 0.0f, 0.0f), scaleExtent.x);
+		obbData.axisY = glm::vec4(rotMat * glm::vec3(0.0f, 1.0f, 0.0f), scaleExtent.y);
+		obbData.axisZ = glm::vec4(rotMat * glm::vec3(0.0f, 0.0f, 1.0f), scaleExtent.z);
+
+		// OBBの中心 (ワールド空間)
+		obbData.center = glm::vec4(m_transfrom.pos + rotMat * (centerLocal * m_transfrom.scale), 0.0f);
+
+		return obbData;
+	}
 }

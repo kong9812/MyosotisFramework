@@ -2,41 +2,42 @@
 // [UBO 0]視錐台平面情報
 layout(std140, binding = 0) uniform FrustumPlanes {
     vec4 planes[6];
-} frustumPlanes;
+};
 
 // [SSBO 1] Min
-layout(std430, binding = 1) readonly buffer MinPosition {
-    vec4 minPosition[];  // (x, y, z, 0)
+struct OBBData {
+    vec4 center;
+    vec4 axisX;
+    vec4 axisY;
+    vec4 axisZ;
+};
+layout(std430, binding = 1) readonly buffer OBBDatas {
+    OBBData obbData[];
 };
 
-// [SSBO 2] Max
-layout(std430, binding = 2) readonly buffer MaxPosition {
-    vec4 maxPosition[];  // (x, y, z, 0)
-};
-
-// [SSBO 3]可視オブジェクトのインデックス
-layout(std430, binding = 3) buffer VisibleObjects {
+// [SSBO 2]可視オブジェクトのインデックス
+layout(std430, binding = 2) buffer VisibleObjects {
     uint visibleIndices[];
 };
 
 void main() 
 {
     uint id = gl_GlobalInvocationID.x;
-    vec3 aabbMin = minPosition[id].xyz;
-    vec3 aabbMax = maxPosition[id].xyz;
+    OBBData obb = obbData[id];
 
-    // Frustum Culling判定 (AABB)
+    // Frustum Culling判定 (OBB)
     bool visible = true;
     for (int i = 0; i < 6; i++) 
     {
-        vec4 plane = frustumPlanes.planes[i];
-        // AABBの最も外側の点を求める
-        vec3 pVertex = vec3(
-            (plane.x >= 0.0) ? aabbMax.x : aabbMin.x,
-            (plane.y >= 0.0) ? aabbMax.y : aabbMin.y,
-            (plane.z >= 0.0) ? aabbMax.z : aabbMin.z           
-        );
-        if (dot(plane.xyz, pVertex) + plane.w < 0.0) 
+        vec4 plane = planes[i];
+        // OBB中心から平面までの距離
+        float d = dot(plane.xyz, obb.center.xyz) + plane.w;
+        // OBB各軸を平面法線に投影した長さの合計が半径
+        float r = 
+            abs(dot(plane.xyz, obb.axisX.xyz)) * obb.axisX.w +
+            abs(dot(plane.xyz, obb.axisY.xyz)) * obb.axisY.w +
+            abs(dot(plane.xyz, obb.axisZ.xyz)) * obb.axisZ.w;
+        if (d + r < 0.0) 
         {
             visible = false;
             break;

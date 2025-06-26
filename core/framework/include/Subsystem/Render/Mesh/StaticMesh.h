@@ -51,6 +51,7 @@ namespace MyosotisFW::System::Render
 		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
 		glm::vec3 GetWorldAABBMin() { return (m_aabbMin + m_transfrom.pos) * m_transfrom.scale; }
 		glm::vec3 GetWorldAABBMax() { return (m_aabbMax + m_transfrom.pos) * m_transfrom.scale; }
+		OBBData GetWorldOBBData();
 
 	protected:
 		virtual void loadAssets() {};
