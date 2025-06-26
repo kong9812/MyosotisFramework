@@ -278,7 +278,7 @@ namespace MyosotisFW::System::Render
 
 		std::vector<TransparentStaticMesh> staticMeshes{};
 		uint32_t staticMeshCounter = 0;
-#ifdef DEBUG
+#ifdef EDITOR
 		uint32_t renderdStaticMesh = 0;
 #endif
 		for (ObjectBase_ptr& object : m_objects)
@@ -291,7 +291,7 @@ namespace MyosotisFW::System::Render
 
 					// Zソート(簡易)
 					staticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
-#ifdef DEBUG
+#ifdef EDITOR
 					renderdStaticMesh++;
 #endif
 				}
