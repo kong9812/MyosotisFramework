@@ -29,8 +29,14 @@ install:
       Remove-Item vulkan_sdk.exe -Force
       $env:PATH = "C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\VulkanSDK\1.4.304.0\Bin;$env:PATH"
       git config --global advice.detachedHead false
+      
 
 before_build:
+  - cmd: echo Creating qt folder and linking to Qt 6.8.1...
+  - cmd: if not exist qt mkdir qt
+  - cmd: if not exist qt\qtbase mklink /J qt\qtbase "C:\Qt\6.8.1\msvc2022_64"
+  - cmd: echo Done setting up qt/qtbase link.
+  - cmd: echo Running welcome.bat...
   - cmd: .\welcome.bat
 
 after_build:
