@@ -21,6 +21,7 @@ namespace MyosotisFW::System::Editor
 		void keyReleaseEvent(QKeyEvent* event) override;
 		void mousePressEvent(QMouseEvent* event) override;
 		void mouseReleaseEvent(QMouseEvent* event) override;
+		void mouseMoveEvent(QMouseEvent* event) override;
 
 	protected:
 		bool eventFilter(QObject* watched, QEvent* event) override;
@@ -29,6 +30,7 @@ namespace MyosotisFW::System::Editor
 
 	private:
 		void updateRender();
+		void objectSelect();
 
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;
@@ -44,6 +46,7 @@ namespace MyosotisFW::System::Editor
 		// 入力
 		std::unordered_map<int, int> m_keyActions;
 		std::unordered_map<int, int> m_mouseButtonActions;
+		bool m_mouseDragging;
 
 	signals:
 		void closeWindow();

@@ -75,6 +75,7 @@ namespace MyosotisFW::System::Render
 				//m_currentLOD = LOD::Hide;
 			}
 		}
+		m_staticMeshShaderObject.standardUBO.data.renderID = m_renderID;
 	}
 
 	void StaticMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)

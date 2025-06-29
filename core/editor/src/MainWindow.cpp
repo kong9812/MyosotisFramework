@@ -1,6 +1,8 @@
 // Copyright (c) 2025 kong9812
 #include "MainWindow.h"
 #include "Appinfo.h"
+#include "KeyConverter.h"
+#include "ThreadPool.h"
 
 namespace MyosotisFW::System::Editor
 {
@@ -10,6 +12,12 @@ namespace MyosotisFW::System::Editor
 		m_contentBrowser(new ContentBrowserDockWidget(this)),
 		m_logger(new LoggerDockWidget(this))
 	{
+		// KeyConverterインスタンス作成
+		KeyConverter::Instance();
+
+		// ThreadPoolインスタンス作成
+		ThreadPool::Instance();
+
 		setWindowIcon(QIcon(AppInfo::g_applicationIcon));
 		setAccessibleName(AppInfo::g_applicationName);
 		resize(QSize(AppInfo::g_windowWidth, AppInfo::g_windowHeight));
@@ -64,6 +72,7 @@ namespace MyosotisFW::System::Editor
 	void MainWindow::closeWindow()
 	{
 		close();
+		ThreadPool::Instance().Shutdown();
 	}
 
 	void MainWindow::openFile(std::string filePath)

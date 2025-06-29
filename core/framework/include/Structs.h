@@ -176,6 +176,7 @@ namespace MyosotisFW
 				glm::mat4 view;
 				glm::mat4 projection;
 				glm::vec4 color;
+				float renderID;
 			}data;
 		}standardUBO;			// UBO
 	}StaticMeshShaderObject;
@@ -193,6 +194,7 @@ namespace MyosotisFW
 				glm::mat4 view;
 				glm::mat4 projection;
 				glm::vec4 color;
+				float renderID;
 			}data;
 		}standardUBO;			// UBO
 	}SkyboxShaderObject;
@@ -213,6 +215,7 @@ namespace MyosotisFW
 				glm::mat4 view;
 				glm::mat4 projection;
 				glm::vec4 color;
+				float renderID;
 			}data;
 		}standardUBO;			// UBO
 	}InteriorObjectShaderObject;

@@ -147,8 +147,10 @@ namespace MyosotisFW::System::Render
 		}
 
 		std::vector<StaticMesh_ptr> firstStaticMesh{};
+		float id = 0.0001f;	// todo.計算で求める (max object countから)
 		for (ObjectBase_ptr& object : m_objects)
 		{
+			object->SetRenderID(id);
 			if (IsStaticMesh(object->GetObjectType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
@@ -165,6 +167,7 @@ namespace MyosotisFW::System::Render
 				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
 				staticMesh->Update(updateData, m_mainCamera);
 			}
+			id += 0.0001f;	// todo.計算で求める (max object countから)
 		}
 
 		// TEST

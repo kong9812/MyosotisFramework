@@ -5,6 +5,7 @@ layout (binding = 0) uniform StandardUBO {
     mat4 view;
     mat4 projection;
     vec4 color;
+    float renderID;
 } objectUbo;
 
 layout (binding = 1) uniform CameraUBO {
@@ -27,6 +28,7 @@ void main()
 {
     outPosition = objectUbo.model * inPosition;
     outNormal = normalize(objectUbo.model * vec4(inNormal, 0.0));
+    outNormal.w = objectUbo.renderID;
     outUV = inUV;
     outBaseColor = inColor;
     outRayDir = outPosition - cameraUbo.position;

@@ -49,6 +49,8 @@ public:
 	// コピー・代入禁止
 	KeyConverter(const KeyConverter&) = delete;
 	KeyConverter& operator=(const KeyConverter&) = delete;
+	KeyConverter(KeyConverter&&) = delete;
+	KeyConverter& operator=(KeyConverter&) = delete;
 
 private:
 	// コンストラクタ

@@ -3,6 +3,7 @@
 #include "AppInfo.h"
 #include "VK_Validation.h"
 #include "KeyConverter.h"
+#include "ThreadPool.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 
@@ -17,14 +18,12 @@ namespace MyosotisFW::System::Editor
 		m_initialized(false),
 		m_resizing(false),
 		m_lastTime(0.0f),
-		m_timer()
+		m_timer(),
+		m_mouseDragging(false)
 	{
 		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
 		QCoreApplication::instance()->installEventFilter(this);
-
-		// KeyConverter初期化
-		KeyConverter::Instance();
 	}
 
 	VulkanWindow::~VulkanWindow()
@@ -141,8 +140,33 @@ namespace MyosotisFW::System::Editor
 
 	void VulkanWindow::mouseReleaseEvent(QMouseEvent* event)
 	{
-		m_mouseButtonActions.insert_or_assign(KeyConverter::Instance().QtToGlfwMouse(event->button()), GLFW_RELEASE);
+		int glfwKey = KeyConverter::Instance().QtToGlfwMouse(event->button());
+		m_mouseButtonActions.insert_or_assign(glfwKey, GLFW_RELEASE);
 		__super::mouseReleaseEvent(event);
+
+		// オブジェクト選択
+		if ((glfwKey == GLFW_MOUSE_BUTTON_LEFT) &&	// マウス左クリック
+			(m_mouseButtonActions.size() == 1) &&	// 他のマウスキー押してない
+			(m_keyActions.empty()) &&				// 他のキー押してない
+			(!m_mouseDragging))						// Dragging状態じゃない
+		{
+			ThreadPool::Instance().enqueue([this] { this->objectSelect(); });
+		}
+
+		// 最後のマウスキーになるとDragging状態解除
+		if (m_mouseButtonActions.size() == 1)
+		{
+			m_mouseDragging = false;
+		}
+	}
+
+	void VulkanWindow::mouseMoveEvent(QMouseEvent* event)
+	{
+		if (!m_mouseButtonActions.empty())
+		{
+			m_mouseDragging = true;
+		}
+		__super::mouseMoveEvent(event);
 	}
 
 	bool VulkanWindow::eventFilter(QObject* watched, QEvent* event)
@@ -240,5 +264,10 @@ namespace MyosotisFW::System::Editor
 				it++;
 			}
 		}
+	}
+
+	void VulkanWindow::objectSelect()
+	{
+		Logger::Debug("[VulkanWindow] objectSelect!!");
 	}
 }

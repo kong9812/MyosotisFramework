@@ -59,6 +59,7 @@ namespace MyosotisFW::System::Render
 		m_skyboxShaderObject.standardUBO.data.model = glm::rotate(m_skyboxShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_skyboxShaderObject.standardUBO.data.model = glm::rotate(m_skyboxShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		m_skyboxShaderObject.standardUBO.data.model = glm::scale(m_skyboxShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
+		m_skyboxShaderObject.standardUBO.data.renderID = m_renderID;
 
 		if (!m_isReady) return;
 		memcpy(m_skyboxShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_skyboxShaderObject.standardUBO.data, sizeof(m_skyboxShaderObject.standardUBO.data));

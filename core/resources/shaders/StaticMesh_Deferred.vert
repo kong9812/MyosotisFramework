@@ -5,6 +5,7 @@ layout (binding = 0) uniform StandardUBO {
     mat4 view;
     mat4 projection;
     vec4 color;
+    float renderID;
 } objectUbo;
 
 layout (location = 0) in vec4 inPosition;
@@ -21,6 +22,7 @@ void main()
 {
     outPosition = objectUbo.model * inPosition;
     outNormal = normalize(objectUbo.model * vec4(inNormal, 0.0));
+    outNormal.w = objectUbo.renderID;
     outUV = inUV;
     outBaseColor = inColor;
     gl_Position = objectUbo.projection * objectUbo.view * outPosition;
