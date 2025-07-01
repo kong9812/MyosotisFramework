@@ -7,7 +7,7 @@ namespace MyosotisFW::System::Render
 {
 	PrimitiveGeometry::PrimitiveGeometry() : StaticMesh()
 	{
-		m_name = "プリミティブジオメトリ";
+		m_name = "PrimitiveGeometry";
 	}
 
 	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)

@@ -20,7 +20,7 @@ namespace MyosotisFW::System
 	void EditorManager::Render()
 	{
 		m_renderSubsystem->BeginRender();
-		m_renderSubsystem->Compute();
+		m_renderSubsystem->FrustumCuilling();
 		m_renderSubsystem->ShadowRender();
 		m_renderSubsystem->MainRender();
 		std::dynamic_pointer_cast<Render::EditorRenderSubsystem>(m_renderSubsystem)->EditorRender();

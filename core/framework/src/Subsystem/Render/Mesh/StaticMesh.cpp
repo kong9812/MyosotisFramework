@@ -11,7 +11,7 @@ namespace MyosotisFW::System::Render
 {
 	StaticMesh::StaticMesh() : ObjectBase(), m_aabbMin(0.0f), m_aabbMax(0.0f)
 	{
-		m_name = "スタティックメッシュ";
+		m_name = "StaticMesh";
 		m_transfrom.scale = glm::vec3(1.0f);
 		m_staticMeshShaderObject = {};
 		m_staticMeshShaderObject.standardUBO.normalMap.sampler = VK_NULL_HANDLE;

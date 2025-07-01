@@ -45,6 +45,7 @@ namespace MyosotisFW::System::Render
 		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
 		vkDestroyCommandPool(*m_device, m_renderCommandPool, m_device->GetAllocationCallbacks());
 		vkDestroyCommandPool(*m_device, m_computeCommandPool, m_device->GetAllocationCallbacks());
+		vkDestroyCommandPool(*m_device, m_transferCommandPool, m_device->GetAllocationCallbacks());
 	}
 
 	void RenderSubsystem::ResetMousePos(const glm::vec2& mousePos)
@@ -115,6 +116,8 @@ namespace MyosotisFW::System::Render
 		vkGetDeviceQueue(*m_device, m_device->GetGraphicsFamilyIndex(), 0, &m_graphicsQueue);
 		// compute queue
 		vkGetDeviceQueue(*m_device, m_device->GetComputeFamilyIndex(), 0, &m_computeQueue);
+		// transfer queue
+		vkGetDeviceQueue(*m_device, m_device->GetTransferFamilyIndex(), 0, &m_transferQueue);
 
 		// Command pool
 		initializeCommandPool();
@@ -147,10 +150,10 @@ namespace MyosotisFW::System::Render
 		}
 
 		std::vector<StaticMesh_ptr> firstStaticMesh{};
-		float id = 0.0001f;	// todo.計算で求める (max object countから)
+		uint32_t id = 0;
 		for (ObjectBase_ptr& object : m_objects)
 		{
-			object->SetRenderID(id);
+			object->SetRenderID(static_cast<float>(id) / static_cast<float>(AppInfo::g_maxObject));
 			if (IsStaticMesh(object->GetObjectType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
@@ -167,7 +170,7 @@ namespace MyosotisFW::System::Render
 				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
 				staticMesh->Update(updateData, m_mainCamera);
 			}
-			id += 0.0001f;	// todo.計算で求める (max object countから)
+			id++;
 		}
 
 		// TEST
@@ -181,7 +184,7 @@ namespace MyosotisFW::System::Render
 		// TEST
 	}
 
-	void RenderSubsystem::Compute()
+	void RenderSubsystem::FrustumCuilling()
 	{
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
@@ -376,6 +379,7 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
 	{
 		// デバイスの処理を待つ
+		VK_VALIDATION(vkQueueWaitIdle(m_transferQueue));
 		VK_VALIDATION(vkQueueWaitIdle(m_computeQueue));
 		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
@@ -465,13 +469,14 @@ namespace MyosotisFW::System::Render
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
 		}
+		{// transfer
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferFamilyIndex());
+			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_transferCommandPool));
+		}
 	}
 
 	void RenderSubsystem::initializeFrustumCuller()
 	{
-		// todo.　動的に変更できるように
-		const uint32_t staticMeshCount = 100;
-
 		{// frustumPlanesUBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
@@ -489,7 +494,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.obbDatasSSBO.data,
-				static_cast<uint32_t>(sizeof(OBBData)) * staticMeshCount,
+				static_cast<uint32_t>(sizeof(OBBData)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.obbDatasSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocation,
@@ -501,7 +506,7 @@ namespace MyosotisFW::System::Render
 				*m_device,
 				m_device->GetVmaAllocator(),
 				m_frustumCullerShaderObject.visibleObjectsSSBO.data,
-				static_cast<uint32_t>(sizeof(uint32_t)) * staticMeshCount,
+				static_cast<uint32_t>(sizeof(uint32_t)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer,
 				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation,

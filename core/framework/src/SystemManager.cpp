@@ -157,7 +157,7 @@ namespace MyosotisFW::System
 	void SystemManager::Render()
 	{
 		m_renderSubsystem->BeginRender();
-		m_renderSubsystem->Compute();
+		m_renderSubsystem->FrustumCuilling();
 		m_renderSubsystem->ShadowRender();
 		m_renderSubsystem->MainRender();
 		m_renderSubsystem->FinalCompositionRender();

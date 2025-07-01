@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render::Camera
 		// アスペクト比
 		m_aspectRadio = static_cast<float>(AppInfo::g_windowWidth) / static_cast<float>(AppInfo::g_windowHeight);
 
-		m_name = "カメラ";
+		m_name = "CameraBase";
 	}
 
 	glm::mat4 CameraBase::GetViewMatrix() const

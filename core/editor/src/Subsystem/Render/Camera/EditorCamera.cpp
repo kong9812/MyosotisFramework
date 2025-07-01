@@ -10,7 +10,7 @@ namespace MyosotisFW::System::Render::Camera
 	EditorCamera::EditorCamera() : CameraBase()
 	{
 		m_lastMousePos = glm::vec3(0.0f);
-		m_name = "エディタカメラ";
+		m_name = "EditorCamera";
 	}
 
 	glm::mat4 EditorCamera::GetViewMatrix() const

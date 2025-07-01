@@ -19,7 +19,8 @@ namespace MyosotisFW::System::Editor
 		m_resizing(false),
 		m_lastTime(0.0f),
 		m_timer(),
-		m_mouseDragging(false)
+		m_mouseDragging(false),
+		m_selectedObject(nullptr)
 	{
 		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
@@ -232,7 +233,7 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->Update(updateData);
 
 			m_renderSubsystem->BeginRender();
-			m_renderSubsystem->Compute();
+			m_renderSubsystem->FrustumCuilling();
 			m_renderSubsystem->ShadowRender();
 			m_renderSubsystem->MainRender();
 			m_renderSubsystem->EditorRender();
@@ -269,5 +270,8 @@ namespace MyosotisFW::System::Editor
 	void VulkanWindow::objectSelect()
 	{
 		Logger::Debug("[VulkanWindow] objectSelect!!");
+		QPoint globalPos = QCursor::pos();
+		QPointF localPos = mapFromGlobal(globalPos);
+		m_renderSubsystem->ObjectSelect(static_cast<int32_t>(localPos.x()), static_cast<int32_t>(localPos.y()));
 	}
 }

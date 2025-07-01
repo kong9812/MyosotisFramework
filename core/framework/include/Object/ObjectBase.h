@@ -29,7 +29,7 @@ namespace MyosotisFW
 			m_name()
 		{
 			m_objectID = hashMaker();
-			m_name = "object";
+			m_name = "ObjectBase";
 		};
 
 		virtual ~ObjectBase() = default;

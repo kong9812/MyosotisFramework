@@ -119,4 +119,7 @@ namespace MyosotisFW::AppInfo
 
 	// render pipeline
 	constexpr uint32_t g_descriptorCount = 10;
+
+	// max object count
+	constexpr uint32_t g_maxObject = 10000;
 }

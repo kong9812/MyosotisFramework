@@ -47,6 +47,7 @@ namespace MyosotisFW::System::Editor
 		std::unordered_map<int, int> m_keyActions;
 		std::unordered_map<int, int> m_mouseButtonActions;
 		bool m_mouseDragging;
+		bool m_selectedObject;
 
 	signals:
 		void closeWindow();

@@ -8,7 +8,7 @@ namespace MyosotisFW::System::Render
 {
 	InteriorObject::InteriorObject() : ObjectBase()
 	{
-		m_name = "インテリアオブジェクト";
+		m_name = "InteriorObject";
 	}
 
 	InteriorObject::~InteriorObject()

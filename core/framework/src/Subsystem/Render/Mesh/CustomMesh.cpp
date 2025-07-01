@@ -7,7 +7,7 @@ namespace MyosotisFW::System::Render
 {
 	CustomMesh::CustomMesh() : StaticMesh()
 	{
-		m_name = "カスタムメッシュ";
+		m_name = "CustomMesh";
 	}
 
 	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
