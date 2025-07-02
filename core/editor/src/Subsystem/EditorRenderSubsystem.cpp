@@ -78,7 +78,7 @@ namespace MyosotisFW::System::Render
 		// copy image
 		Buffer stagingBuffer{};
 		{// CPU buffer (staging buffer)
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(pixelSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(pixelSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
 			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &stagingBuffer.buffer, &stagingBuffer.allocation, &stagingBuffer.allocationInfo));

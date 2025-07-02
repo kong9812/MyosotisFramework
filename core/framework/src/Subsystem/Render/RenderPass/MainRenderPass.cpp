@@ -30,7 +30,14 @@ namespace MyosotisFW::System::Render
 
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format),		// [1] lighting result image
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredPositionFormat),		// [2] [g-buffer] position
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat),		// [3] [g-buffer] normal
+
+			// [3] [g-buffer] normal + ID
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat,
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE,
+				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),
+
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_colorFormat),				// [4] [g-buffer] base color
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepthStencil(AppInfo::g_depthFormat),				// [5] depth/stencil
 		};
