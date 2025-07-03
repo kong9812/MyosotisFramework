@@ -4,6 +4,7 @@
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 #include "Logger.h"
+#include "RenderQueue.h"
 
 namespace
 {
@@ -115,23 +116,19 @@ namespace MyosotisFW::System::Render
 		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalDeviceMemoryProperties);
 
 		// queue family properties
-		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, nullptr);
-		m_queueFamilyProperties.resize(queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &queueFamilyCount, m_queueFamilyProperties.data());
 		std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos{};
 		const float defaultQueuePriority(0.0f);
 		{// Graphics queue
-			m_graphicsFamilyIndex = getQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT, m_queueFamilyProperties);
-			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_graphicsFamilyIndex, defaultQueuePriority));
+			m_graphicsQueue = CreateRenderQueuePointer(m_physicalDevice, VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT);
+			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_graphicsQueue->GetQueueFamilyIndex(), defaultQueuePriority));
 		}
 		{// Compute queue
-			m_computeFamilyIndex = getQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT, m_queueFamilyProperties);
-			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_computeFamilyIndex, defaultQueuePriority));
+			m_computeQueue = CreateRenderQueuePointer(m_physicalDevice, VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT);
+			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_computeQueue->GetQueueFamilyIndex(), defaultQueuePriority));
 		}
 		{// Transfer queue
-			m_transferFamilyIndex = getQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT, m_queueFamilyProperties);
-			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_transferFamilyIndex, defaultQueuePriority));
+			m_transferQueue = CreateRenderQueuePointer(m_physicalDevice, VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT);
+			deviceQueueCreateInfos.push_back(Utility::Vulkan::CreateInfo::deviceQueueCreateInfo(m_transferQueue->GetQueueFamilyIndex(), defaultQueuePriority));
 		}
 
 		// extensions
@@ -153,6 +150,11 @@ namespace MyosotisFW::System::Render
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
 		VK_VALIDATION(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, GetAllocationCallbacks(), &m_device));
 
+		// queue instance
+		m_graphicsQueue->CreateQueueInstance(m_device);
+		m_computeQueue->CreateQueueInstance(m_device);
+		m_transferQueue->CreateQueueInstance(m_device);
+
 		// VMA
 		prepareVMA(vkInstance);
 	}
@@ -170,45 +172,6 @@ namespace MyosotisFW::System::Render
 		VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
 		VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, GetAllocationCallbacks(), &deviceImage.memory));
 		VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
-	}
-
-	uint32_t RenderDevice::getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties)
-	{
-		// VK_QUEUE_COMPUTE_BIT Only
-		if ((queueFlags & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT) == queueFlags)
-		{
-			for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-			{
-				if ((queueFamilyProperties[i].queueFlags & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT) && ((queueFamilyProperties[i].queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT) == 0))
-				{
-					return i;
-				}
-			}
-		}
-
-		// VK_QUEUE_TRANSFER_BIT Only
-		if ((queueFlags & VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT) == queueFlags)
-		{
-			for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-			{
-				if ((queueFamilyProperties[i].queueFlags & VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT) && ((queueFamilyProperties[i].queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT) == 0) && ((queueFamilyProperties[i].queueFlags & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT) == 0))
-				{
-					return i;
-				}
-			}
-		}
-
-		// Any
-		for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-		{
-			if ((queueFamilyProperties[i].queueFlags & queueFlags) == queueFlags)
-			{
-				return i;
-			}
-		}
-
-		ASSERT(false, "Could not find a matching queue!");
-		return 0;
 	}
 
 	uint32_t RenderDevice::getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const

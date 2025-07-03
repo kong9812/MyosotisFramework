@@ -12,7 +12,6 @@ namespace MyosotisFW::System::Render
 		//GLFWwindow& glfwWindow,
 		VkInstance& instance,
 		RenderDevice_ptr renderDevice,
-		VkQueue& queue,
 		VkRenderPass& renderPass,
 		RenderSwapchain_ptr renderSwapchain,
 		VkPipelineCache& pipelineCache)
@@ -27,13 +26,13 @@ namespace MyosotisFW::System::Render
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // キーボード操作を有効化
 		io.Fonts->AddFontFromFileTTF((std::string(AppInfo::g_fontFolder) + AppInfo::g_imguiFontFileName).c_str(), AppInfo::g_imguiFontSize);
-
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
 		ImGui_ImplVulkan_InitInfo initinfo{};
 		initinfo.Instance = instance;
 		initinfo.PhysicalDevice = m_device->GetPhysicalDevice();
 		initinfo.Device = *m_device;
-		initinfo.QueueFamily = m_device->GetGraphicsFamilyIndex();
-		initinfo.Queue = queue;
+		initinfo.QueueFamily = graphicsQueue->GetQueueFamilyIndex();
+		initinfo.Queue = graphicsQueue->GetQueue();
 		initinfo.DescriptorPoolSize = AppInfo::g_imguiDescriptorPoolSize;       // Set to create internal descriptor pool instead of using DescriptorPool
 		initinfo.RenderPass = renderPass;                                       // Ignored if using dynamic rendering
 		initinfo.MinImageCount = renderSwapchain->GetMinImageCount();           // >= 2

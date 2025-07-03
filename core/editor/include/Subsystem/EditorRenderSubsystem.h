@@ -3,6 +3,7 @@
 #include "RenderSubsystem.h"
 #include "EditorGUI.h"
 #include "EditorRenderPass.h"
+#include "ThreadSaveValue.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -31,7 +32,7 @@ namespace MyosotisFW::System::Render
 	private:
 		EditorGUI_ptr m_editorGUI;
 		EditorRenderPass_ptr m_editorRenderPass;
-		ObjectBase_ptr m_selectedObject;
+		ThreadSaveValue<ObjectBase_ptr> m_selectedObject;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem)
 }

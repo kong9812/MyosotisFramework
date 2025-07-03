@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "RenderResources.h"
 #include "VK_Loader.h"
+#include "RenderQueue.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -131,16 +132,15 @@ namespace MyosotisFW::System::Render
 		if (image == m_images.end())
 		{
 			// todo.　実装場所を変える
-			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferFamilyIndex());
 			VkCommandPool pool{};
-			VkQueue queue{};
-			vkGetDeviceQueue(*m_device, m_device->GetTransferFamilyIndex(), 0, &queue);
+			RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
+			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(transferQueue->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
 
 			// ないなら読み込む
 			m_images.emplace(fileName, Utility::Loader::loadImage(
 				*m_device,
-				queue,
+				transferQueue,
 				pool,
 				m_device->GetVmaAllocator(),
 				fileName,
@@ -158,16 +158,15 @@ namespace MyosotisFW::System::Render
 		if (image == m_cubeImages.end())
 		{
 			// todo.　実装場所を変える
-			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferFamilyIndex());
 			VkCommandPool pool{};
-			VkQueue queue{};
-			vkGetDeviceQueue(*m_device, m_device->GetTransferFamilyIndex(), 0, &queue);
+			RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
+			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(transferQueue->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
 
 			// ないなら読み込む
 			m_cubeImages.emplace(fileNames[0], Utility::Loader::loadCubeImage(
 				*m_device,
-				queue,
+				transferQueue,
 				pool,
 				m_device->GetVmaAllocator(),
 				fileNames,

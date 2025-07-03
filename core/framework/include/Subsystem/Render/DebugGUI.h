@@ -16,7 +16,6 @@ namespace MyosotisFW::System::Render
 			//GLFWwindow& glfwWindow,
 			VkInstance& instance,
 			RenderDevice_ptr renderDevice,
-			VkQueue& queue,
 			VkRenderPass& renderPass,
 			RenderSwapchain_ptr renderSwapchain,
 			VkPipelineCache& pipelineCache);

@@ -15,7 +15,7 @@ namespace MyosotisFW::System::Render
 		__super::Initialize(instance, surface);
 
 		// EditorGUIの初期化
-		m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_graphicsQueue, m_editorRenderPass->GetRenderPass(), m_swapchain);
+		m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_editorRenderPass->GetRenderPass(), m_swapchain);
 
 		// EditorCameraの初期化
 		m_mainCamera = Camera::CreateEditorCameraPointer();
@@ -39,9 +39,9 @@ namespace MyosotisFW::System::Render
 		ImGui::Text("Mouse Pos: %.2f %.2f", updateData.mousePos.x, updateData.mousePos.y);
 		ImGui::Text("Pressed key count (Keyboard): %d", updateData.keyActions.size());
 		ImGui::Text("Pressed key count (Mouse): %d", updateData.mouseButtonActions.size());
-		if (m_selectedObject)
+		if (m_selectedObject.Get())
 		{
-			ImGui::Text("Selected Object: %s", m_selectedObject->GetName().c_str());
+			ImGui::Text("Selected Object: %s", m_selectedObject.Get()->GetName().c_str());
 		}
 		ImGui::End();
 
@@ -59,7 +59,9 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
-		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
+		graphicsQueue->WaitIdle();
 		uint32_t pixelSize = 16;	// RGBA32
 
 		// 1 pixel only
@@ -92,8 +94,8 @@ namespace MyosotisFW::System::Render
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
-		VK_VALIDATION(vkQueueSubmit(m_transferQueue, 1, &submitInfo, VK_NULL_HANDLE));
-		VK_VALIDATION(vkQueueWaitIdle(m_transferQueue));
+		transferQueue->Submit(submitInfo);
+		transferQueue->WaitIdle();
 
 		void* data{};
 		float id = 0.0f;
@@ -106,15 +108,7 @@ namespace MyosotisFW::System::Render
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
 
 		uint32_t idx = static_cast<uint32_t>(id * static_cast<float>(AppInfo::g_maxObject));
-		if (idx != 1)
-		{
-			bool test = false;
-		}
-		if (idx != 2)
-		{
-			bool test = false;
-		}
-		m_selectedObject = m_objects[idx];
+		m_selectedObject.Set(m_objects[idx]);
 	}
 
 	void EditorRenderSubsystem::initializeRenderResources()

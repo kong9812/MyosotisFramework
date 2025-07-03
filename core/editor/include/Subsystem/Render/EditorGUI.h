@@ -15,7 +15,6 @@ namespace MyosotisFW::System::Render
 		EditorGUI(
 			const VkInstance& instance,
 			const RenderDevice_ptr renderDevice,
-			const VkQueue& queue,
 			const VkRenderPass& renderPass,
 			const RenderSwapchain_ptr renderSwapchain);
 		~EditorGUI();

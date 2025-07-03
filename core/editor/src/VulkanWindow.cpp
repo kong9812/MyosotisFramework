@@ -233,7 +233,7 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->Update(updateData);
 
 			m_renderSubsystem->BeginRender();
-			m_renderSubsystem->FrustumCuilling();
+			m_renderSubsystem->FrustumCuller();
 			m_renderSubsystem->ShadowRender();
 			m_renderSubsystem->MainRender();
 			m_renderSubsystem->EditorRender();

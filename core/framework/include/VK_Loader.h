@@ -14,6 +14,7 @@
 #include "Structs.h"
 #include "VK_CreateInfo.h"
 #include "VK_Validation.h"
+#include "RenderQueue.h"
 
 namespace Utility::Loader {
 	inline VkShaderModule loadShader(VkDevice device, std::string fileName, const VkAllocationCallbacks* pAllocator = nullptr)
@@ -193,7 +194,7 @@ namespace Utility::Loader {
 		return meshes;
 	}
 
-	inline MyosotisFW::VMAImage loadImage(VkDevice device, VkQueue queue, VkCommandPool commandPool, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::VMAImage loadImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
 		MyosotisFW::VMAImage image{};
 
@@ -274,8 +275,8 @@ namespace Utility::Loader {
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			VK_VALIDATION(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-			VK_VALIDATION(vkQueueWaitIdle(queue));
+			queue->Submit(submitInfo);
+			queue->WaitIdle();
 
 			// clean up
 			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
@@ -284,7 +285,7 @@ namespace Utility::Loader {
 		return image;
 	}
 
-	inline MyosotisFW::VMAImage loadCubeImage(VkDevice device, VkQueue queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::VMAImage loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
 		MyosotisFW::VMAImage image{};
 
@@ -385,8 +386,8 @@ namespace Utility::Loader {
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			VK_VALIDATION(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-			VK_VALIDATION(vkQueueWaitIdle(queue));
+			queue->Submit(submitInfo);
+			queue->WaitIdle();
 
 			// clean up
 			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);

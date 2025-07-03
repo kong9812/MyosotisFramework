@@ -7,6 +7,7 @@
 #include "Structs.h"
 #include "VK_Validation.h"
 #include "ivma.h"
+#include "RenderQueue.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -22,9 +23,9 @@ namespace MyosotisFW::System::Render
 		};
 
 		VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
-		uint32_t GetGraphicsFamilyIndex() const { return m_graphicsFamilyIndex; }
-		uint32_t GetComputeFamilyIndex() const { return m_computeFamilyIndex; }
-		uint32_t GetTransferFamilyIndex() const { return m_transferFamilyIndex; }
+		RenderQueue_ptr GetGraphicsQueue() const { return m_graphicsQueue; }
+		RenderQueue_ptr GetComputeQueue() const { return m_computeQueue; }
+		RenderQueue_ptr GetTransferQueue() const { return m_transferQueue; }
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
 		VmaAllocator GetVmaAllocator() const { return m_allocator; }
 
@@ -36,15 +37,13 @@ namespace MyosotisFW::System::Render
 		VmaAllocator m_allocator;
 		VkAllocationCallbacks m_allocationCallbacks;
 
-		uint32_t m_graphicsFamilyIndex;
-		uint32_t m_computeFamilyIndex;
-		uint32_t m_transferFamilyIndex;
+		RenderQueue_ptr m_graphicsQueue;
+		RenderQueue_ptr m_computeQueue;
+		RenderQueue_ptr m_transferQueue;
 
-		std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;
 		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
 
 	private:
-		uint32_t getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
 		uint32_t getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const;
 		void prepareAllocationCallbacks();
 		void prepareVMA(const VkInstance& vkInstance);

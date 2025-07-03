@@ -112,13 +112,6 @@ namespace MyosotisFW::System::Render
 		// Resources
 		initializeRenderResources();
 
-		// graphics queue
-		vkGetDeviceQueue(*m_device, m_device->GetGraphicsFamilyIndex(), 0, &m_graphicsQueue);
-		// compute queue
-		vkGetDeviceQueue(*m_device, m_device->GetComputeFamilyIndex(), 0, &m_computeQueue);
-		// transfer queue
-		vkGetDeviceQueue(*m_device, m_device->GetTransferFamilyIndex(), 0, &m_transferQueue);
-
 		// Command pool
 		initializeCommandPool();
 
@@ -184,7 +177,7 @@ namespace MyosotisFW::System::Render
 		// TEST
 	}
 
-	void RenderSubsystem::FrustumCuilling()
+	void RenderSubsystem::FrustumCuller()
 	{
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
@@ -239,8 +232,9 @@ namespace MyosotisFW::System::Render
 
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];		// Frustum Culler
-		VK_VALIDATION(vkQueueSubmit(m_computeQueue, 1, &submitInfo, VK_NULL_HANDLE));
-		VK_VALIDATION(vkQueueWaitIdle(m_computeQueue));
+		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
+		computeQueue->Submit(submitInfo);
+		computeQueue->WaitIdle();
 	}
 
 	void RenderSubsystem::BeginRender()
@@ -371,17 +365,18 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
-		VK_VALIDATION(vkQueueSubmit(m_graphicsQueue, 1, &m_submitInfo, VK_NULL_HANDLE));
-		m_swapchain->QueuePresent(m_graphicsQueue, m_currentBufferIndex, m_semaphores.renderComplete);
-		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		graphicsQueue->Submit(m_submitInfo);
+		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
+		graphicsQueue->WaitIdle();
 	}
 
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
 	{
 		// デバイスの処理を待つ
-		VK_VALIDATION(vkQueueWaitIdle(m_transferQueue));
-		VK_VALIDATION(vkQueueWaitIdle(m_computeQueue));
-		VK_VALIDATION(vkQueueWaitIdle(m_graphicsQueue));
+		m_device->GetGraphicsQueue()->WaitIdle();
+		m_device->GetComputeQueue()->WaitIdle();
+		m_device->GetTransferQueue()->WaitIdle();
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
 
 		// swapchain
@@ -454,7 +449,7 @@ namespace MyosotisFW::System::Render
 	{
 		// command pool
 		{// render
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsFamilyIndex());
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsQueue()->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_renderCommandPool));
 
 			m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
@@ -462,7 +457,7 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
 		}
 		{// compute
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeFamilyIndex());
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeQueue()->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_computeCommandPool));
 
 			m_computeCommandBuffers.resize(1);	// Frustum Culler
@@ -470,7 +465,7 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
 		}
 		{// transfer
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferFamilyIndex());
+			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferQueue()->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_transferCommandPool));
 		}
 	}

@@ -40,9 +40,6 @@ namespace MyosotisFW::System::Render
 			m_computeCommandPool(VK_NULL_HANDLE),
 			m_transferCommandPool(VK_NULL_HANDLE),
 			m_currentBufferIndex(0),
-			m_graphicsQueue(VK_NULL_HANDLE),
-			m_computeQueue(VK_NULL_HANDLE),
-			m_transferQueue(VK_NULL_HANDLE),
 			m_descriptorPool(VK_NULL_HANDLE),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
@@ -75,7 +72,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
-		void FrustumCuilling();
+		void FrustumCuller();
 		void BeginRender();
 		void ShadowRender();
 		void MainRender();
@@ -121,10 +118,6 @@ namespace MyosotisFW::System::Render
 		std::vector<VkCommandBuffer> m_computeCommandBuffers;
 
 		uint32_t m_currentBufferIndex;
-
-		VkQueue m_graphicsQueue;
-		VkQueue m_computeQueue;
-		VkQueue m_transferQueue;
 
 		VkDescriptorPool m_descriptorPool;
 		FrustumCullersShaderObject m_frustumCullerShaderObject;
