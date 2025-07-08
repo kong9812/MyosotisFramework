@@ -8,15 +8,18 @@ layout (location = 2) in vec4 inBaseColor;
 
 layout (location = 3) in vec4 inRayDir;
 layout (location = 4) in vec2 inUV;
+layout (location = 5) in flat uint inRenderID;
 
 layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
 layout (location = 2) out vec4 outBaseColor;
+layout (location = 3) out uint outRenderID;
 
 void main() 
 {
     outPosition = inPosition;
     outNormal = inNormal;
+    outRenderID = inRenderID;
 
     vec3 uvw = vec3(inUV.x, 1.0 - inUV.y, 0.0);
     vec3 rayDir = normalize(inRayDir.xyz);

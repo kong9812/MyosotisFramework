@@ -59,10 +59,12 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
-		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
 		RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
-		graphicsQueue->WaitIdle();
-		uint32_t pixelSize = 16;	// RGBA32
+
+		// ObjectSelectFence
+		VkFence fence = VK_NULL_HANDLE;
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
 
 		// 1 pixel only
 		VkBufferImageCopy bufferImageCopy = Utility::Vulkan::CreateInfo::bufferImageCopy(1, 1);
@@ -80,12 +82,12 @@ namespace MyosotisFW::System::Render
 		// copy image
 		Buffer stagingBuffer{};
 		{// CPU buffer (staging buffer)
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(pixelSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(static_cast<uint32_t>(sizeof(uint32_t)), VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
 			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &stagingBuffer.buffer, &stagingBuffer.allocation, &stagingBuffer.allocationInfo));
 		}
-		vkCmdCopyImageToBuffer(commandBuffer, m_resources->GetNormal().image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer.buffer, 1, &bufferImageCopy);
+		vkCmdCopyImageToBuffer(commandBuffer, m_resources->GetIdMap().image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer.buffer, 1, &bufferImageCopy);
 
 		// end command buffer
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
@@ -94,21 +96,21 @@ namespace MyosotisFW::System::Render
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
-		transferQueue->Submit(submitInfo);
-		transferQueue->WaitIdle();
+		VK_VALIDATION(vkWaitForFences(*m_device, 1, &m_renderFence, VK_TRUE, UINT64_MAX));
+		transferQueue->Submit(submitInfo, fence);
+		VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
 
 		void* data{};
-		float id = 0.0f;
+		uint32_t id = 0;
 		VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation, &data));
-		memcpy(&id, &static_cast<float*>(data)[3], sizeof(float));
+		memcpy(&id, data, sizeof(uint32_t));
 		vmaUnmapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation);
 
 		// clean up
 		vkFreeCommandBuffers(*m_device, m_transferCommandPool, 1, &commandBuffer);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
-
-		uint32_t idx = static_cast<uint32_t>(id * static_cast<float>(AppInfo::g_maxObject));
-		m_selectedObject.Set(m_objects[idx]);
+		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
+		m_selectedObject.Set(m_objects[id]);
 	}
 
 	void EditorRenderSubsystem::initializeRenderResources()

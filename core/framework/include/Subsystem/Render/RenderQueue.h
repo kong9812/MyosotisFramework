@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render
 		~RenderQueue() {}
 
 		void Initialize(const VkPhysicalDevice& phyDevice, const VkQueueFlags& queueFlags);
-		void Submit(const VkSubmitInfo& submitInfo);
+		void Submit(const VkSubmitInfo& submitInfo, const VkFence& fence = VK_NULL_HANDLE);
 		void CreateQueueInstance(const VkDevice& device);
 
 		uint32_t GetQueueFamilyIndex() { return m_queueFamilyIndex; }

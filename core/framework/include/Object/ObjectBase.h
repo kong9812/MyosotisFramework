@@ -55,7 +55,7 @@ namespace MyosotisFW
 		const void SetPos(const glm::vec3& pos) { m_transfrom.pos = pos; }
 		const void SetRot(const glm::vec3& rot) { m_transfrom.rot = rot; }
 		const void SetScale(const glm::vec3& scale) { m_transfrom.scale = scale; }
-		void SetRenderID(float id) { m_renderID = id; }
+		void SetRenderID(uint32_t id) { m_renderID = id; }
 
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
@@ -107,7 +107,7 @@ namespace MyosotisFW
 		bool m_isReady;
 		std::string m_name;
 		uuids::uuid m_objectID;
-		float m_renderID;
+		uint32_t m_renderID;
 
 		Transform m_transfrom;
 		std::vector<ObjectBase_ptr> m_childen;

@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
 
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
@@ -21,6 +22,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
 
 			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
@@ -75,7 +77,6 @@ namespace MyosotisFW::System::Render
 		}
 		{// normal
 			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredNormalFormat, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_normal.image, &m_normal.allocation, &m_normal.allocationInfo));
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_normal.image, AppInfo::g_deferredNormalFormat);
@@ -101,6 +102,14 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_mainRenderTarget.image, &m_mainRenderTarget.allocation, &m_mainRenderTarget.allocationInfo));
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_mainRenderTarget.image, AppInfo::g_surfaceFormat.format);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_mainRenderTarget.view));
+		}
+		{// ID Map
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_idMapFormat, width, height);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_idMap.image, &m_idMap.allocation, &m_idMap.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_idMap.image, AppInfo::g_idMapFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_idMap.view));
 		}
 	}
 
@@ -187,6 +196,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
 
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
@@ -194,6 +204,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
 
 			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());

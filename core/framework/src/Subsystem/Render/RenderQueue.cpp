@@ -25,11 +25,11 @@ namespace MyosotisFW::System::Render
 		m_queueFamilyIndex = getQueueFamilyIndex(queueFlags, queueFamilyProperties);
 	}
 
-	void RenderQueue::Submit(const VkSubmitInfo& submitInfo)
+	void RenderQueue::Submit(const VkSubmitInfo& submitInfo, const VkFence& fence)
 	{
 		ASSERT(m_queue, "You must call CreateQueueInstance before sumit command to queue.");
 		std::lock_guard<std::mutex> lock(m_mutex);
-		VK_VALIDATION(vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE));
+		VK_VALIDATION(vkQueueSubmit(m_queue, 1, &submitInfo, fence));
 	}
 
 	void RenderQueue::CreateQueueInstance(const VkDevice& device)

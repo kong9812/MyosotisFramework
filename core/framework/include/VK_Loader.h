@@ -200,6 +200,11 @@ namespace Utility::Loader {
 
 		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_textureFolder + fileName);
 
+		// loadImage fence
+		VkFence fence = VK_NULL_HANDLE;
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		VK_VALIDATION(vkCreateFence(device, &fenceCreateInfo, pAllocationCallbacks, &fence));
+
 		int textureWidth = -1;
 		int textureHeight = -1;
 		int textureChannels = -1;
@@ -275,12 +280,13 @@ namespace Utility::Loader {
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			queue->Submit(submitInfo);
-			queue->WaitIdle();
+			queue->Submit(submitInfo, fence);
+			VK_VALIDATION(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX));
 
 			// clean up
 			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 			vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
+			vkDestroyFence(device, fence, pAllocationCallbacks);
 		}
 		return image;
 	}
@@ -288,6 +294,11 @@ namespace Utility::Loader {
 	inline MyosotisFW::VMAImage loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
 		MyosotisFW::VMAImage image{};
+
+		// loadCubeImage fence
+		VkFence fence = VK_NULL_HANDLE;
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		VK_VALIDATION(vkCreateFence(device, &fenceCreateInfo, pAllocationCallbacks, &fence));
 
 		int textureWidth = -1;
 		int textureHeight = -1;
@@ -386,12 +397,13 @@ namespace Utility::Loader {
 			submitInfo.commandBufferCount = 1;
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			queue->Submit(submitInfo);
-			queue->WaitIdle();
+			queue->Submit(submitInfo, fence);
+			VK_VALIDATION(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX));
 
 			// clean up
 			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 			vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
+			vkDestroyFence(device, fence, pAllocationCallbacks);
 		}
 		return image;
 	}

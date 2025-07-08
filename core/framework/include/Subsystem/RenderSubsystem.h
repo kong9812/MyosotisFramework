@@ -55,7 +55,8 @@ namespace MyosotisFW::System::Render
 			m_interiorObjectDeferredRenderPipeline(nullptr),
 			m_onPressedSaveGameStageCallback(nullptr),
 			m_onPressedLoadGameStageCallback(nullptr),
-			m_onPressedCreateObjectCallback(nullptr) {
+			m_onPressedCreateObjectCallback(nullptr),
+			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
 			m_semaphores.renderComplete = VK_NULL_HANDLE;
@@ -89,6 +90,7 @@ namespace MyosotisFW::System::Render
 		void initializeCommandPool();
 		void initializeFrustumCuller();
 		void initializeSemaphore();
+		void initializeFence();
 		void initializeSubmitInfo();
 		void initializeDebugUtils(const VkInstance& instance);
 		virtual void initializeRenderPass();
@@ -102,6 +104,8 @@ namespace MyosotisFW::System::Render
 			VkSemaphore computeComplete;
 			VkSemaphore renderComplete;
 		}m_semaphores;
+
+		VkFence m_renderFence;
 
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;

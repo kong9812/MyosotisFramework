@@ -38,6 +38,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		}
 
+		vkDestroyFence(*m_device, m_renderFence, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.computeComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
@@ -121,6 +122,9 @@ namespace MyosotisFW::System::Render
 		// Semaphore
 		initializeSemaphore();
 
+		// Fence
+		initializeFence();
+
 		// Submit info
 		initializeSubmitInfo();
 
@@ -146,7 +150,7 @@ namespace MyosotisFW::System::Render
 		uint32_t id = 0;
 		for (ObjectBase_ptr& object : m_objects)
 		{
-			object->SetRenderID(static_cast<float>(id) / static_cast<float>(AppInfo::g_maxObject));
+			object->SetRenderID(id);
 			if (IsStaticMesh(object->GetObjectType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
@@ -366,7 +370,8 @@ namespace MyosotisFW::System::Render
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
 		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-		graphicsQueue->Submit(m_submitInfo);
+		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
+		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
 	}
@@ -374,6 +379,7 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
 	{
 		// デバイスの処理を待つ
+		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
 		m_device->GetGraphicsQueue()->WaitIdle();
 		m_device->GetComputeQueue()->WaitIdle();
 		m_device->GetTransferQueue()->WaitIdle();
@@ -413,7 +419,7 @@ namespace MyosotisFW::System::Render
 		m_submitPipelineStages = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_currentBufferIndex = 0;
 
-		vkDeviceWaitIdle(*m_device);
+		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
 	}
 
 	void RenderSubsystem::SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback)
@@ -555,6 +561,12 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.presentComplete));
 		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.computeComplete));
 		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.renderComplete));
+	}
+
+	void RenderSubsystem::initializeFence()
+	{
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &m_renderFence));
 	}
 
 	void RenderSubsystem::initializeSubmitInfo()

@@ -22,6 +22,7 @@ namespace MyosotisFW::System::Render
 			GBufferPosition,
 			GBufferNormal,
 			GBufferBaseColor,
+			IdMap,
 			DepthStencil,
 			COUNT
 		};

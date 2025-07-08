@@ -27,19 +27,16 @@ namespace MyosotisFW::System::Render
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
-
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format),		// [1] lighting result image
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredPositionFormat),		// [2] [g-buffer] position
-
-			// [3] [g-buffer] normal + ID
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat,
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_deferredNormalFormat),		// [3] [g-buffer] normal
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_colorFormat),				// [4] [g-buffer] base color
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_idMapFormat,					// [5] ID Map
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE,
 				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
 				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),
-
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_colorFormat),				// [4] [g-buffer] base color
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepthStencil(AppInfo::g_depthFormat),				// [5] depth/stencil
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepthStencil(AppInfo::g_depthFormat),				// [6] depth/stencil
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
@@ -49,6 +46,7 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferPosition), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferNormal), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::GBufferBaseColor), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+				Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::IdMap), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
 		};
 		VkAttachmentReference gBufferFillSubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthStencil), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_colors_depth(gBufferFillSubpassColorAttachmentReferences, gBufferFillSubpassDepthAttachmentReference));
@@ -129,6 +127,7 @@ namespace MyosotisFW::System::Render
 		clearValues[static_cast<uint32_t>(Attachments::GBufferPosition)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::GBufferNormal)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::IdMap)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::DepthStencil)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
@@ -158,6 +157,7 @@ namespace MyosotisFW::System::Render
 		attachments[static_cast<uint32_t>(Attachments::GBufferPosition)] = m_resources->GetPosition().view;
 		attachments[static_cast<uint32_t>(Attachments::GBufferNormal)] = m_resources->GetNormal().view;
 		attachments[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = m_resources->GetBaseColor().view;
+		attachments[static_cast<uint32_t>(Attachments::IdMap)] = m_resources->GetIdMap().view;
 		attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = m_resources->GetDepthStencil().view;
 
 		VkFramebufferCreateInfo frameBufferCreateInfo = {};

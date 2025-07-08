@@ -473,6 +473,13 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkFenceCreateInfo fenceCreateInfo()
+	{
+		VkFenceCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		return ci;
+	}
+
 	inline VkFenceCreateInfo fenceCreateInfo(const VkFenceCreateFlags& flags)
 	{
 		VkFenceCreateInfo ci{};

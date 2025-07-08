@@ -47,6 +47,7 @@ namespace MyosotisFW::System::Render
 		VMAImage& GetShadowMap() { return m_shadowMap; }
 		VMAImage& GetLightingResult() { return m_lightingResult; }
 		VMAImage& GetMainRenderTarget() { return m_mainRenderTarget; }
+		VMAImage& GetIdMap() { return m_idMap; }
 
 	protected:
 		// attachments
@@ -58,6 +59,7 @@ namespace MyosotisFW::System::Render
 		VMAImage m_shadowMap;
 		VMAImage m_lightingResult;
 		VMAImage m_mainRenderTarget;
+		VMAImage m_idMap;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
 }
