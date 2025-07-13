@@ -156,6 +156,12 @@ namespace MyosotisFW::System::Render::Camera
 		editorGUI();
 	}
 
+	void EditorCamera::initialize()
+	{
+		__super::initialize();
+		m_lastMousePos = glm::vec3(0.0f);
+	}
+
 	void EditorCamera::editorGUI()
 	{
 		ImGui::Begin("MainEditorWindow");

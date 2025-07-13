@@ -16,7 +16,6 @@
 #include "ShadowMapRenderPipeline.h"
 #include "DeferredRenderPipeline.h"
 #include "CompositionRenderPipeline.h"
-#include "TransparentRenderPipeline.h"
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
@@ -79,6 +78,7 @@ namespace MyosotisFW::System::Render
 		void MainRender();
 		void FinalCompositionRender();
 		void EndRender();
+		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);
 
 		std::vector<ObjectBase_ptr> GetObjects() { return m_objects; }

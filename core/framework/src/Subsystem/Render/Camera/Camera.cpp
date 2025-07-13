@@ -7,27 +7,13 @@ namespace MyosotisFW::System::Render::Camera
 {
 	CameraBase::CameraBase() : ObjectBase()
 	{
-		// カメラ位置
-		m_cameraPos = AppInfo::g_cameraPos;
-		// カメラ視点
-		m_cameraLookAt = AppInfo::g_cameraLookAt;
-		// カメラ　前ベクトル
-		m_cameraFront = AppInfo::g_cameraFront;
-		// カメラ　上ベクトル
-		m_cameraUp = AppInfo::g_cameraUp;
-		// カメラ　右ベクトル
-		m_cameraRight = AppInfo::g_cameraRight;
-		// カメラ FOV
-		m_cameraFov = AppInfo::g_cameraFov;
-		// カメラ Far
-		m_cameraFar = AppInfo::g_cameraFar;
-		// カメラ Near
-		m_cameraNear = AppInfo::g_cameraNear;
-
-		// アスペクト比
-		m_aspectRadio = static_cast<float>(AppInfo::g_windowWidth) / static_cast<float>(AppInfo::g_windowHeight);
-
 		m_name = "CameraBase";
+		initialize();
+	}
+
+	void CameraBase::ResetCamera()
+	{
+		initialize();
 	}
 
 	glm::mat4 CameraBase::GetViewMatrix() const
@@ -107,5 +93,28 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraFov = doc["cameraFov"].GetFloat();
 		m_cameraFar = doc["cameraFar"].GetFloat();
 		m_cameraNear = doc["cameraNear"].GetFloat();
+	}
+
+	void CameraBase::initialize()
+	{
+		// カメラ位置
+		m_cameraPos = AppInfo::g_cameraPos;
+		// カメラ視点
+		m_cameraLookAt = AppInfo::g_cameraLookAt;
+		// カメラ　前ベクトル
+		m_cameraFront = AppInfo::g_cameraFront;
+		// カメラ　上ベクトル
+		m_cameraUp = AppInfo::g_cameraUp;
+		// カメラ　右ベクトル
+		m_cameraRight = AppInfo::g_cameraRight;
+		// カメラ FOV
+		m_cameraFov = AppInfo::g_cameraFov;
+		// カメラ Far
+		m_cameraFar = AppInfo::g_cameraFar;
+		// カメラ Near
+		m_cameraNear = AppInfo::g_cameraNear;
+
+		// アスペクト比
+		m_aspectRadio = static_cast<float>(AppInfo::g_windowWidth) / static_cast<float>(AppInfo::g_windowHeight);
 	}
 }

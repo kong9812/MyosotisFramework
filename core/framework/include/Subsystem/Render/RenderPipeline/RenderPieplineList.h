@@ -8,6 +8,5 @@ namespace MyosotisFW::System::Render
 		ShadowMap,
 		Deferred,
 		Composition,
-		Transparent,
 	}RenderPipelineType;
 }

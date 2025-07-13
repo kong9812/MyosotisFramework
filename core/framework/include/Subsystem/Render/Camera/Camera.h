@@ -16,6 +16,7 @@ namespace MyosotisFW::System::Render::Camera
 		CameraBase();
 		virtual ~CameraBase() = default;
 
+		void ResetCamera();
 		virtual glm::mat4 GetViewMatrix() const;
 		virtual glm::mat4 GetProjectionMatrix() const;
 		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const;
@@ -35,6 +36,8 @@ namespace MyosotisFW::System::Render::Camera
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override;
 	protected:
+		virtual void initialize();
+
 		// カメラ位置
 		glm::vec3 m_cameraPos;
 		// カメラ視点

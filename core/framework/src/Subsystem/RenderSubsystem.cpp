@@ -171,13 +171,16 @@ namespace MyosotisFW::System::Render
 		}
 
 		// TEST
-		g_debugTimer += updateData.deltaTime * g_debugSpeed;
-		if (g_debugTimer >= 360.0f)
+		if (firstStaticMesh.size() >= 2)
 		{
-			g_debugTimer -= 360.0f;
+			g_debugTimer += updateData.deltaTime * g_debugSpeed;
+			if (g_debugTimer >= 360.0f)
+			{
+				g_debugTimer -= 360.0f;
+			}
+			firstStaticMesh[1]->SetRot(glm::vec3(g_debugTimer, 0.0f, 0.0f));
+			firstStaticMesh[1]->Update(updateData, m_mainCamera);
 		}
-		firstStaticMesh[1]->SetRot(glm::vec3(g_debugTimer, 0.0f, 0.0f));
-		firstStaticMesh[1]->Update(updateData, m_mainCamera);
 		// TEST
 	}
 
@@ -374,6 +377,13 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
+	}
+
+	void RenderSubsystem::ResetGameStage()
+	{
+		m_mainCamera->ResetCamera();
+		m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+		m_objects.clear();
 	}
 
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)

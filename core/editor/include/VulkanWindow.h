@@ -22,6 +22,7 @@ namespace MyosotisFW::System::Editor
 		void mousePressEvent(QMouseEvent* event) override;
 		void mouseReleaseEvent(QMouseEvent* event) override;
 		void mouseMoveEvent(QMouseEvent* event) override;
+		void OpenFile(std::string filePath);
 
 	protected:
 		bool eventFilter(QObject* watched, QEvent* event) override;

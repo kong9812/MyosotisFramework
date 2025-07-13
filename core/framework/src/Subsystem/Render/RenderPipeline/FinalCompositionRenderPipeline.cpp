@@ -7,6 +7,7 @@ namespace MyosotisFW::System::Render
 {
 	FinalCompositionRenderPipeline::~FinalCompositionRenderPipeline()
 	{
+		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_shaderBase.descriptorPool, 1, &m_shaderBase.descriptorSet));
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
@@ -33,6 +34,7 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			m_shaderBase.pipelineLayout = m_pipelineLayout;
 			m_shaderBase.pipeline = m_pipeline;
+			m_shaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate

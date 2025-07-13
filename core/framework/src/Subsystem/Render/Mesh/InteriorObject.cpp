@@ -18,9 +18,9 @@ namespace MyosotisFW::System::Render
 			vkDestroySampler(*m_device, m_interiorObjectShaderObject.standardUBO.cubemap.sampler, m_device->GetAllocationCallbacks());
 		}
 
+		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_interiorObjectShaderObject.shaderBase.descriptorPool, 1, &m_interiorObjectShaderObject.shaderBase.descriptorSet));
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
-
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_interiorObjectShaderObject.standardUBO.buffer.buffer, m_interiorObjectShaderObject.standardUBO.buffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_interiorObjectShaderObject.cameraUBO.buffer.buffer, m_interiorObjectShaderObject.cameraUBO.buffer.allocation);
 	}

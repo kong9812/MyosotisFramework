@@ -135,6 +135,12 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraPos += move;
 	}
 
+	void FPSCamera::initialize()
+	{
+		__super::initialize();
+		m_lastMousePos = glm::vec3(0.0f);
+	}
+
 	//void FPSCamera::BindDebugGUIElement()
 	//{
 	//	__super::BindDebugGUIElement();

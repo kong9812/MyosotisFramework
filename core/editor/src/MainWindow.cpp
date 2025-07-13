@@ -77,7 +77,7 @@ namespace MyosotisFW::System::Editor
 
 	void MainWindow::openFile(std::string filePath)
 	{
-
+		m_vulkanWindow->OpenFile(filePath);
 	}
 
 	void MainWindow::resetLayout()

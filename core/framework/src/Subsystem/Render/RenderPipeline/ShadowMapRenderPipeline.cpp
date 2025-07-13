@@ -63,6 +63,7 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			shaderObject.shadowMapRenderShaderBase.pipelineLayout = m_pipelineLayout;
 			shaderObject.shadowMapRenderShaderBase.pipeline = m_pipeline;
+			shaderObject.shadowMapRenderShaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate

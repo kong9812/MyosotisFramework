@@ -24,6 +24,7 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			shaderObject.deferredRenderShaderBase.pipelineLayout = m_pipelineLayout;
 			shaderObject.deferredRenderShaderBase.pipeline = m_pipeline;
+			shaderObject.deferredRenderShaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate

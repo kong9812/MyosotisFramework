@@ -62,8 +62,12 @@ namespace MyosotisFW::System::Render
 
 		// Composition subpass
 		VkAttachmentReference compositionSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference compositionSubpassInputAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::LightingResultImage), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_input(compositionSubpassColorAttachmentReferences, compositionSubpassInputAttachmentReferences));
+		std::vector<VkAttachmentReference> compositionSubpassInputAttachmentReferences =
+		{
+			Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::LightingResultImage), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
+			Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::IdMap), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+		};
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_inputs(compositionSubpassColorAttachmentReferences, compositionSubpassInputAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// start -> G-Buffer fill subpass

@@ -28,7 +28,9 @@ namespace MyosotisFW::System::Render::Camera
 		virtual void Deserialize(const rapidjson::Value& doc, std::function<void(ObjectType, const rapidjson::Value&)> createObject) { __super::Deserialize(doc, createObject); }
 
 	private:
+		virtual void initialize() override;
 		glm::vec2 m_lastMousePos;
+
 	};
 	TYPEDEF_SHARED_PTR(FPSCamera)
 		OBJECT_CAST_FUNCTION(FPSCamera)

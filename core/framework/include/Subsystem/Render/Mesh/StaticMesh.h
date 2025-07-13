@@ -54,8 +54,8 @@ namespace MyosotisFW::System::Render
 		OBBData GetWorldOBBData();
 
 	protected:
-		virtual void loadAssets() {};
-		virtual void prepareShaderStorageBuffers() {};
+		virtual void loadAssets() {}
+		virtual void prepareShaderStorageBuffers() {}
 
 		// render device
 		RenderDevice_ptr m_device;

@@ -65,6 +65,7 @@ namespace MyosotisFW
 
 	typedef struct
 	{
+		VkDescriptorPool descriptorPool;
 		VkDescriptorSet descriptorSet;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
@@ -161,7 +162,6 @@ namespace MyosotisFW
 	{
 		ShaderBase shadowMapRenderShaderBase;
 		ShaderBase deferredRenderShaderBase;
-		ShaderBase transparentRenderShaderBase;
 
 		struct
 		{

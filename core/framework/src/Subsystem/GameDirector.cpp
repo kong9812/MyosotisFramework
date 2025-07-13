@@ -32,7 +32,7 @@ namespace MyosotisFW::System::GameDirector {
 	{
 		m_renderSubsystem = renderSubsystem;
 
-		LoadGameStageFile("TEST.gs");
+		//LoadGameStageFile("TEST.gs");
 
 		// TEST
 		//MyosotisFW::ObjectBase_ptr obj = MyosotisFW::System::ObjectFactory::CreateObject(ObjectType::CustomMesh);
@@ -59,6 +59,9 @@ namespace MyosotisFW::System::GameDirector {
 
 	void GameDirector::LoadGameStageFile(const std::string& fileName)
 	{
+		// object clear
+		m_renderSubsystem->ResetGameStage();
+
 		// todo. load
 		rapidjson::Document doc = Utility::Loader::loadGameStageFile(fileName);
 		if (doc.IsArray())

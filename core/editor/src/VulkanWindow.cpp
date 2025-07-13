@@ -170,6 +170,14 @@ namespace MyosotisFW::System::Editor
 		__super::mouseMoveEvent(event);
 	}
 
+	void VulkanWindow::OpenFile(std::string filePath)
+	{
+		// ファイル名
+		std::string fileName = std::filesystem::path(filePath).filename().string();
+
+		m_gameDirector->LoadGameStageFile(fileName);
+	}
+
 	bool VulkanWindow::eventFilter(QObject* watched, QEvent* event)
 	{
 		if (event->type() == QEvent::Type::MouseButtonRelease)

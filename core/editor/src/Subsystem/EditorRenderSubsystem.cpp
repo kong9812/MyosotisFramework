@@ -59,6 +59,8 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
+		if (static_cast<uint32_t>(m_objects.size()) == 0) return;
+
 		RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
 
 		// ObjectSelectFence

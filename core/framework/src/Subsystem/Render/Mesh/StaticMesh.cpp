@@ -32,6 +32,8 @@ namespace MyosotisFW::System::Render
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[logType][meshIdx].buffer, m_indexBuffer[logType][meshIdx].allocation);
 			}
 		}
+		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_staticMeshShaderObject.deferredRenderShaderBase.descriptorPool, 1, &m_staticMeshShaderObject.deferredRenderShaderBase.descriptorSet));
+		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_staticMeshShaderObject.shadowMapRenderShaderBase.descriptorPool, 1, &m_staticMeshShaderObject.shadowMapRenderShaderBase.descriptorSet));
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_staticMeshShaderObject.standardUBO.buffer.buffer, m_staticMeshShaderObject.standardUBO.buffer.allocation);
 	}
 
@@ -96,11 +98,6 @@ namespace MyosotisFW::System::Render
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipeline);
 		}
 		break;
-		case RenderPipelineType::Transparent:
-		{
-			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.transparentRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.transparentRenderShaderBase.descriptorSet, 0, nullptr);
-			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.transparentRenderShaderBase.pipeline);
-		}
 		break;
 		default:
 			break;
