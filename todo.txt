@@ -5,16 +5,16 @@
 　・[OK] F3でファイル保存機能の除去
 　・[OK] 最後にObjectが持つDescriptorSetをfreeする
 　・[OK] DescriptorPoolをShaderBaseに追加
-[NOW] StageObjectとComponentの移行
-　・[検討中] Object -> RenderComponentBase、そしてStageObjectを新しく作る？…
-　　・これが一番早い気がする…
-　　・StageObject
-　　　・SerializeとDeserialize
-　　　・複数Componentの合算結果を返す
-　　　　・AABB/OBB
-　　　　・TextureList? DiscriptorList?
-　　　　・その他…
-Bindless resources(texture/buffer)
+[OK] StageObjectとComponentの移行
+　・[OK] Object -> RenderComponentBase、そしてStageObjectを新しく作る？…
+　　・[OK] これが一番早い気がする…
+　　・[OK] StageObject
+　　　・[OK] SerializeとDeserialize
+　　　・[後回し] 複数Componentの合算結果を返す
+　　　　・[後回し] AABB/OBB
+　　　　・[後回し] TextureList? DiscriptorList?
+　　　　・[後回し] その他…
+[Now] Bindless resources(texture/buffer)
 Visibility Buffer
 Mesh Shader
 2-phase occlusion culling

@@ -6,7 +6,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	InteriorObject::InteriorObject() : ObjectBase()
+	InteriorObject::InteriorObject() : ComponentBase()
 	{
 		m_name = "InteriorObject";
 	}

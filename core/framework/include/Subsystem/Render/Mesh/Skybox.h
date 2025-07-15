@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "ObjectBase.h"
-#include "ObjectCast.h"
+#include "ComponentBase.h"
+#include "ComponentCast.h"
 #include "RenderDevice.h"
 #include "RenderResources.h"
 #include "Camera.h"
@@ -9,20 +9,19 @@
 
 namespace MyosotisFW::System::Render
 {
-	class Skybox : public ObjectBase
+	class Skybox : public ComponentBase
 	{
 	public:
 		Skybox();
 		~Skybox();
 
-		virtual const ObjectType GetObjectType() const override { return ObjectType::Skybox; }
+		virtual const ComponentType GetType() const override { return ComponentType::Skybox; }
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		SkyboxShaderObject& GetSkyboxShaderObject() { return m_skyboxShaderObject; }
-		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override { return __super::Serialize(allocator); };
-		void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override { __super::Deserialize(doc, createObject); };
+
 	private:
 		void loadAssets();
 

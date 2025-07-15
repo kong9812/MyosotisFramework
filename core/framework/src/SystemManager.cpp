@@ -9,7 +9,7 @@
 #include "Logger.h"
 #include "Structs.h"
 
-#include "ObjectFactory.h"
+#include "ComponentFactory.h"
 
 namespace {
 	// デバッグコールバック関数
@@ -226,20 +226,6 @@ namespace MyosotisFW::System
 	{
 		// m_gameDirector
 		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
-		m_renderSubsystem->SetOnPressedSaveGameStageCallback([=]() {m_gameDirector->SaveGameStageFile("TEST.gs", m_renderSubsystem->GetObjects()); });
-		m_renderSubsystem->SetOnPressedLoadGameStageCallback([=]() {m_gameDirector->LoadGameStageFile("TEST.gs"); });
-		m_renderSubsystem->SetOnPressedCreateObjectCallback([=](ObjectType objType, glm::vec3 pos)
-			{
-				ObjectBase_ptr newObject = ObjectFactory::CreateObject(objType);
-				newObject->SetPos(pos);
-				if (objType == ObjectType::CustomMesh)
-				{
-					CustomMeshInfo customMeshInfo{};
-					customMeshInfo.m_meshPath = "test.fbx";
-					Render::Object_CastToCustomMesh(newObject)->SetCustomMeshInfo(customMeshInfo);
-				}
-				m_renderSubsystem->RegisterObject(newObject);
-			});
 	}
 
 	void SystemManager::resizedCallback(GLFWwindow* window, int width, int height)
@@ -280,17 +266,5 @@ namespace MyosotisFW::System
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
 		Render::RenderSubsystem_ptr renderSubsystem = systemManager->GetRenderSubsystem();
-
-		std::filesystem::path path = paths[0];
-		std::string fileName = path.filename().string();
-		Render::CustomMesh_ptr object = Render::CreateCustomMeshPointer();
-
-		// 座標
-		double x{}, y{};
-		glfwGetCursorPos(window, &x, &y);
-		glm::vec3 worldPos = renderSubsystem->GetMainCamera()->GetWorldPos(glm::vec2(x, y), 10.0f);
-		object->SetPos(worldPos);
-		object->SetCustomMeshInfo({ fileName });
-		renderSubsystem->RegisterObject(Object_Cast<ObjectBase>(object));
 	}
 }

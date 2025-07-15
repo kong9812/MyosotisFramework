@@ -1,38 +1,39 @@
 // Copyright (c) 2025 kong9812
+#include "ComponentFactory.h"
 #include "FpsCamera.h"
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
 #include "Skybox.h"
 #include "InteriorObject.h"
 
-namespace MyosotisFW::System::ObjectFactory
+namespace MyosotisFW::System::ComponentFactory
 {
-	inline ObjectBase_ptr CreateObject(const ObjectType& objectType)
+	ComponentBase_ptr CreateComponent(const ComponentType& objectType)
 	{
-		ObjectBase_ptr object{};
+		ComponentBase_ptr object{};
 		switch (objectType)
 		{
-		case ObjectType::FPSCamera:
+		case ComponentType::FPSCamera:
 		{
 			object = Render::Camera::CreateFPSCameraPointer();
 		}
 		break;
-		case ObjectType::PrimitiveGeometryMesh:
+		case ComponentType::PrimitiveGeometryMesh:
 		{
 			object = Render::CreatePrimitiveGeometryPointer();
 		}
 		break;
-		case ObjectType::CustomMesh:
+		case ComponentType::CustomMesh:
 		{
 			object = Render::CreateCustomMeshPointer();
 		}
 		break;
-		case ObjectType::Skybox:
+		case ComponentType::Skybox:
 		{
 			object = Render::CreateSkyboxPointer();
 		}
 		break;
-		case ObjectType::InteriorObjectMesh:
+		case ComponentType::InteriorObjectMesh:
 		{
 			object = Render::CreateInteriorObjectPointer();
 		}

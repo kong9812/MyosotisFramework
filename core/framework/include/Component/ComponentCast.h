@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "ObjectType.h"
-#include "ObjectBase.h"
+#include "ComponentType.h"
+#include "ComponentBase.h"
 
 namespace MyosotisFW
 {
@@ -13,6 +13,6 @@ namespace MyosotisFW
 }
 
 #define OBJECT_CAST_FUNCTION(To)															\
-    inline std::shared_ptr<To> Object_CastTo##To(const std::shared_ptr<ObjectBase>& obj) {	\
+    inline std::shared_ptr<To> Object_CastTo##To(const std::shared_ptr<ComponentBase>& obj) {	\
         return std::dynamic_pointer_cast<To>(obj);											\
     }

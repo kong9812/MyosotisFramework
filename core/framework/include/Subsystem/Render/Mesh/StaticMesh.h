@@ -4,8 +4,8 @@
 #include <vulkan/vulkan.h>
 #include "iglm.h"
 
-#include "ObjectCast.h"
-#include "ObjectBase.h"
+#include "ComponentCast.h"
+#include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "Structs.h"
 #include "RenderDevice.h"
@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render
 	// ・PrimitiveGeometryMesh
 	// ・FBXMesh
 	// ・...
-	class StaticMesh : public ObjectBase
+	class StaticMesh : public ComponentBase
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
@@ -35,7 +35,7 @@ namespace MyosotisFW::System::Render
 			Max
 		} LOD;
 
-		virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
+		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
 
 		StaticMeshShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
 
@@ -43,15 +43,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
 
-		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override { return __super::Serialize(allocator); }
-		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override { __super::Deserialize(doc, createObject); }
 		virtual glm::vec4 GetCullerData() { return glm::vec4(0.0f); }
-
-		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
-		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
-		glm::vec3 GetWorldAABBMin() { return (m_aabbMin + m_transfrom.pos) * m_transfrom.scale; }
-		glm::vec3 GetWorldAABBMax() { return (m_aabbMax + m_transfrom.pos) * m_transfrom.scale; }
-		OBBData GetWorldOBBData();
 
 	protected:
 		virtual void loadAssets() {}
@@ -67,10 +59,6 @@ namespace MyosotisFW::System::Render
 		std::array<std::vector<Buffer>, LOD::Max> m_vertexBuffer;
 		// index buffer
 		std::array<std::vector<Buffer>, LOD::Max> m_indexBuffer;
-
-		// AABB
-		glm::vec3 m_aabbMin;
-		glm::vec3 m_aabbMax;
 
 		// lod
 		LOD m_currentLOD;

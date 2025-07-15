@@ -2,15 +2,15 @@
 #pragma once
 #include <string>
 
-#include "ObjectCast.h"
+#include "ComponentCast.h"
 #include "iglm.h"
-#include "ObjectBase.h"
+#include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "Structs.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
-	class CameraBase : public ObjectBase
+	class CameraBase : public ComponentBase
 	{
 	public:
 		CameraBase();
@@ -21,7 +21,7 @@ namespace MyosotisFW::System::Render::Camera
 		virtual glm::mat4 GetProjectionMatrix() const;
 		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const;
 
-		virtual const ObjectType GetObjectType() const override { return ObjectType::Undefined; }
+		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
 
 		void UpdateScreenSize(const glm::vec2& size);
 
@@ -34,7 +34,7 @@ namespace MyosotisFW::System::Render::Camera
 		//virtual void BindDebugGUIElement() override;
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
-		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override;
+		virtual void Deserialize(const rapidjson::Value& doc) override;
 	protected:
 		virtual void initialize();
 

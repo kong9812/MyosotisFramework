@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 	private:
 		EditorGUI_ptr m_editorGUI;
 		EditorRenderPass_ptr m_editorRenderPass;
-		ThreadSaveValue<ObjectBase_ptr> m_selectedObject;
+		ThreadSaveValue<ComponentBase_ptr> m_selectedObject;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem)
 }

@@ -11,6 +11,7 @@
 #include "DebugGUI.h"
 #include "StaticMesh.h"
 #include "FpsCamera.h"
+#include "StageObject.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -52,9 +53,6 @@ namespace MyosotisFW::System::Render
 			m_compositionRenderPipeline(nullptr),
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
-			m_onPressedSaveGameStageCallback(nullptr),
-			m_onPressedLoadGameStageCallback(nullptr),
-			m_onPressedCreateObjectCallback(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
@@ -66,7 +64,7 @@ namespace MyosotisFW::System::Render
 
 		void ResetMousePos(const glm::vec2& mousePos);
 
-		void RegisterObject(const ObjectBase_ptr& object);
+		void RegisterObject(const StageObject_ptr& object);
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
@@ -81,7 +79,7 @@ namespace MyosotisFW::System::Render
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);
 
-		std::vector<ObjectBase_ptr> GetObjects() { return m_objects; }
+		std::vector<StageObject_ptr> GetObjects() { return m_objects; }
 
 	protected:
 		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);
@@ -126,7 +124,7 @@ namespace MyosotisFW::System::Render
 		VkDescriptorPool m_descriptorPool;
 		FrustumCullersShaderObject m_frustumCullerShaderObject;
 
-		std::vector<ObjectBase_ptr> m_objects;
+		std::vector<StageObject_ptr> m_objects;
 
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
@@ -144,20 +142,6 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
-
-		// callback
-	protected:
-		using OnPressedSaveGameStageCallback = std::function<void()>;
-		OnPressedSaveGameStageCallback m_onPressedSaveGameStageCallback;
-		using OnPressedLoadGameStageCallback = std::function<void()>;
-		OnPressedLoadGameStageCallback m_onPressedLoadGameStageCallback;
-		using OnPressedCreateObjectCallback = std::function<void(ObjectType, glm::vec3)>;
-		OnPressedCreateObjectCallback m_onPressedCreateObjectCallback;
-	public:
-		void SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback);
-		void SetOnPressedLoadGameStageCallback(const OnPressedLoadGameStageCallback& callback);
-		void SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback);
-
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem)
 }

@@ -59,60 +59,60 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
-		if (static_cast<uint32_t>(m_objects.size()) == 0) return;
+		//if (static_cast<uint32_t>(m_objects.size()) == 0) return;
 
-		RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
+		//RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
 
-		// ObjectSelectFence
-		VkFence fence = VK_NULL_HANDLE;
-		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
-		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
+		//// ObjectSelectFence
+		//VkFence fence = VK_NULL_HANDLE;
+		//VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		//VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
 
-		// 1 pixel only
-		VkBufferImageCopy bufferImageCopy = Utility::Vulkan::CreateInfo::bufferImageCopy(1, 1);
-		bufferImageCopy.imageOffset = { cursorPosX, cursorPosY, 0 };
+		//// 1 pixel only
+		//VkBufferImageCopy bufferImageCopy = Utility::Vulkan::CreateInfo::bufferImageCopy(1, 1);
+		//bufferImageCopy.imageOffset = { cursorPosX, cursorPosY, 0 };
 
-		// create command buffer
-		VkCommandBuffer commandBuffer{};
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_transferCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-		VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, &commandBuffer));
+		//// create command buffer
+		//VkCommandBuffer commandBuffer{};
+		//VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_transferCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+		//VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, &commandBuffer));
 
-		// begin command buffer
-		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		//// begin command buffer
+		//VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		//VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-		// copy image
-		Buffer stagingBuffer{};
-		{// CPU buffer (staging buffer)
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(static_cast<uint32_t>(sizeof(uint32_t)), VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT);
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
-			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &stagingBuffer.buffer, &stagingBuffer.allocation, &stagingBuffer.allocationInfo));
-		}
-		vkCmdCopyImageToBuffer(commandBuffer, m_resources->GetIdMap().image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer.buffer, 1, &bufferImageCopy);
+		//// copy image
+		//Buffer stagingBuffer{};
+		//{// CPU buffer (staging buffer)
+		//	VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(static_cast<uint32_t>(sizeof(uint32_t)), VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+		//	VmaAllocationCreateInfo allocationCreateInfo{};
+		//	allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY;
+		//	VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &stagingBuffer.buffer, &stagingBuffer.allocation, &stagingBuffer.allocationInfo));
+		//}
+		//vkCmdCopyImageToBuffer(commandBuffer, m_resources->GetIdMap().image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer.buffer, 1, &bufferImageCopy);
 
-		// end command buffer
-		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+		//// end command buffer
+		//VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 
-		// submit info
-		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		VK_VALIDATION(vkWaitForFences(*m_device, 1, &m_renderFence, VK_TRUE, UINT64_MAX));
-		transferQueue->Submit(submitInfo, fence);
-		VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
+		//// submit info
+		//VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
+		//submitInfo.commandBufferCount = 1;
+		//submitInfo.pCommandBuffers = &commandBuffer;
+		//VK_VALIDATION(vkWaitForFences(*m_device, 1, &m_renderFence, VK_TRUE, UINT64_MAX));
+		//transferQueue->Submit(submitInfo, fence);
+		//VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
 
-		void* data{};
-		uint32_t id = 0;
-		VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation, &data));
-		memcpy(&id, data, sizeof(uint32_t));
-		vmaUnmapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation);
+		//void* data{};
+		//uint32_t id = 0;
+		//VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation, &data));
+		//memcpy(&id, data, sizeof(uint32_t));
+		//vmaUnmapMemory(m_device->GetVmaAllocator(), stagingBuffer.allocation);
 
-		// clean up
-		vkFreeCommandBuffers(*m_device, m_transferCommandPool, 1, &commandBuffer);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
-		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
-		m_selectedObject.Set(m_objects[id]);
+		//// clean up
+		//vkFreeCommandBuffers(*m_device, m_transferCommandPool, 1, &commandBuffer);
+		//vmaDestroyBuffer(m_device->GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
+		//vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
+		//m_selectedObject.Set(m_objects[id]);
 	}
 
 	void EditorRenderSubsystem::initializeRenderResources()
@@ -186,13 +186,19 @@ namespace MyosotisFW::System::Render
 
 		// update descriptors
 		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		for (ObjectBase_ptr& object : m_objects)
+		for (StageObject_ptr& object : m_objects)
 		{
-			if (IsStaticMesh(object->GetObjectType()))
+			std::vector<ComponentBase_ptr> componentsList = object->FindAllComponents(ComponentType::CustomMesh, true);
+			std::vector<ComponentBase_ptr> subComponentsList = object->FindAllComponents(ComponentType::CustomMesh, true);
+			componentsList.insert(componentsList.end(), subComponentsList.begin(), subComponentsList.end());
+			for (ComponentBase_ptr& component : componentsList)
 			{
-				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
-				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+				if (IsStaticMesh(component->GetType()))
+				{
+					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
+					StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
+					m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+				}
 			}
 		}
 	}

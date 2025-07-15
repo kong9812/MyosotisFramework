@@ -5,7 +5,8 @@
 
 namespace MyosotisFW::System::Render
 {
-	PrimitiveGeometry::PrimitiveGeometry() : StaticMesh()
+	PrimitiveGeometry::PrimitiveGeometry() : StaticMesh(),
+		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::Quad)
 	{
 		m_name = "PrimitiveGeometry";
 	}
@@ -58,9 +59,9 @@ namespace MyosotisFW::System::Render
 		return json;
 	}
 
-	void PrimitiveGeometry::Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject)
+	void PrimitiveGeometry::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc, createObject);
+		__super::Deserialize(doc);
 		m_primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
 	}
 

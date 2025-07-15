@@ -63,9 +63,9 @@ namespace MyosotisFW::System::Render
 		return obj;
 	}
 
-	void CustomMesh::Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject)
+	void CustomMesh::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc, createObject);
+		__super::Deserialize(doc);
 
 		m_customMeshInfo.m_meshPath = doc["meshPath"].GetString();
 	}

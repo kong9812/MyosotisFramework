@@ -10,6 +10,13 @@ namespace MyosotisFW
 {
 	typedef struct
 	{
+		glm::vec3 pos;
+		glm::vec3 rot;
+		glm::vec3 scale;
+	}Transform;
+
+	typedef struct
+	{
 		VkRenderPass renderPass;
 		std::vector<VkFramebuffer> framebuffer;
 	}RenderPass;

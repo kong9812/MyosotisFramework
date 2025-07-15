@@ -5,7 +5,7 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	CameraBase::CameraBase() : ObjectBase()
+	CameraBase::CameraBase() : ComponentBase()
 	{
 		m_name = "CameraBase";
 		initialize();
@@ -80,9 +80,9 @@ namespace MyosotisFW::System::Render::Camera
 		return doc;
 	}
 
-	void CameraBase::Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject)
+	void CameraBase::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc, createObject);
+		__super::Deserialize(doc);
 
 		DeserializeVec3FromJson<glm::vec3>("cameraPos", m_cameraPos, doc);
 		DeserializeVec3FromJson<glm::vec3>("cameraLookAt", m_cameraLookAt, doc);

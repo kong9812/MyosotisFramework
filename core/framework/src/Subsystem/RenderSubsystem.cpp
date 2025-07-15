@@ -56,48 +56,57 @@ namespace MyosotisFW::System::Render
 		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
-	void RenderSubsystem::RegisterObject(const ObjectBase_ptr& object)
+	void RenderSubsystem::RegisterObject(const StageObject_ptr& object)
 	{
-		switch (object->GetObjectType())
+		if (!m_mainCamera && object->HasCamera(true))
 		{
-		case ObjectType::FPSCamera:
-		{
-			if (!m_mainCamera)
+			m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
+			m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+		}
+
+		{// StaticMesh
+			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::CustomMesh, true);
+			std::vector<ComponentBase_ptr> subComponents = object->FindAllComponents(ComponentType::PrimitiveGeometryMesh, true);
+			components.insert(components.end(), subComponents.begin(), subComponents.end());
+			for (ComponentBase_ptr& component : components)
 			{
-				m_mainCamera = Camera::Object_CastToCameraBase(object);
-				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+				if (IsStaticMesh(component->GetType()))
+				{
+					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
+					customMesh->PrepareForRender(m_device, m_resources);
+					StaticMeshShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
+					m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
+					m_deferredRenderPipeline->CreateShaderObject(shaderObject);
+				}
 			}
 		}
-		break;
-		case ObjectType::PrimitiveGeometryMesh:
-		case ObjectType::CustomMesh:
-		{
-			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-			staticMesh->PrepareForRender(m_device, m_resources);
-			StaticMeshShaderObject& shaderObject = staticMesh->GetStaticMeshShaderObject();
-			m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
-			//m_transparentRenderPipeline->CreateShaderObject(shaderObject);
-			m_deferredRenderPipeline->CreateShaderObject(shaderObject);
+
+		{// Skybox
+			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::Skybox, true);
+			for (ComponentBase_ptr& component : components)
+			{
+				if (component->GetType() == ComponentType::Skybox)
+				{
+					Skybox_ptr skybox = Object_CastToSkybox(component);
+					skybox->PrepareForRender(m_device, m_resources);
+					SkyboxShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
+					m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
+				}
+			}
 		}
-		break;
-		case ObjectType::Skybox:
-		{
-			Skybox_ptr skybox = Object_CastToSkybox(object);
-			skybox->PrepareForRender(m_device, m_resources);
-			SkyboxShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
-			m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
-		}
-		break;
-		case ObjectType::InteriorObjectMesh:
-		{
-			InteriorObject_ptr interiorObject = Object_CastToInteriorObject(object);
-			interiorObject->PrepareForRender(m_device, m_resources);
-			InteriorObjectShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
-			m_interiorObjectDeferredRenderPipeline->CreateShaderObject(shaderObject);
-		}
-		break;
-		default:
-			break;
+
+		{// InteriorObjectMesh
+			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::InteriorObjectMesh, true);
+			for (ComponentBase_ptr& component : components)
+			{
+				if (component->GetType() == ComponentType::InteriorObjectMesh)
+				{
+					InteriorObject_ptr interiorObject = Object_CastToInteriorObject(component);
+					interiorObject->PrepareForRender(m_device, m_resources);
+					InteriorObjectShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
+					m_interiorObjectDeferredRenderPipeline->CreateShaderObject(shaderObject);
+				}
+			}
 		}
 		m_objects.push_back(object);
 	}
@@ -146,42 +155,10 @@ namespace MyosotisFW::System::Render
 			m_lightingRenderPipeline->UpdateCameraPosition(glm::vec4(m_mainCamera->GetCameraPos(), 0.0f));
 		}
 
-		std::vector<StaticMesh_ptr> firstStaticMesh{};
-		uint32_t id = 0;
-		for (ObjectBase_ptr& object : m_objects)
+		for (StageObject_ptr& object : m_objects)
 		{
-			object->SetRenderID(id);
-			if (IsStaticMesh(object->GetObjectType()))
-			{
-				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				staticMesh->Update(updateData, m_mainCamera);
-				firstStaticMesh.push_back(staticMesh);
-			}
-			else if (object->GetObjectType() == ObjectType::Skybox)
-			{
-				Skybox_ptr staticMesh = Object_CastToSkybox(object);
-				staticMesh->Update(updateData, m_mainCamera);
-			}
-			else if (object->GetObjectType() == ObjectType::InteriorObjectMesh)
-			{
-				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
-				staticMesh->Update(updateData, m_mainCamera);
-			}
-			id++;
+			object->Update(updateData, m_mainCamera);
 		}
-
-		// TEST
-		if (firstStaticMesh.size() >= 2)
-		{
-			g_debugTimer += updateData.deltaTime * g_debugSpeed;
-			if (g_debugTimer >= 360.0f)
-			{
-				g_debugTimer -= 360.0f;
-			}
-			firstStaticMesh[1]->SetRot(glm::vec3(g_debugTimer, 0.0f, 0.0f));
-			firstStaticMesh[1]->Update(updateData, m_mainCamera);
-		}
-		// TEST
 	}
 
 	void RenderSubsystem::FrustumCuller()
@@ -211,13 +188,19 @@ namespace MyosotisFW::System::Render
 				}
 				{// obbDatasSSBO
 					m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.clear();
-					for (ObjectBase_ptr& object : m_objects)
+					for (StageObject_ptr& object : m_objects)
 					{
-						if (IsStaticMesh(object->GetObjectType()))
+						std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::CustomMesh, true);
+						std::vector<ComponentBase_ptr> subComponents = object->FindAllComponents(ComponentType::PrimitiveGeometryMesh, true);
+						components.insert(components.end(), subComponents.begin(), subComponents.end());
+						for (ComponentBase_ptr& component : components)
 						{
-							StaticMesh_ptr staticMeshPtr = Object_CastToStaticMesh(object);
-							m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.push_back(staticMeshPtr->GetWorldOBBData());
-							staticObjectCount++;
+							if (IsStaticMesh(component->GetType()))
+							{
+								StaticMesh_ptr staticMeshPtr = Object_CastToStaticMesh(component);
+								m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.push_back(staticMeshPtr->GetWorldOBBData());
+								staticObjectCount++;
+							}
 						}
 					}
 				}
@@ -261,11 +244,17 @@ namespace MyosotisFW::System::Render
 
 		m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		for (ObjectBase_ptr& object : m_objects)
+		for (StageObject_ptr& object : m_objects)
 		{
-			if (IsStaticMesh(object->GetObjectType()))
+			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::CustomMesh, true);
+			std::vector<ComponentBase_ptr> subComponents = object->FindAllComponents(ComponentType::PrimitiveGeometryMesh, true);
+			components.insert(components.end(), subComponents.begin(), subComponents.end());
+			for (ComponentBase_ptr& component : components)
 			{
-				Object_CastToStaticMesh(object)->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
+				if (IsStaticMesh(component->GetType()))
+				{
+					Object_CastToStaticMesh(component)->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
+				}
 			}
 		}
 
@@ -285,41 +274,34 @@ namespace MyosotisFW::System::Render
 
 		std::vector<TransparentStaticMesh> staticMeshes{};
 		uint32_t staticMeshCounter = 0;
-#ifdef EDITOR
-		uint32_t renderdStaticMesh = 0;
-#endif
-		for (ObjectBase_ptr& object : m_objects)
+		for (StageObject_ptr& object : m_objects)
 		{
-			if (IsStaticMesh(object->GetObjectType()))
+			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
+			for (ComponentBase_ptr& component : components)
 			{
-				if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
+				if (IsStaticMesh(component->GetType()))
 				{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
+					if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
+					{
+						StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
 
-					// Zソート(簡易)
-					staticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
-#ifdef EDITOR
-					renderdStaticMesh++;
-#endif
+						// Zソート(簡易)
+						staticMeshes.push_back({ m_mainCamera->GetDistance(staticMesh->GetPos()), staticMesh });
+					}
+					staticMeshCounter++;
 				}
-				staticMeshCounter++;
-			}
-			else if (object->GetObjectType() == ObjectType::Skybox)
-			{
-				Skybox_ptr staticMesh = Object_CastToSkybox(object);
-				staticMesh->BindCommandBuffer(currentCommandBuffer);
-			}
-			else if (object->GetObjectType() == ObjectType::InteriorObjectMesh)
-			{
-				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(object);
-				staticMesh->BindCommandBuffer(currentCommandBuffer);
+				else if (component->GetType() == ComponentType::Skybox)
+				{
+					Skybox_ptr staticMesh = Object_CastToSkybox(component);
+					staticMesh->BindCommandBuffer(currentCommandBuffer);
+				}
+				else if (component->GetType() == ComponentType::InteriorObjectMesh)
+				{
+					InteriorObject_ptr staticMesh = Object_CastToInteriorObject(component);
+					staticMesh->BindCommandBuffer(currentCommandBuffer);
+				}
 			}
 		}
-#ifdef EDITOR
-		ImGui::Begin("MainEditorWindow");
-		ImGui::Text("Rendered StaticMeshes: %d", renderdStaticMesh);
-		ImGui::End();
-#endif
 
 		// 距離ソート
 		std::sort(staticMeshes.begin(), staticMeshes.end(),
@@ -430,19 +412,6 @@ namespace MyosotisFW::System::Render
 		m_currentBufferIndex = 0;
 
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
-	}
-
-	void RenderSubsystem::SetOnPressedSaveGameStageCallback(const OnPressedSaveGameStageCallback& callback)
-	{
-		m_onPressedSaveGameStageCallback = callback;
-	}
-	void RenderSubsystem::SetOnPressedLoadGameStageCallback(const OnPressedLoadGameStageCallback& callback)
-	{
-		m_onPressedLoadGameStageCallback = callback;
-	}
-	void RenderSubsystem::SetOnPressedCreateObjectCallback(const OnPressedCreateObjectCallback& callback)
-	{
-		m_onPressedCreateObjectCallback = callback;
 	}
 
 	void RenderSubsystem::initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface)
@@ -652,13 +621,17 @@ namespace MyosotisFW::System::Render
 
 		// update descriptors
 		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		for (ObjectBase_ptr& object : m_objects)
+		for (StageObject_ptr& object : m_objects)
 		{
-			if (IsStaticMesh(object->GetObjectType()))
+			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
+			for (ComponentBase_ptr& component : components)
 			{
-				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(object);
-				StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
-				m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+				if (IsStaticMesh(component->GetType()))
+				{
+					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
+					StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
+					m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
+				}
 			}
 		}
 	}

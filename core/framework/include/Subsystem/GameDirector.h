@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
-#include "ObjectBase.h"
+#include "ComponentBase.h"
 #include "RenderSubsystem.h"
 
 namespace MyosotisFW::System::GameDirector {
@@ -12,7 +12,7 @@ namespace MyosotisFW::System::GameDirector {
 		~GameDirector() {};
 
 		void LoadGameStageFile(const std::string& fileName);
-		void SaveGameStageFile(const std::string& fileName, const std::vector<ObjectBase_ptr>& objects);
+		void SaveGameStageFile(const std::string& fileName, const std::vector<ComponentBase_ptr>& objects);
 
 	private:
 		Render::RenderSubsystem_ptr m_renderSubsystem;

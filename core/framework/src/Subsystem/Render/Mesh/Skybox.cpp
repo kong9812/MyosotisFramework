@@ -6,7 +6,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	Skybox::Skybox() : ObjectBase()
+	Skybox::Skybox() : ComponentBase()
 	{
 		m_name = "Skybox";
 		m_skyboxShaderObject.standardUBO.cubemap.sampler = VK_NULL_HANDLE;

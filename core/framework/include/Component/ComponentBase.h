@@ -1,38 +1,33 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
-#include "ObjectType.h"
+#include "ComponentType.h"
 #include "Structs.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
-#include "istduuid.h"
+#include "ComponentFactory.h"
 
 namespace MyosotisFW
 {
-	typedef struct
-	{
-		glm::vec3 pos;
-		glm::vec3 rot;
-		glm::vec3 scale;
-	}Transform;
+	class ComponentBase;
+	TYPEDEF_SHARED_PTR(ComponentBase)
 
-	class ObjectBase;
-	TYPEDEF_SHARED_PTR_ARGS(ObjectBase)
-
-		class ObjectBase
+		class ComponentBase
 	{
 	public:
-		ObjectBase() :
+		ComponentBase() :
 			m_transfrom({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
 			m_objectID(),
 			m_isReady(false),
-			m_name()
+			m_name(),
+			m_aabbMin(FLT_MAX),
+			m_aabbMax(FLT_MIN)
 		{
 			m_objectID = hashMaker();
-			m_name = "ObjectBase";
+			m_name = "ComponentBase";
 		};
 
-		virtual ~ObjectBase() = default;
+		virtual ~ComponentBase() = default;
 
 		// todo.コンポーネント関連の処理
 
@@ -44,9 +39,9 @@ namespace MyosotisFW
 		//// Debug
 		//virtual void BindDebugGUIElement() = 0;
 
-		virtual const ObjectType GetObjectType() const { return ObjectType::Undefined; }
+		virtual const ComponentType GetType() const { return ComponentType::Undefined; }
 		const std::string GetName() const { return m_name; }
-		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetObjectType()).value(); }
+		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
 		const uuids::uuid GetObjectID() const { return m_objectID; }
 
 		const glm::vec3 GetPos() const { return m_transfrom.pos; }
@@ -56,6 +51,30 @@ namespace MyosotisFW
 		const void SetRot(const glm::vec3& rot) { m_transfrom.rot = rot; }
 		const void SetScale(const glm::vec3& scale) { m_transfrom.scale = scale; }
 		void SetRenderID(uint32_t id) { m_renderID = id; }
+
+		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
+		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
+		glm::vec3 GetWorldAABBMin() { return (m_aabbMin + m_transfrom.pos) * m_transfrom.scale; }
+		glm::vec3 GetWorldAABBMax() { return (m_aabbMax + m_transfrom.pos) * m_transfrom.scale; }
+		OBBData GetWorldOBBData()
+		{
+			OBBData obbData{};
+
+			glm::vec3 localExtent = (m_aabbMax - m_aabbMin) * 0.5f;		// ローカルAABBの半径
+			glm::vec3 centerLocal = (m_aabbMax + m_aabbMin) * 0.5f;		// ローカルAABBの中心
+			glm::vec3 scaleExtent = localExtent * m_transfrom.scale;	// スケール適用
+
+			// 回転を適用
+			glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transfrom.rot)));
+			obbData.axisX = glm::vec4(rotMat * glm::vec3(1.0f, 0.0f, 0.0f), scaleExtent.x);
+			obbData.axisY = glm::vec4(rotMat * glm::vec3(0.0f, 1.0f, 0.0f), scaleExtent.y);
+			obbData.axisZ = glm::vec4(rotMat * glm::vec3(0.0f, 0.0f, 1.0f), scaleExtent.z);
+
+			// OBBの中心 (ワールド空間)
+			obbData.center = glm::vec4(m_transfrom.pos + rotMat * (centerLocal * m_transfrom.scale), 0.0f);
+
+			return obbData;
+		}
 
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
@@ -71,7 +90,7 @@ namespace MyosotisFW
 
 			// もし子要素があれば
 			rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
-			for (const auto& child : m_childen)
+			for (const auto& child : m_children)
 			{
 				childrenArray.PushBack(childrenArray.PushBack(child->Serialize(allocator), allocator), allocator);
 			}
@@ -81,7 +100,7 @@ namespace MyosotisFW
 		}
 
 		// デシリアルライズ
-		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject)
+		virtual void Deserialize(const rapidjson::Value& doc)
 		{
 			m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 			m_name = doc["name"].GetString();
@@ -97,10 +116,25 @@ namespace MyosotisFW
 				{
 					auto typeID = child["typeID"].GetString();
 					auto optType = uuids::uuid::from_string(typeID);
-					ObjectType type = findObjectTypeFromTypeID(optType.value());
-					createObject(type, child);
+					ComponentType type = findComponentTypeFromTypeID(optType.value());
+					ComponentBase_ptr component = System::ComponentFactory::CreateComponent(type);
+					component->Deserialize(child);
+					m_children.push_back(component);
 				}
 			}
+		}
+
+		// Has Camera
+		bool HasCamera() const
+		{
+			if (GetType() == ComponentType::FPSCamera)
+				return true;
+
+			for (const auto& child : m_children)
+				if (child->HasCamera())
+					return true;
+
+			return false;
 		}
 
 	protected:
@@ -110,6 +144,10 @@ namespace MyosotisFW
 		uint32_t m_renderID;
 
 		Transform m_transfrom;
-		std::vector<ObjectBase_ptr> m_childen;
+		std::vector<ComponentBase_ptr> m_children;
+
+		// AABB
+		glm::vec3 m_aabbMin;
+		glm::vec3 m_aabbMax;
 	};
 };

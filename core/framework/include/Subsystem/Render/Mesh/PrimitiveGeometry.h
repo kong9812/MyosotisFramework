@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "StaticMesh.h"
-#include "ObjectCast.h"
+#include "ComponentCast.h"
 #include "PrimitiveGeometryShape.h"
 
 namespace MyosotisFW::System::Render
@@ -12,7 +12,7 @@ namespace MyosotisFW::System::Render
 		PrimitiveGeometry();
 		~PrimitiveGeometry() {};
 
-		virtual const ObjectType GetObjectType() const override { return ObjectType::PrimitiveGeometryMesh; }
+		virtual const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render
 
 		glm::vec4 GetCullerData() override;
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
-		virtual void Deserialize(const rapidjson::Value& doc, const std::function<void(ObjectType, const rapidjson::Value&)>& createObject) override;
+		virtual void Deserialize(const rapidjson::Value& doc) override;
 	private:
 		void loadAssets() override;
 		void prepareShaderStorageBuffers() override {};
