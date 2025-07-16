@@ -2,10 +2,16 @@
 #pragma once
 #include "RenderPipelineBase.h"
 #include "Structs.h"
-#include "Camera.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	namespace Camera
+	{
+		class CameraBase;
+		TYPEDEF_SHARED_PTR_FWD(CameraBase);
+	}
+
 	class LightingRenderPipeline : public RenderPipelineBase
 	{
 	public:
@@ -37,5 +43,5 @@ namespace MyosotisFW::System::Render
 		VkDescriptorImageInfo m_baseColorDescriptorImageInfo;
 
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(LightingRenderPipeline)
+	TYPEDEF_SHARED_PTR_ARGS(LightingRenderPipeline);
 }

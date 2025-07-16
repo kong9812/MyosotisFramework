@@ -30,5 +30,5 @@ namespace MyosotisFW::System::Render
 		VkSampler m_shadowMapSampler;
 		VkDescriptorImageInfo m_shadowMapDescriptorImageInfo;
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(ShadowMapRenderPipeline)
+	TYPEDEF_SHARED_PTR_ARGS(ShadowMapRenderPipeline);
 }

@@ -1,9 +1,13 @@
 // Copyright (c) 2025 kong9812
+#pragma once
 #include "RenderPassBase.h"
-#include "RenderSwapchain.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderSwapchain;
+	TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
+
 	class MainRenderPass : public RenderPassBase
 	{
 	public:
@@ -41,5 +45,5 @@ namespace MyosotisFW::System::Render
 		void createFrameBuffers() override;
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(MainRenderPass)
+	TYPEDEF_SHARED_PTR_ARGS(MainRenderPass);
 }

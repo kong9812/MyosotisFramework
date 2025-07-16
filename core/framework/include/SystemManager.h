@@ -1,13 +1,24 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
-
+#include <unordered_map>
+#include "iglm.h"
 #include "iglfw.h"
-#include "RenderSubsystem.h"
-#include "GameDirector.h"
 
 namespace MyosotisFW::System
 {
+	// 前方宣言
+	namespace GameDirector
+	{
+		class GameDirector;
+		TYPEDEF_SHARED_PTR_FWD(GameDirector);
+	}
+	namespace Render
+	{
+		class RenderSubsystem;
+		TYPEDEF_SHARED_PTR_FWD(RenderSubsystem);
+	}
+
 	class SystemManager
 	{
 	public:
@@ -72,5 +83,5 @@ namespace MyosotisFW::System
 		static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 		static void dropCallback(GLFWwindow* window, int path_count, const char* paths[]);
 	};
-	TYPEDEF_SHARED_PTR_ARGS(SystemManager)
+	TYPEDEF_SHARED_PTR_ARGS(SystemManager);
 }

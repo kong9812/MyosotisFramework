@@ -34,6 +34,6 @@ namespace MyosotisFW::System::Render
 		// shader object
 		InteriorObjectShaderObject m_interiorObjectShaderObject;
 	};
-	TYPEDEF_SHARED_PTR(InteriorObject)
-		OBJECT_CAST_FUNCTION(InteriorObject)
+	TYPEDEF_SHARED_PTR(InteriorObject);
+	OBJECT_CAST_FUNCTION(InteriorObject);
 }

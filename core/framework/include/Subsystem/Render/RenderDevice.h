@@ -7,10 +7,13 @@
 #include "Structs.h"
 #include "VK_Validation.h"
 #include "ivma.h"
-#include "RenderQueue.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderQueue;
+	TYPEDEF_SHARED_PTR_FWD(RenderQueue);
+
 	class RenderDevice
 	{
 	public:
@@ -48,5 +51,5 @@ namespace MyosotisFW::System::Render
 		void prepareAllocationCallbacks();
 		void prepareVMA(const VkInstance& vkInstance);
 	};
-	TYPEDEF_SHARED_PTR_ARGS(RenderDevice)
+	TYPEDEF_SHARED_PTR_ARGS(RenderDevice);
 }

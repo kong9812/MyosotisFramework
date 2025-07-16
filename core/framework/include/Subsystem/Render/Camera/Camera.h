@@ -59,6 +59,6 @@ namespace MyosotisFW::System::Render::Camera
 		// 画面サイズ
 		glm::vec2 m_screenSize;
 	};
-	TYPEDEF_SHARED_PTR(CameraBase)
-		OBJECT_CAST_FUNCTION(CameraBase)
+	TYPEDEF_SHARED_PTR(CameraBase);
+	OBJECT_CAST_FUNCTION(CameraBase);
 }

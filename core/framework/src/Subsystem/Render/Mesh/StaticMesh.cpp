@@ -2,6 +2,10 @@
 #include "StaticMesh.h"
 #include <vector>
 
+#include "RenderDevice.h"
+#include "RenderResources.h"
+#include "Camera.h"
+
 #include "ivma.h"
 #include "AppInfo.h"
 #include "VK_CreateInfo.h"
@@ -12,7 +16,7 @@ namespace MyosotisFW::System::Render
 	StaticMesh::StaticMesh() : ComponentBase()
 	{
 		m_name = "StaticMesh";
-		m_transfrom.scale = glm::vec3(1.0f);
+		m_transform.scale = glm::vec3(1.0f);
 		m_staticMeshShaderObject = {};
 		m_staticMeshShaderObject.standardUBO.normalMap.sampler = VK_NULL_HANDLE;
 	}
@@ -59,7 +63,7 @@ namespace MyosotisFW::System::Render
 	{
 		if (camera)
 		{
-			float distance = camera->GetDistance(m_transfrom.pos);
+			float distance = camera->GetDistance(m_transform.pos);
 			if (distance <= m_lodDistances[LOD::LOD1])
 			{
 				m_currentLOD = LOD::LOD1;

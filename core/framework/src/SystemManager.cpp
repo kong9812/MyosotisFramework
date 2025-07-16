@@ -3,6 +3,9 @@
 
 #include <vector>
 
+#include "GameDirector.h"
+#include "RenderSubsystem.h"
+
 #include "VK_CreateInfo.h"
 #include "VK_Validation.h"
 #include "AppInfo.h"

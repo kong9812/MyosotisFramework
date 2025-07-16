@@ -24,5 +24,5 @@ namespace MyosotisFW::System::Render
 
 		VkDescriptorImageInfo m_editorRenderTargetDescriptorImageInfo;
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(EditorFinalCompositionRenderPipeline)
+	TYPEDEF_UNIQUE_PTR_ARGS(EditorFinalCompositionRenderPipeline);
 }

@@ -20,5 +20,5 @@ namespace MyosotisFW::System::Render
 		void createFrameBuffers() override;
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(ShadowMapRenderPass)
+	TYPEDEF_SHARED_PTR_ARGS(ShadowMapRenderPass);
 }

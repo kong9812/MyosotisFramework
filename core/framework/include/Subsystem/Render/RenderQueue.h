@@ -28,5 +28,5 @@ namespace MyosotisFW::System::Render
 		uint32_t m_queueFamilyIndex;
 		mutable std::mutex m_mutex;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(RenderQueue)
+	TYPEDEF_SHARED_PTR_ARGS(RenderQueue);
 }

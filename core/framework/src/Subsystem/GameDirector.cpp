@@ -1,5 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "GameDirector.h"
+#include "ComponentBase.h"
+#include "RenderSubsystem.h"
 #include "Logger.h"
 #include "istduuid.h"
 #include "CustomMesh.h"

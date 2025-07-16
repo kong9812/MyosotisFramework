@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "RenderResources.h"
+#include "RenderDevice.h"
 #include "VK_Loader.h"
 #include "RenderQueue.h"
 

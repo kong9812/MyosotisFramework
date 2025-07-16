@@ -1,10 +1,27 @@
 // Copyright (c) 2025 kong9812
 #include "EditorRenderSubsystem.h"
-#include "EditorRenderResources.h"
 
-#include "EditorFinalCompositionRenderPass.h"
-#include "EditorFinalCompositionRenderPipeline.h"
+#include "StageObject.h"
+
+#include "EditorRenderResources.h"
+#include "RenderSwapchain.h"
+
+#include "EditorGUI.h"
 #include "EditorCamera.h"
+#include "StaticMesh.h"
+
+#include "EditorRenderPass.h"
+#include "ShadowMapRenderPass.h"
+#include "MainRenderPass.h"
+#include "EditorFinalCompositionRenderPass.h"
+
+#include "SkyboxRenderPipeline.h"
+#include "ShadowMapRenderPipeline.h"
+#include "DeferredRenderPipeline.h"
+#include "CompositionRenderPipeline.h"
+#include "LightingRenderPipeline.h"
+#include "EditorFinalCompositionRenderPipeline.h"
+#include "InteriorObjectDeferredRenderPipeline.h"
 
 #include "AppInfo.h"
 

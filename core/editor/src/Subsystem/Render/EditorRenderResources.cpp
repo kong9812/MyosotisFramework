@@ -1,6 +1,8 @@
 // Copyright (c) 2025 kong9812
 #include "EditorRenderResources.h"
 
+#include "RenderDevice.h"
+
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 

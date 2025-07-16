@@ -1,9 +1,21 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "RenderSubsystem.h"
-#include "EditorGUI.h"
-#include "EditorRenderPass.h"
 #include "ThreadSaveValue.h"
+
+// 前方宣言
+namespace MyosotisFW
+{
+	class ComponentBase;
+	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+	namespace System::Render
+	{
+		class EditorGUI;
+		TYPEDEF_SHARED_PTR_FWD(EditorGUI);
+		class EditorRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(EditorRenderPass);
+	}
+}
 
 namespace MyosotisFW::System::Render
 {
@@ -34,5 +46,5 @@ namespace MyosotisFW::System::Render
 		EditorRenderPass_ptr m_editorRenderPass;
 		ThreadSaveValue<ComponentBase_ptr> m_selectedObject;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem)
+	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem);
 }

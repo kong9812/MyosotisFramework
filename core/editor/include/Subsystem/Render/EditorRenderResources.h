@@ -21,5 +21,5 @@ namespace MyosotisFW::System::Render
 	private:
 		VMAImage m_editorRenderTarget;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(EditorRenderResources)
+	TYPEDEF_SHARED_PTR_ARGS(EditorRenderResources);
 }

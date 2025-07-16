@@ -27,6 +27,6 @@ namespace MyosotisFW::System::Render
 
 		CustomMeshInfo m_customMeshInfo;
 	};
-	TYPEDEF_SHARED_PTR(CustomMesh)
-		OBJECT_CAST_FUNCTION(CustomMesh)
+	TYPEDEF_SHARED_PTR(CustomMesh);
+	OBJECT_CAST_FUNCTION(CustomMesh);
 }

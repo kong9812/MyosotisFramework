@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "FinalCompositionRenderPipeline.h"
+#include "Camera.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 

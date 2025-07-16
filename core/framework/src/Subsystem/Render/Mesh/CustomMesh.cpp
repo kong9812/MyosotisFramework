@@ -1,7 +1,9 @@
 // Copyright (c) 2025 kong9812
 #include "CustomMesh.h"
+#include "RenderDevice.h"
 #include "RenderResources.h"
 #include "VK_CreateInfo.h"
+#include "Camera.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -18,8 +20,8 @@ namespace MyosotisFW::System::Render
 		loadAssets();
 		prepareShaderStorageBuffers();
 
-		m_transfrom.scale = glm::vec3(1.0f);
-		m_transfrom.rot = glm::vec3(-90.0f, 0.0f, 0.0f);
+		m_transform.scale = glm::vec3(1.0f);
+		m_transform.rot = glm::vec3(-90.0f, 0.0f, 0.0f);
 
 		// todo.検証処理
 		m_isReady = true;
@@ -34,11 +36,11 @@ namespace MyosotisFW::System::Render
 			m_staticMeshShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
 			m_staticMeshShaderObject.standardUBO.data.view = camera->GetViewMatrix();
 		}
-		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transform.scale));
 
 		if (!m_isReady) return;
 		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
@@ -51,7 +53,7 @@ namespace MyosotisFW::System::Render
 
 	glm::vec4 CustomMesh::GetCullerData()
 	{
-		return glm::vec4(m_transfrom.pos, 1.0f);
+		return glm::vec4(m_transform.pos, 1.0f);
 	}
 
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const

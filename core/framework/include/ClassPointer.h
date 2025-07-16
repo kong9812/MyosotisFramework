@@ -1,6 +1,12 @@
 #pragma once
 #include <memory>
 
+#define TYPEDEF_SHARED_PTR_FWD(T)                                               \
+    typedef std::shared_ptr<T> T##_ptr;                                     
+
+#define TYPEDEF_UNIQUE_PTR_FWD(T)                                           \
+    typedef std::unique_ptr<T> T##_ptr;                                     
+
 #define TYPEDEF_SHARED_PTR(T)                                               \
     typedef std::shared_ptr<T> T##_ptr;                                     \
     inline T##_ptr Create##T##Pointer() { return std::make_shared<T>(); }   

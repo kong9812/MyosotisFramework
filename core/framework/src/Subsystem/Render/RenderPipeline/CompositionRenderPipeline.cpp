@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "CompositionRenderPipeline.h"
+#include "Camera.h"
 #include "VK_CreateInfo.h"
 
 namespace MyosotisFW::System::Render

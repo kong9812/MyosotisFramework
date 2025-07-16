@@ -2,13 +2,21 @@
 #pragma once
 #include "ComponentBase.h"
 #include "ComponentCast.h"
-#include "RenderDevice.h"
-#include "RenderResources.h"
-#include "Camera.h"
 #include "RenderPieplineList.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderResources;
+	TYPEDEF_SHARED_PTR_FWD(RenderResources);
+	namespace Camera
+	{
+		class CameraBase;
+		TYPEDEF_SHARED_PTR_FWD(CameraBase);
+	}
+
 	class Skybox : public ComponentBase
 	{
 	public:
@@ -39,6 +47,6 @@ namespace MyosotisFW::System::Render
 		// shader object
 		SkyboxShaderObject m_skyboxShaderObject;
 	};
-	TYPEDEF_SHARED_PTR(Skybox)
-		OBJECT_CAST_FUNCTION(Skybox)
+	TYPEDEF_SHARED_PTR(Skybox);
+	OBJECT_CAST_FUNCTION(Skybox);
 }

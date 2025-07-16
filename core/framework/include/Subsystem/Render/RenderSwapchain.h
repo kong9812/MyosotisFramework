@@ -2,11 +2,15 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include "ClassPointer.h"
-#include "RenderDevice.h"
 #include "VK_Validation.h"
+#include "Structs.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+
 	class RenderSwapchain
 	{
 	public:
@@ -36,5 +40,5 @@ namespace MyosotisFW::System::Render
 		std::vector<Image> m_swapchainImage;
 		uint32_t m_minImageCount;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(RenderSwapchain)
+	TYPEDEF_SHARED_PTR_ARGS(RenderSwapchain);
 }

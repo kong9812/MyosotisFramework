@@ -21,5 +21,5 @@ namespace MyosotisFW::System::Render
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 	};
-	TYPEDEF_UNIQUE_PTR_ARGS(SkyboxRenderPipeline)
+	TYPEDEF_SHARED_PTR_ARGS(SkyboxRenderPipeline);
 }

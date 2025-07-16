@@ -5,7 +5,7 @@
 
 namespace MyosotisFW {
 	class ComponentBase;
-	TYPEDEF_SHARED_PTR_ARGS(ComponentBase)
+	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
 }
 
 namespace MyosotisFW::System::ComponentFactory

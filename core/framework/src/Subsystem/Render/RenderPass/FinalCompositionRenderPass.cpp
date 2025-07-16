@@ -3,11 +3,18 @@
 #include <vector>
 #include <array>
 
+#include "RenderSwapchain.h"
+
 #include "AppInfo.h"
 #include "VK_Loader.h"
 
 namespace MyosotisFW::System::Render
 {
+	FinalCompositionRenderPass::FinalCompositionRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
+		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()),
+		m_swapchain(swapchain) {
+	}
+
 	FinalCompositionRenderPass::~FinalCompositionRenderPass()
 	{
 		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());

@@ -12,7 +12,7 @@ namespace MyosotisFW
 	}
 }
 
-#define OBJECT_CAST_FUNCTION(To)															\
+#define OBJECT_CAST_FUNCTION(To)																\
     inline std::shared_ptr<To> Object_CastTo##To(const std::shared_ptr<ComponentBase>& obj) {	\
-        return std::dynamic_pointer_cast<To>(obj);											\
+        return std::dynamic_pointer_cast<To>(obj);												\
     }

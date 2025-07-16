@@ -10,13 +10,13 @@
 namespace MyosotisFW
 {
 	class ComponentBase;
-	TYPEDEF_SHARED_PTR(ComponentBase)
+	TYPEDEF_SHARED_PTR(ComponentBase);
 
-		class ComponentBase
+	class ComponentBase
 	{
 	public:
 		ComponentBase() :
-			m_transfrom({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
+			m_transform({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
 			m_objectID(),
 			m_isReady(false),
 			m_name(),
@@ -29,49 +29,39 @@ namespace MyosotisFW
 
 		virtual ~ComponentBase() = default;
 
-		// todo.コンポーネント関連の処理
-
-		// Update
-		//virtual void Update(const UpdateData& updateData) = 0;
-
-		// Render
-		//virtual void BindCommandBuffer(VkCommandBuffer commandBuffer) = 0;
-		//// Debug
-		//virtual void BindDebugGUIElement() = 0;
-
 		virtual const ComponentType GetType() const { return ComponentType::Undefined; }
 		const std::string GetName() const { return m_name; }
 		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
 		const uuids::uuid GetObjectID() const { return m_objectID; }
 
-		const glm::vec3 GetPos() const { return m_transfrom.pos; }
-		const glm::vec3 GetRot() const { return m_transfrom.rot; }
-		const glm::vec3 GetScale() const { return m_transfrom.scale; }
-		const void SetPos(const glm::vec3& pos) { m_transfrom.pos = pos; }
-		const void SetRot(const glm::vec3& rot) { m_transfrom.rot = rot; }
-		const void SetScale(const glm::vec3& scale) { m_transfrom.scale = scale; }
+		const glm::vec3 GetPos() const { return m_transform.pos; }
+		const glm::vec3 GetRot() const { return m_transform.rot; }
+		const glm::vec3 GetScale() const { return m_transform.scale; }
+		const void SetPos(const glm::vec3& pos) { m_transform.pos = pos; }
+		const void SetRot(const glm::vec3& rot) { m_transform.rot = rot; }
+		const void SetScale(const glm::vec3& scale) { m_transform.scale = scale; }
 		void SetRenderID(uint32_t id) { m_renderID = id; }
 
 		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
 		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
-		glm::vec3 GetWorldAABBMin() { return (m_aabbMin + m_transfrom.pos) * m_transfrom.scale; }
-		glm::vec3 GetWorldAABBMax() { return (m_aabbMax + m_transfrom.pos) * m_transfrom.scale; }
+		glm::vec3 GetWorldAABBMin() { return (m_aabbMin + m_transform.pos) * m_transform.scale; }
+		glm::vec3 GetWorldAABBMax() { return (m_aabbMax + m_transform.pos) * m_transform.scale; }
 		OBBData GetWorldOBBData()
 		{
 			OBBData obbData{};
 
 			glm::vec3 localExtent = (m_aabbMax - m_aabbMin) * 0.5f;		// ローカルAABBの半径
 			glm::vec3 centerLocal = (m_aabbMax + m_aabbMin) * 0.5f;		// ローカルAABBの中心
-			glm::vec3 scaleExtent = localExtent * m_transfrom.scale;	// スケール適用
+			glm::vec3 scaleExtent = localExtent * m_transform.scale;	// スケール適用
 
 			// 回転を適用
-			glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transfrom.rot)));
+			glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transform.rot)));
 			obbData.axisX = glm::vec4(rotMat * glm::vec3(1.0f, 0.0f, 0.0f), scaleExtent.x);
 			obbData.axisY = glm::vec4(rotMat * glm::vec3(0.0f, 1.0f, 0.0f), scaleExtent.y);
 			obbData.axisZ = glm::vec4(rotMat * glm::vec3(0.0f, 0.0f, 1.0f), scaleExtent.z);
 
 			// OBBの中心 (ワールド空間)
-			obbData.center = glm::vec4(m_transfrom.pos + rotMat * (centerLocal * m_transfrom.scale), 0.0f);
+			obbData.center = glm::vec4(m_transform.pos + rotMat * (centerLocal * m_transform.scale), 0.0f);
 
 			return obbData;
 		}
@@ -84,9 +74,9 @@ namespace MyosotisFW
 			json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
 			json.AddMember("typeID", rapidjson::Value(uuids::to_string(GetTypeID()).c_str(), allocator), allocator);
 
-			SerializeVec3ToJson<glm::vec3>("pos", m_transfrom.pos, json, allocator);
-			SerializeVec3ToJson<glm::vec3>("rot", m_transfrom.rot, json, allocator);
-			SerializeVec3ToJson<glm::vec3>("scale", m_transfrom.scale, json, allocator);
+			SerializeVec3ToJson<glm::vec3>("pos", m_transform.pos, json, allocator);
+			SerializeVec3ToJson<glm::vec3>("rot", m_transform.rot, json, allocator);
+			SerializeVec3ToJson<glm::vec3>("scale", m_transform.scale, json, allocator);
 
 			// もし子要素があれば
 			rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
@@ -105,9 +95,9 @@ namespace MyosotisFW
 			m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 			m_name = doc["name"].GetString();
 
-			DeserializeVec3FromJson<glm::vec3>("pos", m_transfrom.pos, doc);
-			DeserializeVec3FromJson<glm::vec3>("rot", m_transfrom.rot, doc);
-			DeserializeVec3FromJson<glm::vec3>("scale", m_transfrom.scale, doc);
+			DeserializeVec3FromJson<glm::vec3>("pos", m_transform.pos, doc);
+			DeserializeVec3FromJson<glm::vec3>("rot", m_transform.rot, doc);
+			DeserializeVec3FromJson<glm::vec3>("scale", m_transform.scale, doc);
 
 			// 子要素のデシリアル化
 			if (doc.HasMember("children") && doc["children"].IsArray())
@@ -143,7 +133,7 @@ namespace MyosotisFW
 		uuids::uuid m_objectID;
 		uint32_t m_renderID;
 
-		Transform m_transfrom;
+		Transform m_transform;
 		std::vector<ComponentBase_ptr> m_children;
 
 		// AABB

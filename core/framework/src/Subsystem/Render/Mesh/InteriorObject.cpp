@@ -1,6 +1,10 @@
 // Copyright (c) 2025 kong9812
 #include "InteriorObject.h"
 
+#include "Camera.h"
+#include "RenderDevice.h"
+#include "RenderResources.h"
+
 #include "VK_CreateInfo.h"
 #include "PrimitiveGeometryShape.h"
 
@@ -65,11 +69,11 @@ namespace MyosotisFW::System::Render
 			m_interiorObjectShaderObject.standardUBO.data.view = camera->GetViewMatrix();
 			m_interiorObjectShaderObject.cameraUBO.data.position = glm::vec4(camera->GetCameraPos(), 0.0);
 		}
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transfrom.pos));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transfrom.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::scale(m_interiorObjectShaderObject.standardUBO.data.model, glm::vec3(m_transfrom.scale));
+		m_interiorObjectShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_interiorObjectShaderObject.standardUBO.data.model = glm::scale(m_interiorObjectShaderObject.standardUBO.data.model, glm::vec3(m_transform.scale));
 		m_interiorObjectShaderObject.standardUBO.data.renderID = m_renderID;
 
 		if (!m_isReady) return;

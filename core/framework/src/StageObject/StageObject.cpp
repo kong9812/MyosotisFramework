@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "StageObject.h"
+#include "ComponentBase.h"
 #include "ComponentType.h"
 #include "ComponentFactory.h"
 #include "FpsCamera.h"
@@ -8,28 +9,29 @@
 #include "CustomMesh.h"
 #include "Skybox.h"
 #include "InteriorObject.h"
+#include "Camera.h"
 
 namespace MyosotisFW
 {
-	namespace RenderNS = System::Render;
+	using namespace System::Render;
 
-	void StageObject::Update(const UpdateData& updateData, const RenderNS::Camera::CameraBase_ptr& mainCamera)
+	void StageObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
 			if (IsStaticMesh(component->GetType()))
 			{
-				RenderNS::StaticMesh_ptr staticMesh = RenderNS::Object_CastToStaticMesh(component);
+				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
 				staticMesh->Update(updateData, mainCamera);
 			}
 			else if (component->GetType() == ComponentType::Skybox)
 			{
-				RenderNS::Skybox_ptr staticMesh = RenderNS::Object_CastToSkybox(component);
+				Skybox_ptr staticMesh = Object_CastToSkybox(component);
 				staticMesh->Update(updateData, mainCamera);
 			}
 			else if (component->GetType() == ComponentType::InteriorObjectMesh)
 			{
-				RenderNS::InteriorObject_ptr staticMesh = RenderNS::Object_CastToInteriorObject(component);
+				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(component);
 				staticMesh->Update(updateData, mainCamera);
 			}
 		}
@@ -128,9 +130,9 @@ namespace MyosotisFW
 		json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
 		json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
 
-		SerializeVec3ToJson<glm::vec3>("pos", m_transfrom.pos, json, allocator);
-		SerializeVec3ToJson<glm::vec3>("rot", m_transfrom.rot, json, allocator);
-		SerializeVec3ToJson<glm::vec3>("scale", m_transfrom.scale, json, allocator);
+		SerializeVec3ToJson<glm::vec3>("pos", m_transform.pos, json, allocator);
+		SerializeVec3ToJson<glm::vec3>("rot", m_transform.rot, json, allocator);
+		SerializeVec3ToJson<glm::vec3>("scale", m_transform.scale, json, allocator);
 
 		// もし子要素があれば
 		rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
@@ -149,9 +151,9 @@ namespace MyosotisFW
 		m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 		m_name = doc["name"].GetString();
 
-		DeserializeVec3FromJson<glm::vec3>("pos", m_transfrom.pos, doc);
-		DeserializeVec3FromJson<glm::vec3>("rot", m_transfrom.rot, doc);
-		DeserializeVec3FromJson<glm::vec3>("scale", m_transfrom.scale, doc);
+		DeserializeVec3FromJson<glm::vec3>("pos", m_transform.pos, doc);
+		DeserializeVec3FromJson<glm::vec3>("rot", m_transform.rot, doc);
+		DeserializeVec3FromJson<glm::vec3>("scale", m_transform.scale, doc);
 
 		// 子要素のデシリアル化
 		if (doc.HasMember("children") && doc["children"].IsArray())

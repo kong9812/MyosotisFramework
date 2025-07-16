@@ -19,5 +19,5 @@ namespace MyosotisFW::System
 		void initializeGameDirector();
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(EditorManager)
+	TYPEDEF_SHARED_PTR_ARGS(EditorManager);
 }

@@ -3,6 +3,8 @@
 #include <vector>
 #include <array>
 
+#include "RenderSwapchain.h"
+
 #include "AppInfo.h"
 #include "VK_Loader.h"
 

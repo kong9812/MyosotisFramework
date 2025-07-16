@@ -1,10 +1,17 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include "ClassPointer.h"
 #include "FinalCompositionRenderPass.h"
 #include "EditorRenderResources.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderSwapchain;
+	TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
+
 	class EditorFinalCompositionRenderPass : public FinalCompositionRenderPass
 	{
 	public:
@@ -34,5 +41,5 @@ namespace MyosotisFW::System::Render
 		void createFrameBuffers() override;
 
 	};
-	TYPEDEF_SHARED_PTR_ARGS(EditorFinalCompositionRenderPass)
+	TYPEDEF_SHARED_PTR_ARGS(EditorFinalCompositionRenderPass);
 }

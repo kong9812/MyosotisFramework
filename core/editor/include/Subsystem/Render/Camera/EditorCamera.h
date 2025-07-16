@@ -1,3 +1,4 @@
+// Copyright (c) 2025 kong9812
 #pragma once
 #include "Camera.h"
 
@@ -26,6 +27,6 @@ namespace MyosotisFW::System::Render::Camera
 
 		void editorGUI();
 	};
-	TYPEDEF_SHARED_PTR(EditorCamera)
-		OBJECT_CAST_FUNCTION(EditorCamera)
+	TYPEDEF_SHARED_PTR(EditorCamera);
+	OBJECT_CAST_FUNCTION(EditorCamera);
 }

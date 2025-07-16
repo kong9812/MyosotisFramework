@@ -3,12 +3,16 @@
 #include <vulkan/vulkan.h>
 #include "iimgui.h"
 #include "ClassPointer.h"
-
-#include "RenderDevice.h"
-#include "RenderSwapchain.h"
+#include "Structs.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderSwapchain;
+	TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
+
 	class DebugGUI
 	{
 	public:
@@ -32,5 +36,5 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(DebugGUI)
+	TYPEDEF_SHARED_PTR_ARGS(DebugGUI);
 }

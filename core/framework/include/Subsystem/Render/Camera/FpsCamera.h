@@ -28,6 +28,6 @@ namespace MyosotisFW::System::Render::Camera
 		glm::vec2 m_lastMousePos;
 
 	};
-	TYPEDEF_SHARED_PTR(FPSCamera)
-		OBJECT_CAST_FUNCTION(FPSCamera)
+	TYPEDEF_SHARED_PTR(FPSCamera);
+	OBJECT_CAST_FUNCTION(FPSCamera);
 }

@@ -5,9 +5,33 @@
 #include <array>
 #include <backends/imgui_impl_vulkan.h>
 
+#include "StageObject.h"
+
+#include "RenderDevice.h"
+#include "RenderSwapchain.h"
+#include "RenderResources.h"
+
+#include "DebugGUI.h"
+#include "StaticMesh.h"
+#include "FpsCamera.h"
+
+#include "ShadowMapRenderPass.h"
+#include "MainRenderPass.h"
+#include "FinalCompositionRenderPass.h"
+
+#include "SkyboxRenderPipeline.h"
+#include "ShadowMapRenderPipeline.h"
+#include "DeferredRenderPipeline.h"
+#include "CompositionRenderPipeline.h"
+#include "LightingRenderPipeline.h"
+#include "FinalCompositionRenderPipeline.h"
+#include "InteriorObjectDeferredRenderPipeline.h"
+
+#include "RenderQueue.h"
 #include "VK_Validation.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
+
 #include "PrimitiveGeometry.h"
 #include "Skybox.h"
 #include "InteriorObject.h"

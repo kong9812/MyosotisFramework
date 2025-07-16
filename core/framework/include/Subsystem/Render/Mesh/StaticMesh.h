@@ -8,13 +8,21 @@
 #include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "Structs.h"
-#include "RenderDevice.h"
-#include "RenderResources.h"
-#include "Camera.h"
 #include "RenderPieplineList.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderResources;
+	TYPEDEF_SHARED_PTR_FWD(RenderResources);
+	namespace Camera
+	{
+		class CameraBase;
+		TYPEDEF_SHARED_PTR_FWD(CameraBase);
+	}
+
 	// todo.ファクトリーパターンにする予定
 	// StaticMeshFactory
 	// ・PrimitiveGeometryMesh
@@ -67,6 +75,6 @@ namespace MyosotisFW::System::Render
 		// shader object
 		StaticMeshShaderObject m_staticMeshShaderObject;
 	};
-	TYPEDEF_SHARED_PTR(StaticMesh)
-		OBJECT_CAST_FUNCTION(StaticMesh)
+	TYPEDEF_SHARED_PTR(StaticMesh);
+	OBJECT_CAST_FUNCTION(StaticMesh);
 }

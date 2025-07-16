@@ -10,7 +10,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		PrimitiveGeometry();
-		~PrimitiveGeometry() {};
+		~PrimitiveGeometry() {}
 
 		virtual const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }
 
@@ -27,6 +27,6 @@ namespace MyosotisFW::System::Render
 
 		Shape::PrimitiveGeometryShape m_primitiveGeometryShape;
 	};
-	TYPEDEF_SHARED_PTR(PrimitiveGeometry)
-		OBJECT_CAST_FUNCTION(PrimitiveGeometry)
+	TYPEDEF_SHARED_PTR(PrimitiveGeometry);
+	OBJECT_CAST_FUNCTION(PrimitiveGeometry);
 }

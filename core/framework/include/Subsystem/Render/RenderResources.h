@@ -3,12 +3,15 @@
 #include <unordered_map>
 #include <string>
 #include <vulkan/vulkan.h>
-
+#include "Structs.h"
 #include "ClassPointer.h"
-#include "RenderDevice.h"
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+
 	class RenderResources
 	{
 	public:
@@ -61,5 +64,5 @@ namespace MyosotisFW::System::Render
 		VMAImage m_mainRenderTarget;
 		VMAImage m_idMap;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(RenderResources)
+	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

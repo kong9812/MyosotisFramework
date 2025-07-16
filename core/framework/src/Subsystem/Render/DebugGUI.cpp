@@ -2,6 +2,10 @@
 #include "DebugGUI.h"
 #include <sstream>
 
+#include "RenderDevice.h"
+#include "RenderQueue.h"
+#include "RenderSwapchain.h"
+
 #include "AppInfo.h"
 #include "VK_CreateInfo.h"
 #include "VK_Validation.h"

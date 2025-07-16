@@ -5,25 +5,54 @@
 #include "iglfw.h"
 #include "Structs.h"
 
-#include "RenderDevice.h"
-#include "RenderSwapchain.h"
-#include "RenderResources.h"
-#include "DebugGUI.h"
-#include "StaticMesh.h"
-#include "FpsCamera.h"
-#include "StageObject.h"
+// 前方宣言
+namespace MyosotisFW
+{
+	class StageObject;
+	TYPEDEF_SHARED_PTR_FWD(StageObject);
 
-#include "SkyboxRenderPipeline.h"
-#include "ShadowMapRenderPipeline.h"
-#include "DeferredRenderPipeline.h"
-#include "CompositionRenderPipeline.h"
-#include "LightingRenderPipeline.h"
-#include "FinalCompositionRenderPipeline.h"
-#include "InteriorObjectDeferredRenderPipeline.h"
+	namespace System::Render
+	{
+		class RenderDevice;
+		TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+		class RenderSwapchain;
+		TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
+		class RenderResources;
+		TYPEDEF_SHARED_PTR_FWD(RenderResources);
 
-#include "ShadowMapRenderPass.h"
-#include "MainRenderPass.h"
-#include "FinalCompositionRenderPass.h"
+		class StaticMesh;
+		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
+		class DebugGUI;
+		TYPEDEF_SHARED_PTR_FWD(DebugGUI);
+		namespace Camera
+		{
+			class CameraBase;
+			TYPEDEF_SHARED_PTR_FWD(CameraBase);
+		}
+
+		class ShadowMapRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(ShadowMapRenderPass);
+		class MainRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(MainRenderPass);
+		class FinalCompositionRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPass);
+
+		class SkyboxRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPipeline);
+		class ShadowMapRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(ShadowMapRenderPipeline);
+		class DeferredRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(DeferredRenderPipeline);
+		class LightingRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(LightingRenderPipeline);
+		class CompositionRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(CompositionRenderPipeline);
+		class FinalCompositionRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPipeline);
+		class InteriorObjectDeferredRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
+	}
+}
 
 namespace MyosotisFW::System::Render
 {
@@ -143,5 +172,5 @@ namespace MyosotisFW::System::Render
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
 	};
-	TYPEDEF_SHARED_PTR(RenderSubsystem)
+	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }
