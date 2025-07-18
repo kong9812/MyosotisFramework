@@ -10,11 +10,7 @@
 namespace
 {
 #ifdef DEBUG
-	void PrintPhysicalDeviceInfo(VkPhysicalDevice physicalDevice) {
-		// デバイスプロパティを取得
-		VkPhysicalDeviceProperties properties;
-		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-
+	void PrintPhysicalDeviceInfo(const VkPhysicalDeviceProperties& properties) {
 		// デバイス情報をログに出力
 		CustomLog(LogLevel::LOG_INFO, "=============================================================================");
 		CustomLog(LogLevel::LOG_INFO, "Device Name: " + std::string(properties.deviceName));
@@ -98,7 +94,18 @@ namespace
 
 namespace MyosotisFW::System::Render
 {
-	RenderDevice::RenderDevice(const VkInstance& vkInstance)
+	RenderDevice::RenderDevice(const VkInstance& vkInstance) :
+		m_physicalDevice(VK_NULL_HANDLE),
+		m_device(VK_NULL_HANDLE),
+		m_allocator(nullptr),
+		m_allocationCallbacks({}),
+		m_graphicsQueue(nullptr),
+		m_computeQueue(nullptr),
+		m_transferQueue(nullptr),
+		m_physicalDeviceMemoryProperties({}),
+		m_maxDescriptorSetStorageBuffers(0),
+		m_maxDescriptorSetSampledImages(0),
+		m_maxDescriptorSetStorageImages(0)
 	{
 		// prepare allocation callbacks
 		prepareAllocationCallbacks();
@@ -109,8 +116,14 @@ namespace MyosotisFW::System::Render
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices.data()));
 		m_physicalDevice = physicalDevices[AppInfo::g_physicalIndex];
+		// デバイスプロパティを取得
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+		m_maxDescriptorSetStorageBuffers = properties.limits.maxDescriptorSetStorageBuffers;
+		m_maxDescriptorSetSampledImages = properties.limits.maxDescriptorSetSampledImages;
+		m_maxDescriptorSetStorageImages = properties.limits.maxDescriptorSetStorageImages;
 #ifdef DEBUG
-		PrintPhysicalDeviceInfo(m_physicalDevice);
+		PrintPhysicalDeviceInfo(properties);
 #endif
 
 		// memory properties
@@ -144,11 +157,27 @@ namespace MyosotisFW::System::Render
 		}
 #endif
 		// デバイス機能を取得
-		VkPhysicalDeviceFeatures features;
+		VkPhysicalDeviceFeatures features{};
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
+
+		// 物理デバイス機能を指定
+		VkPhysicalDeviceDescriptorIndexingFeatures physicalDeviceDescriptorIndexingFeatures = {};
+		physicalDeviceDescriptorIndexingFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		physicalDeviceDescriptorIndexingFeatures.pNext = NULL;
+		// 未バインドのディスクリプタスロットを許可する（Shader中で未使用slotがあってもOK）
+		physicalDeviceDescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+		// 異なる配列要素のインデックスアクセスを許可する
+		physicalDeviceDescriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE; // SSBO配列のランダムアクセス
+		physicalDeviceDescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;  // テクスチャ配列のランダムアクセス
+		physicalDeviceDescriptorIndexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;  // 画像配列のランダムアクセス
+		// ディスクリプタをバインド後に更新できるようにする
+		physicalDeviceDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE; // SSBO
+		physicalDeviceDescriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;  // テクスチャ
+		physicalDeviceDescriptorIndexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;  // 画像
 
 		// create device
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
+		deviceCreateInfo.pNext = &physicalDeviceDescriptorIndexingFeatures;
 		VK_VALIDATION(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, GetAllocationCallbacks(), &m_device));
 
 		// queue instance

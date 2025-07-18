@@ -14,6 +14,7 @@
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
 #include "EditorFinalCompositionRenderPass.h"
+#include "BindlessResourcesRenderPass.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -22,6 +23,7 @@
 #include "LightingRenderPipeline.h"
 #include "EditorFinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
+#include "BindlessResourcesRenderPipeline.h"
 
 #include "AppInfo.h"
 
@@ -151,6 +153,9 @@ namespace MyosotisFW::System::Render
 
 		m_editorRenderPass = CreateEditorRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
 		m_editorRenderPass->Initialize();
+
+		m_bindlessResourcesRenderPass = CreateBindlessResourcesRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_bindlessResourcesRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
@@ -175,11 +180,15 @@ namespace MyosotisFW::System::Render
 
 		m_finalCompositionRenderPipeline = CreateEditorFinalCompositionRenderPipelinePointer(m_device);
 		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
-		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 
+		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device);
+		m_bindlessResourcesRenderPipeline->Initialize(m_resources, m_bindlessResourcesRenderPass->GetRenderPass());
+
+		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+		m_bindlessResourcesRenderPipeline->CreateShaderObject(m_swapchain->GetScreenSize());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
@@ -188,6 +197,7 @@ namespace MyosotisFW::System::Render
 		m_mainRenderPass->Resize(width, height);
 		m_finalCompositionRenderPass->Resize(width, height);
 		m_editorRenderPass->Resize(width, height);
+		m_bindlessResourcesRenderPass->Resize(width, height);
 	}
 
 	void EditorRenderSubsystem::resizeRenderPipeline()
@@ -200,6 +210,7 @@ namespace MyosotisFW::System::Render
 		m_compositionRenderPipeline->Resize(m_resources);
 		m_finalCompositionRenderPipeline->Resize(m_resources);
 		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+		m_bindlessResourcesRenderPipeline->Resize(m_resources);
 
 		// update descriptors
 		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());

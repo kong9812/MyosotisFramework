@@ -5,19 +5,18 @@
 
 namespace MyosotisFW::System::Render
 {
-	class FinalCompositionRenderPipeline : public RenderPipelineBase
+	class BindlessResourcesRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		FinalCompositionRenderPipeline(const RenderDevice_ptr& device) :
+		BindlessResourcesRenderPipeline(const RenderDevice_ptr& device) :
 			RenderPipelineBase(device),
-			m_shaderBase({}),
-			m_mainRenderTargetDescriptorImageInfo({}) {
+			m_shaderBase({}) {
 		}
-		~FinalCompositionRenderPipeline();
+		~BindlessResourcesRenderPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		virtual void CreateShaderObject();
+		void CreateShaderObject(const glm::vec2& screenSize);
 		void UpdateDescriptors();
 		void Resize(const RenderResources_ptr& resources) override;
 
@@ -25,8 +24,15 @@ namespace MyosotisFW::System::Render
 		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
-		VkDescriptorImageInfo m_mainRenderTargetDescriptorImageInfo;
 		ShaderBase m_shaderBase;
+		Image m_image;
+
+	private:
+		struct {
+			uint32_t textureId;
+			uint32_t bufferId;
+			glm::vec2 screenSize;
+		}m_pushConstant;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(FinalCompositionRenderPipeline);
+	TYPEDEF_SHARED_PTR_ARGS(BindlessResourcesRenderPipeline);
 }

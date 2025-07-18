@@ -17,8 +17,11 @@ namespace MyosotisFW::System::Render
 		RenderSwapchain(const RenderDevice_ptr& renderDevice, const VkSurfaceKHR& vkSurface);
 		~RenderSwapchain();
 
-		uint32_t GetWidth() { return m_width; }
-		uint32_t GetHeight() { return m_height; }
+		uint32_t GetWidth() const { return m_width; }
+		uint32_t GetHeight() const { return m_height; }
+		float GetWidthF() const { return static_cast<float>(m_width); }
+		float GetHeightF() const { return static_cast<float>(m_height); }
+		glm::vec2 GetScreenSize() { return glm::vec2(static_cast<float>(m_width), static_cast<float>(m_height)); }
 		uint32_t GetImageCount() { return static_cast<uint32_t>(m_swapchainImage.size()); }
 		uint32_t GetMinImageCount() { return m_minImageCount; }
 		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }

@@ -18,6 +18,7 @@
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
 #include "FinalCompositionRenderPass.h"
+#include "BindlessResourcesRenderPass.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -26,6 +27,7 @@
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
+#include "BindlessResourcesRenderPipeline.h"
 
 #include "RenderQueue.h"
 #include "VK_Validation.h"
@@ -360,14 +362,30 @@ namespace MyosotisFW::System::Render
 	{
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
-		// final composition Prender Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Final Composition Prender Pass"));
+		// final composition Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Final Composition Render Pass"));
 
 		m_finalCompositionRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
 		m_finalCompositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
 		m_finalCompositionRenderPass->EndRender(currentCommandBuffer);
+
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
+	void RenderSubsystem::BindlessResourcesRender()
+	{
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+
+		// Bindless Resources Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Bindless Resources Render Pass"));
+
+		m_bindlessResourcesRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+
+		m_bindlessResourcesRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+
+		m_bindlessResourcesRenderPass->EndRender(currentCommandBuffer);
 
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
@@ -594,6 +612,9 @@ namespace MyosotisFW::System::Render
 
 		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_finalCompositionRenderPass->Initialize();
+
+		m_bindlessResourcesRenderPass = CreateBindlessResourcesRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_bindlessResourcesRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -619,10 +640,14 @@ namespace MyosotisFW::System::Render
 		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device);
 		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
 
+		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device);
+		m_bindlessResourcesRenderPipeline->Initialize(m_resources, m_bindlessResourcesRenderPass->GetRenderPass());
+
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+		m_bindlessResourcesRenderPipeline->CreateShaderObject(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
@@ -630,6 +655,7 @@ namespace MyosotisFW::System::Render
 		m_shadowMapRenderPass->Resize(width, height);
 		m_mainRenderPass->Resize(width, height);
 		m_finalCompositionRenderPass->Resize(width, height);
+		m_bindlessResourcesRenderPass->Resize(width, height);
 	}
 
 	void RenderSubsystem::resizeRenderPipeline()
@@ -642,6 +668,7 @@ namespace MyosotisFW::System::Render
 		m_compositionRenderPipeline->Resize(m_resources);
 		m_finalCompositionRenderPipeline->Resize(m_resources);
 		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
+		m_bindlessResourcesRenderPipeline->Resize(m_resources);
 
 		// update descriptors
 		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());

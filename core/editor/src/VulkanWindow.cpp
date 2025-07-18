@@ -246,6 +246,7 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->ShadowRender();
 			m_renderSubsystem->MainRender();
 			m_renderSubsystem->EditorRender();
+			m_renderSubsystem->BindlessResourcesRender();
 			m_renderSubsystem->FinalCompositionRender();
 			m_renderSubsystem->EndRender();
 		}

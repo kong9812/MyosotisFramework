@@ -36,6 +36,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(MainRenderPass);
 		class FinalCompositionRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPass);
+		class BindlessResourcesRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(BindlessResourcesRenderPass);
 
 		class SkyboxRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPipeline);
@@ -51,6 +53,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPipeline);
 		class InteriorObjectDeferredRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
+		class BindlessResourcesRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(BindlessResourcesRenderPipeline);
 	}
 }
 
@@ -75,6 +79,7 @@ namespace MyosotisFW::System::Render
 			m_shadowMapRenderPass(nullptr),
 			m_mainRenderPass(nullptr),
 			m_finalCompositionRenderPass(nullptr),
+			m_bindlessResourcesRenderPass(nullptr),
 			m_skyboxRenderPipeline(nullptr),
 			m_shadowMapRenderPipeline(nullptr),
 			m_deferredRenderPipeline(nullptr),
@@ -82,6 +87,7 @@ namespace MyosotisFW::System::Render
 			m_compositionRenderPipeline(nullptr),
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
+			m_bindlessResourcesRenderPipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
@@ -104,6 +110,7 @@ namespace MyosotisFW::System::Render
 		void ShadowRender();
 		void MainRender();
 		void FinalCompositionRender();
+		void BindlessResourcesRender();
 		void EndRender();
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);
@@ -162,6 +169,7 @@ namespace MyosotisFW::System::Render
 		ShadowMapRenderPass_ptr m_shadowMapRenderPass;
 		MainRenderPass_ptr m_mainRenderPass;
 		FinalCompositionRenderPass_ptr m_finalCompositionRenderPass;
+		BindlessResourcesRenderPass_ptr m_bindlessResourcesRenderPass;
 
 	protected:
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
@@ -171,6 +179,7 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
+		BindlessResourcesRenderPipeline_ptr m_bindlessResourcesRenderPipeline;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

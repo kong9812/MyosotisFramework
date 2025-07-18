@@ -606,7 +606,8 @@ namespace Utility::Vulkan::CreateInfo
 		const uint32_t& dstBinding,
 		const VkDescriptorType& descriptorType,
 		const VkDescriptorImageInfo* pImageInfo,
-		const uint32_t& descriptorCount = 1)
+		const uint32_t& descriptorCount = 1,
+		const uint32_t& resourceID = 0)
 	{
 		VkWriteDescriptorSet wds{};
 		wds.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -615,6 +616,7 @@ namespace Utility::Vulkan::CreateInfo
 		wds.descriptorCount = descriptorCount;
 		wds.descriptorType = descriptorType;
 		wds.pImageInfo = pImageInfo;
+		wds.dstArrayElement = resourceID;
 		return wds;
 	}
 
