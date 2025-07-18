@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 		}
 		m_shaderModules.clear();
 
-		m_meshVertexDatas.clear();
+		m_meshVertexData.clear();
 
 		for (std::pair<std::string, VMAImage> image : m_images)
 		{
@@ -127,13 +127,13 @@ namespace MyosotisFW::System::Render
 
 	std::vector<Mesh> RenderResources::GetMeshVertex(const std::string& fileName)
 	{
-		auto vertexData = m_meshVertexDatas.find(fileName);
-		if (vertexData == m_meshVertexDatas.end())
+		auto vertexData = m_meshVertexData.find(fileName);
+		if (vertexData == m_meshVertexData.end())
 		{
 			// ないなら読み込む
-			m_meshVertexDatas.emplace(fileName, Utility::Loader::loadFbx(fileName));
+			m_meshVertexData.emplace(fileName, Utility::Loader::loadFbx(fileName));
 		}
-		return m_meshVertexDatas[fileName];
+		return m_meshVertexData[fileName];
 	}
 
 	Image RenderResources::GetImage(const std::string& fileName)

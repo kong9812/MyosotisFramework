@@ -13,7 +13,14 @@
 
 namespace MyosotisFW::System::Render
 {
-	StaticMesh::StaticMesh() : ComponentBase()
+	StaticMesh::StaticMesh() : ComponentBase(),
+		m_device(nullptr),
+		m_resources(nullptr),
+		m_vertexBuffer({}),
+		m_indexBuffer({}),
+		m_currentLOD(LOD::Hide),
+		m_lodDistances({}),
+		m_staticMeshShaderObject({})
 	{
 		m_name = "StaticMesh";
 		m_transform.scale = glm::vec3(1.0f);

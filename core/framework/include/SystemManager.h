@@ -29,11 +29,13 @@ namespace MyosotisFW::System
 			m_surface(VK_NULL_HANDLE),
 			m_pause(false),
 			m_lastTime(0.0f),
+			m_keyActions({}),
+			m_mouseButtonActions({}),
+			m_mousePos(glm::vec2(0.0f)),
 			m_vkDebugReportCallback(VK_NULL_HANDLE),
 			m_vkCreateDebugReportCallbackEXT(nullptr),
-			m_vkDestroyDebugReportCallbackEXT(nullptr),
-			m_mousePos(glm::vec2(0.0f)) {
-		};
+			m_vkDestroyDebugReportCallbackEXT(nullptr) {
+		}
 		~SystemManager();
 
 		Render::RenderSubsystem_ptr& GetRenderSubsystem() { return m_renderSubsystem; }

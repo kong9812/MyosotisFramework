@@ -10,7 +10,12 @@
 
 namespace MyosotisFW::System::Render
 {
-	InteriorObject::InteriorObject() : ComponentBase()
+	InteriorObject::InteriorObject() : ComponentBase(),
+		m_device(nullptr),
+		m_resources(nullptr),
+		m_vertexBuffer({}),
+		m_indexBuffer({}),
+		m_interiorObjectShaderObject({})
 	{
 		m_name = "InteriorObject";
 	}

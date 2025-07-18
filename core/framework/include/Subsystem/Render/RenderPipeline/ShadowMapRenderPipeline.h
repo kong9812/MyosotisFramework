@@ -9,7 +9,10 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		ShadowMapRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device) {
+			RenderPipelineBase(device),
+			m_shadowMapShaderObject({}),
+			m_shadowMapSampler(VK_NULL_HANDLE),
+			m_shadowMapDescriptorImageInfo({}) {
 		}
 		~ShadowMapRenderPipeline();
 

@@ -17,8 +17,8 @@ namespace MyosotisFW::System::Render
 	public:
 		FinalCompositionRenderPipeline(const RenderDevice_ptr& device) :
 			RenderPipelineBase(device),
-			m_shaderBase{},
-			m_mainRenderTargetDescriptorImageInfo{} {
+			m_shaderBase({}),
+			m_mainRenderTargetDescriptorImageInfo({}) {
 		}
 		~FinalCompositionRenderPipeline();
 

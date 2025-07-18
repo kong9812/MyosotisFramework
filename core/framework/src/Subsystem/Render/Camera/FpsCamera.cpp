@@ -5,7 +5,8 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	FPSCamera::FPSCamera() : CameraBase()
+	FPSCamera::FPSCamera() : CameraBase(),
+		m_lastMousePos(glm::vec2(0.0f))
 	{
 		m_lastMousePos = glm::vec3(0.0f);
 		m_name = "FPSCamera";

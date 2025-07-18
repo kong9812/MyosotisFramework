@@ -27,10 +27,13 @@ namespace MyosotisFW
 	{
 	public:
 		StageObject() :
-			m_transform({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
-			m_objectID(),
 			m_isReady(false),
-			m_name("StageObject")
+			m_name("StageObject"),
+			m_objectID(),
+			m_renderID(0),
+			m_transform({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
+			m_children(),
+			m_components()
 		{
 			m_objectID = hashMaker();
 		}

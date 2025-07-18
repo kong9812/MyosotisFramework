@@ -18,8 +18,8 @@ namespace MyosotisFW::System::Render
 	public:
 		CompositionRenderPipeline(const RenderDevice_ptr& device) :
 			RenderPipelineBase(device),
-			m_shaderBase{},
-			m_lightingResultDescriptorImageInfo{} {
+			m_shaderBase({}),
+			m_lightingResultDescriptorImageInfo({}) {
 		}
 		~CompositionRenderPipeline();
 

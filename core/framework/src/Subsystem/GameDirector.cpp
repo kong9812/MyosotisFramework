@@ -13,10 +13,9 @@
 // TEST
 
 namespace MyosotisFW::System::GameDirector {
-	GameDirector::GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem)
+	GameDirector::GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem) :
+		m_renderSubsystem(renderSubsystem)
 	{
-		m_renderSubsystem = renderSubsystem;
-
 		// TEST
 		StageObject_ptr newObject = CreateStageObjectPointer();
 		Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(

@@ -21,7 +21,8 @@ namespace MyosotisFW
 			m_isReady(false),
 			m_name(),
 			m_aabbMin(FLT_MAX),
-			m_aabbMax(FLT_MIN)
+			m_aabbMax(FLT_MIN),
+			m_renderID(0)
 		{
 			m_objectID = hashMaker();
 			m_name = "ComponentBase";

@@ -17,13 +17,18 @@ namespace MyosotisFW::System::Render
 	public:
 		RenderResources(const RenderDevice_ptr& device)
 			:m_device(device),
-			m_depthStencil{},
-			m_position{},
-			m_normal{},
-			m_baseColor{},
-			m_shadowMap{},
-			m_lightingResult{},
-			m_mainRenderTarget{} {
+			m_shaderModules({}),
+			m_meshVertexData({}),
+			m_images({}),
+			m_cubeImages({}),
+			m_depthStencil({}),
+			m_position({}),
+			m_normal({}),
+			m_baseColor({}),
+			m_shadowMap({}),
+			m_lightingResult({}),
+			m_mainRenderTarget({}),
+			m_idMap({}) {
 		}
 		~RenderResources();
 
@@ -38,7 +43,7 @@ namespace MyosotisFW::System::Render
 	protected:
 		RenderDevice_ptr m_device;
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
-		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexDatas;
+		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexData;
 		std::unordered_map<std::string, VMAImage> m_images;
 		std::unordered_map<std::string, VMAImage> m_cubeImages;
 

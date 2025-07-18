@@ -10,7 +10,12 @@
 
 namespace MyosotisFW::System::Render
 {
-	Skybox::Skybox() : ComponentBase()
+	Skybox::Skybox() : ComponentBase(),
+		m_device(nullptr),
+		m_resources(nullptr),
+		m_vertexBuffer({}),
+		m_indexBuffer({}),
+		m_skyboxShaderObject({})
 	{
 		m_name = "Skybox";
 		m_skyboxShaderObject.standardUBO.cubemap.sampler = VK_NULL_HANDLE;

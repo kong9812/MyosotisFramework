@@ -5,7 +5,17 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	CameraBase::CameraBase() : ComponentBase()
+	CameraBase::CameraBase() : ComponentBase(),
+		m_cameraPos(glm::vec3(0.0f)),
+		m_cameraLookAt(glm::vec3(0.0f)),
+		m_cameraFront(glm::vec3(0.0f)),
+		m_cameraUp(glm::vec3(0.0f)),
+		m_cameraRight(glm::vec3(0.0f)),
+		m_cameraFov(0.0f),
+		m_cameraFar(0.0f),
+		m_cameraNear(0.0f),
+		m_aspectRadio(0.0f),
+		m_screenSize(glm::vec2(0.0f))
 	{
 		m_name = "CameraBase";
 		initialize();

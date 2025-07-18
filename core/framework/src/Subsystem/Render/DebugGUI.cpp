@@ -18,13 +18,11 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr renderDevice,
 		VkRenderPass& renderPass,
 		RenderSwapchain_ptr renderSwapchain,
-		VkPipelineCache& pipelineCache)
+		VkPipelineCache& pipelineCache) :
+		m_deltaTime(0.0f),
+		m_device(renderDevice),
+		m_descriptorPool(VK_NULL_HANDLE)
 	{
-		m_deltaTime = {};
-		m_descriptorPool = VK_NULL_HANDLE;
-
-		m_device = renderDevice;
-
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();

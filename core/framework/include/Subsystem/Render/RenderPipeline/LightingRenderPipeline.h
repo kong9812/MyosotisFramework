@@ -17,10 +17,10 @@ namespace MyosotisFW::System::Render
 	public:
 		LightingRenderPipeline(const RenderDevice_ptr& device) :
 			RenderPipelineBase(device),
-			m_lightingShaderObject{},
-			m_positionDescriptorImageInfo{},
-			m_normalDescriptorImageInfo{},
-			m_baseColorDescriptorImageInfo{} {
+			m_lightingShaderObject({}),
+			m_positionDescriptorImageInfo({}),
+			m_normalDescriptorImageInfo({}),
+			m_baseColorDescriptorImageInfo({}) {
 		}
 		~LightingRenderPipeline();
 
