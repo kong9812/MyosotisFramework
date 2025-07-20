@@ -629,12 +629,12 @@ namespace Utility::Vulkan::CreateInfo
 		return imageInfo;
 	}
 
-	inline VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(const VkDescriptorSetLayout* pSetLayouts, const uint32_t& setLayoutCount = 1)
+	inline VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo(const std::vector<VkDescriptorSetLayout>& setLayouts)
 	{
 		VkPipelineLayoutCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		ci.setLayoutCount = setLayoutCount;
-		ci.pSetLayouts = pSetLayouts;
+		ci.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+		ci.pSetLayouts = setLayouts.data();
 		return ci;
 	}
 
@@ -1040,5 +1040,14 @@ namespace Utility::Vulkan::CreateInfo
 		ci.maxLod = 1.0f;
 		ci.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		return ci;
+	}
+
+	inline VkPushConstantRange pushConstantRange(const VkShaderStageFlags& shaderStageFlags, const uint32_t& offset, const uint32_t& size)
+	{
+		VkPushConstantRange pc{};
+		pc.stageFlags = shaderStageFlags;
+		pc.offset = offset;
+		pc.size = size;
+		return pc;
 	}
 }

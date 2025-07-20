@@ -16,8 +16,8 @@ namespace MyosotisFW::System::Render
 	class CompositionRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		CompositionRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device),
+		CompositionRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors),
 			m_shaderBase({}),
 			m_lightingResultDescriptorImageInfo({}) {
 		}
@@ -26,11 +26,12 @@ namespace MyosotisFW::System::Render
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		void CreateShaderObject();
-		void UpdateDescriptors();
-		void Resize(const RenderResources_ptr& resources) override;
+
 	private:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
+
+		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkDescriptorSet m_descriptorSet;
 
 		ShaderBase m_shaderBase;
 		VkDescriptorImageInfo m_lightingResultDescriptorImageInfo;

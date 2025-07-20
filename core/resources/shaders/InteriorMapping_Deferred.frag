@@ -1,6 +1,11 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require
 
-layout (binding = 2) uniform samplerCube colorMap;
+layout (binding = 2) uniform samplerCube SamplerCube[];
+layout (push_constant) uniform PushConstant {
+    uint objectIndex;
+    uint textureId;
+};
 
 layout (location = 0) in vec4 inPosition;
 layout (location = 1) in vec4 inNormal;
@@ -28,5 +33,5 @@ void main()
     vec3 rayHit = uvw + rayDir * dist;
     vec3 uv = (rayHit - 0.5) * 2.0;
 
-    outBaseColor = texture(colorMap, uv);
+    outBaseColor = texture(SamplerCube[textureId], uv);
 }

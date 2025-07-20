@@ -10,6 +10,7 @@
 #include "RenderDevice.h"
 #include "RenderSwapchain.h"
 #include "RenderResources.h"
+#include "RenderDescriptors.h"
 
 #include "DebugGUI.h"
 #include "StaticMesh.h"
@@ -54,7 +55,7 @@ namespace MyosotisFW::System::Render
 {
 	RenderSubsystem::~RenderSubsystem()
 	{
-		{// furstum culler
+		{// frustum culler
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer, m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation);
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.obbDatasSSBO.buffer.buffer, m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocation);
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer, m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation);
@@ -144,6 +145,9 @@ namespace MyosotisFW::System::Render
 
 		// Swapchain
 		initializeRenderSwapchain(surface);
+
+		// Descriptors
+		initializeRenderDescriptors();
 
 		// Resources
 		initializeRenderResources();
@@ -259,6 +263,9 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
+
+		// descriptors
+		m_bindlessResourcesRenderPipeline->UpdateDescriptors();
 	}
 
 	void RenderSubsystem::ShadowRender()
@@ -279,7 +286,9 @@ namespace MyosotisFW::System::Render
 			{
 				if (IsStaticMesh(component->GetType()))
 				{
-					Object_CastToStaticMesh(component)->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
+					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
+					m_shadowMapRenderPipeline->UpdateDescriptors(staticMesh->GetStaticMeshShaderObject());
+					staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
 				}
 			}
 		}
@@ -319,6 +328,7 @@ namespace MyosotisFW::System::Render
 				else if (component->GetType() == ComponentType::Skybox)
 				{
 					Skybox_ptr staticMesh = Object_CastToSkybox(component);
+					m_skyboxRenderPipeline->UpdateDescriptors(staticMesh->GetSkyboxShaderObject());
 					staticMesh->BindCommandBuffer(currentCommandBuffer);
 				}
 				else if (component->GetType() == ComponentType::InteriorObjectMesh)
@@ -339,6 +349,7 @@ namespace MyosotisFW::System::Render
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.2f, 0.1f), "Deferred SubPass"));
 			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
+				m_deferredRenderPipeline->UpdateDescriptors(staticMeshesPair.staticMesh->GetStaticMeshShaderObject());
 				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
 			}
 
@@ -347,6 +358,7 @@ namespace MyosotisFW::System::Render
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
+		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
@@ -392,6 +404,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::EndRender()
 	{
+		m_descriptors->UpdateDescriptorSet();
+
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
@@ -401,6 +415,8 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
+
+		m_descriptors->ResetInfos();
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -447,9 +463,6 @@ namespace MyosotisFW::System::Render
 		// Render Pass
 		resizeRenderPass(width, height);
 
-		// pipeline
-		resizeRenderPipeline();
-
 		m_submitPipelineStages = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_currentBufferIndex = 0;
 
@@ -464,6 +477,11 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::initializeRenderSwapchain(const VkSurfaceKHR& surface)
 	{
 		m_swapchain = CreateRenderSwapchainPointer(m_device, surface);
+	}
+
+	void RenderSubsystem::initializeRenderDescriptors()
+	{
+		m_descriptors = CreateRenderDescriptorsPointer(m_device);
 	}
 
 	void RenderSubsystem::initializeRenderResources()
@@ -568,7 +586,8 @@ namespace MyosotisFW::System::Render
 			vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 		}
 
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_frustumCullerShaderObject.shaderBase.descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_frustumCullerShaderObject.shaderBase.descriptorSetLayout };
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullerShaderObject.shaderBase.pipelineLayout));
 		VkPipelineShaderStageCreateInfo shaderStageCreateInfo = Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT, m_resources->GetShaderModules("Frustum_Culling.comp.spv"));
 		VkComputePipelineCreateInfo computePipelineCreateInfo = Utility::Vulkan::CreateInfo::computePipelineCreateInfo(m_frustumCullerShaderObject.shaderBase.pipelineLayout, shaderStageCreateInfo);
@@ -619,28 +638,28 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderPipeline()
 	{
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device);
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_descriptors);
 		m_shadowMapRenderPipeline->Initialize(m_resources, m_shadowMapRenderPass->GetRenderPass());
 
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device);
+		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_descriptors);
 		m_skyboxRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device);
+		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_descriptors);
 		m_deferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device);
+		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_descriptors);
 		m_lightingRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device);
+		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_descriptors);
 		m_compositionRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device);
+		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_descriptors);
 		m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device);
+		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_descriptors);
 		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
 
-		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device);
+		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device, m_descriptors);
 		m_bindlessResourcesRenderPipeline->Initialize(m_resources, m_bindlessResourcesRenderPass->GetRenderPass());
 
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
@@ -656,34 +675,5 @@ namespace MyosotisFW::System::Render
 		m_mainRenderPass->Resize(width, height);
 		m_finalCompositionRenderPass->Resize(width, height);
 		m_bindlessResourcesRenderPass->Resize(width, height);
-	}
-
-	void RenderSubsystem::resizeRenderPipeline()
-	{
-		// update pipeline
-		m_skyboxRenderPipeline->Resize(m_resources);
-		m_shadowMapRenderPipeline->Resize(m_resources);
-		m_deferredRenderPipeline->Resize(m_resources);
-		m_lightingRenderPipeline->Resize(m_resources);
-		m_compositionRenderPipeline->Resize(m_resources);
-		m_finalCompositionRenderPipeline->Resize(m_resources);
-		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
-		m_bindlessResourcesRenderPipeline->Resize(m_resources);
-
-		// update descriptors
-		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		for (StageObject_ptr& object : m_objects)
-		{
-			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
-			for (ComponentBase_ptr& component : components)
-			{
-				if (IsStaticMesh(component->GetType()))
-				{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
-					m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
-				}
-			}
-		}
 	}
 }

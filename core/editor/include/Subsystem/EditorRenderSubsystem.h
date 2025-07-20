@@ -39,7 +39,6 @@ namespace MyosotisFW::System::Render
 		void initializeRenderPass() override;
 		void initializeRenderPipeline() override;
 		void resizeRenderPass(const uint32_t& width, const uint32_t& height) override;
-		void resizeRenderPipeline() override;
 
 	private:
 		EditorGUI_ptr m_editorGUI;

@@ -1,9 +1,9 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
 
-layout(binding = 1) uniform sampler2D Sampler2D[];
+layout (binding = 2) uniform sampler2D Sampler2D[];
 
-layout(push_constant) uniform PushConstant {
+layout (push_constant) uniform PushConstant {
     uint textureId;
     uint bufferId;
 	vec2 screenSize;

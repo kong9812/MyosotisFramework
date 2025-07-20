@@ -34,17 +34,16 @@ namespace MyosotisFW::System::Render
 
 		if (camera)
 		{
-			m_staticMeshShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
-			m_staticMeshShaderObject.standardUBO.data.view = camera->GetViewMatrix();
+			m_staticMeshShaderObject.standardSSBO.projection = camera->GetProjectionMatrix();
+			m_staticMeshShaderObject.standardSSBO.view = camera->GetViewMatrix();
 		}
-		m_staticMeshShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::rotate(m_staticMeshShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_staticMeshShaderObject.standardUBO.data.model = glm::scale(m_staticMeshShaderObject.standardUBO.data.model, glm::vec3(m_transform.scale));
+		m_staticMeshShaderObject.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_staticMeshShaderObject.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_staticMeshShaderObject.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_staticMeshShaderObject.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_staticMeshShaderObject.standardSSBO.model = glm::scale(m_staticMeshShaderObject.standardSSBO.model, glm::vec3(m_transform.scale));
 
 		if (!m_isReady) return;
-		memcpy(m_staticMeshShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_staticMeshShaderObject.standardUBO.data, sizeof(m_staticMeshShaderObject.standardUBO.data));
 	}
 
 	void CustomMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)

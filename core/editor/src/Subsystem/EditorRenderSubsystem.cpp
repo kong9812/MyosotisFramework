@@ -160,28 +160,28 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device);
+		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_descriptors);
 		m_shadowMapRenderPipeline->Initialize(m_resources, m_shadowMapRenderPass->GetRenderPass());
 
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device);
+		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_descriptors);
 		m_skyboxRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device);
+		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_descriptors);
 		m_deferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device);
+		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_descriptors);
 		m_lightingRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device);
+		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_descriptors);
 		m_compositionRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device);
-		m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
+		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_descriptors);
+		//m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
 
-		m_finalCompositionRenderPipeline = CreateEditorFinalCompositionRenderPipelinePointer(m_device);
+		m_finalCompositionRenderPipeline = CreateEditorFinalCompositionRenderPipelinePointer(m_device, m_descriptors);
 		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
 
-		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device);
+		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device, m_descriptors);
 		m_bindlessResourcesRenderPipeline->Initialize(m_resources, m_bindlessResourcesRenderPass->GetRenderPass());
 
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
@@ -198,36 +198,5 @@ namespace MyosotisFW::System::Render
 		m_finalCompositionRenderPass->Resize(width, height);
 		m_editorRenderPass->Resize(width, height);
 		m_bindlessResourcesRenderPass->Resize(width, height);
-	}
-
-	void EditorRenderSubsystem::resizeRenderPipeline()
-	{
-		// pipeline
-		m_skyboxRenderPipeline->Resize(m_resources);
-		m_shadowMapRenderPipeline->Resize(m_resources);
-		m_deferredRenderPipeline->Resize(m_resources);
-		m_lightingRenderPipeline->Resize(m_resources);
-		m_compositionRenderPipeline->Resize(m_resources);
-		m_finalCompositionRenderPipeline->Resize(m_resources);
-		m_interiorObjectDeferredRenderPipeline->Resize(m_resources);
-		m_bindlessResourcesRenderPipeline->Resize(m_resources);
-
-		// update descriptors
-		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		for (StageObject_ptr& object : m_objects)
-		{
-			std::vector<ComponentBase_ptr> componentsList = object->FindAllComponents(ComponentType::CustomMesh, true);
-			std::vector<ComponentBase_ptr> subComponentsList = object->FindAllComponents(ComponentType::CustomMesh, true);
-			componentsList.insert(componentsList.end(), subComponentsList.begin(), subComponentsList.end());
-			for (ComponentBase_ptr& component : componentsList)
-			{
-				if (IsStaticMesh(component->GetType()))
-				{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					StaticMeshShaderObject& shadowObject = staticMesh->GetStaticMeshShaderObject();
-					m_shadowMapRenderPipeline->UpdateDescriptors(shadowObject);
-				}
-			}
-		}
 	}
 }

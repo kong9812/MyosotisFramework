@@ -19,6 +19,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
 		class RenderResources;
 		TYPEDEF_SHARED_PTR_FWD(RenderResources);
+		class RenderDescriptors;
+		TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 		class StaticMesh;
 		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
@@ -67,6 +69,7 @@ namespace MyosotisFW::System::Render
 			m_device(nullptr),
 			m_swapchain(nullptr),
 			m_resources(nullptr),
+			m_descriptors(nullptr),
 			m_mainCamera(nullptr),
 			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
 			m_renderCommandPool(VK_NULL_HANDLE),
@@ -120,6 +123,7 @@ namespace MyosotisFW::System::Render
 	protected:
 		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);
 		void initializeRenderSwapchain(const VkSurfaceKHR& surface);
+		void initializeRenderDescriptors();
 		virtual void initializeRenderResources();
 		void initializeCommandPool();
 		void initializeFrustumCuller();
@@ -130,7 +134,6 @@ namespace MyosotisFW::System::Render
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
 		virtual void resizeRenderPass(const uint32_t& width, const uint32_t& height);
-		virtual void resizeRenderPipeline();
 
 	protected:
 		struct {
@@ -144,6 +147,8 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
+		RenderDescriptors_ptr m_descriptors;
+
 		Camera::CameraBase_ptr m_mainCamera;
 
 		VkSubmitInfo m_submitInfo;

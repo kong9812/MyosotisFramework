@@ -7,16 +7,15 @@ namespace MyosotisFW::System::Render
 {
 	CompositionRenderPipeline::~CompositionRenderPipeline()
 	{
-		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_shaderBase.descriptorPool, 1, &m_shaderBase.descriptorSet));
+		vkFreeDescriptorSets(*m_device, m_descriptors->GetDescriptorPool(), 1, &m_descriptorSet);
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
 	void CompositionRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 
 		m_lightingResultDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetLightingResult().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -25,7 +24,9 @@ namespace MyosotisFW::System::Render
 	void CompositionRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shaderBase.pipeline);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shaderBase.pipelineLayout, 0, 1, &m_shaderBase.descriptorSet, 0, NULL);
+		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessDescriptorSet(), m_descriptorSet };
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shaderBase.pipelineLayout, 0,
+			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
@@ -34,52 +35,33 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			m_shaderBase.pipelineLayout = m_pipelineLayout;
 			m_shaderBase.pipeline = m_pipeline;
-			m_shaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
-		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_shaderBase.descriptorSet));
+		m_shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 
-		UpdateDescriptors();
-	}
-
-	void CompositionRenderPipeline::UpdateDescriptors()
-	{
-		// write descriptor set
+		// descriptorSet
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_lightingResultDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_lightingResultDescriptorImageInfo),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
 
-	void CompositionRenderPipeline::Resize(const RenderResources_ptr& resources)
+	void CompositionRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		m_lightingResultDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetLightingResult().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		UpdateDescriptors();
-	}
-
-	void CompositionRenderPipeline::prepareDescriptors()
-	{
-		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1),
-		};
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize, m_descriptorCount);
-		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
-
 		// [descriptor]layout
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
 			// binding: 0
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, 1),
 		};
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
 		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
-	}
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptors->GetDescriptorPool(), &m_descriptorSetLayout);
+		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 
-	void CompositionRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
-	{
 		// [pipeline]layout
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout(), m_descriptorSetLayout };
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline

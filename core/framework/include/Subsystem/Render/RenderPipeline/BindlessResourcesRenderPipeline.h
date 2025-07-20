@@ -8,9 +8,11 @@ namespace MyosotisFW::System::Render
 	class BindlessResourcesRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		BindlessResourcesRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device),
-			m_shaderBase({}) {
+		BindlessResourcesRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors),
+			m_image({}),
+			m_shaderBase({}),
+			m_pushConstant({}) {
 		}
 		~BindlessResourcesRenderPipeline();
 
@@ -18,10 +20,8 @@ namespace MyosotisFW::System::Render
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		void CreateShaderObject(const glm::vec2& screenSize);
 		void UpdateDescriptors();
-		void Resize(const RenderResources_ptr& resources) override;
 
 	protected:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		ShaderBase m_shaderBase;
@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 	private:
 		struct {
 			uint32_t textureId;
-			uint32_t bufferId;
+			uint32_t empty;
 			glm::vec2 screenSize;
 		}m_pushConstant;
 	};

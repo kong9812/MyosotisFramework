@@ -27,11 +27,9 @@ namespace MyosotisFW::System::Render
 			vkDestroySampler(*m_device, m_interiorObjectShaderObject.standardUBO.cubemap.sampler, m_device->GetAllocationCallbacks());
 		}
 
-		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_interiorObjectShaderObject.shaderBase.descriptorPool, 1, &m_interiorObjectShaderObject.shaderBase.descriptorSet));
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_interiorObjectShaderObject.standardUBO.buffer.buffer, m_interiorObjectShaderObject.standardUBO.buffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_interiorObjectShaderObject.cameraUBO.buffer.buffer, m_interiorObjectShaderObject.cameraUBO.buffer.allocation);
 	}
 
 	void InteriorObject::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
@@ -49,16 +47,6 @@ namespace MyosotisFW::System::Render
 			m_interiorObjectShaderObject.standardUBO.buffer.allocationInfo,
 			m_interiorObjectShaderObject.standardUBO.buffer.descriptor);
 
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_interiorObjectShaderObject.cameraUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_interiorObjectShaderObject.cameraUBO.buffer.buffer,
-			m_interiorObjectShaderObject.cameraUBO.buffer.allocation,
-			m_interiorObjectShaderObject.cameraUBO.buffer.allocationInfo,
-			m_interiorObjectShaderObject.cameraUBO.buffer.descriptor);
-
 		// プリミティブジオメトリの作成
 		loadAssets();
 
@@ -72,7 +60,7 @@ namespace MyosotisFW::System::Render
 		{
 			m_interiorObjectShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
 			m_interiorObjectShaderObject.standardUBO.data.view = camera->GetViewMatrix();
-			m_interiorObjectShaderObject.cameraUBO.data.position = glm::vec4(camera->GetCameraPos(), 0.0);
+			m_interiorObjectShaderObject.cameraSSBO.position = glm::vec4(camera->GetCameraPos(), 0.0);
 		}
 		m_interiorObjectShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
 		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -83,7 +71,6 @@ namespace MyosotisFW::System::Render
 
 		if (!m_isReady) return;
 		memcpy(m_interiorObjectShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_interiorObjectShaderObject.standardUBO.data, sizeof(m_interiorObjectShaderObject.standardUBO.data));
-		memcpy(m_interiorObjectShaderObject.cameraUBO.buffer.allocationInfo.pMappedData, &m_interiorObjectShaderObject.cameraUBO.data, sizeof(m_interiorObjectShaderObject.cameraUBO.data));
 	}
 
 	void InteriorObject::BindCommandBuffer(const VkCommandBuffer& commandBuffer)

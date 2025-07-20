@@ -8,38 +8,16 @@ namespace MyosotisFW::System::Render
 {
 	LightingRenderPipeline::~LightingRenderPipeline()
 	{
-		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_lightingShaderObject.shaderBase.descriptorPool, 1, &m_lightingShaderObject.shaderBase.descriptorSet));
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.cameraUBO.buffer.buffer, m_lightingShaderObject.cameraUBO.buffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_lightingShaderObject.lightUBO.buffer.buffer, m_lightingShaderObject.lightUBO.buffer.allocation);
+		vkFreeDescriptorSets(*m_device, m_descriptors->GetDescriptorPool(), 1, &m_descriptorSet);
 		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
+
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
 	void LightingRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
-
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_lightingShaderObject.cameraUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_lightingShaderObject.cameraUBO.buffer.buffer,
-			m_lightingShaderObject.cameraUBO.buffer.allocation,
-			m_lightingShaderObject.cameraUBO.buffer.allocationInfo,
-			m_lightingShaderObject.cameraUBO.buffer.descriptor);
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_lightingShaderObject.lightUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_lightingShaderObject.lightUBO.buffer.buffer,
-			m_lightingShaderObject.lightUBO.buffer.allocation,
-			m_lightingShaderObject.lightUBO.buffer.allocationInfo,
-			m_lightingShaderObject.lightUBO.buffer.descriptor);
 
 		m_positionDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetPosition().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_normalDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetNormal().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -49,20 +27,23 @@ namespace MyosotisFW::System::Render
 	void LightingRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lightingShaderObject.shaderBase.pipeline);
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lightingShaderObject.shaderBase.pipelineLayout, 0, 1, &m_lightingShaderObject.shaderBase.descriptorSet, 0, NULL);
+		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessDescriptorSet(), m_descriptorSet };
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lightingShaderObject.shaderBase.pipelineLayout, 0,
+			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
+		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			0, static_cast<uint32_t>(sizeof(m_pushConstant)), &m_pushConstant);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
-	void LightingRenderPipeline::UpdateDirectionalLightInfo(const DirectionalLightInfo& lightInfo)
+	void LightingRenderPipeline::UpdateDirectionalLightInfo(const DirectionalLightSSBO& lightInfo)
 	{
-		m_lightingShaderObject.lightUBO.data = lightInfo;
-		memcpy(m_lightingShaderObject.lightUBO.buffer.allocationInfo.pMappedData, &m_lightingShaderObject.lightUBO.data, sizeof(m_lightingShaderObject.lightUBO.data));
+		m_lightingShaderObject.lightSSBO = lightInfo;
 	}
 
 	void LightingRenderPipeline::UpdateCameraPosition(const glm::vec4& position)
 	{
-		m_lightingShaderObject.cameraUBO.data.position = position;
-		memcpy(m_lightingShaderObject.cameraUBO.buffer.allocationInfo.pMappedData, &m_lightingShaderObject.cameraUBO.data, sizeof(m_lightingShaderObject.cameraUBO.data));
+		m_lightingShaderObject.cameraSSBO.position = position;
 	}
 
 	void LightingRenderPipeline::CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo)
@@ -70,70 +51,62 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			m_lightingShaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
 			m_lightingShaderObject.shaderBase.pipeline = m_pipeline;
-			m_lightingShaderObject.shaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
-		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_lightingShaderObject.shaderBase.descriptorSet));
+		m_lightingShaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 
-		UpdateDescriptors(shadowMapImageInfo);
-	}
-
-	void LightingRenderPipeline::UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo)
-	{
-		// write descriptor set
+		// descriptorSet
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_positionDescriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_normalDescriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_baseColorDescriptorImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shadowMapImageInfo),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 4, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_lightingShaderObject.cameraUBO.buffer.descriptor),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_lightingShaderObject.shaderBase.descriptorSet, 5, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_lightingShaderObject.lightUBO.buffer.descriptor),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_positionDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_normalDescriptorImageInfo),
+			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_baseColorDescriptorImageInfo),
 		};
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
 
-	void LightingRenderPipeline::Resize(const RenderResources_ptr& resources)
+	void LightingRenderPipeline::UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo)
 	{
-		m_positionDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetPosition().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_normalDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetNormal().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_baseColorDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, resources->GetBaseColor().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	}
+		struct {
+			glm::vec4 cameraPosition;
+			glm::mat4 viewProjection;
+			glm::vec4 lightPosition;
+			int32_t pcfCount;
+		} ssbo;
 
-	void LightingRenderPipeline::prepareDescriptors()
-	{
-		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 3),
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1),
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),
-		};
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize, m_descriptorCount);
-		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
+		ssbo.cameraPosition = m_lightingShaderObject.cameraSSBO.position;
+		ssbo.viewProjection = m_lightingShaderObject.lightSSBO.viewProjection;
+		ssbo.lightPosition = m_lightingShaderObject.lightSSBO.position;
+		ssbo.pcfCount = m_lightingShaderObject.lightSSBO.pcfCount;
 
-		// [descriptor]layout
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
-			// binding: 0
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 1
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 2
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 3
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 4
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(4, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 5
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(5, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-		};
-		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
-		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
+		m_pushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
+		m_pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(shadowMapImageInfo);
 	}
 
 	void LightingRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
+		// [descriptor]layout
+		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
+			// binding: 0
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, 1),
+			// binding: 1
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, 1),
+			// binding: 2
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, 1),
+		};
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
+		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptors->GetDescriptorPool(), &m_descriptorSetLayout);
+		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
+
+		// push constant
+		VkPushConstantRange pushConstantRange = Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(sizeof(m_pushConstant)));
+
 		// [pipeline]layout
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout(), m_descriptorSetLayout };
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline

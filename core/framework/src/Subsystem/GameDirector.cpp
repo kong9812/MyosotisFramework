@@ -10,6 +10,7 @@
 
 // TEST
 #include "PrimitiveGeometry.h"
+#include "Skybox.h"
 // TEST
 
 namespace MyosotisFW::System::GameDirector {
@@ -17,14 +18,28 @@ namespace MyosotisFW::System::GameDirector {
 		m_renderSubsystem(renderSubsystem)
 	{
 		// TEST
-		StageObject_ptr newObject = CreateStageObjectPointer();
-		Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-			System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
-		component->SetPos(glm::vec3(0.0f));
-		component->SetPos(glm::vec3(0.0f));
-		component->SetPos(glm::vec3(1.0f));
-		newObject->AddComponent(component);
-		m_renderSubsystem->RegisterObject(newObject);
+		{
+			StageObject_ptr newObject = CreateStageObjectPointer();
+			Render::Skybox_ptr component = Object_Cast<Render::Skybox>(
+				System::ComponentFactory::CreateComponent(ComponentType::Skybox));
+			component->SetPos(glm::vec3(0.0f));
+			component->SetRot(glm::vec3(0.0f));
+			component->SetScale(glm::vec3(1.0f));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
+
+		{
+			StageObject_ptr newObject = CreateStageObjectPointer();
+			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
+				System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
+			component->SetPos(glm::vec3(1.0f));
+			component->SetRot(glm::vec3(0.0f));
+			component->SetScale(glm::vec3(1.0f));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
+
 		// TEST
 	}
 

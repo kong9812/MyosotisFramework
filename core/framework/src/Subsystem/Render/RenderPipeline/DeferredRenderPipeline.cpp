@@ -7,15 +7,12 @@ namespace MyosotisFW::System::Render
 {
 	DeferredRenderPipeline::~DeferredRenderPipeline()
 	{
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
 	void DeferredRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 	}
 
@@ -24,72 +21,42 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			shaderObject.deferredRenderShaderBase.pipelineLayout = m_pipelineLayout;
 			shaderObject.deferredRenderShaderBase.pipeline = m_pipeline;
-			shaderObject.deferredRenderShaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
-		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.deferredRenderShaderBase.descriptorSet));
-
-		UpdateDescriptors(shaderObject);
+		shaderObject.deferredRenderShaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
 	void DeferredRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
 	{
-		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {};
 		VkDescriptorImageInfo descriptorImageInfo{};
-		if (shaderObject.standardUBO.useNormalMap)
+		if (shaderObject.useNormalMap)
 		{
-			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.normalMap.sampler, shaderObject.standardUBO.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-			// write descriptor set
-			writeDescriptorSet = {
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &descriptorImageInfo),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
-			};
+			shaderObject.standardPushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.standardSSBO);
+			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.normalMap.sampler, shaderObject.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			shaderObject.standardPushConstant.textureId = m_descriptors->AddStorageBuffer(descriptorImageInfo);
 		}
 		else
 		{
-			// write descriptor set
-			writeDescriptorSet = {
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &shaderObject.standardUBO.shadowMapImageInfo),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.deferredRenderShaderBase.descriptorSet, 3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.shadowMapBufferDescriptor),
-			};
+			shaderObject.standardPushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.standardSSBO);
 		}
-		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
-	}
-
-	void DeferredRenderPipeline::prepareDescriptors()
-	{
-		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2)
-		};
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize, m_descriptorCount);
-		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
-
-		// [descriptor]layout
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
-			// binding: 0
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
-			// binding: 1
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 2
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-			// binding: 3
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-		};
-		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
-		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
 	}
 
 	void DeferredRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
+		// push constant
+		std::vector<VkPushConstantRange> pushConstantRange = {
+			// VS
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+				0,
+				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::standardPushConstant))),
+		};
+
 		// [pipeline]layout
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout() };
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
+		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline

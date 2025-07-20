@@ -8,9 +8,8 @@ namespace MyosotisFW::System::Render
 	class ShadowMapRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		ShadowMapRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device),
-			m_shadowMapShaderObject({}),
+		ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors),
 			m_shadowMapSampler(VK_NULL_HANDLE),
 			m_shadowMapDescriptorImageInfo({}) {
 		}
@@ -19,17 +18,14 @@ namespace MyosotisFW::System::Render
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
 		void UpdateDescriptors(StaticMeshShaderObject& shaderObject);
-		void Resize(const RenderResources_ptr& resources) override;
 
-		DirectionalLightInfo GetDirectionalLightInfo();
+		DirectionalLightSSBO GetDirectionalLightInfo();
 
 		VkDescriptorImageInfo GetShadowMapDescriptorImageInfo() { return m_shadowMapDescriptorImageInfo; }
 
 	private:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
-		ShadowMapShaderObject m_shadowMapShaderObject;
 		VkSampler m_shadowMapSampler;
 		VkDescriptorImageInfo m_shadowMapDescriptorImageInfo;
 	};

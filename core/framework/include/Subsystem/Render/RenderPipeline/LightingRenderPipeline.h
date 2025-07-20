@@ -15,8 +15,8 @@ namespace MyosotisFW::System::Render
 	class LightingRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		LightingRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device),
+		LightingRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors),
 			m_lightingShaderObject({}),
 			m_positionDescriptorImageInfo({}),
 			m_normalDescriptorImageInfo({}),
@@ -26,15 +26,22 @@ namespace MyosotisFW::System::Render
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		void UpdateDirectionalLightInfo(const DirectionalLightInfo& lightInfo);
+		void UpdateDirectionalLightInfo(const DirectionalLightSSBO& lightInfo);
 		void UpdateCameraPosition(const glm::vec4& position);
 		void CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo);
 		void UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo);
-		void Resize(const RenderResources_ptr& resources) override;
+
 
 	private:
-		void prepareDescriptors() override;
+		struct {
+			uint32_t objectIndex;
+			uint32_t textureId;
+		}m_pushConstant;
+
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
+
+		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkDescriptorSet m_descriptorSet;
 
 		LightingShaderObject m_lightingShaderObject;
 

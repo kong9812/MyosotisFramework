@@ -32,9 +32,11 @@ namespace MyosotisFW::System::Render
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
 		VmaAllocator GetVmaAllocator() const { return m_allocator; }
 
+		uint32_t GetMaxDescriptorSetaa() const { return m_maxDescriptorSetUniformBuffers; }
 		uint32_t GetMaxDescriptorSetStorageBuffers() const { return m_maxDescriptorSetStorageBuffers; }
 		uint32_t GetMaxDescriptorSetSampledImages() const { return m_maxDescriptorSetSampledImages; }
 		uint32_t GetMaxDescriptorSetStorageImages() const { return m_maxDescriptorSetStorageImages; }
+		uint32_t GetMaxDescriptorSetInputAttachments() const { return m_maxDescriptorSetInputAttachments; }
 
 		void ImageMemoryAllocate(DeviceImage& deviceImage);
 
@@ -55,9 +57,11 @@ namespace MyosotisFW::System::Render
 		void prepareAllocationCallbacks();
 		void prepareVMA(const VkInstance& vkInstance);
 
+		uint32_t m_maxDescriptorSetUniformBuffers;
 		uint32_t m_maxDescriptorSetStorageBuffers;
 		uint32_t m_maxDescriptorSetSampledImages;
 		uint32_t m_maxDescriptorSetStorageImages;
+		uint32_t m_maxDescriptorSetInputAttachments;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderDevice);
 }

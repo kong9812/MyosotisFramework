@@ -8,8 +8,8 @@ namespace MyosotisFW::System::Render
 	class DeferredRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		DeferredRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device) {
+		DeferredRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors) {
 		}
 		~DeferredRenderPipeline();
 
@@ -18,7 +18,6 @@ namespace MyosotisFW::System::Render
 		void UpdateDescriptors(StaticMeshShaderObject& shaderObject);
 
 	private:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(DeferredRenderPipeline);

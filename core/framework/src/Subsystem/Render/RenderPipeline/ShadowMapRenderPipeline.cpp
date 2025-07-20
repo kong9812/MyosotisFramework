@@ -27,35 +27,17 @@ namespace MyosotisFW::System::Render
 	ShadowMapRenderPipeline::~ShadowMapRenderPipeline()
 	{
 		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_shadowMapShaderObject.lightUBO.buffer.buffer, m_shadowMapShaderObject.lightUBO.buffer.allocation);
-		vkDestroyDescriptorSetLayout(*m_device, m_descriptorSetLayout, m_device->GetAllocationCallbacks());
-		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
 	void ShadowMapRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		prepareDescriptors();
 		prepareRenderPipeline(resources, renderPass);
 
 		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
 		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
 		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-		m_shadowMapShaderObject.lightUBO.data.position = glm::vec4(g_lightPos, 1.0f);
-		m_shadowMapShaderObject.lightUBO.data.viewProjection = GetLightViewProject();
-		m_shadowMapShaderObject.lightUBO.data.pcfCount = g_pcfCount;
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_shadowMapShaderObject.lightUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_shadowMapShaderObject.lightUBO.buffer.buffer,
-			m_shadowMapShaderObject.lightUBO.buffer.allocation,
-			m_shadowMapShaderObject.lightUBO.buffer.allocationInfo,
-			m_shadowMapShaderObject.lightUBO.buffer.descriptor);
-		memcpy(m_shadowMapShaderObject.lightUBO.buffer.allocationInfo.pMappedData, &m_shadowMapShaderObject.lightUBO.data, sizeof(m_shadowMapShaderObject.lightUBO.data));
 	}
 
 	void ShadowMapRenderPipeline::CreateShaderObject(StaticMeshShaderObject& shaderObject)
@@ -63,68 +45,64 @@ namespace MyosotisFW::System::Render
 		{// pipeline
 			shaderObject.shadowMapRenderShaderBase.pipelineLayout = m_pipelineLayout;
 			shaderObject.shadowMapRenderShaderBase.pipeline = m_pipeline;
-			shaderObject.shadowMapRenderShaderBase.descriptorPool = m_descriptorPool;
 		}
 
 		// layout allocate
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
-		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &shaderObject.shadowMapRenderShaderBase.descriptorSet));
-
-		UpdateDescriptors(shaderObject);
+		shaderObject.shadowMapRenderShaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
 	void ShadowMapRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
 	{
-		shaderObject.standardUBO.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
-		shaderObject.standardUBO.shadowMapBufferDescriptor = m_shadowMapShaderObject.lightUBO.buffer.descriptor;
-		// write descriptor set
-		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&m_shadowMapShaderObject.lightUBO.buffer.descriptor),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shadowMapRenderShaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
-		};
-		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+		shaderObject.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
+
+		struct {
+			glm::mat4 model;
+			glm::mat4 view;
+			glm::mat4 projection;
+			glm::vec4 color;
+			uint32_t renderID;
+			glm::mat4 viewProjection;
+			glm::vec4 position;
+			uint32_t pcfCount;
+		} ssbo;
+
+		ssbo.model = shaderObject.standardSSBO.model;
+		ssbo.view = shaderObject.standardSSBO.view;
+		ssbo.projection = shaderObject.standardSSBO.projection;
+		ssbo.color = shaderObject.standardSSBO.color;
+		ssbo.renderID = shaderObject.standardSSBO.renderID;
+		ssbo.viewProjection = GetLightViewProject();
+		ssbo.position = glm::vec4(g_lightPos, 1.0f);
+		ssbo.pcfCount = g_pcfCount;
+
+		shaderObject.shadowPushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
+		shaderObject.shadowPushConstant.textureId = m_descriptors->AddStorageBuffer(m_shadowMapDescriptorImageInfo);
 	}
 
-	void ShadowMapRenderPipeline::Resize(const RenderResources_ptr& resources)
+	DirectionalLightSSBO ShadowMapRenderPipeline::GetDirectionalLightInfo()
 	{
-		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
-		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
-		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	}
-
-	DirectionalLightInfo ShadowMapRenderPipeline::GetDirectionalLightInfo()
-	{
-		DirectionalLightInfo lightInfo{};
+		DirectionalLightSSBO lightInfo{};
 		lightInfo.viewProjection = GetLightViewProject();
 		lightInfo.position = glm::vec4(g_lightPos, 1.0f);
 		lightInfo.pcfCount = g_pcfCount;
 		return lightInfo;
 	}
 
-	void ShadowMapRenderPipeline::prepareDescriptors()
-	{
-		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),
-		};
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = Utility::Vulkan::CreateInfo::descriptorPoolCreateInfo(poolSize, m_descriptorCount);
-		VK_VALIDATION(vkCreateDescriptorPool(*m_device, &descriptorPoolCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorPool));
-
-		// [descriptor]layout
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
-			// binding: 0
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
-			// binding: 1
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
-		};
-		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
-		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
-	}
-
 	void ShadowMapRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
+		// push constant
+		std::vector<VkPushConstantRange> pushConstantRange = {
+			// VS
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+				0,
+				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::shadowPushConstant))),
+		};
+
 		// [pipeline]layout
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout() };
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
+		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline

@@ -8,8 +8,8 @@ namespace MyosotisFW::System::Render
 	class SkyboxRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		SkyboxRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device) {
+		SkyboxRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors) {
 		}
 		~SkyboxRenderPipeline();
 
@@ -18,7 +18,6 @@ namespace MyosotisFW::System::Render
 		void UpdateDescriptors(SkyboxShaderObject& shaderObject);
 
 	private:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(SkyboxRenderPipeline);

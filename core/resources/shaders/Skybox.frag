@@ -1,9 +1,14 @@
 #version 450
-
-layout (binding = 1) uniform samplerCube colorMap;
+#extension GL_EXT_nonuniform_qualifier : require
 
 layout (location = 0) in vec3 inUVW;
 layout (location = 1) in flat uint inRenderID;
+
+layout (binding = 2) uniform samplerCube SamplerCube[];
+layout (push_constant) uniform PushConstant {
+    uint objectIndex;
+    uint textureId;
+};
 
 layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
@@ -13,5 +18,5 @@ layout (location = 3) out uint outRenderID;
 void main() 
 {
     outRenderID = inRenderID;
-    outBaseColor = texture(colorMap, inUVW);
+    outBaseColor = texture(SamplerCube[textureId], inUVW);
 }

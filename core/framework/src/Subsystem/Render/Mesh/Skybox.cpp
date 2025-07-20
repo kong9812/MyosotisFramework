@@ -18,36 +18,24 @@ namespace MyosotisFW::System::Render
 		m_skyboxShaderObject({})
 	{
 		m_name = "Skybox";
-		m_skyboxShaderObject.standardUBO.cubemap.sampler = VK_NULL_HANDLE;
+		m_skyboxShaderObject.cubeMap.sampler = VK_NULL_HANDLE;
 	}
 
 	Skybox::~Skybox()
 	{
-		if (m_skyboxShaderObject.standardUBO.cubemap.sampler)
+		if (m_skyboxShaderObject.cubeMap.sampler)
 		{
-			vkDestroySampler(*m_device, m_skyboxShaderObject.standardUBO.cubemap.sampler, m_device->GetAllocationCallbacks());
+			vkDestroySampler(*m_device, m_skyboxShaderObject.cubeMap.sampler, m_device->GetAllocationCallbacks());
 		}
 
-		VK_VALIDATION(vkFreeDescriptorSets(*m_device, m_skyboxShaderObject.shaderBase.descriptorPool, 1, &m_skyboxShaderObject.shaderBase.descriptorSet));
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_skyboxShaderObject.standardUBO.buffer.buffer, m_skyboxShaderObject.standardUBO.buffer.allocation);
 	}
 
 	void Skybox::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
 		m_device = device;
 		m_resources = resources;
-
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_skyboxShaderObject.standardUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_skyboxShaderObject.standardUBO.buffer.buffer,
-			m_skyboxShaderObject.standardUBO.buffer.allocation,
-			m_skyboxShaderObject.standardUBO.buffer.allocationInfo,
-			m_skyboxShaderObject.standardUBO.buffer.descriptor);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -60,25 +48,27 @@ namespace MyosotisFW::System::Render
 	{
 		if (camera)
 		{
-			m_skyboxShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
-			m_skyboxShaderObject.standardUBO.data.view = camera->GetViewMatrix();
+			m_skyboxShaderObject.standardSSBO.projection = camera->GetProjectionMatrix();
+			m_skyboxShaderObject.standardSSBO.view = camera->GetViewMatrix();
 		}
-		m_skyboxShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_skyboxShaderObject.standardUBO.data.model = glm::rotate(m_skyboxShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_skyboxShaderObject.standardUBO.data.model = glm::rotate(m_skyboxShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_skyboxShaderObject.standardUBO.data.model = glm::rotate(m_skyboxShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_skyboxShaderObject.standardUBO.data.model = glm::scale(m_skyboxShaderObject.standardUBO.data.model, glm::vec3(m_transform.scale));
-		m_skyboxShaderObject.standardUBO.data.renderID = m_renderID;
+		m_skyboxShaderObject.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_skyboxShaderObject.standardSSBO.model = glm::scale(m_skyboxShaderObject.standardSSBO.model, glm::vec3(m_transform.scale));
+		m_skyboxShaderObject.standardSSBO.renderID = m_renderID;
 
 		if (!m_isReady) return;
-		memcpy(m_skyboxShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_skyboxShaderObject.standardUBO.data, sizeof(m_skyboxShaderObject.standardUBO.data));
 	}
 
 	void Skybox::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipelineLayout, 0, 1, &m_skyboxShaderObject.shaderBase.descriptorSet, 0, nullptr);
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipeline);
-
+		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipelineLayout, 0, 1, &m_skyboxShaderObject.shaderBase.descriptorSet, 0, nullptr);
+		vkCmdPushConstants(commandBuffer, m_skyboxShaderObject.shaderBase.pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			0,
+			static_cast<uint32_t>(sizeof(m_skyboxShaderObject.pushConstant)), &m_skyboxShaderObject.pushConstant);
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
@@ -117,7 +107,7 @@ namespace MyosotisFW::System::Render
 
 
 		// 実験
-		m_skyboxShaderObject.standardUBO.cubemap = m_resources->GetCubeImage({
+		m_skyboxShaderObject.cubeMap = m_resources->GetCubeImage({
 			"sky\\right.png",
 			"sky\\left.png",
 			"sky\\top.png",
@@ -127,6 +117,6 @@ namespace MyosotisFW::System::Render
 
 		// sampler
 		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_skyboxShaderObject.standardUBO.cubemap.sampler));
+		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_skyboxShaderObject.cubeMap.sampler));
 	}
 }

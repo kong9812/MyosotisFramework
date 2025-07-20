@@ -103,9 +103,11 @@ namespace MyosotisFW::System::Render
 		m_computeQueue(nullptr),
 		m_transferQueue(nullptr),
 		m_physicalDeviceMemoryProperties({}),
+		m_maxDescriptorSetUniformBuffers(0),
 		m_maxDescriptorSetStorageBuffers(0),
 		m_maxDescriptorSetSampledImages(0),
-		m_maxDescriptorSetStorageImages(0)
+		m_maxDescriptorSetStorageImages(0),
+		m_maxDescriptorSetInputAttachments(0)
 	{
 		// prepare allocation callbacks
 		prepareAllocationCallbacks();
@@ -119,9 +121,11 @@ namespace MyosotisFW::System::Render
 		// デバイスプロパティを取得
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+		m_maxDescriptorSetUniformBuffers = properties.limits.maxDescriptorSetUniformBuffers;
 		m_maxDescriptorSetStorageBuffers = properties.limits.maxDescriptorSetStorageBuffers;
 		m_maxDescriptorSetSampledImages = properties.limits.maxDescriptorSetSampledImages;
 		m_maxDescriptorSetStorageImages = properties.limits.maxDescriptorSetStorageImages;
+		m_maxDescriptorSetInputAttachments = properties.limits.maxDescriptorSetInputAttachments;
 #ifdef DEBUG
 		PrintPhysicalDeviceInfo(properties);
 #endif
@@ -164,6 +168,8 @@ namespace MyosotisFW::System::Render
 		VkPhysicalDeviceDescriptorIndexingFeatures physicalDeviceDescriptorIndexingFeatures = {};
 		physicalDeviceDescriptorIndexingFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 		physicalDeviceDescriptorIndexingFeatures.pNext = NULL;
+		// SSBO 配列
+		physicalDeviceDescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
 		// 未バインドのディスクリプタスロットを許可する（Shader中で未使用slotがあってもOK）
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
 		// 異なる配列要素のインデックスアクセスを許可する

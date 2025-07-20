@@ -8,8 +8,8 @@ namespace MyosotisFW::System::Render
 	class InteriorObjectDeferredRenderPipeline : public RenderPipelineBase
 	{
 	public:
-		InteriorObjectDeferredRenderPipeline(const RenderDevice_ptr& device) :
-			RenderPipelineBase(device) {
+		InteriorObjectDeferredRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+			RenderPipelineBase(device, descriptors) {
 		}
 		~InteriorObjectDeferredRenderPipeline();
 
@@ -18,7 +18,6 @@ namespace MyosotisFW::System::Render
 		void UpdateDescriptors(InteriorObjectShaderObject& shaderObject);
 
 	private:
-		void prepareDescriptors() override;
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(InteriorObjectDeferredRenderPipeline);
