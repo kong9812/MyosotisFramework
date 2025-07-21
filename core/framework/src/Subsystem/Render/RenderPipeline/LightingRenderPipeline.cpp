@@ -26,36 +26,28 @@ namespace MyosotisFW::System::Render
 
 	void LightingRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lightingShaderObject.shaderBase.pipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessDescriptorSet(), m_descriptorSet };
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_lightingShaderObject.shaderBase.pipelineLayout, 0,
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
-			0, static_cast<uint32_t>(sizeof(m_pushConstant)), &m_pushConstant);
+			0, static_cast<uint32_t>(sizeof(m_lightingShaderObject.pushConstant)), &m_lightingShaderObject.pushConstant);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
 	void LightingRenderPipeline::UpdateDirectionalLightInfo(const DirectionalLightSSBO& lightInfo)
 	{
-		m_lightingShaderObject.lightSSBO = lightInfo;
+		m_lightingShaderObject.SSBO.lightSSBO = lightInfo;
 	}
 
 	void LightingRenderPipeline::UpdateCameraPosition(const glm::vec4& position)
 	{
-		m_lightingShaderObject.cameraSSBO.position = position;
+		m_lightingShaderObject.SSBO.cameraSSBO.position = position;
 	}
 
 	void LightingRenderPipeline::CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo)
 	{
-		{// pipeline
-			m_lightingShaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
-			m_lightingShaderObject.shaderBase.pipeline = m_pipeline;
-		}
-
-		// layout allocate
-		m_lightingShaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
-
 		// descriptorSet
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_positionDescriptorImageInfo),
@@ -67,20 +59,8 @@ namespace MyosotisFW::System::Render
 
 	void LightingRenderPipeline::UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo)
 	{
-		struct {
-			glm::vec4 cameraPosition;
-			glm::mat4 viewProjection;
-			glm::vec4 lightPosition;
-			int32_t pcfCount;
-		} ssbo;
-
-		ssbo.cameraPosition = m_lightingShaderObject.cameraSSBO.position;
-		ssbo.viewProjection = m_lightingShaderObject.lightSSBO.viewProjection;
-		ssbo.lightPosition = m_lightingShaderObject.lightSSBO.position;
-		ssbo.pcfCount = m_lightingShaderObject.lightSSBO.pcfCount;
-
-		m_pushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
-		m_pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(shadowMapImageInfo);
+		m_lightingShaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(m_lightingShaderObject.SSBO);
+		m_lightingShaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(shadowMapImageInfo);
 	}
 
 	void LightingRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
@@ -100,7 +80,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 
 		// push constant
-		VkPushConstantRange pushConstantRange = Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(sizeof(m_pushConstant)));
+		VkPushConstantRange pushConstantRange = Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(sizeof(m_lightingShaderObject.pushConstant)));
 
 		// [pipeline]layout
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout(), m_descriptorSetLayout };

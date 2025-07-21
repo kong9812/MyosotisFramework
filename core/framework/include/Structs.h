@@ -77,7 +77,6 @@ namespace MyosotisFW
 		VkPipeline pipeline;
 	}ShaderBase;
 
-
 	typedef struct
 	{
 		glm::mat4 viewProjection;
@@ -103,6 +102,15 @@ namespace MyosotisFW
 		glm::vec4 axisY;
 		glm::vec4 axisZ;
 	}OBBData;
+
+	typedef struct
+	{
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 projection;
+		glm::vec4 color;
+		uint32_t renderID;
+	}StandardSSBO;
 
 	typedef struct
 	{
@@ -144,44 +152,48 @@ namespace MyosotisFW
 
 	typedef struct
 	{
-		DirectionalLightSSBO lightSSBO;
+		struct {
+			uint32_t objectIndex;
+			uint32_t textureId;
+		}pushConstant;
+
+		struct {
+			CameraSSBO cameraSSBO;
+			DirectionalLightSSBO lightSSBO;
+		}SSBO;
+	}LightingShaderObject;
+
+	typedef struct
+	{
+		ShaderBase shaderBase;
+
+		struct {
+			uint32_t objectIndex;
+			uint32_t textureId;
+		}pushConstant;
+
+		struct {
+			StandardSSBO standardSSBO;
+			DirectionalLightSSBO lightSSBO;
+		}SSBO;
 	}ShadowMapShaderObject;
 
 	typedef struct
 	{
 		ShaderBase shaderBase;
 
-		CameraSSBO cameraSSBO;
-		DirectionalLightSSBO lightSSBO;
-	}LightingShaderObject;
-
-	typedef struct
-	{
-		ShaderBase shadowMapRenderShaderBase;
-		ShaderBase deferredRenderShaderBase;
-
 		bool useNormalMap;
 		Image normalMap;
-		VkDescriptorImageInfo shadowMapImageInfo;
 
 		struct {
 			uint32_t objectIndex;
 			uint32_t textureId;
-		}standardPushConstant;
-
-		struct {
-			uint32_t objectIndex;
-			uint32_t textureId;
-		}shadowPushConstant;
+		}pushConstant;
 
 		struct
 		{
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 projection;
-			glm::vec4 color;
-			uint32_t renderID;
-		}standardSSBO;
+			StandardSSBO standardSSBO;
+		}SSBO;
 	}StaticMeshShaderObject;
 
 	typedef struct
@@ -196,19 +208,14 @@ namespace MyosotisFW
 
 		struct
 		{
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 projection;
-			glm::vec4 color;
-			uint32_t renderID;
-		}standardSSBO;
+			StandardSSBO standardSSBO;
+		}SSBO;
 	}SkyboxShaderObject;
 
 	typedef struct
 	{
 		ShaderBase shaderBase;
 
-		CameraSSBO cameraSSBO;
 		Image cubeMap;
 
 		struct {
@@ -218,12 +225,9 @@ namespace MyosotisFW
 
 		struct
 		{
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 projection;
-			glm::vec4 color;
-			uint32_t renderID;
-		}standardSSBO;			// UBO
+			StandardSSBO standardSSBO;
+			CameraSSBO cameraSSBO;
+		}SSBO;
 	}InteriorObjectShaderObject;
 
 	typedef struct

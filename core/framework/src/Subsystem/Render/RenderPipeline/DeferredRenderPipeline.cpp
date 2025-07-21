@@ -19,26 +19,25 @@ namespace MyosotisFW::System::Render
 	void DeferredRenderPipeline::CreateShaderObject(StaticMeshShaderObject& shaderObject)
 	{
 		{// pipeline
-			shaderObject.deferredRenderShaderBase.pipelineLayout = m_pipelineLayout;
-			shaderObject.deferredRenderShaderBase.pipeline = m_pipeline;
+			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
+			shaderObject.shaderBase.pipeline = m_pipeline;
 		}
 
 		// layout allocate
-		shaderObject.deferredRenderShaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
+		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
 	void DeferredRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
 	{
-		VkDescriptorImageInfo descriptorImageInfo{};
 		if (shaderObject.useNormalMap)
 		{
-			shaderObject.standardPushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.standardSSBO);
-			descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.normalMap.sampler, shaderObject.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			shaderObject.standardPushConstant.textureId = m_descriptors->AddStorageBuffer(descriptorImageInfo);
+			shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.normalMap.sampler, shaderObject.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			shaderObject.pushConstant.textureId = m_descriptors->AddStorageBuffer(descriptorImageInfo);
 		}
 		else
 		{
-			shaderObject.standardPushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.standardSSBO);
+			shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 		}
 	}
 
@@ -49,7 +48,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
 				0,
-				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::standardPushConstant))),
+				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

@@ -48,15 +48,15 @@ namespace MyosotisFW::System::Render
 	{
 		if (camera)
 		{
-			m_skyboxShaderObject.standardSSBO.projection = camera->GetProjectionMatrix();
-			m_skyboxShaderObject.standardSSBO.view = camera->GetViewMatrix();
+			m_skyboxShaderObject.SSBO.standardSSBO.projection = camera->GetProjectionMatrix();
+			m_skyboxShaderObject.SSBO.standardSSBO.view = camera->GetViewMatrix();
 		}
-		m_skyboxShaderObject.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_skyboxShaderObject.standardSSBO.model = glm::rotate(m_skyboxShaderObject.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_skyboxShaderObject.standardSSBO.model = glm::scale(m_skyboxShaderObject.standardSSBO.model, glm::vec3(m_transform.scale));
-		m_skyboxShaderObject.standardSSBO.renderID = m_renderID;
+		m_skyboxShaderObject.SSBO.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_skyboxShaderObject.SSBO.standardSSBO.model = glm::rotate(m_skyboxShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_skyboxShaderObject.SSBO.standardSSBO.model = glm::rotate(m_skyboxShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_skyboxShaderObject.SSBO.standardSSBO.model = glm::rotate(m_skyboxShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_skyboxShaderObject.SSBO.standardSSBO.model = glm::scale(m_skyboxShaderObject.SSBO.standardSSBO.model, glm::vec3(m_transform.scale));
+		m_skyboxShaderObject.SSBO.standardSSBO.renderID = m_renderID;
 
 		if (!m_isReady) return;
 	}

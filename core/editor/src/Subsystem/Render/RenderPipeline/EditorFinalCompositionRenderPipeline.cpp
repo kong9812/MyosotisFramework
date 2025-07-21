@@ -16,14 +16,6 @@ namespace MyosotisFW::System::Render
 
 	void EditorFinalCompositionRenderPipeline::CreateShaderObject()
 	{
-		{// pipeline
-			m_shaderBase.pipelineLayout = m_pipelineLayout;
-			m_shaderBase.pipeline = m_pipeline;
-		}
-
-		// layout allocate
-		m_shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
-
 		// descriptorSet
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
 			Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, &m_mainRenderTargetDescriptorImageInfo),

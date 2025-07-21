@@ -23,9 +23,9 @@ namespace MyosotisFW::System::Render
 
 	void FinalCompositionRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shaderBase.pipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessDescriptorSet(), m_descriptorSet };
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shaderBase.pipelineLayout, 0,
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
@@ -33,12 +33,9 @@ namespace MyosotisFW::System::Render
 	void FinalCompositionRenderPipeline::CreateShaderObject()
 	{
 		{// pipeline
-			m_shaderBase.pipelineLayout = m_pipelineLayout;
-			m_shaderBase.pipeline = m_pipeline;
+			m_pipelineLayout = m_pipelineLayout;
+			m_pipeline = m_pipeline;
 		}
-
-		// layout allocate
-		m_shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 
 		// descriptorSet
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {

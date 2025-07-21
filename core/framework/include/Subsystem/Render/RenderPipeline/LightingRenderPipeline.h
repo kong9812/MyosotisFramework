@@ -17,6 +17,8 @@ namespace MyosotisFW::System::Render
 	public:
 		LightingRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
 			RenderPipelineBase(device, descriptors),
+			m_descriptorSetLayout(VK_NULL_HANDLE),
+			m_descriptorSet(VK_NULL_HANDLE),
 			m_lightingShaderObject({}),
 			m_positionDescriptorImageInfo({}),
 			m_normalDescriptorImageInfo({}),
@@ -33,11 +35,6 @@ namespace MyosotisFW::System::Render
 
 
 	private:
-		struct {
-			uint32_t objectIndex;
-			uint32_t textureId;
-		}m_pushConstant;
-
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		VkDescriptorSetLayout m_descriptorSetLayout;

@@ -16,11 +16,10 @@ namespace MyosotisFW::System::Render
 		~ShadowMapRenderPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
-		void UpdateDescriptors(StaticMeshShaderObject& shaderObject);
+		void CreateShaderObject(ShadowMapShaderObject& shaderObject);
+		void UpdateDescriptors(ShadowMapShaderObject& shaderObject);
 
 		DirectionalLightSSBO GetDirectionalLightInfo();
-
 		VkDescriptorImageInfo GetShadowMapDescriptorImageInfo() { return m_shadowMapDescriptorImageInfo; }
 
 	private:

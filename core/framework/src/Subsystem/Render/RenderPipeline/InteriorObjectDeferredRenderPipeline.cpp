@@ -29,22 +29,7 @@ namespace MyosotisFW::System::Render
 
 	void InteriorObjectDeferredRenderPipeline::UpdateDescriptors(InteriorObjectShaderObject& shaderObject)
 	{
-		struct {
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 projection;
-			glm::vec4 color;
-			uint32_t renderID;
-			glm::vec4 cameraPosition;
-		} ssbo;
-
-		ssbo.model = shaderObject.standardSSBO.model;
-		ssbo.view = shaderObject.standardSSBO.view;
-		ssbo.projection = shaderObject.standardSSBO.projection;
-		ssbo.color = shaderObject.standardSSBO.color;
-		ssbo.renderID = shaderObject.standardSSBO.renderID;
-		ssbo.cameraPosition = shaderObject.cameraSSBO.position;
-		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
+		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.cubeMap.sampler, shaderObject.cubeMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
 	}

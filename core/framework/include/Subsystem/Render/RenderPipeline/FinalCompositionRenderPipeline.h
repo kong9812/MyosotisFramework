@@ -12,7 +12,6 @@ namespace MyosotisFW::System::Render
 			RenderPipelineBase(device, descriptors),
 			m_descriptorSetLayout(VK_NULL_HANDLE),
 			m_descriptorSet(VK_NULL_HANDLE),
-			m_shaderBase({}),
 			m_mainRenderTargetDescriptorImageInfo({}) {
 		}
 		~FinalCompositionRenderPipeline();
@@ -28,7 +27,6 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSet m_descriptorSet;
 
 		VkDescriptorImageInfo m_mainRenderTargetDescriptorImageInfo;
-		ShaderBase m_shaderBase;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(FinalCompositionRenderPipeline);
 }

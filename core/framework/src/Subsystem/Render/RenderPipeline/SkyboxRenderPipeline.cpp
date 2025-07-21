@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 
 	void SkyboxRenderPipeline::UpdateDescriptors(SkyboxShaderObject& shaderObject)
 	{
-		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.standardSSBO);
+		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 
 		VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.cubeMap.sampler, shaderObject.cubeMap.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(imageInfo);

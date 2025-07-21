@@ -30,22 +30,22 @@ namespace MyosotisFW::System::GameDirector {
 			m_renderSubsystem->RegisterObject(newObject);
 		}
 
-		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
-		//	component->SetPos(glm::vec3(1.0f));
-		//	component->SetRot(glm::vec3(0.0f));
-		//	component->SetScale(glm::vec3(1.0f));
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
+		{
+			StageObject_ptr newObject = CreateStageObjectPointer();
+			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
+				System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
+			component->SetPos(glm::vec3(1.0f));
+			component->SetRot(glm::vec3(0.0f));
+			component->SetScale(glm::vec3(1.0f));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
 
 		{
 			StageObject_ptr newObject = CreateStageObjectPointer();
 			Render::InteriorObject_ptr component = Object_Cast<Render::InteriorObject>(
 				System::ComponentFactory::CreateComponent(ComponentType::InteriorObjectMesh));
-			component->SetPos(glm::vec3(1.0f));
+			component->SetPos(glm::vec3(5.0f));
 			component->SetRot(glm::vec3(-90.0f, 0.0f, 0.0f));
 			component->SetScale(glm::vec3(1.0f));
 			newObject->AddComponent(component);

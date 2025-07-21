@@ -99,9 +99,14 @@ namespace MyosotisFW::System::Render
 				{
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
 					customMesh->PrepareForRender(m_device, m_resources);
-					StaticMeshShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
-					m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
-					m_deferredRenderPipeline->CreateShaderObject(shaderObject);
+					{// ShadowMap
+						ShadowMapShaderObject& shaderObject = customMesh->GetShadowMapShaderObject();
+						m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
+					}
+					{// Deferred Render
+						StaticMeshShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
+						m_deferredRenderPipeline->CreateShaderObject(shaderObject);
+					}
 				}
 			}
 		}
@@ -282,7 +287,7 @@ namespace MyosotisFW::System::Render
 				if (IsStaticMesh(component->GetType()))
 				{
 					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					m_shadowMapRenderPipeline->UpdateDescriptors(staticMesh->GetStaticMeshShaderObject());
+					m_shadowMapRenderPipeline->UpdateDescriptors(staticMesh->GetShadowMapShaderObject());
 					staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
 				}
 			}

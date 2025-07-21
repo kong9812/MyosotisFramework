@@ -40,43 +40,21 @@ namespace MyosotisFW::System::Render
 		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void ShadowMapRenderPipeline::CreateShaderObject(StaticMeshShaderObject& shaderObject)
+	void ShadowMapRenderPipeline::CreateShaderObject(ShadowMapShaderObject& shaderObject)
 	{
 		{// pipeline
-			shaderObject.shadowMapRenderShaderBase.pipelineLayout = m_pipelineLayout;
-			shaderObject.shadowMapRenderShaderBase.pipeline = m_pipeline;
+			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
+			shaderObject.shaderBase.pipeline = m_pipeline;
 		}
 
 		// layout allocate
-		shaderObject.shadowMapRenderShaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
+		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
-	void ShadowMapRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
+	void ShadowMapRenderPipeline::UpdateDescriptors(ShadowMapShaderObject& shaderObject)
 	{
-		shaderObject.shadowMapImageInfo = m_shadowMapDescriptorImageInfo;
-
-		struct {
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 projection;
-			glm::vec4 color;
-			uint32_t renderID;
-			glm::mat4 viewProjection;
-			glm::vec4 position;
-			uint32_t pcfCount;
-		} ssbo;
-
-		ssbo.model = shaderObject.standardSSBO.model;
-		ssbo.view = shaderObject.standardSSBO.view;
-		ssbo.projection = shaderObject.standardSSBO.projection;
-		ssbo.color = shaderObject.standardSSBO.color;
-		ssbo.renderID = shaderObject.standardSSBO.renderID;
-		ssbo.viewProjection = GetLightViewProject();
-		ssbo.position = glm::vec4(g_lightPos, 1.0f);
-		ssbo.pcfCount = g_pcfCount;
-
-		shaderObject.shadowPushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
-		shaderObject.shadowPushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(m_shadowMapDescriptorImageInfo);
+		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
+		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(m_shadowMapDescriptorImageInfo);
 	}
 
 	DirectionalLightSSBO ShadowMapRenderPipeline::GetDirectionalLightInfo()
@@ -95,7 +73,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
 				0,
-				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::shadowPushConstant))),
+				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

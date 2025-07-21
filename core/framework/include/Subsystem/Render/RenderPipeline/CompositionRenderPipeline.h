@@ -18,7 +18,8 @@ namespace MyosotisFW::System::Render
 	public:
 		CompositionRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
 			RenderPipelineBase(device, descriptors),
-			m_shaderBase({}),
+			m_descriptorSetLayout(VK_NULL_HANDLE),
+			m_descriptorSet(VK_NULL_HANDLE),
 			m_lightingResultDescriptorImageInfo({}) {
 		}
 		~CompositionRenderPipeline();
@@ -33,7 +34,6 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkDescriptorSet m_descriptorSet;
 
-		ShaderBase m_shaderBase;
 		VkDescriptorImageInfo m_lightingResultDescriptorImageInfo;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(CompositionRenderPipeline);

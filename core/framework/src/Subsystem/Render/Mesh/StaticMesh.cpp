@@ -20,11 +20,11 @@ namespace MyosotisFW::System::Render
 		m_indexBuffer({}),
 		m_currentLOD(LOD::Hide),
 		m_lodDistances({}),
+		m_shadowMapShaderObject({}),
 		m_staticMeshShaderObject({})
 	{
 		m_name = "StaticMesh";
 		m_transform.scale = glm::vec3(1.0f);
-		m_staticMeshShaderObject = {};
 		m_staticMeshShaderObject.normalMap.sampler = VK_NULL_HANDLE;
 	}
 
@@ -75,7 +75,8 @@ namespace MyosotisFW::System::Render
 				//m_currentLOD = LOD::Hide;
 			}
 		}
-		m_staticMeshShaderObject.standardSSBO.renderID = m_renderID;
+		m_staticMeshShaderObject.SSBO.standardSSBO.renderID = m_renderID;
+		m_shadowMapShaderObject.SSBO.standardSSBO = m_staticMeshShaderObject.SSBO.standardSSBO;
 	}
 
 	void StaticMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)
@@ -86,22 +87,22 @@ namespace MyosotisFW::System::Render
 		{
 		case RenderPipelineType::ShadowMap:
 		{
-			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shadowMapRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shadowMapRenderShaderBase.descriptorSet, 0, nullptr);
-			vkCmdPushConstants(commandBuffer, m_staticMeshShaderObject.shadowMapRenderShaderBase.pipelineLayout,
+			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapShaderObject.shaderBase.pipelineLayout, 0, 1, &m_shadowMapShaderObject.shaderBase.descriptorSet, 0, nullptr);
+			vkCmdPushConstants(commandBuffer, m_shadowMapShaderObject.shaderBase.pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
 				0,
-				static_cast<uint32_t>(sizeof(m_staticMeshShaderObject.shadowPushConstant)), &m_staticMeshShaderObject.shadowPushConstant);
-			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shadowMapRenderShaderBase.pipeline);
+				static_cast<uint32_t>(sizeof(m_shadowMapShaderObject.pushConstant)), &m_shadowMapShaderObject.pushConstant);
+			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapShaderObject.shaderBase.pipeline);
 		}
 		break;
 		case RenderPipelineType::Deferred:
 		{
-			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.deferredRenderShaderBase.descriptorSet, 0, nullptr);
-			vkCmdPushConstants(commandBuffer, m_staticMeshShaderObject.deferredRenderShaderBase.pipelineLayout,
+			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shaderBase.descriptorSet, 0, nullptr);
+			vkCmdPushConstants(commandBuffer, m_staticMeshShaderObject.shaderBase.pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
 				0,
-				static_cast<uint32_t>(sizeof(m_staticMeshShaderObject.standardPushConstant)), &m_staticMeshShaderObject.standardPushConstant);
-			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.deferredRenderShaderBase.pipeline);
+				static_cast<uint32_t>(sizeof(m_staticMeshShaderObject.pushConstant)), &m_staticMeshShaderObject.pushConstant);
+			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipeline);
 		}
 		break;
 		break;
