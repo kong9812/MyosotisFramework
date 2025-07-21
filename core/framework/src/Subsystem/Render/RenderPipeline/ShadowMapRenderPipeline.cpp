@@ -26,7 +26,6 @@ namespace MyosotisFW::System::Render
 {
 	ShadowMapRenderPipeline::~ShadowMapRenderPipeline()
 	{
-		vkDestroySampler(*m_device, m_shadowMapSampler, m_device->GetAllocationCallbacks());
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
@@ -35,9 +34,7 @@ namespace MyosotisFW::System::Render
 	{
 		prepareRenderPipeline(resources, renderPass);
 
-		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMapSampler));
-		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_shadowMapSampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(resources->GetShadowMap().sampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	void ShadowMapRenderPipeline::CreateShaderObject(ShadowMapShaderObject& shaderObject)

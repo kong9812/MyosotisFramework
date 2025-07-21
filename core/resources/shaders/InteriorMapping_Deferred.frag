@@ -1,6 +1,5 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
-#extension GL_EXT_debug_printf : enable
 
 layout (binding = 2) uniform samplerCube SamplerCube[];
 layout (push_constant) uniform PushConstant {
@@ -22,9 +21,7 @@ layout (location = 2) out vec4 outBaseColor;
 layout (location = 3) out uint outRenderID;
 
 void main() 
-{
-    debugPrintfEXT("Hello from shader!\n");
-    
+{    
     outPosition = inPosition;
     outNormal = inNormal;
     outRenderID = inRenderID;

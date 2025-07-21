@@ -10,7 +10,6 @@ namespace MyosotisFW::System::Render
 	public:
 		ShadowMapRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
 			RenderPipelineBase(device, descriptors),
-			m_shadowMapSampler(VK_NULL_HANDLE),
 			m_shadowMapDescriptorImageInfo({}) {
 		}
 		~ShadowMapRenderPipeline();
@@ -25,7 +24,6 @@ namespace MyosotisFW::System::Render
 	private:
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
-		VkSampler m_shadowMapSampler;
 		VkDescriptorImageInfo m_shadowMapDescriptorImageInfo;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(ShadowMapRenderPipeline);

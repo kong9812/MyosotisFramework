@@ -1,25 +1,12 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : require
+
+#include "RawDataLoader.glsl"
 
 layout (set = 1, input_attachment_index = 0, binding = 0) uniform subpassInput inputPosition;
 layout (set = 1, input_attachment_index = 1, binding = 1) uniform subpassInput inputNormal;
 layout (set = 1, input_attachment_index = 2, binding = 2) uniform subpassInput inputBaseColor;
-
-// Meta情報構造体
-struct BaseObjectData {
-    uint typeID;        // 今は使わない
-    uint dataOffset;    // 実データのoffset
-};
-
-// Meta情報テーブル
-layout(std430, binding = 0) buffer MetaBuffer {
-    BaseObjectData objectTable[];
-};
-
-// 実データ
-layout(std430, binding = 1) buffer AllDataBuffer {
-    uint rawData[]; // 全てのデータをここにまとめる
-};
 
 // 画像
 layout (binding = 2) uniform sampler2D Sampler2D[];
@@ -61,26 +48,6 @@ const vec3 diffuseColor = vec3(1.0);
 const vec3 ambientColor = vec3(1.0);
 const vec3 specularColor = vec3(1.0);
 
-mat4 LoadMat4(uint base) {
-    return mat4(
-        vec4(uintBitsToFloat(rawData[base +  0]), uintBitsToFloat(rawData[base +  1]),
-             uintBitsToFloat(rawData[base +  2]), uintBitsToFloat(rawData[base +  3])),
-        vec4(uintBitsToFloat(rawData[base +  4]), uintBitsToFloat(rawData[base +  5]),
-             uintBitsToFloat(rawData[base +  6]), uintBitsToFloat(rawData[base +  7])),
-        vec4(uintBitsToFloat(rawData[base +  8]), uintBitsToFloat(rawData[base +  9]),
-             uintBitsToFloat(rawData[base + 10]), uintBitsToFloat(rawData[base + 11])),
-        vec4(uintBitsToFloat(rawData[base + 12]), uintBitsToFloat(rawData[base + 13]),
-             uintBitsToFloat(rawData[base + 14]), uintBitsToFloat(rawData[base + 15]))
-    );
-}
-vec4 LoadVec4(uint base) {
-    return vec4(
-        uintBitsToFloat(rawData[base + 0]),
-        uintBitsToFloat(rawData[base + 1]),
-        uintBitsToFloat(rawData[base + 2]),
-        uintBitsToFloat(rawData[base + 3])
-    );
-}
 void main() 
 {
     BaseObjectData meta = objectTable[nonuniformEXT(objectIndex)];

@@ -9,6 +9,8 @@ namespace MyosotisFW::System::Render
 	RenderResources::~RenderResources()
 	{
 		{// attachment
+			vkDestroySampler(*m_device, m_shadowMap.sampler, m_device->GetAllocationCallbacks());
+
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
@@ -68,6 +70,8 @@ namespace MyosotisFW::System::Render
 			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_shadowMap.image, AppInfo::g_shadowMapFormat);
 			imageViewCreateInfoForDepthStencil.subresourceRange.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_shadowMap.view));
+			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_shadowMap.sampler));
 		}
 		{// position
 			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_deferredPositionFormat, width, height);

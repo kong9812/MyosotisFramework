@@ -105,7 +105,6 @@ namespace MyosotisFW::System::Render
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipeline);
 		}
 		break;
-		break;
 		default:
 			break;
 		}
