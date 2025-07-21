@@ -14,24 +14,11 @@
 　　　　・[後回し] AABB/OBB
 　　　　・[後回し] TextureList? DiscriptorList?
 　　　　・[後回し] その他…
-[Now] Bindless resources(texture/buffer)
-　・[OK] BindlessResourcesの仮実装（実験）
-　・[Now] VKPushConstantRange
-　　・TextureID/BufferID
-    　・PushConstant
-    　　・Base部分
-    　　　・画面サイズ
-    　　　・など
-    　　・Pipelineカスタマイズ可能部分
-    　　　・Texture_1
-    　　　・Texture_2
-    　　　・Buffer_1
-    　　　・Buffer_2
-    　　　・など
-　・RenderDescriptorPool
-  　・VkDescriptorPool
-    ・VkDescriptorSetLayout
-    ・VkDescriptorSet AllocateDescriptorSets()
+[OK] UBO-> readonly SSBO
+　・[OK] バッファの扱いがもっと自由になるように…
+[OK] Bindless resources(texture/buffer)
+[NOW] リファクタ
+　・[NOW] Imageの重複判定
 Visibility Buffer
 Mesh Shader
 2-phase occlusion culling
