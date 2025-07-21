@@ -52,7 +52,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
 
-		virtual glm::vec4 GetCullerData() { return glm::vec4(0.0f); }
+		virtual glm::vec4 GetCullingData() { return glm::vec4(0.0f); }
 
 	protected:
 		virtual void loadAssets() {}

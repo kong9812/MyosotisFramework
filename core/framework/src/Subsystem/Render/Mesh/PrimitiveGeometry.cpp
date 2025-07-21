@@ -50,7 +50,7 @@ namespace MyosotisFW::System::Render
 		__super::BindCommandBuffer(commandBuffer, pipelineType);
 	}
 
-	glm::vec4 PrimitiveGeometry::GetCullerData()
+	glm::vec4 PrimitiveGeometry::GetCullingData()
 	{
 		return glm::vec4(m_transform.pos, 2.5f);
 	}

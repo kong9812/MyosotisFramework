@@ -53,13 +53,13 @@ namespace MyosotisFW::System::Render
 {
 	RenderSubsystem::~RenderSubsystem()
 	{
-		{// frustum culler
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer, m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.obbDatasSSBO.buffer.buffer, m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer, m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation);
-			vkDestroyPipeline(*m_device, m_frustumCullerShaderObject.shaderBase.pipeline, m_device->GetAllocationCallbacks());
-			vkDestroyPipelineLayout(*m_device, m_frustumCullerShaderObject.shaderBase.pipelineLayout, m_device->GetAllocationCallbacks());
-			vkDestroyDescriptorSetLayout(*m_device, m_frustumCullerShaderObject.shaderBase.descriptorSetLayout, m_device->GetAllocationCallbacks());
+		{// frustum culling
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullingShaderObject.frustumPlanesUBO.buffer.buffer, m_frustumCullingShaderObject.frustumPlanesUBO.buffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullingShaderObject.obbDatasSSBO.buffer.buffer, m_frustumCullingShaderObject.obbDatasSSBO.buffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.buffer, m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.allocation);
+			vkDestroyPipeline(*m_device, m_frustumCullingShaderObject.shaderBase.pipeline, m_device->GetAllocationCallbacks());
+			vkDestroyPipelineLayout(*m_device, m_frustumCullingShaderObject.shaderBase.pipelineLayout, m_device->GetAllocationCallbacks());
+			vkDestroyDescriptorSetLayout(*m_device, m_frustumCullingShaderObject.shaderBase.descriptorSetLayout, m_device->GetAllocationCallbacks());
 			vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 		}
 
@@ -158,8 +158,8 @@ namespace MyosotisFW::System::Render
 		// Command pool
 		initializeCommandPool();
 
-		// Frustum Culler
-		initializeFrustumCuller();
+		// Frustum Culling
+		initializeFrustumCulling();
 
 		// Semaphore
 		initializeSemaphore();
@@ -194,15 +194,15 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderSubsystem::FrustumCuller()
+	void RenderSubsystem::FrustumCulling()
 	{
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 			VK_VALIDATION(vkBeginCommandBuffer(m_computeCommandBuffers[0], &commandBufferBeginInfo));
-			m_vkCmdBeginDebugUtilsLabelEXT(m_computeCommandBuffers[0], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.5f, 0.1f, 0.1f), "Compute Pass"));
-			vkCmdBindPipeline(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipeline);
-			vkCmdBindDescriptorSets(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullerShaderObject.shaderBase.pipelineLayout, 0, 1, &m_frustumCullerShaderObject.shaderBase.descriptorSet, 0, 0);
+			m_vkCmdBeginDebugUtilsLabelEXT(m_computeCommandBuffers[0], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Frustum Culling"));
+			vkCmdBindPipeline(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullingShaderObject.shaderBase.pipeline);
+			vkCmdBindDescriptorSets(m_computeCommandBuffers[0], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_frustumCullingShaderObject.shaderBase.pipelineLayout, 0, 1, &m_frustumCullingShaderObject.shaderBase.descriptorSet, 0, 0);
 
 			uint32_t staticObjectCount = 0;
 			{// Data setup
@@ -212,15 +212,15 @@ namespace MyosotisFW::System::Render
 					glm::vec4 rowY = glm::vec4(vp[0][1], vp[1][1], vp[2][1], vp[3][1]);
 					glm::vec4 rowZ = glm::vec4(vp[0][2], vp[1][2], vp[2][2], vp[3][2]);
 					glm::vec4 rowW = glm::vec4(vp[0][3], vp[1][3], vp[2][3], vp[3][3]);
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[0] = normalizePlane(rowW + rowX); // Left
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[1] = normalizePlane(rowW - rowX); // Right
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[2] = normalizePlane(rowW + rowY); // Bottom
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[3] = normalizePlane(rowW - rowY); // Top
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[4] = normalizePlane(rowW + rowZ); // Near
-					m_frustumCullerShaderObject.frustumPlanesUBO.data.planes[5] = normalizePlane(rowW - rowZ); // Far
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[0] = normalizePlane(rowW + rowX); // Left
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[1] = normalizePlane(rowW - rowX); // Right
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[2] = normalizePlane(rowW + rowY); // Bottom
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[3] = normalizePlane(rowW - rowY); // Top
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[4] = normalizePlane(rowW + rowZ); // Near
+					m_frustumCullingShaderObject.frustumPlanesUBO.data.planes[5] = normalizePlane(rowW - rowZ); // Far
 				}
 				{// obbDatasSSBO
-					m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.clear();
+					m_frustumCullingShaderObject.obbDatasSSBO.data.obbDatas.clear();
 					for (StageObject_ptr& object : m_objects)
 					{
 						std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::CustomMesh, true);
@@ -231,21 +231,21 @@ namespace MyosotisFW::System::Render
 							if (IsStaticMesh(component->GetType()))
 							{
 								StaticMesh_ptr staticMeshPtr = Object_CastToStaticMesh(component);
-								m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.push_back(staticMeshPtr->GetWorldOBBData());
+								m_frustumCullingShaderObject.obbDatasSSBO.data.obbDatas.push_back(staticMeshPtr->GetWorldOBBData());
 								staticObjectCount++;
 							}
 						}
 					}
 				}
 				{// visibleObjectsSSBO
-					m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.clear();
-					m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.resize(staticObjectCount);
+					m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.clear();
+					m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.resize(staticObjectCount);
 				}
 			}
 			{// Update UBO/SSBO
-				memcpy(m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocationInfo.pMappedData, &m_frustumCullerShaderObject.frustumPlanesUBO.data.planes, sizeof(m_frustumCullerShaderObject.frustumPlanesUBO.data.planes));
-				memcpy(m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.obbDatasSSBO.data.obbDatas.data(), staticObjectCount * sizeof(OBBData));
-				memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
+				memcpy(m_frustumCullingShaderObject.frustumPlanesUBO.buffer.allocationInfo.pMappedData, &m_frustumCullingShaderObject.frustumPlanesUBO.data.planes, sizeof(m_frustumCullingShaderObject.frustumPlanesUBO.data.planes));
+				memcpy(m_frustumCullingShaderObject.obbDatasSSBO.buffer.allocationInfo.pMappedData, m_frustumCullingShaderObject.obbDatasSSBO.data.obbDatas.data(), staticObjectCount * sizeof(OBBData));
+				memcpy(m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
 			}
 
 			vkCmdDispatch(m_computeCommandBuffers[0], staticObjectCount, 1, 1);
@@ -254,7 +254,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];		// Frustum Culler
+		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];		// Frustum Culling
 		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
 		computeQueue->Submit(submitInfo);
 		computeQueue->WaitIdle();
@@ -273,7 +273,7 @@ namespace MyosotisFW::System::Render
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// ShadowMap Prender Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "ShadowMap Prender Pass"));
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.4f, 0.0f, 0.6f), "Shadow Render"));
 
 		m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
@@ -302,10 +302,10 @@ namespace MyosotisFW::System::Render
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// main render pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.8f, 0.1f), "Static Mesh Deferred Render Pass"));
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.8f, 0.8f, 1.0f), "Main Render"));
 
 		m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-		memcpy(m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
+		memcpy(m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.data(), m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.allocationInfo.pMappedData, m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices.size() * sizeof(uint32_t));
 
 		std::vector<TransparentStaticMesh> staticMeshes{};
 		uint32_t staticMeshCounter = 0;
@@ -316,7 +316,7 @@ namespace MyosotisFW::System::Render
 			{
 				if (IsStaticMesh(component->GetType()))
 				{
-					if (m_frustumCullerShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
+					if (m_frustumCullingShaderObject.visibleObjectsSSBO.data.visibleIndices[staticMeshCounter] == 1)
 					{
 						StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
 
@@ -327,15 +327,19 @@ namespace MyosotisFW::System::Render
 				}
 				else if (component->GetType() == ComponentType::Skybox)
 				{
+					m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.2f, 0.4f, 1.0f), "Skybox Render"));
 					Skybox_ptr staticMesh = Object_CastToSkybox(component);
 					m_skyboxRenderPipeline->UpdateDescriptors(staticMesh->GetSkyboxShaderObject());
 					staticMesh->BindCommandBuffer(currentCommandBuffer);
+					m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 				}
 				else if (component->GetType() == ComponentType::InteriorObjectMesh)
 				{
+					m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.6f, 0.3f, 1.0f), "InteriorObject Render"));
 					InteriorObject_ptr staticMesh = Object_CastToInteriorObject(component);
 					m_interiorObjectDeferredRenderPipeline->UpdateDescriptors(staticMesh->GetInteriorObjectShaderObject());
 					staticMesh->BindCommandBuffer(currentCommandBuffer);
+					m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 				}
 			}
 		}
@@ -347,24 +351,27 @@ namespace MyosotisFW::System::Render
 			});
 
 		{// Deferred Render Pass
-			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.2f, 0.1f), "Deferred SubPass"));
+			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.2f, 1.0f, 0.2f), "Deferred Render"));
 			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
 				m_deferredRenderPipeline->UpdateDescriptors(staticMeshesPair.staticMesh->GetStaticMeshShaderObject());
 				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
 			}
-
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.6f, 0.0f), "Lighting Render"));
 		m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Composition Render"));
 		m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 
 		m_mainRenderPass->EndRender(currentCommandBuffer);
 
@@ -376,7 +383,7 @@ namespace MyosotisFW::System::Render
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// final composition Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Final Composition Render Pass"));
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 1.0f), "FinalComposition Render"));
 
 		m_finalCompositionRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
@@ -435,7 +442,7 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
 		}
 		{// compute
-			m_computeCommandBuffers.resize(1);	// Frustum Culler
+			m_computeCommandBuffers.resize(1);	// Frustum Culling
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
 		}
@@ -490,7 +497,7 @@ namespace MyosotisFW::System::Render
 			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeQueue()->GetQueueFamilyIndex());
 			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_computeCommandPool));
 
-			m_computeCommandBuffers.resize(1);	// Frustum Culler
+			m_computeCommandBuffers.resize(1);	// Frustum Culling
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
 			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
 		}
@@ -500,43 +507,43 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderSubsystem::initializeFrustumCuller()
+	void RenderSubsystem::initializeFrustumCulling()
 	{
 		{// frustumPlanesUBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullerShaderObject.frustumPlanesUBO.data,
-				static_cast<uint32_t>(sizeof(m_frustumCullerShaderObject.frustumPlanesUBO.data.planes)),
+				m_frustumCullingShaderObject.frustumPlanesUBO.data,
+				static_cast<uint32_t>(sizeof(m_frustumCullingShaderObject.frustumPlanesUBO.data.planes)),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.buffer,
-				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocation,
-				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.allocationInfo,
-				m_frustumCullerShaderObject.frustumPlanesUBO.buffer.descriptor);
+				m_frustumCullingShaderObject.frustumPlanesUBO.buffer.buffer,
+				m_frustumCullingShaderObject.frustumPlanesUBO.buffer.allocation,
+				m_frustumCullingShaderObject.frustumPlanesUBO.buffer.allocationInfo,
+				m_frustumCullingShaderObject.frustumPlanesUBO.buffer.descriptor);
 		}
 		{// objectMinSSBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullerShaderObject.obbDatasSSBO.data,
+				m_frustumCullingShaderObject.obbDatasSSBO.data,
 				static_cast<uint32_t>(sizeof(OBBData)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-				m_frustumCullerShaderObject.obbDatasSSBO.buffer.buffer,
-				m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocation,
-				m_frustumCullerShaderObject.obbDatasSSBO.buffer.allocationInfo,
-				m_frustumCullerShaderObject.obbDatasSSBO.buffer.descriptor);
+				m_frustumCullingShaderObject.obbDatasSSBO.buffer.buffer,
+				m_frustumCullingShaderObject.obbDatasSSBO.buffer.allocation,
+				m_frustumCullingShaderObject.obbDatasSSBO.buffer.allocationInfo,
+				m_frustumCullingShaderObject.obbDatasSSBO.buffer.descriptor);
 		}
 		{// visibleObjectsSSBO
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullerShaderObject.visibleObjectsSSBO.data,
+				m_frustumCullingShaderObject.visibleObjectsSSBO.data,
 				static_cast<uint32_t>(sizeof(uint32_t)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.buffer,
-				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocation,
-				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.allocationInfo,
-				m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.descriptor);
+				m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.buffer,
+				m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.allocation,
+				m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.allocationInfo,
+				m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.descriptor);
 		}
 
 		{// m_frustumDescriptor
@@ -558,25 +565,25 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT),
 			};
 			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = Utility::Vulkan::CreateInfo::descriptorSetLayoutCreateInfo(setLayoutBinding);
-			VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullerShaderObject.shaderBase.descriptorSetLayout));
+			VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullingShaderObject.shaderBase.descriptorSetLayout));
 			// layout allocate
-			VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_frustumCullerShaderObject.shaderBase.descriptorSetLayout);
-			VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_frustumCullerShaderObject.shaderBase.descriptorSet));
+			VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_frustumCullingShaderObject.shaderBase.descriptorSetLayout);
+			VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_frustumCullingShaderObject.shaderBase.descriptorSet));
 			// write descriptor set
 			std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullerShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_frustumCullerShaderObject.frustumPlanesUBO.buffer.descriptor),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullerShaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_frustumCullerShaderObject.obbDatasSSBO.buffer.descriptor),
-				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullerShaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_frustumCullerShaderObject.visibleObjectsSSBO.buffer.descriptor),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullingShaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_frustumCullingShaderObject.frustumPlanesUBO.buffer.descriptor),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullingShaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_frustumCullingShaderObject.obbDatasSSBO.buffer.descriptor),
+				Utility::Vulkan::CreateInfo::writeDescriptorSet(m_frustumCullingShaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.descriptor),
 			};
 			vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 		}
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_frustumCullerShaderObject.shaderBase.descriptorSetLayout };
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_frustumCullingShaderObject.shaderBase.descriptorSetLayout };
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
-		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullerShaderObject.shaderBase.pipelineLayout));
+		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullingShaderObject.shaderBase.pipelineLayout));
 		VkPipelineShaderStageCreateInfo shaderStageCreateInfo = Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT, m_resources->GetShaderModules("Frustum_Culling.comp.spv"));
-		VkComputePipelineCreateInfo computePipelineCreateInfo = Utility::Vulkan::CreateInfo::computePipelineCreateInfo(m_frustumCullerShaderObject.shaderBase.pipelineLayout, shaderStageCreateInfo);
-		VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullerShaderObject.shaderBase.pipeline));
+		VkComputePipelineCreateInfo computePipelineCreateInfo = Utility::Vulkan::CreateInfo::computePipelineCreateInfo(m_frustumCullingShaderObject.shaderBase.pipelineLayout, shaderStageCreateInfo);
+		VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_frustumCullingShaderObject.shaderBase.pipeline));
 	}
 
 	void RenderSubsystem::initializeSemaphore()

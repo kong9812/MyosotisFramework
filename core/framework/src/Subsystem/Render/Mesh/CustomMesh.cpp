@@ -51,7 +51,7 @@ namespace MyosotisFW::System::Render
 		__super::BindCommandBuffer(commandBuffer, pipelineType);
 	}
 
-	glm::vec4 CustomMesh::GetCullerData()
+	glm::vec4 CustomMesh::GetCullingData()
 	{
 		return glm::vec4(m_transform.pos, 1.0f);
 	}

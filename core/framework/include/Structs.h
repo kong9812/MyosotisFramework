@@ -8,20 +8,20 @@
 
 namespace MyosotisFW
 {
-	typedef struct
+	struct Transform
 	{
 		glm::vec3 pos;
 		glm::vec3 rot;
 		glm::vec3 scale;
-	}Transform;
+	};
 
-	typedef struct
+	struct RenderPass
 	{
 		VkRenderPass renderPass;
 		std::vector<VkFramebuffer> framebuffer;
-	}RenderPass;
+	};
 
-	typedef struct
+	struct UpdateData
 	{
 		bool pause;
 		float deltaTime;
@@ -29,90 +29,90 @@ namespace MyosotisFW
 		std::unordered_map<int, int> mouseButtonActions;
 		glm::vec2 mousePos;
 		glm::vec2 screenSize;
-	}UpdateData;
+	};
 
-	typedef struct
+	struct Image
 	{
 		VkImage image;
 		VkImageView view;
 		VkSampler sampler;
-	}Image;
+	};
 
-	typedef struct
+	struct DeviceImage
 	{
 		VkImage image;
 		VkDeviceMemory memory;
 		VkImageView view;
-	}DeviceImage;
+	};
 
-	typedef struct
+	struct VMAImage
 	{
 		VkImage image;
 		VkImageView view;
 		VkSampler sampler;
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
-	}VMAImage;
+	};
 
-	typedef struct
+	struct Buffer
 	{
 		VkBuffer buffer;
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
 		VkDescriptorBufferInfo descriptor;
-	}Buffer;
+	};
 
-	typedef struct
+	struct Mesh
 	{
 		std::vector<float> vertex;
 		std::vector<uint32_t> index;
 		glm::vec3 min;
 		glm::vec3 max;
-	}Mesh;
+	};
 
-	typedef struct
+	struct ShaderBase
 	{
 		VkDescriptorSet descriptorSet;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
-	}ShaderBase;
+	};
 
-	typedef struct
+	struct DirectionalLightSSBO
 	{
 		glm::mat4 viewProjection;
 		glm::vec4 position;
 		int32_t pcfCount;
-	}DirectionalLightSSBO;
+	};
 
-	typedef struct
+	struct CameraSSBO
 	{
 		glm::vec4 position;
-	}CameraSSBO;
+	};
 
-	typedef struct
+	struct AABBData
 	{
 		glm::vec4 min;
 		glm::vec4 max;
-	}AABBData;
+	};
 
-	typedef struct
+	struct OBBData
 	{
 		glm::vec4 center;
 		glm::vec4 axisX;
 		glm::vec4 axisY;
 		glm::vec4 axisZ;
-	}OBBData;
+	};
 
-	typedef struct
+	struct StandardSSBO
 	{
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
 		glm::vec4 color;
 		uint32_t renderID;
-	}StandardSSBO;
+	};
 
-	typedef struct
+	struct FrustumCullingShaderObject
 	{
 		struct
 		{
@@ -148,9 +148,9 @@ namespace MyosotisFW
 				std::vector<uint32_t> visibleIndices;	// 可視オブジェクトのインデックス
 			}data;
 		}visibleObjectsSSBO;							// SSBO
-	}FrustumCullersShaderObject;
+	};
 
-	typedef struct
+	struct LightingShaderObject
 	{
 		struct {
 			uint32_t objectIndex;
@@ -161,9 +161,9 @@ namespace MyosotisFW
 			CameraSSBO cameraSSBO;
 			DirectionalLightSSBO lightSSBO;
 		}SSBO;
-	}LightingShaderObject;
+	};
 
-	typedef struct
+	struct ShadowMapShaderObject
 	{
 		ShaderBase shaderBase;
 
@@ -176,9 +176,9 @@ namespace MyosotisFW
 			StandardSSBO standardSSBO;
 			DirectionalLightSSBO lightSSBO;
 		}SSBO;
-	}ShadowMapShaderObject;
+	};
 
-	typedef struct
+	struct StaticMeshShaderObject
 	{
 		ShaderBase shaderBase;
 
@@ -190,13 +190,12 @@ namespace MyosotisFW
 			uint32_t textureId;
 		}pushConstant;
 
-		struct
-		{
+		struct {
 			StandardSSBO standardSSBO;
 		}SSBO;
-	}StaticMeshShaderObject;
+	};
 
-	typedef struct
+	struct SkyboxShaderObject
 	{
 		ShaderBase shaderBase;
 		Image cubeMap;
@@ -210,9 +209,9 @@ namespace MyosotisFW
 		{
 			StandardSSBO standardSSBO;
 		}SSBO;
-	}SkyboxShaderObject;
+	};
 
-	typedef struct
+	struct InteriorObjectShaderObject
 	{
 		ShaderBase shaderBase;
 
@@ -228,16 +227,16 @@ namespace MyosotisFW
 			StandardSSBO standardSSBO;
 			CameraSSBO cameraSSBO;
 		}SSBO;
-	}InteriorObjectShaderObject;
+	};
 
-	typedef struct
+	struct CustomMeshInfo
 	{
 		std::string m_meshPath;
-	}CustomMeshInfo;
+	};
 
-	typedef struct
+	struct MetaData
 	{
 		uint32_t typeID;
 		uint32_t dataOffset;
-	}MetaData;
+	};
 }

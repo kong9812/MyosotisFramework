@@ -102,7 +102,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
-		void FrustumCuller();
+		void FrustumCulling();
 		void BeginRender();
 		void ShadowRender();
 		void MainRender();
@@ -119,7 +119,7 @@ namespace MyosotisFW::System::Render
 		void initializeRenderDescriptors();
 		virtual void initializeRenderResources();
 		void initializeCommandPool();
-		void initializeFrustumCuller();
+		void initializeFrustumCulling();
 		void initializeSemaphore();
 		void initializeFence();
 		void initializeSubmitInfo();
@@ -156,7 +156,7 @@ namespace MyosotisFW::System::Render
 		uint32_t m_currentBufferIndex;
 
 		VkDescriptorPool m_descriptorPool;
-		FrustumCullersShaderObject m_frustumCullerShaderObject;
+		FrustumCullingShaderObject m_frustumCullingShaderObject;
 
 		std::vector<StageObject_ptr> m_objects;
 

@@ -18,7 +18,7 @@ namespace MyosotisFW::System::Render
 
 		void SetCustomMeshInfo(const CustomMeshInfo& customMeshInfo) { m_customMeshInfo = customMeshInfo; }
 
-		glm::vec4 GetCullerData() override;
+		glm::vec4 GetCullingData() override;
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		void Deserialize(const rapidjson::Value& doc) override;
 	private:

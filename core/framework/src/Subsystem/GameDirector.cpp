@@ -51,7 +51,6 @@ namespace MyosotisFW::System::GameDirector {
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
-
 		// TEST
 	}
 

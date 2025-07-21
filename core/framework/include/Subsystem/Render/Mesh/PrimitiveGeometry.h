@@ -18,7 +18,7 @@ namespace MyosotisFW::System::Render
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType) override;
 
-		glm::vec4 GetCullerData() override;
+		glm::vec4 GetCullingData() override;
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;
 	private:
