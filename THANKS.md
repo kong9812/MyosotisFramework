@@ -7,7 +7,8 @@ Thanks to the authors of these libraries for their incredible work and contribut
 - [Vulkan Memory Allocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)  
 - [stduuid](https://github.com/mariusbancila/stduuid)  
 - [RapidJSON](https://github.com/Tencent/rapidjson)  
-- [stb](https://github.com/nothings/stb)
+- [stb](https://github.com/nothings/stb)  
+- [QT-qtbase](https://github.com/qt/qt5)
   
 Special thanks to all contributors and developers who have made these libraries freely available and easy to integrate.
 
@@ -24,6 +25,7 @@ Please note that each library is distributed under its own license. Ensure compl
 - **stduuid**: Licensed under the [MIT License](https://github.com/mariusbancila/stduuid/blob/master/LICENSE).  
 - **RapidJSON**: Licensed under the [MIT License](https://github.com/Tencent/rapidjson/blob/master/license.txt).
 - **stb**: Licensed under the [MIT License](https://github.com/nothings/stb/blob/master/LICENSE).  
+- **QT-qtbase**: Licensed under the [LGPL-3.0 License](https://github.com/qt/qtbase/blob/dev/LICENSES/LGPL-3.0-only.txt).
 
 For more details about the licenses, please refer to the respective library repositories.
 
