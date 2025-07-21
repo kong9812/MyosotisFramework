@@ -70,6 +70,8 @@ Once the environment setup is complete, you can use the following batch file to 
   - **Reload Method**  
     Press the `F5 key` to trigger hot reloading.
 
+- **Bindless Resources (Texture/Buffer)**
+
 - **ImGui**  
   ImGui has been integrated into the project, providing an easy-to-use graphical user interface for debugging and development.
 
@@ -86,8 +88,6 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Interior Mapping**  
 ![interiorMapping](https://github.com/kong9812/MyosotisFramework/blob/main/demo/interiorMapping.gif)
-
-- **Bindless Resources (Texture/Buffer)**
 
 ---
 
