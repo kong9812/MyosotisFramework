@@ -51,7 +51,7 @@ namespace
 		message += "size: " + std::to_string(size) + " ";
 		message += "alignment: " + std::to_string(alignment) + " ";
 		message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
-		Logger::Info(message);
+		//Logger::Info(message);
 		return ptr;
 	}
 	void* vkReallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -62,7 +62,7 @@ namespace
 		message += "size: " + std::to_string(size) + " ";
 		message += "alignment: " + std::to_string(alignment) + " ";
 		message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
-		Logger::Info(message);
+		//Logger::Info(message);
 		return ptr;
 	}
 	void vkFree(void* pUserData, void* pMemory)
@@ -70,7 +70,7 @@ namespace
 		if (!pMemory) return;
 		std::string message = "vkFree ";
 		message += std::string("address: ") + std::to_string(reinterpret_cast<uintptr_t>(pMemory)) + " ";
-		Logger::Info(message);
+		//Logger::Info(message);
 		free(pMemory);
 		pMemory = nullptr;
 	}
@@ -80,7 +80,7 @@ namespace
 		message += "size: " + std::to_string(size) + " ";
 		message += std::string("allocationType: ") + vmaTools::VkInternalAllocationTypeToString(allocationType).data() + " ";
 		message += std::string("allocationScope: ") + vmaTools::VkSystemAllocationScopeToString(allocationScope).data();
-		Logger::Info(message);
+		//Logger::Info(message);
 	}
 	void vkInternalFreeNotification(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
 	{

@@ -209,20 +209,21 @@ namespace MyosotisFW
 		ShaderBase shaderBase;
 
 		CameraSSBO cameraSSBO;
+		Image cubeMap;
+
+		struct {
+			uint32_t objectIndex;
+			uint32_t textureId;
+		}pushConstant;
 
 		struct
 		{
-			Image cubemap;
-			Buffer buffer;
-			struct
-			{
-				glm::mat4 model;
-				glm::mat4 view;
-				glm::mat4 projection;
-				glm::vec4 color;
-				uint32_t renderID;
-			}data;
-		}standardUBO;			// UBO
+			glm::mat4 model;
+			glm::mat4 view;
+			glm::mat4 projection;
+			glm::vec4 color;
+			uint32_t renderID;
+		}standardSSBO;			// UBO
 	}InteriorObjectShaderObject;
 
 	typedef struct

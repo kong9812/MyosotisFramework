@@ -76,7 +76,7 @@ namespace MyosotisFW::System::Render
 		ssbo.pcfCount = g_pcfCount;
 
 		shaderObject.shadowPushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
-		shaderObject.shadowPushConstant.textureId = m_descriptors->AddStorageBuffer(m_shadowMapDescriptorImageInfo);
+		shaderObject.shadowPushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(m_shadowMapDescriptorImageInfo);
 	}
 
 	DirectionalLightSSBO ShadowMapRenderPipeline::GetDirectionalLightInfo()

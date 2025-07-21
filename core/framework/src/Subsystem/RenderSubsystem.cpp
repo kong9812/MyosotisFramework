@@ -19,7 +19,6 @@
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
 #include "FinalCompositionRenderPass.h"
-#include "BindlessResourcesRenderPass.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -28,7 +27,6 @@
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
-#include "BindlessResourcesRenderPipeline.h"
 
 #include "RenderQueue.h"
 #include "VK_Validation.h"
@@ -263,9 +261,6 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
-
-		// descriptors
-		m_bindlessResourcesRenderPipeline->UpdateDescriptors();
 	}
 
 	void RenderSubsystem::ShadowRender()
@@ -334,6 +329,7 @@ namespace MyosotisFW::System::Render
 				else if (component->GetType() == ComponentType::InteriorObjectMesh)
 				{
 					InteriorObject_ptr staticMesh = Object_CastToInteriorObject(component);
+					m_interiorObjectDeferredRenderPipeline->UpdateDescriptors(staticMesh->GetInteriorObjectShaderObject());
 					staticMesh->BindCommandBuffer(currentCommandBuffer);
 				}
 			}
@@ -382,22 +378,6 @@ namespace MyosotisFW::System::Render
 		m_finalCompositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
 
 		m_finalCompositionRenderPass->EndRender(currentCommandBuffer);
-
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::BindlessResourcesRender()
-	{
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
-
-		// Bindless Resources Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.1f, 0.5f), "Bindless Resources Render Pass"));
-
-		m_bindlessResourcesRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-
-		m_bindlessResourcesRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-
-		m_bindlessResourcesRenderPass->EndRender(currentCommandBuffer);
 
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
@@ -631,9 +611,6 @@ namespace MyosotisFW::System::Render
 
 		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_finalCompositionRenderPass->Initialize();
-
-		m_bindlessResourcesRenderPass = CreateBindlessResourcesRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_bindlessResourcesRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -659,14 +636,10 @@ namespace MyosotisFW::System::Render
 		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_descriptors);
 		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
 
-		m_bindlessResourcesRenderPipeline = CreateBindlessResourcesRenderPipelinePointer(m_device, m_descriptors);
-		m_bindlessResourcesRenderPipeline->Initialize(m_resources, m_bindlessResourcesRenderPass->GetRenderPass());
-
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
-		m_bindlessResourcesRenderPipeline->CreateShaderObject(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
@@ -674,6 +647,5 @@ namespace MyosotisFW::System::Render
 		m_shadowMapRenderPass->Resize(width, height);
 		m_mainRenderPass->Resize(width, height);
 		m_finalCompositionRenderPass->Resize(width, height);
-		m_bindlessResourcesRenderPass->Resize(width, height);
 	}
 }

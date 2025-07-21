@@ -22,30 +22,19 @@ namespace MyosotisFW::System::Render
 
 	InteriorObject::~InteriorObject()
 	{
-		if (m_interiorObjectShaderObject.standardUBO.cubemap.sampler)
+		if (m_interiorObjectShaderObject.cubeMap.sampler)
 		{
-			vkDestroySampler(*m_device, m_interiorObjectShaderObject.standardUBO.cubemap.sampler, m_device->GetAllocationCallbacks());
+			vkDestroySampler(*m_device, m_interiorObjectShaderObject.cubeMap.sampler, m_device->GetAllocationCallbacks());
 		}
 
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_interiorObjectShaderObject.standardUBO.buffer.buffer, m_interiorObjectShaderObject.standardUBO.buffer.allocation);
 	}
 
 	void InteriorObject::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
 		m_device = device;
 		m_resources = resources;
-
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			m_interiorObjectShaderObject.standardUBO.data,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			m_interiorObjectShaderObject.standardUBO.buffer.buffer,
-			m_interiorObjectShaderObject.standardUBO.buffer.allocation,
-			m_interiorObjectShaderObject.standardUBO.buffer.allocationInfo,
-			m_interiorObjectShaderObject.standardUBO.buffer.descriptor);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -58,25 +47,28 @@ namespace MyosotisFW::System::Render
 	{
 		if (camera)
 		{
-			m_interiorObjectShaderObject.standardUBO.data.projection = camera->GetProjectionMatrix();
-			m_interiorObjectShaderObject.standardUBO.data.view = camera->GetViewMatrix();
+			m_interiorObjectShaderObject.standardSSBO.projection = camera->GetProjectionMatrix();
+			m_interiorObjectShaderObject.standardSSBO.view = camera->GetViewMatrix();
 			m_interiorObjectShaderObject.cameraSSBO.position = glm::vec4(camera->GetCameraPos(), 0.0);
 		}
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::rotate(m_interiorObjectShaderObject.standardUBO.data.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_interiorObjectShaderObject.standardUBO.data.model = glm::scale(m_interiorObjectShaderObject.standardUBO.data.model, glm::vec3(m_transform.scale));
-		m_interiorObjectShaderObject.standardUBO.data.renderID = m_renderID;
+		m_interiorObjectShaderObject.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
+		m_interiorObjectShaderObject.standardSSBO.model = glm::rotate(m_interiorObjectShaderObject.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_interiorObjectShaderObject.standardSSBO.model = glm::rotate(m_interiorObjectShaderObject.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_interiorObjectShaderObject.standardSSBO.model = glm::rotate(m_interiorObjectShaderObject.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_interiorObjectShaderObject.standardSSBO.model = glm::scale(m_interiorObjectShaderObject.standardSSBO.model, glm::vec3(m_transform.scale));
+		m_interiorObjectShaderObject.standardSSBO.renderID = m_renderID;
 
 		if (!m_isReady) return;
-		memcpy(m_interiorObjectShaderObject.standardUBO.buffer.allocationInfo.pMappedData, &m_interiorObjectShaderObject.standardUBO.data, sizeof(m_interiorObjectShaderObject.standardUBO.data));
 	}
 
 	void InteriorObject::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_interiorObjectShaderObject.shaderBase.pipelineLayout, 0, 1, &m_interiorObjectShaderObject.shaderBase.descriptorSet, 0, nullptr);
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_interiorObjectShaderObject.shaderBase.pipeline);
+
+		vkCmdPushConstants(commandBuffer, m_interiorObjectShaderObject.shaderBase.pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			0, static_cast<uint32_t>(sizeof(m_interiorObjectShaderObject.pushConstant)), &m_interiorObjectShaderObject.pushConstant);
 
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
@@ -115,7 +107,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		// 実験
-		m_interiorObjectShaderObject.standardUBO.cubemap = m_resources->GetCubeImage({
+		m_interiorObjectShaderObject.cubeMap = m_resources->GetCubeImage({
 			"InteriorMappingTest\\right.png",
 			"InteriorMappingTest\\left.png",
 			"InteriorMappingTest\\top.png",
@@ -125,6 +117,6 @@ namespace MyosotisFW::System::Render
 
 		// sampler
 		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_interiorObjectShaderObject.standardUBO.cubemap.sampler));
+		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_interiorObjectShaderObject.cubeMap.sampler));
 	}
 }

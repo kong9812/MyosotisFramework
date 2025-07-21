@@ -29,21 +29,41 @@ namespace MyosotisFW::System::Render
 
 	void InteriorObjectDeferredRenderPipeline::UpdateDescriptors(InteriorObjectShaderObject& shaderObject)
 	{
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.standardUBO.cubemap.sampler, shaderObject.standardUBO.cubemap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		// write descriptor set
-		std::vector<VkWriteDescriptorSet> writeDescriptorSet = {
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shaderBase.descriptorSet, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.standardUBO.buffer.descriptor),
-			//Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shaderBase.descriptorSet, 1, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &shaderObject.cameraSSBO.descriptor),
-			Utility::Vulkan::CreateInfo::writeDescriptorSet(shaderObject.shaderBase.descriptorSet, 2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &descriptorImageInfo),
-		};
-		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+		struct {
+			glm::mat4 model;
+			glm::mat4 view;
+			glm::mat4 projection;
+			glm::vec4 color;
+			uint32_t renderID;
+			glm::vec4 cameraPosition;
+		} ssbo;
+
+		ssbo.model = shaderObject.standardSSBO.model;
+		ssbo.view = shaderObject.standardSSBO.view;
+		ssbo.projection = shaderObject.standardSSBO.projection;
+		ssbo.color = shaderObject.standardSSBO.color;
+		ssbo.renderID = shaderObject.standardSSBO.renderID;
+		ssbo.cameraPosition = shaderObject.cameraSSBO.position;
+		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(ssbo);
+		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.cubeMap.sampler, shaderObject.cubeMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
 	}
 
 	void InteriorObjectDeferredRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
+		// push constant
+		std::vector<VkPushConstantRange> pushConstantRange = {
+			// VS
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+				0,
+				static_cast<uint32_t>(sizeof(InteriorObjectShaderObject::pushConstant))),
+		};
+
 		// [pipeline]layout
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout() };
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
+		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline
