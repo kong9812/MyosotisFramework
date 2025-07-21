@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">MyosotisFramework<img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">
 A framework created with Vulkan
-![DEMO](https://github.com/user-attachments/assets/32ac263e-6dde-4ed3-b8a2-3e1ea7108016)
+![DEMO](https://github.com/user-attachments/assets/22d7281d-df50-4254-947b-23ce1eb5126f)
 
 > [!IMPORTANT]
 > This software is still under development and contains many unimplemented or partially implemented features.  
@@ -86,6 +86,8 @@ Once the environment setup is complete, you can use the following batch file to 
 
 - **Interior Mapping**  
 ![interiorMapping](https://github.com/kong9812/MyosotisFramework/blob/main/demo/interiorMapping.gif)
+
+- **Bindless Resources (Texture/Buffer)**
 
 ---
 
