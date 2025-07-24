@@ -45,16 +45,6 @@ namespace MyosotisFW::System::Render
 		if (!m_isReady) return;
 	}
 
-	void PrimitiveGeometry::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)
-	{
-		__super::BindCommandBuffer(commandBuffer, pipelineType);
-	}
-
-	glm::vec4 PrimitiveGeometry::GetCullingData()
-	{
-		return glm::vec4(m_transform.pos, 2.5f);
-	}
-
 	rapidjson::Value PrimitiveGeometry::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value json = __super::Serialize(allocator);

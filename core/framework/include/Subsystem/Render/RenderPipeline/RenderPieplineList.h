@@ -8,5 +8,6 @@ namespace MyosotisFW::System::Render
 		ShadowMap,
 		Deferred,
 		Composition,
+		InteriorMapping,
 	}RenderPipelineType;
 }

@@ -31,7 +31,7 @@ namespace MyosotisFW::System::Render
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, static_cast<uint32_t>(sizeof(m_lightingShaderObject.pushConstant)), &m_lightingShaderObject.pushConstant);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
@@ -80,7 +80,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 
 		// push constant
-		VkPushConstantRange pushConstantRange = Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, 0, static_cast<uint32_t>(sizeof(m_lightingShaderObject.pushConstant)));
+		VkPushConstantRange pushConstantRange = Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, 0, static_cast<uint32_t>(sizeof(m_lightingShaderObject.pushConstant)));
 
 		// [pipeline]layout
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout(), m_descriptorSetLayout };

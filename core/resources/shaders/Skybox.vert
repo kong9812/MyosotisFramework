@@ -1,8 +1,7 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : require
 
-#include "RawDataLoader.glsl"
+#include "StandardSSBO.glsl"
 
 layout(push_constant) uniform PushConstant {
     uint objectIndex;
@@ -19,15 +18,10 @@ layout (location = 1) out flat uint outRenderID;
 
 void main() 
 {
-    BaseObjectData meta = objectTable[nonuniformEXT(objectIndex)];    
-
-    mat4 model = LoadMat4(meta.dataOffset + 0);
-    mat4 view = LoadMat4(meta.dataOffset + 16);
-    mat4 projection = LoadMat4(meta.dataOffset + 32);
-    vec4 color = LoadVec4(meta.dataOffset + 48);
-    uint renderID = uint(rawData[meta.dataOffset + 52]); // floatをuintに変換
+    BaseObjectData meta = GetBaseObjectData(objectIndex);
+    StandardSSBO standardSSBO = LoadStandardSSBO(meta.dataOffset + 0);
 
     outUVW = inPosition.xyz;
-    outRenderID = renderID;
-    gl_Position = projection * mat4(mat3(view * model)) * inPosition;
+    outRenderID = standardSSBO.renderID;
+    gl_Position = standardSSBO.projection * mat4(mat3(standardSSBO.view * standardSSBO.model)) * inPosition;
 }

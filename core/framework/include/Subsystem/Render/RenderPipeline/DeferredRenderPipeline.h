@@ -13,6 +13,24 @@ namespace MyosotisFW::System::Render
 		}
 		~DeferredRenderPipeline();
 
+		// ShaderObject
+		struct StaticMeshShaderObject
+		{
+			ShaderBase shaderBase;
+
+			bool useNormalMap;
+			Image normalMap;
+
+			struct {
+				uint32_t objectIndex;
+				uint32_t textureId;
+			}pushConstant;
+
+			struct {
+				StandardSSBO standardSSBO;
+			}SSBO;
+		};
+
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(StaticMeshShaderObject& shaderObject);
 		void UpdateDescriptors(StaticMeshShaderObject& shaderObject);

@@ -14,6 +14,22 @@ namespace MyosotisFW::System::Render
 		}
 		~ShadowMapRenderPipeline();
 
+		// ShaderObject
+		struct ShadowMapShaderObject
+		{
+			ShaderBase shaderBase;
+
+			struct {
+				uint32_t objectIndex;
+				uint32_t textureId;
+			}pushConstant;
+
+			struct {
+				StandardSSBO standardSSBO;
+				DirectionalLightSSBO lightSSBO;
+			}SSBO;
+		};
+
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(ShadowMapShaderObject& shaderObject);
 		void UpdateDescriptors(ShadowMapShaderObject& shaderObject);

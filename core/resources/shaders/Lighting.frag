@@ -1,8 +1,8 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : require
 
-#include "RawDataLoader.glsl"
+#include "CameraSSBO.glsl"
+#include "DirectionalLightSSBO.glsl"
 
 layout (set = 1, input_attachment_index = 0, binding = 0) uniform subpassInput inputPosition;
 layout (set = 1, input_attachment_index = 1, binding = 1) uniform subpassInput inputNormal;
@@ -50,24 +50,21 @@ const vec3 specularColor = vec3(1.0);
 
 void main() 
 {
-    BaseObjectData meta = objectTable[nonuniformEXT(objectIndex)];
-
-    vec4 cameraPosition = LoadVec4(meta.dataOffset + 0);
-    mat4 viewProjection = LoadMat4(meta.dataOffset + 4);
-    vec4 lightPosition = LoadVec4(meta.dataOffset + 20);
-    int pcfCount = int(rawData[meta.dataOffset + 24]);
+    BaseObjectData meta = GetBaseObjectData(objectIndex);
+    CameraSSBO cameraSSBO = LoadCameraSSBO(meta.dataOffset + 0);
+    DirectionalLightSSBO directionalLightSSBO = LoadDirectionalLightSSBO(meta.dataOffset + CameraSSBOSize);
 
 	vec4 position = subpassLoad(inputPosition);
     vec4 normal = subpassLoad(inputNormal);
 	vec4 baseColor = subpassLoad(inputBaseColor);
 
-	vec4 lightSpace = biasMat * viewProjection * position;
-	float shadow = PCFShadow(vec3((lightSpace / lightSpace.w).xyz), pcfCount);
+	vec4 lightSpace = biasMat * directionalLightSSBO.viewProjection * position;
+	float shadow = PCFShadow(vec3((lightSpace / lightSpace.w).xyz), directionalLightSSBO.pcfCount);
 
-	vec3 lightDir = normalize(lightPosition.xyz - position.xyz);
+	vec3 lightDir = normalize(directionalLightSSBO.position.xyz - position.xyz);
     vec3 reflectDir = reflect(-lightDir, normal.xyz);
-    vec3 viewDir = normalize(cameraPosition.xyz - position.xyz);
-    vec3 halfwayDir = normalize(lightDir + cameraPosition.xyz);
+    vec3 viewDir = normalize(cameraSSBO.position.xyz - position.xyz);
+    vec3 halfwayDir = normalize(lightDir + cameraSSBO.position.xyz);
 
     float diff = max(dot(normal.xyz, lightDir), 0.0);
     float spec = pow(max(dot(normal.xyz, halfwayDir), 0.0), 64.0);

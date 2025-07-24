@@ -1,3 +1,7 @@
+#ifndef RAWDATALOADER
+#define RAWDATALOADER
+#extension GL_EXT_nonuniform_qualifier : require
+
 // Meta情報構造体
 struct BaseObjectData {
     uint typeID;        // 今は使わない
@@ -36,6 +40,16 @@ vec4 LoadVec4(uint base) {
     );
 }
 
+uint LoadUint(uint base) {
+    return rawData[base];
+}
+
 int LoadInt(uint base) {
     return int(rawData[base]);
 }
+
+BaseObjectData GetBaseObjectData(uint index)
+{
+    return objectTable[nonuniformEXT(index)];
+}
+#endif

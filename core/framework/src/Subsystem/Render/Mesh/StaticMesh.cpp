@@ -89,7 +89,7 @@ namespace MyosotisFW::System::Render
 		{
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapShaderObject.shaderBase.pipelineLayout, 0, 1, &m_shadowMapShaderObject.shaderBase.descriptorSet, 0, nullptr);
 			vkCmdPushConstants(commandBuffer, m_shadowMapShaderObject.shaderBase.pipelineLayout,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(m_shadowMapShaderObject.pushConstant)), &m_shadowMapShaderObject.pushConstant);
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapShaderObject.shaderBase.pipeline);
@@ -99,7 +99,7 @@ namespace MyosotisFW::System::Render
 		{
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipelineLayout, 0, 1, &m_staticMeshShaderObject.shaderBase.descriptorSet, 0, nullptr);
 			vkCmdPushConstants(commandBuffer, m_staticMeshShaderObject.shaderBase.pipelineLayout,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(m_staticMeshShaderObject.pushConstant)), &m_staticMeshShaderObject.pushConstant);
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_staticMeshShaderObject.shaderBase.pipeline);

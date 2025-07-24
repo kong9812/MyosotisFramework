@@ -1,8 +1,8 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
 #extension GL_GOOGLE_include_directive : require
 
-#include "RawDataLoader.glsl"
+#include "StandardSSBO.glsl"
+#include "CameraSSBO.glsl"
 
 layout(push_constant) uniform PushConstant {
     uint objectIndex;
@@ -24,20 +24,15 @@ layout (location = 5) out flat uint outRenderID;
 
 void main() 
 {
-    BaseObjectData meta = objectTable[nonuniformEXT(objectIndex)];
+    BaseObjectData meta = GetBaseObjectData(objectIndex);
+    StandardSSBO standardSSBO = LoadStandardSSBO(meta.dataOffset + 0);
+    CameraSSBO cameraSSBO = LoadCameraSSBO(meta.dataOffset + StandardSSBOSize);
 
-    mat4 model = LoadMat4(meta.dataOffset + 0);
-    mat4 view = LoadMat4(meta.dataOffset + 16);
-    mat4 projection = LoadMat4(meta.dataOffset + 32);
-    vec4 color = LoadVec4(meta.dataOffset + 48);
-    uint renderID = rawData[meta.dataOffset + 52];
-    vec4 cameraPosition = LoadVec4(meta.dataOffset + 53);
-
-    outPosition = model * inPosition;
-    outNormal = normalize(model * vec4(inNormal, 0.0));
-    outRenderID = renderID;
+    outPosition = standardSSBO.model * inPosition;
+    outNormal = normalize(standardSSBO.model * vec4(inNormal, 0.0));
+    outRenderID = standardSSBO.renderID;
     outUV = inUV;
     outBaseColor = inColor;
-    outRayDir = outPosition - cameraPosition;
-    gl_Position = projection * view * outPosition;
+    outRayDir = outPosition - cameraSSBO.position;
+    gl_Position = standardSSBO.projection * standardSSBO.view * outPosition;
 }

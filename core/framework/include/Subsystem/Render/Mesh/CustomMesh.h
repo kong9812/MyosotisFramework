@@ -14,11 +14,9 @@ namespace MyosotisFW::System::Render
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType) override;
 
 		void SetCustomMeshInfo(const CustomMeshInfo& customMeshInfo) { m_customMeshInfo = customMeshInfo; }
 
-		glm::vec4 GetCullingData() override;
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		void Deserialize(const rapidjson::Value& doc) override;
 	private:

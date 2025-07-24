@@ -3,6 +3,7 @@
 #include "ComponentBase.h"
 #include "ComponentCast.h"
 #include "RenderPieplineList.h"
+#include "SkyboxRenderPipeline.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -28,7 +29,7 @@ namespace MyosotisFW::System::Render
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		SkyboxShaderObject& GetSkyboxShaderObject() { return m_skyboxShaderObject; }
+		SkyboxRenderPipeline::SkyboxShaderObject& GetSkyboxShaderObject() { return m_skyboxShaderObject; }
 
 	private:
 		void loadAssets();
@@ -45,7 +46,7 @@ namespace MyosotisFW::System::Render
 		Buffer m_indexBuffer;
 
 		// shader object
-		SkyboxShaderObject m_skyboxShaderObject;
+		SkyboxRenderPipeline::SkyboxShaderObject m_skyboxShaderObject;
 	};
 	TYPEDEF_SHARED_PTR(Skybox);
 	OBJECT_CAST_FUNCTION(Skybox);

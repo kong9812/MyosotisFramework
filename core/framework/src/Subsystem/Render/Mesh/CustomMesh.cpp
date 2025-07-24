@@ -46,16 +46,6 @@ namespace MyosotisFW::System::Render
 		if (!m_isReady) return;
 	}
 
-	void CustomMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)
-	{
-		__super::BindCommandBuffer(commandBuffer, pipelineType);
-	}
-
-	glm::vec4 CustomMesh::GetCullingData()
-	{
-		return glm::vec4(m_transform.pos, 1.0f);
-	}
-
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);

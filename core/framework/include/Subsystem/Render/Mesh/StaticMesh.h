@@ -9,6 +9,8 @@
 #include "ClassPointer.h"
 #include "Structs.h"
 #include "RenderPieplineList.h"
+#include "DeferredRenderPipeline.h"
+#include "ShadowMapRenderPipeline.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -43,16 +45,14 @@ namespace MyosotisFW::System::Render
 			Max
 		} LOD;
 
-		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
+		const ComponentType GetType() const override { return ComponentType::Undefined; }
 
-		StaticMeshShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
-		ShadowMapShaderObject& GetShadowMapShaderObject() { return m_shadowMapShaderObject; }
+		DeferredRenderPipeline::StaticMeshShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
+		ShadowMapRenderPipeline::ShadowMapShaderObject& GetShadowMapShaderObject() { return m_shadowMapShaderObject; }
 
 		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
-
-		virtual glm::vec4 GetCullingData() { return glm::vec4(0.0f); }
 
 	protected:
 		virtual void loadAssets() {}
@@ -74,8 +74,8 @@ namespace MyosotisFW::System::Render
 		std::array<float, LOD::Max> m_lodDistances;
 
 		// shader object
-		ShadowMapShaderObject m_shadowMapShaderObject;
-		StaticMeshShaderObject m_staticMeshShaderObject;
+		ShadowMapRenderPipeline::ShadowMapShaderObject m_shadowMapShaderObject;
+		DeferredRenderPipeline::StaticMeshShaderObject m_staticMeshShaderObject;
 	};
 	TYPEDEF_SHARED_PTR(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);

@@ -13,6 +13,23 @@ namespace MyosotisFW::System::Render
 		}
 		~SkyboxRenderPipeline();
 
+		// ShaderObject
+		struct SkyboxShaderObject
+		{
+			ShaderBase shaderBase;
+			Image cubeMap;
+
+			struct {
+				uint32_t objectIndex;
+				uint32_t textureId;
+			}pushConstant;
+
+			struct
+			{
+				StandardSSBO standardSSBO;
+			}SSBO;
+		};
+
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(SkyboxShaderObject& shaderObject);
 		void UpdateDescriptors(SkyboxShaderObject& shaderObject);

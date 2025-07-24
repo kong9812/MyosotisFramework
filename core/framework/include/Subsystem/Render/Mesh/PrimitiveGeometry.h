@@ -12,13 +12,11 @@ namespace MyosotisFW::System::Render
 		PrimitiveGeometry();
 		~PrimitiveGeometry() {}
 
-		virtual const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }
+		const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType) override;
 
-		glm::vec4 GetCullingData() override;
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;
 	private:

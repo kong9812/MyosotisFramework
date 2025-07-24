@@ -107,6 +107,9 @@ namespace MyosotisFW::System::Render
 	void RenderDescriptors::UpdateDescriptorSet()
 	{
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet{};
+		VkDescriptorBufferInfo metaDataDescriptorBufferInfo{};
+		VkDescriptorBufferInfo rawDataDescriptorBufferInfo{};
+
 		if (m_storageBufferMetaData.size() > 0)
 		{
 			// SSBO作成
@@ -120,10 +123,10 @@ namespace MyosotisFW::System::Render
 				m_storageBufferMetaDataBuffer.allocation,
 				m_storageBufferMetaDataBuffer.allocationInfo,
 				m_storageBufferMetaDataBuffer.descriptor);
-			VkDescriptorBufferInfo descriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferMetaDataBuffer.buffer, 0);
+			metaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferMetaDataBuffer.buffer, 0);
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
 				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::META_DATA),
-				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &descriptorBufferInfo, 1));
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &metaDataDescriptorBufferInfo, 1));
 
 			memcpy(m_storageBufferMetaDataBuffer.allocationInfo.pMappedData, m_storageBufferMetaData.data(),
 				static_cast<uint32_t>(sizeof(MetaData) * static_cast<uint32_t>(m_storageBufferMetaData.size())));
@@ -141,10 +144,10 @@ namespace MyosotisFW::System::Render
 				m_storageBufferRawDataBuffer.allocation,
 				m_storageBufferRawDataBuffer.allocationInfo,
 				m_storageBufferRawDataBuffer.descriptor);
-			VkDescriptorBufferInfo descriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferRawDataBuffer.buffer, 0);
+			rawDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferRawDataBuffer.buffer, 0);
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
 				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::STORAGE_BUFFER),
-				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &descriptorBufferInfo, 1));
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &rawDataDescriptorBufferInfo, 1));
 
 			memcpy(m_storageBufferRawDataBuffer.allocationInfo.pMappedData, m_storageBufferRawData.data(),
 				static_cast<uint32_t>(sizeof(uint32_t) * static_cast<uint32_t>(m_storageBufferRawData.size())));

@@ -13,6 +13,25 @@ namespace MyosotisFW::System::Render
 		}
 		~InteriorObjectDeferredRenderPipeline();
 
+		// ShaderObject
+		struct InteriorObjectShaderObject
+		{
+			ShaderBase shaderBase;
+
+			Image cubeMap;
+
+			struct {
+				uint32_t objectIndex;
+				uint32_t textureId;
+			}pushConstant;
+
+			struct
+			{
+				StandardSSBO standardSSBO;
+				CameraSSBO cameraSSBO;
+			}SSBO;
+		};
+
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(InteriorObjectShaderObject& shaderObject);
 		void UpdateDescriptors(InteriorObjectShaderObject& shaderObject);

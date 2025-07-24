@@ -17,8 +17,16 @@
 [OK] UBO-> readonly SSBO
 　・[OK] バッファの扱いがもっと自由になるように…
 [OK] Bindless resources(texture/buffer)
-[NOW] リファクタ
-　・[NOW] Imageの重複判定
+[OK] ・PushConstant
+　[OK] ・VS/PSに転送する部分を分別
+[OK] ・ShaderObjectをpipeline下に配置
+[OK] ・GLSL関数を増やす
+　[OK] ・SSBOデータのロード関連
+・InteriorObejctをStaticMesh化
+・buffer_referenceで頂点情報を保管
+・FrustumCullingPipelineを作成
+
+StageObjectの親子関係
 Visibility Buffer
 Mesh Shader
 2-phase occlusion culling

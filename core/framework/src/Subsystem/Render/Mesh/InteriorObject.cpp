@@ -67,7 +67,7 @@ namespace MyosotisFW::System::Render
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_interiorObjectShaderObject.shaderBase.pipeline);
 
 		vkCmdPushConstants(commandBuffer, m_interiorObjectShaderObject.shaderBase.pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0, static_cast<uint32_t>(sizeof(m_interiorObjectShaderObject.pushConstant)), &m_interiorObjectShaderObject.pushConstant);
 
 		const VkDeviceSize offsets[1] = { 0 };
@@ -79,6 +79,7 @@ namespace MyosotisFW::System::Render
 	void InteriorObject::loadAssets()
 	{
 		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(Shape::PrimitiveGeometryShape::Plane, 5.0f);
+		bool firstDataForAABB = true;
 
 		{// vertex
 			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(float) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -104,6 +105,27 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation, &data));
 			memcpy(data, vertex.index.data(), bufferCreateInfo.size);
 			vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation);
+		}
+
+		{// aabb
+			if (firstDataForAABB)
+			{
+				m_aabbMin.x = vertex.min.x;
+				m_aabbMin.y = vertex.min.y;
+				m_aabbMin.z = vertex.min.z;
+				m_aabbMax.x = vertex.max.x;
+				m_aabbMax.y = vertex.max.y;
+				m_aabbMax.z = vertex.max.z;
+			}
+			else
+			{
+				m_aabbMin.x = m_aabbMin.x < vertex.min.x ? m_aabbMin.x : vertex.min.x;
+				m_aabbMin.y = m_aabbMin.y < vertex.min.y ? m_aabbMin.y : vertex.min.y;
+				m_aabbMin.z = m_aabbMin.z < vertex.min.z ? m_aabbMin.z : vertex.min.z;
+				m_aabbMax.x = m_aabbMax.x > vertex.max.x ? m_aabbMax.x : vertex.max.x;
+				m_aabbMax.y = m_aabbMax.y > vertex.max.y ? m_aabbMax.y : vertex.max.y;
+				m_aabbMax.z = m_aabbMax.z > vertex.max.z ? m_aabbMax.z : vertex.max.z;
+			}
 		}
 
 		// 実験

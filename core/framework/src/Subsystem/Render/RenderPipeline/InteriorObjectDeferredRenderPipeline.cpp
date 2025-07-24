@@ -39,7 +39,7 @@ namespace MyosotisFW::System::Render
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
 			// VS
-			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(InteriorObjectShaderObject::pushConstant))),
 		};

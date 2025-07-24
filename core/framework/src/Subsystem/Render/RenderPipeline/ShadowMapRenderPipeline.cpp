@@ -2,6 +2,7 @@
 #include "ShadowMapRenderPipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
+#include "DeferredRenderPipeline.h"
 
 namespace {
 	// todo. 外部から取って来れるように変更
@@ -68,9 +69,9 @@ namespace MyosotisFW::System::Render
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
 			// VS
-			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::pushConstant))),
+				static_cast<uint32_t>(sizeof(DeferredRenderPipeline::StaticMeshShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

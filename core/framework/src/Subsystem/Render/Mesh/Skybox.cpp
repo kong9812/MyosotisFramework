@@ -66,7 +66,7 @@ namespace MyosotisFW::System::Render
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipeline);
 		vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_skyboxShaderObject.shaderBase.pipelineLayout, 0, 1, &m_skyboxShaderObject.shaderBase.descriptorSet, 0, nullptr);
 		vkCmdPushConstants(commandBuffer, m_skyboxShaderObject.shaderBase.pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0,
 			static_cast<uint32_t>(sizeof(m_skyboxShaderObject.pushConstant)), &m_skyboxShaderObject.pushConstant);
 		const VkDeviceSize offsets[1] = { 0 };

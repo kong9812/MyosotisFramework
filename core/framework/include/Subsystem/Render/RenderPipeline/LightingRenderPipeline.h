@@ -26,6 +26,20 @@ namespace MyosotisFW::System::Render
 		}
 		~LightingRenderPipeline();
 
+		// ShaderObject
+		struct LightingShaderObject
+		{
+			struct {
+				uint32_t objectIndex;
+				uint32_t textureId;
+			}pushConstant;
+
+			struct {
+				CameraSSBO cameraSSBO;
+				DirectionalLightSSBO lightSSBO;
+			}SSBO;
+		};
+
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		void UpdateDirectionalLightInfo(const DirectionalLightSSBO& lightInfo);
