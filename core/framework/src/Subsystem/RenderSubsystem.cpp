@@ -196,6 +196,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::FrustumCulling()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
@@ -262,6 +265,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::BeginRender()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
@@ -270,6 +276,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::ShadowRender()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// ShadowMap Prender Pass
@@ -299,6 +308,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::MainRender()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// main render pass
@@ -380,6 +392,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::FinalCompositionRender()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// final composition Render Pass
@@ -396,6 +411,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::EndRender()
 	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
 		m_descriptors->UpdateDescriptorSet();
 
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
