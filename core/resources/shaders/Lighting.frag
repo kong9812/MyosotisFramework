@@ -1,15 +1,13 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
-#include "CameraSSBO.glsl"
-#include "DirectionalLightSSBO.glsl"
+#include "SSBO/CameraSSBO.glsl"
+#include "SSBO/DirectionalLightSSBO.glsl"
+#include "Loader/Sampler2DLoader.glsl"
 
 layout (set = 1, input_attachment_index = 0, binding = 0) uniform subpassInput inputPosition;
 layout (set = 1, input_attachment_index = 1, binding = 1) uniform subpassInput inputNormal;
 layout (set = 1, input_attachment_index = 2, binding = 2) uniform subpassInput inputBaseColor;
-
-// 画像
-layout (binding = 2) uniform sampler2D Sampler2D[];
 
 layout (push_constant) uniform PushConstant {
     uint objectIndex;
@@ -23,14 +21,14 @@ layout (location = 0) out vec4 outColor;
 float PCFShadow(vec3 shadowCoord, int pcfCount) 
 {
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(Sampler2D[textureId], 0);
+    vec2 texelSize = 1.0 / Sampler2DLoader_GetTextureSize(textureId, 0);
 	uint count = 0; 
     for (int x = -pcfCount; x <= pcfCount; ++x) 
     {
         for (int y = -pcfCount; y <= pcfCount; ++y) 
         {
             vec2 offset = vec2(x, y) * texelSize;
-            float closestDepth = texture(Sampler2D[textureId], shadowCoord.xy + offset).r;
+            float closestDepth = Sampler2DLoader_GetTexture(textureId, shadowCoord.xy + offset).r;
             shadow += (shadowCoord.z > closestDepth) ? 1.0 : 0.1;
 			count++;
         }

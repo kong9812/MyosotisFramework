@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render
 		~InteriorObjectDeferredRenderPipeline();
 
 		// ShaderObject
-		struct InteriorObjectShaderObject
+		struct ShaderObject
 		{
 			ShaderBase shaderBase;
 
@@ -33,8 +33,8 @@ namespace MyosotisFW::System::Render
 		};
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void CreateShaderObject(InteriorObjectShaderObject& shaderObject);
-		void UpdateDescriptors(InteriorObjectShaderObject& shaderObject);
+		void CreateShaderObject(ShaderObject& shaderObject);
+		void UpdateDescriptors(ShaderObject& shaderObject);
 
 	private:
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;

@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 	}
 
-	void DeferredRenderPipeline::CreateShaderObject(StaticMeshShaderObject& shaderObject)
+	void DeferredRenderPipeline::CreateShaderObject(ShaderObject& shaderObject)
 	{
 		{// pipeline
 			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
-	void DeferredRenderPipeline::UpdateDescriptors(StaticMeshShaderObject& shaderObject)
+	void DeferredRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
 	{
 		if (shaderObject.useNormalMap)
 		{
@@ -48,7 +48,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(StaticMeshShaderObject::pushConstant))),
+				static_cast<uint32_t>(sizeof(ShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

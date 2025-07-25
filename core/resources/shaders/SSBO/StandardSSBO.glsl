@@ -1,6 +1,6 @@
 #ifndef STANDARDSSBO
 #define STANDARDSSBO
-#include "RawDataLoader.glsl"
+#include "../Loader/RawDataLoader.glsl"
 
 struct StandardSSBO {
     mat4 model;

@@ -1,6 +1,6 @@
 #ifndef CAMERASSBO
 #define CAMERASSBO
-#include "RawDataLoader.glsl"
+#include "../Loader/RawDataLoader.glsl"
 
 struct CameraSSBO {
     vec4 position;

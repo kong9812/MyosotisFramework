@@ -17,7 +17,7 @@ namespace MyosotisFW::System::Render
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
-		InteriorObjectDeferredRenderPipeline::InteriorObjectShaderObject& GetInteriorObjectShaderObject() { return m_interiorObjectShaderObject; }
+		InteriorObjectDeferredRenderPipeline::ShaderObject& GetInteriorObjectShaderObject() { return m_interiorObjectShaderObject; }
 	private:
 		void loadAssets();
 
@@ -33,7 +33,7 @@ namespace MyosotisFW::System::Render
 		Buffer m_indexBuffer;
 
 		// shader object
-		InteriorObjectDeferredRenderPipeline::InteriorObjectShaderObject m_interiorObjectShaderObject;
+		InteriorObjectDeferredRenderPipeline::ShaderObject m_interiorObjectShaderObject;
 	};
 	TYPEDEF_SHARED_PTR(InteriorObject);
 	OBJECT_CAST_FUNCTION(InteriorObject);

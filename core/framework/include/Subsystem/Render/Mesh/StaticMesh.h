@@ -47,8 +47,8 @@ namespace MyosotisFW::System::Render
 
 		const ComponentType GetType() const override { return ComponentType::Undefined; }
 
-		DeferredRenderPipeline::StaticMeshShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
-		ShadowMapRenderPipeline::ShadowMapShaderObject& GetShadowMapShaderObject() { return m_shadowMapShaderObject; }
+		DeferredRenderPipeline::ShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
+		ShadowMapRenderPipeline::ShaderObject& GetShadowMapShaderObject() { return m_shadowMapShaderObject; }
 
 		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
@@ -74,8 +74,8 @@ namespace MyosotisFW::System::Render
 		std::array<float, LOD::Max> m_lodDistances;
 
 		// shader object
-		ShadowMapRenderPipeline::ShadowMapShaderObject m_shadowMapShaderObject;
-		DeferredRenderPipeline::StaticMeshShaderObject m_staticMeshShaderObject;
+		ShadowMapRenderPipeline::ShaderObject m_shadowMapShaderObject;
+		DeferredRenderPipeline::ShaderObject m_staticMeshShaderObject;
 	};
 	TYPEDEF_SHARED_PTR(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);

@@ -100,11 +100,11 @@ namespace MyosotisFW::System::Render
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
 					customMesh->PrepareForRender(m_device, m_resources);
 					{// ShadowMap
-						ShadowMapRenderPipeline::ShadowMapShaderObject& shaderObject = customMesh->GetShadowMapShaderObject();
+						ShadowMapRenderPipeline::ShaderObject& shaderObject = customMesh->GetShadowMapShaderObject();
 						m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
 					}
 					{// Deferred Render
-						DeferredRenderPipeline::StaticMeshShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
+						DeferredRenderPipeline::ShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
 						m_deferredRenderPipeline->CreateShaderObject(shaderObject);
 					}
 				}
@@ -119,7 +119,7 @@ namespace MyosotisFW::System::Render
 				{
 					Skybox_ptr skybox = Object_CastToSkybox(component);
 					skybox->PrepareForRender(m_device, m_resources);
-					SkyboxRenderPipeline::SkyboxShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
+					SkyboxRenderPipeline::ShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
 					m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
 				}
 			}
@@ -133,7 +133,7 @@ namespace MyosotisFW::System::Render
 				{
 					InteriorObject_ptr interiorObject = Object_CastToInteriorObject(component);
 					interiorObject->PrepareForRender(m_device, m_resources);
-					InteriorObjectDeferredRenderPipeline::InteriorObjectShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
+					InteriorObjectDeferredRenderPipeline::ShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
 					m_interiorObjectDeferredRenderPipeline->CreateShaderObject(shaderObject);
 				}
 			}

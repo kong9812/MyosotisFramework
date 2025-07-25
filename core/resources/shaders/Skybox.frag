@@ -1,5 +1,7 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : require
+
+#include "Loader/SamplerCubeLoader.glsl"
 
 layout (location = 0) in vec3 inUVW;
 layout (location = 1) in flat uint inRenderID;
@@ -18,5 +20,5 @@ layout (location = 3) out uint outRenderID;
 void main() 
 {
     outRenderID = inRenderID;
-    outBaseColor = texture(SamplerCube[textureId], inUVW);
+    outBaseColor = SamplerCubeLoader_GetTexture(textureId, inUVW);
 }

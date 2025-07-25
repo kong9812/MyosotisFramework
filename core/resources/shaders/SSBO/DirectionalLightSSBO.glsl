@@ -1,6 +1,6 @@
 #ifndef DIRECTIONALLIGHTSSBO
 #define DIRECTIONALLIGHTSSBO
-#include "RawDataLoader.glsl"
+#include "../Loader/RawDataLoader.glsl"
 
 struct DirectionalLightSSBO {
 	mat4 viewProjection;

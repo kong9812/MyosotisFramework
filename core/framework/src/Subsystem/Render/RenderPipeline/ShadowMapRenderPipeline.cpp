@@ -38,7 +38,7 @@ namespace MyosotisFW::System::Render
 		m_shadowMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(resources->GetShadowMap().sampler, resources->GetShadowMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
-	void ShadowMapRenderPipeline::CreateShaderObject(ShadowMapShaderObject& shaderObject)
+	void ShadowMapRenderPipeline::CreateShaderObject(ShaderObject& shaderObject)
 	{
 		{// pipeline
 			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
@@ -49,7 +49,7 @@ namespace MyosotisFW::System::Render
 		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
-	void ShadowMapRenderPipeline::UpdateDescriptors(ShadowMapShaderObject& shaderObject)
+	void ShadowMapRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
 	{
 		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(m_shadowMapDescriptorImageInfo);
@@ -71,7 +71,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(DeferredRenderPipeline::StaticMeshShaderObject::pushConstant))),
+				static_cast<uint32_t>(sizeof(DeferredRenderPipeline::ShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

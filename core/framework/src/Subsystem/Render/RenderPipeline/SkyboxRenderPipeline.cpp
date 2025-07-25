@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 	}
 
-	void SkyboxRenderPipeline::CreateShaderObject(SkyboxShaderObject& shaderObject)
+	void SkyboxRenderPipeline::CreateShaderObject(ShaderObject& shaderObject)
 	{
 		{// pipeline
 			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
-	void SkyboxRenderPipeline::UpdateDescriptors(SkyboxShaderObject& shaderObject)
+	void SkyboxRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
 	{
 		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 
@@ -42,7 +42,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(SkyboxShaderObject::pushConstant))),
+				static_cast<uint32_t>(sizeof(ShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

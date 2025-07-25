@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 		~LightingRenderPipeline();
 
 		// ShaderObject
-		struct LightingShaderObject
+		struct ShaderObject
 		{
 			struct {
 				uint32_t objectIndex;
@@ -54,7 +54,7 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetLayout m_descriptorSetLayout;
 		VkDescriptorSet m_descriptorSet;
 
-		LightingShaderObject m_lightingShaderObject;
+		ShaderObject m_lightingShaderObject;
 
 		VkDescriptorImageInfo m_positionDescriptorImageInfo;
 		VkDescriptorImageInfo m_normalDescriptorImageInfo;

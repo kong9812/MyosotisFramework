@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 	}
 
-	void InteriorObjectDeferredRenderPipeline::CreateShaderObject(InteriorObjectShaderObject& shaderObject)
+	void InteriorObjectDeferredRenderPipeline::CreateShaderObject(ShaderObject& shaderObject)
 	{
 		{// pipeline
 			shaderObject.shaderBase.pipelineLayout = m_pipelineLayout;
@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
 	}
 
-	void InteriorObjectDeferredRenderPipeline::UpdateDescriptors(InteriorObjectShaderObject& shaderObject)
+	void InteriorObjectDeferredRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
 	{
 		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.cubeMap.sampler, shaderObject.cubeMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -41,7 +41,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(InteriorObjectShaderObject::pushConstant))),
+				static_cast<uint32_t>(sizeof(ShaderObject::pushConstant))),
 		};
 
 		// [pipeline]layout

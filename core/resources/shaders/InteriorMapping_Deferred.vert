@@ -1,8 +1,8 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
-#include "StandardSSBO.glsl"
-#include "CameraSSBO.glsl"
+#include "SSBO/StandardSSBO.glsl"
+#include "SSBO/CameraSSBO.glsl"
 
 layout(push_constant) uniform PushConstant {
     uint objectIndex;

@@ -1,7 +1,8 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_GOOGLE_include_directive : require
 
-layout (binding = 2) uniform samplerCube SamplerCube[];
+#include "Loader/SamplerCubeLoader.glsl"
+
 layout (push_constant) uniform PushConstant {
     uint objectIndex;
     uint textureId;
@@ -31,7 +32,7 @@ void main()
     vec3 dist3 = (step(0.0, rayDir) - uvw) / rayDir;
     float dist = min(min(dist3.x, dist3.y), dist3.z);
     vec3 rayHit = uvw + rayDir * dist;
-    vec3 uv = (rayHit - 0.5) * 2.0;
+    vec3 offset = (rayHit - 0.5) * 2.0;
 
-    outBaseColor = texture(SamplerCube[textureId], uv);
+    outBaseColor = SamplerCubeLoader_GetTexture(textureId, offset);
 }
