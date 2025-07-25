@@ -57,6 +57,15 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::vec3(worldPos) / worldPos.w;
 	}
 
+	CameraData CameraBase::GetCameraData() const
+	{
+		CameraData data{};
+		data.position = glm::vec4(m_cameraPos, 0.0f);
+		data.projection = GetProjectionMatrix();
+		data.view = GetViewMatrix();
+		return data;
+	}
+
 	void CameraBase::UpdateScreenSize(const glm::vec2& size)
 	{
 		m_screenSize = size;

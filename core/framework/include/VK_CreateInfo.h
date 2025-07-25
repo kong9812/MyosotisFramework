@@ -536,7 +536,7 @@ namespace Utility::Vulkan::CreateInfo
 		return r2d;
 	}
 
-	inline VkDescriptorPoolSize descriptorPoolSize(const VkDescriptorType& descriptorType, const uint32_t& descriptorCount)
+	inline VkDescriptorPoolSize descriptorPoolSize(const VkDescriptorType& descriptorType, const uint32_t& descriptorCount = 1)
 	{
 		VkDescriptorPoolSize ps{};
 		ps.type = descriptorType;

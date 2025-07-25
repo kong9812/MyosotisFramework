@@ -14,8 +14,10 @@ namespace MyosotisFW::System::Render
 		m_descriptorSet(VK_NULL_HANDLE),
 		m_storageBufferRawData({}),
 		m_storageBufferMetaData({}),
+		m_mainCameraDataBuffer({}),
 		m_storageBufferRawDataBuffer({}),
 		m_storageBufferMetaDataBuffer({}) {
+		createMainCameraBuffer();
 		createDescriptorPool();
 		createBindlessDescriptorSetLayout();
 		allocateDescriptorSet();
@@ -25,6 +27,11 @@ namespace MyosotisFW::System::Render
 
 	RenderDescriptors::~RenderDescriptors()
 	{
+		if (m_mainCameraDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_mainCameraDataBuffer.buffer, m_mainCameraDataBuffer.allocation);
+			m_mainCameraDataBuffer.buffer = VK_NULL_HANDLE;
+		}
 		if (m_storageBufferRawDataBuffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_storageBufferRawDataBuffer.buffer, m_storageBufferRawDataBuffer.allocation);
@@ -39,10 +46,25 @@ namespace MyosotisFW::System::Render
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
 	}
 
+	void RenderDescriptors::createMainCameraBuffer()
+	{
+		// UBO作成
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			sizeof(CameraData),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			m_mainCameraDataBuffer.buffer,
+			m_mainCameraDataBuffer.allocation,
+			m_mainCameraDataBuffer.allocationInfo,
+			m_mainCameraDataBuffer.descriptor);
+	}
+
 	void RenderDescriptors::createDescriptorPool()
 	{
 		std::vector<VkDescriptorPoolSize> poolSize = {
-			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, m_device->GetMaxDescriptorSetStorageBuffers()),
+			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER),	// todo.今後は必要に応じて追加
+			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
 			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, m_device->GetMaxDescriptorSetSampledImages()),
 			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, m_device->GetMaxDescriptorSetStorageImages()),
 			Utility::Vulkan::CreateInfo::descriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, m_device->GetMaxDescriptorSetInputAttachments()),
@@ -56,24 +78,21 @@ namespace MyosotisFW::System::Render
 	{
 		// [descriptor]layout
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
-			// binding: 0 [SSBO] MetaData
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::META_DATA),
-				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
-				m_device->GetMaxDescriptorSetStorageBuffers() / 2),
-				// binding: 1 [SSBO] RawData
-				Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::STORAGE_BUFFER),
-					VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-					VkShaderStageFlagBits::VK_SHADER_STAGE_ALL,
-					m_device->GetMaxDescriptorSetStorageBuffers() / 2),
-					// binding: 2
-					Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::COMBINED_IMAGE_SAMPLER), VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, m_device->GetMaxDescriptorSetSampledImages()),
-					// binding: 3
-					Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::STORAGE_IMAGE), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, m_device->GetMaxDescriptorSetStorageImages()),
+			// binding: [UBO] MainCameraData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::MAIN_CAMERA_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] MetaData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::META_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] RawData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::STORAGE_BUFFER), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: CombinedImageSampler
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::COMBINED_IMAGE_SAMPLER), VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, m_device->GetMaxDescriptorSetSampledImages()),
+			// binding: StorageImage
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(DescriptorBindingIndex::STORAGE_IMAGE), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL, m_device->GetMaxDescriptorSetStorageImages()),
 		};
 
 		// 未使用許可 & バインド後更新 を有効化
 		std::vector<VkDescriptorBindingFlags> descriptorBindingFlags = {
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
@@ -104,6 +123,15 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
+	void RenderDescriptors::UpdateMainCameraData(const CameraData& cameraData)
+	{
+		memcpy(m_mainCameraDataBuffer.allocationInfo.pMappedData, &cameraData, sizeof(CameraData));
+		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
+			static_cast<uint32_t>(RenderDescriptors::DescriptorBindingIndex::MAIN_CAMERA_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_mainCameraDataBuffer.descriptor);
+		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
+	}
+
 	void RenderDescriptors::UpdateDescriptorSet()
 	{
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet{};
@@ -116,7 +144,6 @@ namespace MyosotisFW::System::Render
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_storageBufferMetaData.data(),
 				static_cast<uint32_t>(sizeof(MetaData) * static_cast<uint32_t>(m_storageBufferMetaData.size())),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_storageBufferMetaDataBuffer.buffer,
@@ -125,8 +152,8 @@ namespace MyosotisFW::System::Render
 				m_storageBufferMetaDataBuffer.descriptor);
 			metaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferMetaDataBuffer.buffer, 0);
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
-				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::META_DATA),
-				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &metaDataDescriptorBufferInfo, 1));
+				static_cast<uint32_t>(RenderDescriptors::DescriptorBindingIndex::META_DATA),
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &metaDataDescriptorBufferInfo));
 
 			memcpy(m_storageBufferMetaDataBuffer.allocationInfo.pMappedData, m_storageBufferMetaData.data(),
 				static_cast<uint32_t>(sizeof(MetaData) * static_cast<uint32_t>(m_storageBufferMetaData.size())));
@@ -137,7 +164,6 @@ namespace MyosotisFW::System::Render
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_storageBufferRawData.data(),
 				static_cast<uint32_t>(sizeof(uint32_t) * static_cast<uint32_t>(m_storageBufferRawData.size())),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_storageBufferRawDataBuffer.buffer,
@@ -146,8 +172,8 @@ namespace MyosotisFW::System::Render
 				m_storageBufferRawDataBuffer.descriptor);
 			rawDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_storageBufferRawDataBuffer.buffer, 0);
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
-				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::STORAGE_BUFFER),
-				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &rawDataDescriptorBufferInfo, 1));
+				static_cast<uint32_t>(RenderDescriptors::DescriptorBindingIndex::STORAGE_BUFFER),
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &rawDataDescriptorBufferInfo));
 
 			memcpy(m_storageBufferRawDataBuffer.allocationInfo.pMappedData, m_storageBufferRawData.data(),
 				static_cast<uint32_t>(sizeof(uint32_t) * static_cast<uint32_t>(m_storageBufferRawData.size())));
@@ -155,14 +181,14 @@ namespace MyosotisFW::System::Render
 		if (m_combinedImageSamplersImageInfos.size() > 0)
 		{
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
-				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::COMBINED_IMAGE_SAMPLER),
+				static_cast<uint32_t>(RenderDescriptors::DescriptorBindingIndex::COMBINED_IMAGE_SAMPLER),
 				VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, m_combinedImageSamplersImageInfos.data(),
 				static_cast<uint32_t>(m_combinedImageSamplersImageInfos.size())));
 		}
 		if (m_storageImageInfos.size() > 0)
 		{
 			writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
-				static_cast<uint8_t>(RenderDescriptors::DescriptorBindingIndex::STORAGE_IMAGE),
+				static_cast<uint32_t>(RenderDescriptors::DescriptorBindingIndex::STORAGE_IMAGE),
 				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, m_storageImageInfos.data(),
 				static_cast<uint32_t>(m_storageImageInfos.size())));
 		}

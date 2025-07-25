@@ -41,11 +41,6 @@ namespace MyosotisFW::System::Render
 		m_lightingShaderObject.SSBO.lightSSBO = lightInfo;
 	}
 
-	void LightingRenderPipeline::UpdateCameraPosition(const glm::vec4& position)
-	{
-		m_lightingShaderObject.SSBO.cameraSSBO.position = position;
-	}
-
 	void LightingRenderPipeline::CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo)
 	{
 		// descriptorSet

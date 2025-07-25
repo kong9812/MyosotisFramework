@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render::Camera
 		virtual glm::mat4 GetViewMatrix() const;
 		virtual glm::mat4 GetProjectionMatrix() const;
 		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const;
-
+		CameraData GetCameraData() const;
 		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
 
 		void UpdateScreenSize(const glm::vec2& size);
@@ -31,7 +31,6 @@ namespace MyosotisFW::System::Render::Camera
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
 		virtual void Update(const UpdateData& updateData) {}
-		//virtual void BindDebugGUIElement() override;
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;

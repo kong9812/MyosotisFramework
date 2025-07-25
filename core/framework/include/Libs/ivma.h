@@ -30,32 +30,9 @@ namespace vmaTools
 		}
 	}
 
-	template <typename T>
 	inline void ShaderBufferObjectAllocate(
 		const VkDevice& device,
 		const VmaAllocator& allocator,
-		const T& data,
-		const VkBufferUsageFlagBits& usage,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
-	{
-		{// m_staticMeshUniformBufferObject
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(data), usage);
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング
-			VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
-			descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(pBuffer);
-		}
-	}
-
-	template <typename T>
-	inline void ShaderBufferObjectAllocate(
-		const VkDevice& device,
-		const VmaAllocator& allocator,
-		const T& data,
 		const uint32_t& size,
 		const VkBufferUsageFlagBits& usage,
 		VkBuffer& pBuffer,

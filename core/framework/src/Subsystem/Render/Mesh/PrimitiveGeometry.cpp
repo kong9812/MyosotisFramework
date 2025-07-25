@@ -31,11 +31,6 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Update(updateData, camera);
 
-		if (camera)
-		{
-			m_staticMeshShaderObject.SSBO.standardSSBO.projection = camera->GetProjectionMatrix();
-			m_staticMeshShaderObject.SSBO.standardSSBO.view = camera->GetViewMatrix();
-		}
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));

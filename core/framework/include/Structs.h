@@ -84,8 +84,10 @@ namespace MyosotisFW
 		int32_t pcfCount;
 	};
 
-	struct CameraSSBO
+	struct CameraData
 	{
+		glm::mat4 view;
+		glm::mat4 projection;
 		glm::vec4 position;
 	};
 
@@ -106,8 +108,6 @@ namespace MyosotisFW
 	struct StandardSSBO
 	{
 		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 projection;
 		glm::vec4 color;
 		uint32_t renderID;
 	};

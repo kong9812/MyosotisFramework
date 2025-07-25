@@ -35,7 +35,6 @@ namespace MyosotisFW::System::Render
 			}pushConstant;
 
 			struct {
-				CameraSSBO cameraSSBO;
 				DirectionalLightSSBO lightSSBO;
 			}SSBO;
 		};
@@ -43,7 +42,6 @@ namespace MyosotisFW::System::Render
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		void UpdateDirectionalLightInfo(const DirectionalLightSSBO& lightInfo);
-		void UpdateCameraPosition(const glm::vec4& position);
 		void CreateShaderObject(const VkDescriptorImageInfo& shadowMapImageInfo);
 		void UpdateDescriptors(const VkDescriptorImageInfo& shadowMapImageInfo);
 

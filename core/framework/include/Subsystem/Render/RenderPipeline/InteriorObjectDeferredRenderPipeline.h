@@ -28,7 +28,6 @@ namespace MyosotisFW::System::Render
 			struct
 			{
 				StandardSSBO standardSSBO;
-				CameraSSBO cameraSSBO;
 			}SSBO;
 		};
 

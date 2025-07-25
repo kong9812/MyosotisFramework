@@ -185,7 +185,7 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera)
 		{
 			m_mainCamera->Update(updateData);
-			m_lightingRenderPipeline->UpdateCameraPosition(glm::vec4(m_mainCamera->GetCameraPos(), 0.0f));
+			m_descriptors->UpdateMainCameraData(m_mainCamera->GetCameraData());
 		}
 
 		for (StageObject_ptr& object : m_objects)
@@ -253,7 +253,7 @@ namespace MyosotisFW::System::Render
 
 			vkCmdDispatch(m_computeCommandBuffers[0], staticObjectCount, 1, 1);
 			m_vkCmdEndDebugUtilsLabelEXT(m_computeCommandBuffers[0]);
-			vkEndCommandBuffer(m_computeCommandBuffers[0]);
+			VK_VALIDATION(vkEndCommandBuffer(m_computeCommandBuffers[0]));
 		}
 
 		submitInfo.commandBufferCount = 1;
@@ -531,7 +531,6 @@ namespace MyosotisFW::System::Render
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullingShaderObject.frustumPlanesUBO.data,
 				static_cast<uint32_t>(sizeof(m_frustumCullingShaderObject.frustumPlanesUBO.data.planes)),
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				m_frustumCullingShaderObject.frustumPlanesUBO.buffer.buffer,
@@ -543,7 +542,6 @@ namespace MyosotisFW::System::Render
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullingShaderObject.obbDatasSSBO.data,
 				static_cast<uint32_t>(sizeof(OBBData)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullingShaderObject.obbDatasSSBO.buffer.buffer,
@@ -555,7 +553,6 @@ namespace MyosotisFW::System::Render
 			vmaTools::ShaderBufferObjectAllocate(
 				*m_device,
 				m_device->GetVmaAllocator(),
-				m_frustumCullingShaderObject.visibleObjectsSSBO.data,
 				static_cast<uint32_t>(sizeof(uint32_t)) * AppInfo::g_maxObject,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 				m_frustumCullingShaderObject.visibleObjectsSSBO.buffer.buffer,

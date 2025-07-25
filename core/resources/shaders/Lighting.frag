@@ -1,9 +1,9 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
-#include "SSBO/CameraSSBO.glsl"
-#include "SSBO/DirectionalLightSSBO.glsl"
+#include "Loader/MainCameraDataLoader.glsl"
 #include "Loader/Sampler2DLoader.glsl"
+#include "SSBO/DirectionalLightSSBO.glsl"
 
 layout (set = 1, input_attachment_index = 0, binding = 0) uniform subpassInput inputPosition;
 layout (set = 1, input_attachment_index = 1, binding = 1) uniform subpassInput inputNormal;
@@ -49,8 +49,8 @@ const vec3 specularColor = vec3(1.0);
 void main() 
 {
     BaseObjectData meta = GetBaseObjectData(objectIndex);
-    CameraSSBO cameraSSBO = LoadCameraSSBO(meta.dataOffset + 0);
-    DirectionalLightSSBO directionalLightSSBO = LoadDirectionalLightSSBO(meta.dataOffset + CameraSSBOSize);
+    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
+    DirectionalLightSSBO directionalLightSSBO = LoadDirectionalLightSSBO(meta.dataOffset + 0);
 
 	vec4 position = subpassLoad(inputPosition);
     vec4 normal = subpassLoad(inputNormal);
@@ -61,8 +61,8 @@ void main()
 
 	vec3 lightDir = normalize(directionalLightSSBO.position.xyz - position.xyz);
     vec3 reflectDir = reflect(-lightDir, normal.xyz);
-    vec3 viewDir = normalize(cameraSSBO.position.xyz - position.xyz);
-    vec3 halfwayDir = normalize(lightDir + cameraSSBO.position.xyz);
+    vec3 viewDir = normalize(cameraData.position.xyz - position.xyz);
+    vec3 halfwayDir = normalize(lightDir + cameraData.position.xyz);
 
     float diff = max(dot(normal.xyz, lightDir), 0.0);
     float spec = pow(max(dot(normal.xyz, halfwayDir), 0.0), 64.0);

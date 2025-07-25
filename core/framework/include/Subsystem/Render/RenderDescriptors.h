@@ -16,15 +16,17 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors(const RenderDevice_ptr& device);
 		~RenderDescriptors();
 
-		enum class DescriptorBindingIndex : uint8_t
+		enum class DescriptorBindingIndex : uint32_t
 		{
-			META_DATA = 0,
+			MAIN_CAMERA_DATA = 0,
+			META_DATA,
 			STORAGE_BUFFER,
 			COMBINED_IMAGE_SAMPLER,
 			STORAGE_IMAGE,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
+		void UpdateMainCameraData(const CameraData& cameraData);
 		void UpdateDescriptorSet();
 
 		void ResetInfos();
@@ -54,6 +56,7 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetLayout& GetBindlessDescriptorSetLayout() { return m_descriptorSetLayout; }
 
 	private:
+		void createMainCameraBuffer();
 		void createDescriptorPool();
 		void createBindlessDescriptorSetLayout();
 		void allocateDescriptorSet();
@@ -65,6 +68,7 @@ namespace MyosotisFW::System::Render
 
 		std::vector<uint32_t> m_storageBufferRawData;
 		std::vector<MetaData> m_storageBufferMetaData;
+		Buffer m_mainCameraDataBuffer;
 		Buffer m_storageBufferRawDataBuffer;
 		Buffer m_storageBufferMetaDataBuffer;
 

@@ -10,8 +10,7 @@ struct DirectionalLightSSBO {
 
 const uint DirectionalLightSSBOSize = 21;
 
-DirectionalLightSSBO LoadDirectionalLightSSBO(uint offset)
-{
+DirectionalLightSSBO LoadDirectionalLightSSBO(uint offset) {
     DirectionalLightSSBO ssbo;
     ssbo.viewProjection = LoadMat4(offset + 0);
     ssbo.position = LoadVec4(offset + 16);

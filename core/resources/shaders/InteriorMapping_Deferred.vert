@@ -1,10 +1,11 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
+#include "Loader/MainCameraDataLoader.glsl"
+#include "Loader/MainCameraDataLoader.glsl"
 #include "SSBO/StandardSSBO.glsl"
-#include "SSBO/CameraSSBO.glsl"
 
-layout(push_constant) uniform PushConstant {
+layout (push_constant) uniform PushConstant {
     uint objectIndex;
     uint textureId;
 };
@@ -25,14 +26,14 @@ layout (location = 5) out flat uint outRenderID;
 void main() 
 {
     BaseObjectData meta = GetBaseObjectData(objectIndex);
+    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     StandardSSBO standardSSBO = LoadStandardSSBO(meta.dataOffset + 0);
-    CameraSSBO cameraSSBO = LoadCameraSSBO(meta.dataOffset + StandardSSBOSize);
 
     outPosition = standardSSBO.model * inPosition;
     outNormal = normalize(standardSSBO.model * vec4(inNormal, 0.0));
     outRenderID = standardSSBO.renderID;
     outUV = inUV;
     outBaseColor = inColor;
-    outRayDir = outPosition - cameraSSBO.position;
-    gl_Position = standardSSBO.projection * standardSSBO.view * outPosition;
+    outRayDir = outPosition - cameraData.position;
+    gl_Position = cameraData.projection * cameraData.view * outPosition;
 }

@@ -2,20 +2,17 @@
 #define RAWDATALOADER
 #extension GL_EXT_nonuniform_qualifier : require
 
-// Meta情報構造体
 struct BaseObjectData {
-    uint typeID;        // 今は使わない
-    uint dataOffset;    // 実データのoffset
+    uint typeID;
+    uint dataOffset;
 };
 
-// Meta情報テーブル
-layout(std430, binding = 0) readonly buffer MetaBuffer {
+layout (std430, set = 0, binding = 1) readonly buffer MetaBuffer {
     BaseObjectData objectTable[];
 };
 
-// 実データ
-layout(std430, binding = 1) readonly buffer AllDataBuffer {
-    uint rawData[]; // 全てのデータをここにまとめる
+layout (std430, set = 0, binding = 2) readonly buffer AllDataBuffer {
+    uint rawData[];
 };
 
 mat4 LoadMat4(uint base) {
@@ -48,8 +45,7 @@ int LoadInt(uint base) {
     return int(rawData[base]);
 }
 
-BaseObjectData GetBaseObjectData(uint index)
-{
+BaseObjectData GetBaseObjectData(uint index) {
     return objectTable[nonuniformEXT(index)];
 }
 #endif
