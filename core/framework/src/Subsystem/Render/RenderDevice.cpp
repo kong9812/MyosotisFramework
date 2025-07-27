@@ -167,7 +167,6 @@ namespace MyosotisFW::System::Render
 		// 物理デバイス機能を指定
 		VkPhysicalDeviceDescriptorIndexingFeatures physicalDeviceDescriptorIndexingFeatures = {};
 		physicalDeviceDescriptorIndexingFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-		physicalDeviceDescriptorIndexingFeatures.pNext = NULL;
 		// SSBO 配列
 		physicalDeviceDescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
 		// 未バインドのディスクリプタスロットを許可する（Shader中で未使用slotがあってもOK）
@@ -180,6 +179,21 @@ namespace MyosotisFW::System::Render
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE; // SSBO
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;  // テクスチャ
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;  // 画像
+
+		// Maintenance4 機能
+		VkPhysicalDeviceMaintenance4Features physicalDeviceMaintenance4Features{};
+		physicalDeviceMaintenance4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
+		physicalDeviceMaintenance4Features.maintenance4 = VK_TRUE;
+
+		// Mesh Shader 機能
+		VkPhysicalDeviceMeshShaderFeaturesEXT physicalDeviceMeshShaderFeaturesEXT{};
+		physicalDeviceMeshShaderFeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+		physicalDeviceMeshShaderFeaturesEXT.taskShader = VK_TRUE;
+		physicalDeviceMeshShaderFeaturesEXT.meshShader = VK_TRUE;
+
+		// pNextチェーン
+		physicalDeviceDescriptorIndexingFeatures.pNext = &physicalDeviceMaintenance4Features;
+		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
 
 		// create device
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);

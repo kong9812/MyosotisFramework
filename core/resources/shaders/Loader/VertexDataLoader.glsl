@@ -31,19 +31,19 @@ struct VertexData {
     vec4 tangent;
 };
 
-layout (std430, set = 0, binding = 5) readonly buffer VertexMetaBuffer {
+layout (std430, set = 1, binding = 0) readonly buffer VertexMetaBuffer {
     VertexDataMetaData vertexDataTable[];
 };
 
-layout (std430, set = 0, binding = 6) readonly buffer AllVertexBuffer {
+layout (std430, set = 1, binding = 1) readonly buffer AllVertexBuffer {
     uint vertexData[];
 };
 
-layout (std430, set = 0, binding = 7) readonly buffer IndexMetaBuffer {
+layout (std430, set = 1, binding = 2) readonly buffer IndexMetaBuffer {
     IndexDataMetaData indexDataTable[];
 };
 
-layout (std430, set = 0, binding = 7) readonly buffer AllIndexBuffer {
+layout (std430, set = 1, binding = 3) readonly buffer AllIndexBuffer {
     uint indexData[];
 };
 
@@ -75,11 +75,11 @@ vec3 VertexDataLoader_LoadVec3(uint base) {
     );
 }
 
-uvec3 VertexDataLoader_LoadUVec3(uint base) {
+uvec3 VertexDataLoader_LoadIndexUVec3(uint base) {
     return uvec3(
-        vertexData[base + 0],
-        vertexData[base + 1],
-        vertexData[base + 2]
+        indexData[base + 0],
+        indexData[base + 1],
+        indexData[base + 2]
     );
 }
 
@@ -109,7 +109,7 @@ uvec3 VertexDataLoader_GetIndexData(uint index, uint indexIndex)
 {
     IndexDataMetaData meta = indexDataTable[nonuniformEXT(index)];
     uint offset = meta.offset + (3 * indexIndex);
-    return VertexDataLoader_LoadUVec3(offset);
+    return VertexDataLoader_LoadIndexUVec3(offset);
 }
 
 VertexData VertexDataLoader_GetVertexData(uint index, uint vertexIndex) {

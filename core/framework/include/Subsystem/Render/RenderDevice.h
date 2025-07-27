@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 		VkAllocationCallbacks* GetAllocationCallbacks() { return &m_allocationCallbacks; }
 		VmaAllocator GetVmaAllocator() const { return m_allocator; }
 
-		uint32_t GetMaxDescriptorSetaa() const { return m_maxDescriptorSetUniformBuffers; }
+		uint32_t GetMaxDescriptorSetUniformBuffers() const { return m_maxDescriptorSetUniformBuffers; }
 		uint32_t GetMaxDescriptorSetStorageBuffers() const { return m_maxDescriptorSetStorageBuffers; }
 		uint32_t GetMaxDescriptorSetSampledImages() const { return m_maxDescriptorSetSampledImages; }
 		uint32_t GetMaxDescriptorSetStorageImages() const { return m_maxDescriptorSetStorageImages; }

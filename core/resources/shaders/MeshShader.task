@@ -1,5 +1,6 @@
-#version 460
+#version 450
 #extension GL_EXT_mesh_shader : require
+#extension GL_EXT_debug_printf : enable
 
 struct SharedData
 {
@@ -9,6 +10,9 @@ taskPayloadSharedEXT SharedData sharedData;
 
 void main()
 {
+    debugPrintfEXT("Hello from frag shader!\n");
+
+    // gl_WorkGroupID.x
     sharedData.meshIndex = 0;   // テスト
 	EmitMeshTasksEXT(1, 1, 1);
 }

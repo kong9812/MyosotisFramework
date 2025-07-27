@@ -19,6 +19,7 @@
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
 #include "FinalCompositionRenderPass.h"
+#include "MeshShaderRenderPass.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -27,6 +28,7 @@
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
+#include "MeshShaderRenderPipeline.h"
 
 #include "RenderQueue.h"
 #include "VK_Validation.h"
@@ -390,6 +392,25 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
+	void RenderSubsystem::MeshShaderRender()
+	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+
+		// mesh shader Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
+
+		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+
+		m_meshShaderRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+
+		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
+
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
 	void RenderSubsystem::FinalCompositionRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -638,6 +659,9 @@ namespace MyosotisFW::System::Render
 
 		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_finalCompositionRenderPass->Initialize();
+
+		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_meshShaderRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -667,6 +691,9 @@ namespace MyosotisFW::System::Render
 		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+
+		m_meshShaderRenderPipeline = CreateMeshShaderRenderPipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)

@@ -38,6 +38,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(MainRenderPass);
 		class FinalCompositionRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPass);
+		class MeshShaderRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPass);
 
 		class SkyboxRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPipeline);
@@ -53,6 +55,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPipeline);
 		class InteriorObjectDeferredRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
+		class MeshShaderRenderPipeline;
+		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPipeline);
 	}
 }
 
@@ -78,6 +82,7 @@ namespace MyosotisFW::System::Render
 			m_shadowMapRenderPass(nullptr),
 			m_mainRenderPass(nullptr),
 			m_finalCompositionRenderPass(nullptr),
+			m_meshShaderRenderPass(nullptr),
 			m_skyboxRenderPipeline(nullptr),
 			m_shadowMapRenderPipeline(nullptr),
 			m_deferredRenderPipeline(nullptr),
@@ -85,6 +90,7 @@ namespace MyosotisFW::System::Render
 			m_compositionRenderPipeline(nullptr),
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
+			m_meshShaderRenderPipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
@@ -106,6 +112,7 @@ namespace MyosotisFW::System::Render
 		void BeginRender();
 		void ShadowRender();
 		void MainRender();
+		void MeshShaderRender();
 		void FinalCompositionRender();
 		void EndRender();
 		void ResetGameStage();
@@ -167,6 +174,7 @@ namespace MyosotisFW::System::Render
 		ShadowMapRenderPass_ptr m_shadowMapRenderPass;
 		MainRenderPass_ptr m_mainRenderPass;
 		FinalCompositionRenderPass_ptr m_finalCompositionRenderPass;
+		MeshShaderRenderPass_ptr m_meshShaderRenderPass;
 
 	protected:
 		SkyboxRenderPipeline_ptr m_skyboxRenderPipeline;
@@ -176,6 +184,7 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
+		MeshShaderRenderPipeline_ptr m_meshShaderRenderPipeline;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

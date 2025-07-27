@@ -1,6 +1,7 @@
-#version 460
+#version 450
 #extension GL_EXT_mesh_shader : require
 #extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
 
 #include "Loader/VertexDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
@@ -23,6 +24,12 @@ void main()
 {
     VertexDataMetaData meta = VertexDataLoader_GetVertexDataMetaData(sharedData.meshIndex);
 
+    // IndexDataMetaData metatest = indexDataTable[nonuniformEXT(sharedData.meshIndex)];
+    // debugPrintfEXT("offset: %d", metatest.offset);
+    // uint offset = meta.offset + (3 * indexIndex);
+    // uvec3 VertexDataLoader_LoadUVec3(offset);
+
+
     // 出力する頂点数・プリミティブ数を指定
     if (gl_LocalInvocationIndex == 0) {
         SetMeshOutputsEXT(meta.vertexCount, meta.primitiveCount);
@@ -42,11 +49,15 @@ void main()
         vec4 worldPos = standardSSBO.model * vec4(v.position.xyz, 1.0);
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
         vertexOutput[i].color = v.color;
+
+        debugPrintfEXT("MeshIndex: %d vertex index: %d\n x: %f y: %f z: %f", sharedData.meshIndex, i, v.position.x, v.position.y, v.position.z);
     }
 
     // プリミティブ処理：同様に分割＋ループで処理
     for (uint i = idx; i < meta.primitiveCount; i += stride) 
     {
-        gl_PrimitiveTriangleIndicesEXT[i] = VertexDataLoader_GetIndexData(sharedData.meshIndex, i);
+        uvec3 index = VertexDataLoader_GetIndexData(sharedData.meshIndex, i);
+        gl_PrimitiveTriangleIndicesEXT[i] = index;
+        debugPrintfEXT("MeshIndex: %d index index: %d\n x: %d y: %d z: %d", sharedData.meshIndex, i, index.x, index.y, index.z);
     }
 }

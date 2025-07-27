@@ -163,6 +163,7 @@ namespace MyosotisFW::System
 		m_renderSubsystem->FrustumCulling();
 		m_renderSubsystem->ShadowRender();
 		m_renderSubsystem->MainRender();
+		m_renderSubsystem->MeshShaderRender();
 		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
 	}

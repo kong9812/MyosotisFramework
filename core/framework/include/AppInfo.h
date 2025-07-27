@@ -40,6 +40,8 @@ namespace MyosotisFW::AppInfo
 	// 指定VkExtensionProperties
 	const std::vector<const char*> g_vkDeviceExtensionProperties = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_EXT_MESH_SHADER_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
 	};
 	// 指定Layer
 	const std::vector<const char*> g_layer = {
