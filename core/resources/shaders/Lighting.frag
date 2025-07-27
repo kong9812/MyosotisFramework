@@ -48,9 +48,9 @@ const vec3 specularColor = vec3(1.0);
 
 void main() 
 {
-    BaseObjectData meta = GetBaseObjectData(objectIndex);
+    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    DirectionalLightSSBO directionalLightSSBO = LoadDirectionalLightSSBO(meta.dataOffset + 0);
+    DirectionalLightSSBO directionalLightSSBO = DirectionalLightSSBO_LoadDirectionalLightSSBO(meta.dataOffset + 0);
 
 	vec4 position = subpassLoad(inputPosition);
     vec4 normal = subpassLoad(inputNormal);

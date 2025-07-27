@@ -22,6 +22,13 @@
 [OK] ・ShaderObjectをpipeline下に配置
 [OK] ・GLSL関数を増やす
 　[OK] ・SSBOデータのロード関連
+
+・GLTFも使いたい…
+・VertexDataLoader.glslを作成
+　・ないデータは0を返せばいいかも
+・MeshShader
+　・64,126分割
+
 ・InteriorObejctをStaticMesh化
 ・buffer_referenceで頂点情報を保管
 ・FrustumCullingPipelineを作成

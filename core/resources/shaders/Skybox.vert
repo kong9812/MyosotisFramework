@@ -19,9 +19,9 @@ layout (location = 1) out flat uint outRenderID;
 
 void main() 
 {
-    BaseObjectData meta = GetBaseObjectData(objectIndex);
+    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = LoadStandardSSBO(meta.dataOffset + 0);
+    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
 
     outUVW = inPosition.xyz;
     outRenderID = standardSSBO.renderID;

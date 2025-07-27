@@ -1,0 +1,14 @@
+#version 460
+#extension GL_EXT_mesh_shader : require
+
+struct SharedData
+{
+    uint meshIndex; //todo.Meshlet化
+};
+taskPayloadSharedEXT SharedData sharedData;
+
+void main()
+{
+    sharedData.meshIndex = 0;   // テスト
+	EmitMeshTasksEXT(1, 1, 1);
+}

@@ -1,0 +1,52 @@
+#version 460
+#extension GL_EXT_mesh_shader : require
+#extension GL_GOOGLE_include_directive : require
+
+#include "Loader/VertexDataLoader.glsl"
+#include "Loader/MainCameraDataLoader.glsl"
+#include "SSBO/StandardSSBO.glsl"
+
+layout(local_size_x = 64) in;
+layout(triangles, max_vertices = 64, max_primitives = 124) out;
+
+struct SharedData
+{
+    uint meshIndex; //todo.Meshlet化
+};
+taskPayloadSharedEXT SharedData sharedData;
+
+layout(location = 0) out VertexOutput {
+	vec4 color;
+} vertexOutput[];
+
+void main()
+{
+    VertexDataMetaData meta = VertexDataLoader_GetVertexDataMetaData(sharedData.meshIndex);
+
+    // 出力する頂点数・プリミティブ数を指定
+    if (gl_LocalInvocationIndex == 0) {
+        SetMeshOutputsEXT(meta.vertexCount, meta.primitiveCount);
+    }
+    barrier();
+
+    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
+    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(sharedData.meshIndex);
+
+    uint stride = gl_WorkGroupSize.x;
+    uint idx = gl_LocalInvocationIndex;
+
+    // 頂点処理：スレッドで分割し、forループで複数頂点を担当
+    for (uint i = idx; i < meta.vertexCount; i += stride) 
+    {
+        VertexData v = VertexDataLoader_GetVertexData(sharedData.meshIndex, i);
+        vec4 worldPos = standardSSBO.model * vec4(v.position.xyz, 1.0);
+        gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
+        vertexOutput[i].color = v.color;
+    }
+
+    // プリミティブ処理：同様に分割＋ループで処理
+    for (uint i = idx; i < meta.primitiveCount; i += stride) 
+    {
+        gl_PrimitiveTriangleIndicesEXT[i] = VertexDataLoader_GetIndexData(sharedData.meshIndex, i);
+    }
+}

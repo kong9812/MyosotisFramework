@@ -18,9 +18,9 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-    BaseObjectData meta = GetBaseObjectData(objectIndex);
-    StandardSSBO standardSSBO = LoadStandardSSBO(meta.dataOffset + 0);
-    DirectionalLightSSBO directionalLightSSBO = LoadDirectionalLightSSBO(meta.dataOffset + StandardSSBOSize);
+    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
+    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+    DirectionalLightSSBO directionalLightSSBO = DirectionalLightSSBO_LoadDirectionalLightSSBO(meta.dataOffset + StandardSSBOSize);
 
     gl_Position = directionalLightSSBO.viewProjection * standardSSBO.model * inPosition;
 }

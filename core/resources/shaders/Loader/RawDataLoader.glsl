@@ -2,20 +2,20 @@
 #define RAWDATALOADER
 #extension GL_EXT_nonuniform_qualifier : require
 
-struct BaseObjectData {
+struct RawDataMetaData {
     uint typeID;
     uint dataOffset;
 };
 
 layout (std430, set = 0, binding = 1) readonly buffer MetaBuffer {
-    BaseObjectData objectTable[];
+    RawDataMetaData rawDataTable[];
 };
 
 layout (std430, set = 0, binding = 2) readonly buffer AllDataBuffer {
     uint rawData[];
 };
 
-mat4 LoadMat4(uint base) {
+mat4 RawDataLoader_LoadMat4(uint base) {
     return mat4(
         vec4(uintBitsToFloat(rawData[base +  0]), uintBitsToFloat(rawData[base +  1]),
              uintBitsToFloat(rawData[base +  2]), uintBitsToFloat(rawData[base +  3])),
@@ -28,7 +28,22 @@ mat4 LoadMat4(uint base) {
     );
 }
 
-vec4 LoadVec4(uint base) {
+vec2 RawDataLoader_LoadVec2(uint base) {
+    return vec2(
+        uintBitsToFloat(rawData[base + 0]),
+        uintBitsToFloat(rawData[base + 1])
+    );
+}
+
+vec3 RawDataLoader_LoadVec3(uint base) {
+    return vec3(
+        uintBitsToFloat(rawData[base + 0]),
+        uintBitsToFloat(rawData[base + 1]),
+        uintBitsToFloat(rawData[base + 2])
+    );
+}
+
+vec4 RawDataLoader_LoadVec4(uint base) {
     return vec4(
         uintBitsToFloat(rawData[base + 0]),
         uintBitsToFloat(rawData[base + 1]),
@@ -37,15 +52,15 @@ vec4 LoadVec4(uint base) {
     );
 }
 
-uint LoadUint(uint base) {
+uint RawDataLoader_LoadUint(uint base) {
     return rawData[base];
 }
 
-int LoadInt(uint base) {
+int RawDataLoader_LoadInt(uint base) {
     return int(rawData[base]);
 }
 
-BaseObjectData GetBaseObjectData(uint index) {
-    return objectTable[nonuniformEXT(index)];
+RawDataMetaData RawDataLoader_GetRawDataMetaData(uint index) {
+    return rawDataTable[nonuniformEXT(index)];
 }
 #endif

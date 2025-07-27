@@ -10,11 +10,11 @@ struct StandardSSBO {
 
 const uint StandardSSBOSize = 53;
 
-StandardSSBO LoadStandardSSBO(uint offset) {
+StandardSSBO StandardSSBO_LoadStandardSSBO(uint offset) {
     StandardSSBO ssbo;
-    ssbo.model = LoadMat4(offset + 0);
-    ssbo.color = LoadVec4(offset + 48);
-    ssbo.renderID = LoadUint(offset + 52);
+    ssbo.model = RawDataLoader_LoadMat4(offset + 0);
+    ssbo.color = RawDataLoader_LoadVec4(offset + 48);
+    ssbo.renderID = RawDataLoader_LoadUint(offset + 52);
     return ssbo;
 }
 #endif
