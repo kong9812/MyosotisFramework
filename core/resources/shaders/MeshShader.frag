@@ -11,5 +11,5 @@ void main()
 {
     debugPrintfEXT("Hello from frag shader!\n");
 
-	outFragColor = vertexInput.color;
+	outFragColor = vec4(1.0,0.0,0.0,1.0);
 }

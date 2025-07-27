@@ -10,7 +10,7 @@ taskPayloadSharedEXT SharedData sharedData;
 
 void main()
 {
-    debugPrintfEXT("Hello from frag shader!\n");
+    debugPrintfEXT("Hello from task shader!\n");
 
     // gl_WorkGroupID.x
     sharedData.meshIndex = 0;   // テスト
