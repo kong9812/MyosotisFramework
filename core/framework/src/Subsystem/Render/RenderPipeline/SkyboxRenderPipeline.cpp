@@ -24,7 +24,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		// layout allocate
-		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessDescriptorSet();
+		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessMainDescriptorSet();
 	}
 
 	void SkyboxRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
@@ -46,7 +46,7 @@ namespace MyosotisFW::System::Render
 		};
 
 		// [pipeline]layout
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessDescriptorSetLayout() };
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout() };
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();

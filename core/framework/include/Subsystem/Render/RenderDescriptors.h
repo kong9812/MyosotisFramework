@@ -4,6 +4,7 @@
 #include <vector>
 #include "Structs.h"
 #include "ClassPointer.h"
+#include "PrimitiveGeometryShape.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -16,13 +17,20 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors(const RenderDevice_ptr& device);
 		~RenderDescriptors();
 
-		enum class DescriptorBindingIndex : uint32_t
+		enum class MainDescriptorBindingIndex : uint32_t
 		{
 			MAIN_CAMERA_DATA = 0,
 			META_DATA,
 			STORAGE_BUFFER,
 			COMBINED_IMAGE_SAMPLER,
 			STORAGE_IMAGE,
+		};
+		enum class VertexDescriptorBindingIndex : uint32_t
+		{
+			VERTEX_META_DATA = 0,
+			VERTEX_DATA,
+			INDEX_META_DATA,
+			INDEX_DATA,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
@@ -48,29 +56,54 @@ namespace MyosotisFW::System::Render
 			return index;
 		}
 
+		void AddPrimitiveGeometryModel(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshData);
 		uint32_t AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo);
 		uint32_t AddStorageImageInfo(const VkDescriptorImageInfo& imageInfo);
 
-		VkDescriptorSet& GetBindlessDescriptorSet() { return m_descriptorSet; }
 		VkDescriptorPool& GetDescriptorPool() { return m_descriptorPool; }
-		VkDescriptorSetLayout& GetBindlessDescriptorSetLayout() { return m_descriptorSetLayout; }
+		VkDescriptorSet& GetBindlessMainDescriptorSet() { return m_mainDescriptorSet; }
+		VkDescriptorSet& GetBindlessVertexDescriptorSet() { return m_vertexDescriptorSet; }
+		VkDescriptorSetLayout& GetBindlessMainDescriptorSetLayout() { return m_mainDescriptorSetLayout; }
+		VkDescriptorSetLayout& GetBindlessVertexDescriptorSetLayout() { return m_vertexDescriptorSetLayout; }
+
+	private:
+		struct VertexMetaData {
+			uint32_t vertexCount;
+			uint32_t primitiveCount;    // 三角形単位(三角形の数)
+			uint32_t vertexAttributeBit;
+			uint32_t unitSize;          // 一枚当たりのサイズ
+			uint32_t offset;
+		};
+
+		struct IndexMetaData {
+			uint32_t offset;            // IndexDataの開始位置
+		};
 
 	private:
 		void createMainCameraBuffer();
 		void createDescriptorPool();
-		void createBindlessDescriptorSetLayout();
-		void allocateDescriptorSet();
+		void createBindlessMainDescriptorSetLayout();
+		void createBindlessVertexDescriptorSetLayout();
+		void allocateMainDescriptorSet();
+		void allocateVertexDescriptorSet();
 
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
-		VkDescriptorSetLayout m_descriptorSetLayout;
-		VkDescriptorSet m_descriptorSet;
+		VkDescriptorSetLayout m_mainDescriptorSetLayout;
+		VkDescriptorSetLayout m_vertexDescriptorSetLayout;
+		VkDescriptorSet m_mainDescriptorSet;
+		VkDescriptorSet m_vertexDescriptorSet;
 
 		std::vector<uint32_t> m_storageBufferRawData;
 		std::vector<MetaData> m_storageBufferMetaData;
 		Buffer m_mainCameraDataBuffer;
 		Buffer m_storageBufferRawDataBuffer;
 		Buffer m_storageBufferMetaDataBuffer;
+
+		Buffer m_vertexMetaDataBuffer;
+		Buffer m_vertexDataBuffer;
+		Buffer m_indexMetaDataBuffer;
+		Buffer m_indexDataBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;
 		std::vector<VkDescriptorImageInfo> m_storageImageInfos;

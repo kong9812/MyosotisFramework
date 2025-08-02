@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		std::vector<VkAttachmentDescription> attachments = {
 			// [0] main render target
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),

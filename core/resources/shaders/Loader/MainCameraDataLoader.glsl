@@ -3,6 +3,7 @@
 #extension GL_EXT_nonuniform_qualifier : require
 
 struct MainCameraData {
+    vec4 frustumPlanes[6];
     mat4 view;
     mat4 projection;
     vec4 position;

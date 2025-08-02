@@ -45,7 +45,7 @@ namespace MyosotisFW::System::GameDirector {
 				System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
 			component->SetPos(glm::vec3(1.0f));
 			component->SetRot(glm::vec3(0.0f));
-			component->SetScale(glm::vec3(1.0f));
+			component->SetScale(glm::vec3(2.5f));
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}

@@ -30,12 +30,7 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
 		__super::Update(updateData, camera);
-
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::scale(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::vec3(m_transform.scale));
+		m_staticMeshShaderObject.SSBO.standardSSBO.vertexMetaIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
 
 		if (!m_isReady) return;
 	}
@@ -55,7 +50,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::loadAssets()
 	{
-		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape, 5.0f, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
 		bool firstDataForAABB = true;
 
 		for (int i = 0; i < LOD::Max; i++)

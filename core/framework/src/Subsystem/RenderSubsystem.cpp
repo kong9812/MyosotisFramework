@@ -513,6 +513,14 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::initializeRenderDescriptors()
 	{
 		m_descriptors = CreateRenderDescriptorsPointer(m_device);
+		std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> data{};
+		for (uint8_t i = 0; i < static_cast<uint8_t>(Shape::PrimitiveGeometryShape::Max); i++)
+		{
+			Shape::PrimitiveGeometryShape shape = static_cast<Shape::PrimitiveGeometryShape>(i);
+			std::vector<Mesh> mesh{ Shape::createShape(shape) };
+			data.push_back(std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>(shape, mesh));
+		}
+		m_descriptors->AddPrimitiveGeometryModel(data);
 	}
 
 	void RenderSubsystem::initializeRenderResources()

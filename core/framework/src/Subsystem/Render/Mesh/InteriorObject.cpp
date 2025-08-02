@@ -50,6 +50,7 @@ namespace MyosotisFW::System::Render
 		m_interiorObjectShaderObject.SSBO.standardSSBO.model = glm::rotate(m_interiorObjectShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_interiorObjectShaderObject.SSBO.standardSSBO.model = glm::rotate(m_interiorObjectShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		m_interiorObjectShaderObject.SSBO.standardSSBO.model = glm::scale(m_interiorObjectShaderObject.SSBO.standardSSBO.model, glm::vec3(m_transform.scale));
+		m_interiorObjectShaderObject.SSBO.standardSSBO.obbData = GetWorldOBBData();
 		m_interiorObjectShaderObject.SSBO.standardSSBO.renderID = m_renderID;
 
 		if (!m_isReady) return;

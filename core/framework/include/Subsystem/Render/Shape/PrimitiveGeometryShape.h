@@ -18,11 +18,12 @@ namespace MyosotisFW::System::Render::Shape
 {
 	enum class PrimitiveGeometryShape
 	{
-		UNDEFINED,
+		UNDEFINED = -1,
 		Quad,
 		Plane,
 		Circle,
 		Sphere,
+		Max
 	};
 
 	inline Mesh createQuad(const float& size = 1.0f, const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f }, const glm::vec3& center = { 0.0f, 0.0f, 0.0f })

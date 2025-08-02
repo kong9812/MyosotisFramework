@@ -35,27 +35,8 @@ namespace MyosotisFW::System::Render
 			uint32_t offset;            // IndexDataの開始位置
 		};
 
-		struct VertexData {
-			glm::vec4 position;
-			glm::vec3 normal;
-			glm::vec2 uv;
-			glm::vec4 color;
-			glm::vec4 tangent;
-		};
-
 	private:
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void prepareDescriptorSet();
-
-		VkDescriptorSetLayout m_descriptorSetLayout;
-		VkDescriptorSet m_descriptorSet;
-
-		Mesh m_vertex;
-
-		Buffer m_vertexMetaDataBuffer;
-		Buffer m_vertexDataBuffer;
-		Buffer m_indexMetaDataBuffer;
-		Buffer m_indexDataBuffer;
 
 		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;
 	};

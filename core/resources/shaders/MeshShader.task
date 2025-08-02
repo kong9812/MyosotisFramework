@@ -1,6 +1,10 @@
 #version 450
 #extension GL_EXT_mesh_shader : require
-#extension GL_EXT_debug_printf : enable
+#extension GL_GOOGLE_include_directive : require
+// #extension GL_EXT_debug_printf : enable
+
+#include "Loader/MainCameraDataLoader.glsl"
+#include "SSBO/StandardSSBO.glsl"
 
 struct SharedData
 {
@@ -10,9 +14,35 @@ taskPayloadSharedEXT SharedData sharedData;
 
 void main()
 {
-    debugPrintfEXT("Hello from task shader!\n");
+    // debugPrintfEXT("Hello from task shader!\n");
+    uint objectIndex = gl_WorkGroupID.x;
 
-    // gl_WorkGroupID.x
-    sharedData.meshIndex = 0;   // テスト
-	EmitMeshTasksEXT(1, 1, 1);
+    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
+    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
+    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+
+    // Frustum Culling判定 (OBB)
+    bool visible = true;
+    for (int i = 0; i < 6; i++) 
+    {
+        vec4 plane = cameraData.frustumPlanes[i];
+        // OBB中心から平面までの距離
+        float d = dot(plane.xyz, standardSSBO.obbData.center.xyz) + plane.w;
+        // OBB各軸を平面法線に投影した長さの合計が半径
+        float r = 
+            abs(dot(plane.xyz, standardSSBO.obbData.axisX.xyz)) * standardSSBO.obbData.axisX.w +
+            abs(dot(plane.xyz, standardSSBO.obbData.axisY.xyz)) * standardSSBO.obbData.axisY.w +
+            abs(dot(plane.xyz, standardSSBO.obbData.axisZ.xyz)) * standardSSBO.obbData.axisZ.w;
+        if (d + r < 0.0) 
+        {
+            visible = false;
+            break;
+        }
+    }
+    // 画面に入ってる
+    if (visible) 
+    {
+        sharedData.meshIndex = objectIndex;
+	    EmitMeshTasksEXT(1, 1, 1);
+    }
 }
