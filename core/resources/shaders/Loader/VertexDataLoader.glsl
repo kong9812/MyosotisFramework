@@ -23,9 +23,9 @@ struct MeshletMetaData {
 	uint vertexAttributeBit;
 	uint unitSize;
 	uint vertexDataOffset;
-	uint indexDataOffset;
-	uint empty1;
-	uint empty2;
+	uint uniqueIndexOffset;
+	uint primitivesOffset;
+	uint empty;
 };
 
 struct VertexData {
@@ -47,8 +47,12 @@ layout (std430, set = 1, binding = 2) readonly buffer AllVertexBuffer {
     uint vertexData[];
 };
 
-layout (std430, set = 1, binding = 3) readonly buffer AllIndexBuffer {
-    uint indexData[];
+layout (std430, set = 1, binding = 3) readonly buffer AllUniqueIndexBuffer {
+    uint uniqueIndexData[];
+};
+
+layout (std430, set = 1, binding = 4) readonly buffer AllPrimitivesBuffer {
+    uint primitivesData[];
 };
 
 mat4 VertexDataLoader_LoadMat4(uint base) {
@@ -79,11 +83,11 @@ vec3 VertexDataLoader_LoadVec3(uint base) {
     );
 }
 
-uvec3 VertexDataLoader_LoadIndexUVec3(uint base) {
+uvec3 VertexDataLoader_LoadPrimitiveUVec3(uint base) {
     return uvec3(
-        indexData[base + 0],
-        indexData[base + 1],
-        indexData[base + 2]
+        primitivesData[base + 0],
+        primitivesData[base + 1],
+        primitivesData[base + 2]
     );
 }
 
@@ -148,12 +152,12 @@ VertexData VertexDataLoader_GetVertexData(uint meshID, uint meshletIndex, uint v
     return v;
 }
 
-uvec3 VertexDataLoader_GetIndexData(uint meshID, uint meshletIndex, uint indexIndex)
+uvec3 VertexDataLoader_GetPrimitivesData(uint meshID, uint meshletIndex, uint primitiveIndex)
 {
     MeshData meshData = meshDatas[nonuniformEXT(meshID)];
     MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshletIndex)];
-    uint offset = meshletMetaData.indexDataOffset + (3 * indexIndex);
-    return VertexDataLoader_LoadIndexUVec3(offset);
+    uint offset = meshletMetaData.primitivesOffset + (3 * primitiveIndex);
+    return VertexDataLoader_LoadPrimitiveUVec3(offset);
 }
 
 #endif

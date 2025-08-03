@@ -126,4 +126,8 @@ namespace MyosotisFW::AppInfo
 
 	// max object count
 	constexpr uint32_t g_maxObject = 10000;
+
+	// max meshlet count
+	constexpr uint32_t g_maxMeshletVertices = 64;
+	constexpr uint32_t g_maxMeshletPrimitives = 124;
 }

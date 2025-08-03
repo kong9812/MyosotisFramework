@@ -1,7 +1,9 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vector>
+#include <unordered_set>
 
+#include "AppInfo.h"
 #include "iglm.h"
 #include "Structs.h"
 
@@ -30,6 +32,8 @@ namespace MyosotisFW::System::Render::Shape
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
+		Meshlet meshlet = {};
+		std::unordered_set<uint32_t> uniqueVertexIndices{};
 
 		// 頂点データ (x, y, z, w, nx, ny, nz, uvx, uvy, r, g, b, a,)
 		mesh.vertex = {
@@ -69,7 +73,7 @@ namespace MyosotisFW::System::Render::Shape
 			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 22
 			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 23
 		};
-		mesh.index = {
+		meshlet.primitives = {
 			0,	2,	1,	0,	3,	2,	// 前面
 			4,	5,	6,	4,	6,	7,	// 背面
 			8,	10,	9,	8,	11,	10,	// 上面
@@ -77,8 +81,19 @@ namespace MyosotisFW::System::Render::Shape
 			16, 17,	18,	16,	18,	19,	// 右面
 			20, 22,	21,	20,	23,	22	// 左面
 		};
-		mesh.min = center - glm::vec3(halfSize);
-		mesh.max = center + glm::vec3(halfSize);
+		for (uint32_t index : meshlet.primitives)
+		{
+			if (uniqueVertexIndices.insert(index).second)
+			{
+				meshlet.uniqueIndex.push_back(index);
+			}
+		}
+		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
+		meshlet.min = center - glm::vec3(halfSize);
+		meshlet.max = center + glm::vec3(halfSize);
+		mesh.meshlet.push_back(meshlet);
+		mesh.min = meshlet.min;
+		mesh.max = meshlet.max;
 		return mesh;
 	}
 
@@ -86,6 +101,8 @@ namespace MyosotisFW::System::Render::Shape
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
+		Meshlet meshlet = {};
+		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
 			// 上面 (0, 1, 0)
@@ -94,11 +111,22 @@ namespace MyosotisFW::System::Render::Shape
 			 halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
 			-halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
 		};
-		mesh.index = {
+		meshlet.primitives = {
 			0,	2,	1,	0,	3,	2,	// 上面
 		};
-		mesh.min = center - glm::vec3(halfSize, 0.0f, halfSize);
-		mesh.max = center + glm::vec3(halfSize, 0.0f, halfSize);
+		for (uint32_t index : meshlet.primitives)
+		{
+			if (uniqueVertexIndices.insert(index).second)
+			{
+				meshlet.uniqueIndex.push_back(index);
+			}
+		}
+		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
+		meshlet.min = center - glm::vec3(halfSize, 0.0f, halfSize);
+		meshlet.max = center + glm::vec3(halfSize, 0.0f, halfSize);
+		mesh.meshlet.push_back(meshlet);
+		mesh.min = meshlet.min;
+		mesh.max = meshlet.max;
 		return mesh;
 	}
 
@@ -106,7 +134,8 @@ namespace MyosotisFW::System::Render::Shape
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
-
+		Meshlet meshlet = {};
+		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		ASSERT(side > 2, "circle's side must be more than 2");
 
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
@@ -132,17 +161,32 @@ namespace MyosotisFW::System::Render::Shape
 				0.0f, 0.0f, -1.0f,
 				0.0f, 0.0f,
 				color.r, color.g, color.b, color.a });
-			mesh.index.insert(mesh.index.end(), { 0, i, idx });
+			meshlet.primitives.insert(meshlet.primitives.end(), { 0, i, idx });
 		}
-		mesh.min = center - glm::vec3(radius, radius, 0.0f);
-		mesh.max = center + glm::vec3(radius, radius, 0.0f);
+		for (uint32_t index : meshlet.primitives)
+		{
+			if (uniqueVertexIndices.insert(index).second)
+			{
+				meshlet.uniqueIndex.push_back(index);
+			}
+		}
+		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
+		meshlet.min = center - glm::vec3(radius, radius, 0.0f);
+		meshlet.max = center + glm::vec3(radius, radius, 0.0f);
+		mesh.meshlet.push_back(meshlet);
+		mesh.min = meshlet.min;
+		mesh.max = meshlet.max;
+		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
+		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;
 	}
 
-	inline Mesh createSphere(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, glm::vec3 center = { 0.0f,0.0f,0.0f }, uint32_t side = 96)
+	inline Mesh createSphere(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, glm::vec3 center = { 0.0f,0.0f,0.0f }, uint32_t side = 4)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
+		Meshlet meshlet = {};
+		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		ASSERT(side > 3, "sphere's side must be more than 3");
 
 		// 頂点データ (x, y, z, w, r, g, b, a, uvx, uvy, nx, ny, nz)
@@ -174,12 +218,24 @@ namespace MyosotisFW::System::Render::Shape
 			for (uint32_t j = 0; j < side; j++)
 			{
 				uint32_t idx = i * (side + 1) + j;
-				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 1, idx });
-				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 2, idx + side + 1 });
+				meshlet.primitives.insert(meshlet.primitives.end(), { idx + 1, idx + side + 1, idx });
+				meshlet.primitives.insert(meshlet.primitives.end(), { idx + 1, idx + side + 2, idx + side + 1 });
 			}
 		}
-		mesh.min = center - glm::vec3(radius);
-		mesh.max = center + glm::vec3(radius);
+		for (uint32_t index : meshlet.primitives)
+		{
+			if (uniqueVertexIndices.insert(index).second)
+			{
+				meshlet.uniqueIndex.push_back(index);
+			}
+		}
+		meshlet.min = center - glm::vec3(radius, radius, 0.0f);
+		meshlet.max = center + glm::vec3(radius, radius, 0.0f);
+		mesh.meshlet.push_back(meshlet);
+		mesh.min = meshlet.min;
+		mesh.max = meshlet.max;
+		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
+		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;
 	}
 

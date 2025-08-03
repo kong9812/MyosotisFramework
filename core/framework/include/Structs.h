@@ -2,6 +2,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "ivma.h"
 #include "iglm.h"
@@ -62,10 +63,18 @@ namespace MyosotisFW
 		VkDescriptorBufferInfo descriptor;
 	};
 
+	struct Meshlet
+	{
+		std::vector<uint32_t> uniqueIndex;
+		std::vector<uint32_t> primitives;
+		glm::vec3 min;
+		glm::vec3 max;
+	};
+
 	struct Mesh
 	{
 		std::vector<float> vertex;
-		std::vector<uint32_t> index;
+		std::vector<Meshlet> meshlet;
 		glm::vec3 min;
 		glm::vec3 max;
 	};

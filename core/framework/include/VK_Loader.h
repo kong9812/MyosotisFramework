@@ -4,11 +4,13 @@
 #include <fstream>
 #include <vector>
 #include <chrono>
+#include <unordered_set>
 
 #include "iRapidJson.h"
 #include "iofbx.h"
 #include "istb_image.h"
 #include "itiny_gltf.h"
+#include "AppInfo.h"
 
 #include "Logger.h"
 #include "AppInfo.h"
@@ -255,26 +257,220 @@ namespace Utility::Loader {
 					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
 					const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
 
+					const uint32_t trianglesCount = accessor.count / 3;
+					MyosotisFW::Meshlet currentMeshletData{};
+					std::unordered_set<uint32_t> currentUniqueIndex;
+					bool firstDataForMeshletAABB = true;
+
 					// glTF supports different component types of indices
 					switch (accessor.componentType) {
 					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
 						const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++) {
-							meshData.index.push_back(buf[index]);
+						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+							const uint32_t triangle[3] = {
+								buf[primitiveIndex * 3 + 0],
+								buf[primitiveIndex * 3 + 1],
+								buf[primitiveIndex * 3 + 2]
+							};
+
+							// 頂点追加後のサイズ
+							size_t newUnique = currentUniqueIndex.size();
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
+								{
+									newUnique++;
+								}
+							}
+
+							// 制限チェック
+							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							{
+								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
+								meshData.meshlet.push_back(currentMeshletData);
+								currentMeshletData = MyosotisFW::Meshlet();
+								firstDataForMeshletAABB = true;
+							}
+
+							// 頂点追加
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.insert(triangle[i]).second)
+								{
+									currentMeshletData.uniqueIndex.push_back(triangle[i]);
+								}
+							}
+
+							// AABB更新
+							if (firstDataForMeshletAABB)
+							{
+								currentMeshletData.min.x = positionBuffer[triangle[0]];
+								currentMeshletData.min.y = positionBuffer[triangle[1]];
+								currentMeshletData.min.z = positionBuffer[triangle[2]];
+								currentMeshletData.max.x = positionBuffer[triangle[0]];
+								currentMeshletData.max.y = positionBuffer[triangle[1]];
+								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								firstDataForMeshletAABB = false;
+							}
+							else
+							{
+								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
+								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
+								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
+								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
+								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
+								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+							}
+
+							// 三角形追加
+							currentMeshletData.primitives.push_back(triangle[0]);
+							currentMeshletData.primitives.push_back(triangle[1]);
+							currentMeshletData.primitives.push_back(triangle[2]);
+						}
+						if (!currentMeshletData.primitives.empty())
+						{
+							meshData.meshlet.push_back(currentMeshletData);
 						}
 						break;
 					}
 					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
 						const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++) {
-							meshData.index.push_back(buf[index]);
+						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+							const uint16_t triangle[3] = {
+								buf[primitiveIndex * 3 + 0],
+								buf[primitiveIndex * 3 + 1],
+								buf[primitiveIndex * 3 + 2]
+							};
+
+							// 頂点追加後のサイズ
+							size_t newUnique = currentUniqueIndex.size();
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
+								{
+									newUnique++;
+								}
+							}
+
+							// 制限チェック
+							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							{
+								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
+								meshData.meshlet.push_back(currentMeshletData);
+								currentMeshletData = MyosotisFW::Meshlet();
+								firstDataForMeshletAABB = true;
+							}
+
+							// 頂点追加
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.insert(triangle[i]).second)
+								{
+									currentMeshletData.uniqueIndex.push_back(triangle[i]);
+								}
+							}
+
+							// AABB更新
+							if (firstDataForMeshletAABB)
+							{
+								currentMeshletData.min.x = positionBuffer[triangle[0]];
+								currentMeshletData.min.y = positionBuffer[triangle[1]];
+								currentMeshletData.min.z = positionBuffer[triangle[2]];
+								currentMeshletData.max.x = positionBuffer[triangle[0]];
+								currentMeshletData.max.y = positionBuffer[triangle[1]];
+								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								firstDataForMeshletAABB = false;
+							}
+							else
+							{
+								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
+								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
+								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
+								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
+								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
+								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+							}
+
+							// 三角形追加
+							currentMeshletData.primitives.push_back(triangle[0]);
+							currentMeshletData.primitives.push_back(triangle[1]);
+							currentMeshletData.primitives.push_back(triangle[2]);
+						}
+						if (!currentMeshletData.primitives.empty())
+						{
+							meshData.meshlet.push_back(currentMeshletData);
 						}
 						break;
 					}
 					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
 						const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++) {
-							meshData.index.push_back(buf[index]);
+						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+							const uint8_t triangle[3] = {
+								buf[primitiveIndex * 3 + 0],
+								buf[primitiveIndex * 3 + 1],
+								buf[primitiveIndex * 3 + 2]
+							};
+
+							// 頂点追加後のサイズ
+							size_t newUnique = currentUniqueIndex.size();
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
+								{
+									newUnique++;
+								}
+							}
+
+							// 制限チェック
+							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							{
+								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
+								meshData.meshlet.push_back(currentMeshletData);
+								currentMeshletData = MyosotisFW::Meshlet();
+								firstDataForMeshletAABB = true;
+							}
+
+							// 頂点追加
+							for (uint32_t i = 0; i < 3; i++)
+							{
+								if (currentUniqueIndex.insert(triangle[i]).second)
+								{
+									currentMeshletData.uniqueIndex.push_back(triangle[i]);
+								}
+							}
+
+							// AABB更新
+							if (firstDataForMeshletAABB)
+							{
+								currentMeshletData.min.x = positionBuffer[triangle[0]];
+								currentMeshletData.min.y = positionBuffer[triangle[1]];
+								currentMeshletData.min.z = positionBuffer[triangle[2]];
+								currentMeshletData.max.x = positionBuffer[triangle[0]];
+								currentMeshletData.max.y = positionBuffer[triangle[1]];
+								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								firstDataForMeshletAABB = false;
+							}
+							else
+							{
+								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
+								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
+								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
+								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
+								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
+								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+							}
+
+							// 三角形追加
+							currentMeshletData.primitives.push_back(triangle[0]);
+							currentMeshletData.primitives.push_back(triangle[1]);
+							currentMeshletData.primitives.push_back(triangle[2]);
+						}
+						if (!currentMeshletData.primitives.empty())
+						{
+							meshData.meshlet.push_back(currentMeshletData);
 						}
 						break;
 					}
@@ -378,10 +574,74 @@ namespace Utility::Loader {
 					}
 				}
 
+				MyosotisFW::Meshlet currentMeshletData{};
+				std::unordered_set<uint32_t> currentUniqueIndex;
+				bool firstDataForMeshletAABB = true;
 				for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
 				{
 					const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
-					triangulate(geomData, polygon, meshData.index);
+					std::vector<uint32_t> triangle{};
+					triangulate(geomData, polygon, triangle);
+
+					// 頂点追加後のサイズ
+					size_t newUnique = currentUniqueIndex.size();
+					for (uint32_t i = 0; i < 3; i++)
+					{
+						if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
+						{
+							newUnique++;
+						}
+					}
+
+					// 制限チェック
+					if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+						(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+					{
+						currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
+						meshData.meshlet.push_back(currentMeshletData);
+						currentMeshletData = MyosotisFW::Meshlet();
+						firstDataForMeshletAABB = true;
+					}
+
+					// 頂点追加
+					for (uint32_t i = 0; i < 3; i++)
+					{
+						if (currentUniqueIndex.insert(triangle[i]).second)
+						{
+							currentMeshletData.uniqueIndex.push_back(triangle[i]);
+						}
+					}
+
+					// AABB更新
+					if (firstDataForMeshletAABB)
+					{
+						currentMeshletData.min.x = positions.get(triangle[0]).x;
+						currentMeshletData.min.y = positions.get(triangle[1]).y;
+						currentMeshletData.min.z = positions.get(triangle[2]).z;
+						currentMeshletData.max.x = positions.get(triangle[0]).x;
+						currentMeshletData.max.y = positions.get(triangle[1]).y;
+						currentMeshletData.max.z = positions.get(triangle[2]).z;
+						firstDataForMeshletAABB = false;
+					}
+					else
+					{
+						currentMeshletData.min.x = currentMeshletData.min.x < positions.get(triangle[0]).x ? currentMeshletData.min.x : positions.get(triangle[0]).x;
+						currentMeshletData.min.y = currentMeshletData.min.y < positions.get(triangle[1]).y ? currentMeshletData.min.y : positions.get(triangle[1]).y;
+						currentMeshletData.min.z = currentMeshletData.min.z < positions.get(triangle[2]).z ? currentMeshletData.min.z : positions.get(triangle[2]).z;
+						currentMeshletData.max.x = currentMeshletData.max.x > positions.get(triangle[0]).x ? currentMeshletData.max.x : positions.get(triangle[0]).x;
+						currentMeshletData.max.y = currentMeshletData.max.y > positions.get(triangle[1]).y ? currentMeshletData.max.y : positions.get(triangle[1]).y;
+						currentMeshletData.max.z = currentMeshletData.max.z > positions.get(triangle[2]).z ? currentMeshletData.max.z : positions.get(triangle[2]).z;
+					}
+
+					// 三角形追加
+					currentMeshletData.primitives.push_back(triangle[0]);
+					currentMeshletData.primitives.push_back(triangle[1]);
+					currentMeshletData.primitives.push_back(triangle[2]);
+				}
+				if (!currentMeshletData.primitives.empty())
+				{
+					currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
+					meshData.meshlet.push_back(currentMeshletData);
 				}
 				indicesOffset += positions.count;
 			}

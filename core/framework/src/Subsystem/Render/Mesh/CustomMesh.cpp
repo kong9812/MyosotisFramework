@@ -53,14 +53,31 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::loadAssets()
 	{
-		//std::vector<Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
 		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.meshName);
+
+		// 一時対応
+		std::vector<uint32_t> index{};
+		for (const Mesh& mesh : meshes)
+		{
+			for (const Meshlet& meshlet : mesh.meshlet)
+			{
+				index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+			}
+		}
+
 		bool firstDataForAABB = true;
 
 		for (int i = 0; i < LOD::Max; i++)
 		{
 			for (uint32_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 			{
+				std::vector<uint32_t> index{};
+				const Mesh& mesh = meshes[meshIdx];
+				for (const Meshlet& meshlet : mesh.meshlet)
+				{
+					index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+				}
+
 				m_vertexBuffer[i].resize(meshes.size());
 				m_indexBuffer[i].resize(meshes.size());
 
@@ -77,7 +94,7 @@ namespace MyosotisFW::System::Render
 					vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][meshIdx].allocation);
 				}
 				{// index
-					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * meshes[meshIdx].index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 					VmaAllocationCreateInfo allocationCreateInfo{};
 					allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 					VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i][meshIdx].buffer, &m_indexBuffer[i][meshIdx].allocation, &m_indexBuffer[i][meshIdx].allocationInfo));
@@ -86,9 +103,8 @@ namespace MyosotisFW::System::Render
 					// mapping
 					void* data{};
 					VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][meshIdx].allocation, &data));
-					memcpy(data, meshes[meshIdx].index.data(), bufferCreateInfo.size);
+					memcpy(data, index.data(), bufferCreateInfo.size);
 					vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][meshIdx].allocation);
-
 				}
 
 				{// aabb

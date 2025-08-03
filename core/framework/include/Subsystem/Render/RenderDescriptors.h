@@ -30,7 +30,8 @@ namespace MyosotisFW::System::Render
 			MESH_DATA = 0,
 			MESHLET_META_DATA,
 			VERTEX_DATA,
-			INDEX_DATA,
+			UNIQUE_INDEX,
+			PRIMITIVES,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
@@ -69,22 +70,22 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetLayout& GetBindlessVertexDescriptorSetLayout() { return m_vertexDescriptorSetLayout; }
 
 	private:
-		struct MeshData {
+		struct MeshDataSSBO {
 			uint32_t meshID;				// MeshID
 			uint32_t meshletMetaDataOffset;	// MeshletMetaDataの開始位置
 			uint32_t meshletMetaDataCount;	// MeshletMetaDataの数
 			uint32_t empty;					// 予約領域(将来の拡張用)
 		};
 
-		struct MeshletMetaData {
+		struct MeshletMetaDataSSBO {
 			uint32_t vertexCount;		// 頂点の数
 			uint32_t primitiveCount;    // 三角形単位(三角形の数)
 			uint32_t vertexAttributeBit;// 頂点属性のビットフラグ
 			uint32_t unitSize;          // 一枚当たりのサイズ
 			uint32_t vertexDataOffset;	// VertexDataの開始位置
-			uint32_t indexDataOffset;	// IndexDataの開始位置
-			uint32_t empty1;			// 予約領域(将来の拡張用)
-			uint32_t empty2;			// 予約領域(将来の拡張用)
+			uint32_t uniqueIndexOffset;	// UniqueIndexの開始位置
+			uint32_t primitivesOffset;	// Primitivesの開始位置
+			uint32_t empty;				// 予約領域(将来の拡張用)
 		};
 
 	private:
@@ -111,14 +112,16 @@ namespace MyosotisFW::System::Render
 		Buffer m_storageBufferMetaDataBuffer;
 
 		// Set = 1
-		std::vector<MeshData> m_meshDatas{};
-		std::vector<MeshletMetaData> m_meshletMetaDatas{};
+		std::vector<MeshDataSSBO> m_meshDatas{};
+		std::vector<MeshletMetaDataSSBO> m_meshletMetaDatas{};
 		std::vector<float> m_vertexDatas{};
-		std::vector<uint32_t> m_indexDatas{};
+		std::vector<uint32_t> m_uniqueIndex{};
+		std::vector<glm::ivec3> m_primitives{};
 		Buffer m_meshDataBuffer;
 		Buffer m_meshletMetaDataBuffer;
 		Buffer m_vertexDataBuffer;
-		Buffer m_indexDataBuffer;
+		Buffer m_uniqueIndexBuffer;
+		Buffer m_primitivesBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;
 		std::vector<VkDescriptorImageInfo> m_storageImageInfos;

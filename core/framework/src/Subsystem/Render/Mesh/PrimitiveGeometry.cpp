@@ -53,6 +53,13 @@ namespace MyosotisFW::System::Render
 		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
 		bool firstDataForAABB = true;
 
+		// 一時対応
+		std::vector<uint32_t> index{};
+		for (const Meshlet& meshlet : vertex.meshlet)
+		{
+			index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+		}
+
 		for (int i = 0; i < LOD::Max; i++)
 		{
 			m_vertexBuffer[i].resize(1);
@@ -71,7 +78,7 @@ namespace MyosotisFW::System::Render
 				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][0].allocation);
 			}
 			{// index
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * vertex.index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i][0].buffer, &m_indexBuffer[i][0].allocation, &m_indexBuffer[i][0].allocationInfo));
@@ -80,7 +87,7 @@ namespace MyosotisFW::System::Render
 				// mapping
 				void* data{};
 				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation, &data));
-				memcpy(data, vertex.index.data(), bufferCreateInfo.size);
+				memcpy(data, index.data(), bufferCreateInfo.size);
 				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation);
 			}
 		}
