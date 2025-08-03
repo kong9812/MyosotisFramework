@@ -192,6 +192,18 @@ set(STB_SOURCES
   ${stb_SOURCE_DIR}/stb_image.h
 )
 
+# tinygltf
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG release
+)
+set(TINYGLTF_HEADER_ONLY ON CACHE BOOL "" FORCE)
+set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE BOOL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE BOOL "" FORCE)
+set(TINYGLTF_INSTALL_VENDOR OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(tinygltf)
+
 # framework project
 set(FRAMEWORK_PROJECT_NAME "MyosotisFW")
 
@@ -236,6 +248,8 @@ target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DI
 source_group("external/stb" FILES ${STB_SOURCES})
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${STB_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
+# RapidJSON
+target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${tinygltf_SOURCE_DIR})
 # vulkan
 find_package(Vulkan REQUIRED)
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})

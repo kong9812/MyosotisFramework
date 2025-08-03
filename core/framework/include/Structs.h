@@ -155,7 +155,7 @@ namespace MyosotisFW
 
 	struct CustomMeshInfo
 	{
-		std::string m_meshPath;
+		std::string meshName;
 	};
 
 	struct MetaData

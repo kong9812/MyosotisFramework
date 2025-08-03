@@ -8,6 +8,7 @@
 #include "iRapidJson.h"
 #include "iofbx.h"
 #include "istb_image.h"
+#include "itiny_gltf.h"
 
 #include "Logger.h"
 #include "AppInfo.h"
@@ -103,6 +104,195 @@ namespace Utility::Loader {
 		return 3 * triangleCount;
 	}
 
+	inline std::vector<MyosotisFW::Mesh> loadGltf(std::string fileName)
+	{
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] Start load: " + fileName);
+		auto start = std::chrono::high_resolution_clock::now();
+#endif
+		tinygltf::Model glTFModel{};
+		tinygltf::TinyGLTF glTFLoader{};
+		std::string error{};
+		std::string warning{};
+
+		bool fileLoaded = glTFLoader.LoadASCIIFromFile(&glTFModel, &error, &warning, std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
+		ASSERT(fileLoaded, "Failed to open gltf file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName + "\nerror: " + error);
+
+		std::vector<MyosotisFW::Mesh> meshes{};
+		for (const tinygltf::Mesh& mesh : glTFModel.meshes)
+		{
+			for (const tinygltf::Primitive& primitive : mesh.primitives)
+			{
+				MyosotisFW::Mesh meshData{};
+				bool firstDataForAABB = true;
+				const float* positionBuffer = nullptr;
+				const float* normalBuffer = nullptr;
+				const float* uvBuffer = nullptr;
+				const float* colorBuffer = nullptr;
+
+				size_t vertexCount = 0;
+				// position
+				if (primitive.attributes.find("POSITION") != primitive.attributes.end())
+				{
+					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.attributes.find("POSITION")->second];
+					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+					positionBuffer = reinterpret_cast<const float*>(&(glTFModel.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
+					vertexCount = accessor.count;
+				}
+
+				// normal
+				if (primitive.attributes.find("NORMAL") != primitive.attributes.end())
+				{
+					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.attributes.find("NORMAL")->second];
+					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+					normalBuffer = reinterpret_cast<const float*>(&(glTFModel.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
+				}
+
+				// uv
+				if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end())
+				{
+					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+					uvBuffer = reinterpret_cast<const float*>(&(glTFModel.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
+				}
+
+				// color
+				if (primitive.attributes.find("COLOR_0") != primitive.attributes.end())
+				{
+					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.attributes.find("COLOR_0")->second];
+					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+					colorBuffer = reinterpret_cast<const float*>(&(glTFModel.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
+				}
+
+				// add vertex data
+				for (size_t vertex = 0; vertex < vertexCount; vertex++)
+				{
+					if (positionBuffer != nullptr)
+					{
+						glm::vec3 v = glm::make_vec3(&positionBuffer[vertex * 3]);
+						meshData.vertex.push_back(v.x);
+						meshData.vertex.push_back(v.y);
+						meshData.vertex.push_back(v.z);
+						meshData.vertex.push_back(1.0f);
+
+						// aabb
+						if (firstDataForAABB)
+						{
+							meshData.min.x = positionBuffer ? positionBuffer[vertex * 3 + 0] : 0.0f;
+							meshData.min.y = positionBuffer ? positionBuffer[vertex * 3 + 1] : 0.0f;
+							meshData.min.z = positionBuffer ? positionBuffer[vertex * 3 + 2] : 0.0f;
+							meshData.max.x = meshData.min.x;
+							meshData.max.y = meshData.min.y;
+							meshData.max.z = meshData.min.z;
+							firstDataForAABB = false;
+						}
+						else
+						{
+							if (positionBuffer)
+							{
+								meshData.min.x = meshData.min.x < v.x ? meshData.min.x : v.x;
+								meshData.min.y = meshData.min.y < v.y ? meshData.min.y : v.y;
+								meshData.min.z = meshData.min.z < v.z ? meshData.min.z : v.z;
+								meshData.max.x = meshData.max.x > v.x ? meshData.max.x : v.x;
+								meshData.max.y = meshData.max.y > v.y ? meshData.max.y : v.y;
+								meshData.max.z = meshData.max.z > v.z ? meshData.max.z : v.z;
+							}
+						}
+					}
+					else
+					{
+						// どうかなぁ…
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(1.0f);
+					}
+
+					if (normalBuffer != nullptr)
+					{
+						glm::vec3 n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
+						meshData.vertex.push_back(n.x);
+						meshData.vertex.push_back(n.y);
+						meshData.vertex.push_back(n.z);
+					}
+					else
+					{
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+					}
+
+					if (uvBuffer != nullptr)
+					{
+						glm::vec2 uv = glm::make_vec2(&uvBuffer[vertex * 2]);
+						meshData.vertex.push_back(uv.x);
+						meshData.vertex.push_back(uv.y);
+					}
+					else
+					{
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+					}
+
+					if (colorBuffer != nullptr)
+					{
+						glm::vec3 color = glm::make_vec3(&colorBuffer[vertex * 3]);
+						meshData.vertex.push_back(color.r);
+						meshData.vertex.push_back(color.g);
+						meshData.vertex.push_back(color.b);
+						meshData.vertex.push_back(1.0f);
+					}
+					else
+					{
+						meshData.vertex.push_back(1.0f);
+						meshData.vertex.push_back(1.0f);
+						meshData.vertex.push_back(1.0f);
+						meshData.vertex.push_back(1.0f);
+					}
+				}
+				{// add index data
+					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
+					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+					const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
+
+					// glTF supports different component types of indices
+					switch (accessor.componentType) {
+					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
+						const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index++) {
+							meshData.index.push_back(buf[index]);
+						}
+						break;
+					}
+					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
+						const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index++) {
+							meshData.index.push_back(buf[index]);
+						}
+						break;
+					}
+					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
+						const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index++) {
+							meshData.index.push_back(buf[index]);
+						}
+						break;
+					}
+					default:
+						ASSERT(false, "Index component type not supported! File: " + fileName);
+						break;
+					}
+				}
+				meshes.push_back(meshData);
+			}
+		}
+#ifdef DEBUG
+		Logger::Debug("[VK_Loader] End load: " + fileName +
+			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
+#endif
+		return meshes;
+	}
+
 	inline std::vector<MyosotisFW::Mesh> loadFbx(std::string fileName)
 	{
 #ifdef DEBUG
@@ -150,6 +340,16 @@ namespace Utility::Loader {
 						meshData.vertex.push_back(v.z);
 						meshData.vertex.push_back(1.0f);
 
+						// 仮normal
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+
+						// 仮uv
+						meshData.vertex.push_back(0.0f);
+						meshData.vertex.push_back(0.0f);
+
+						// 仮color
 						meshData.vertex.push_back(1.0f);
 						meshData.vertex.push_back(1.0f);
 						meshData.vertex.push_back(1.0f);
@@ -164,6 +364,7 @@ namespace Utility::Loader {
 							meshData.max.x = v.x;
 							meshData.max.y = v.y;
 							meshData.max.z = v.z;
+							firstDataForAABB = false;
 						}
 						else
 						{

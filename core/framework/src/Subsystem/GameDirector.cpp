@@ -52,6 +52,20 @@ namespace MyosotisFW::System::GameDirector {
 
 		{
 			StageObject_ptr newObject = CreateStageObjectPointer();
+			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+			CustomMeshInfo customMeshInfo{};
+			customMeshInfo.meshName = "BarramundiFish.gltf";
+			component->SetCustomMeshInfo(customMeshInfo);
+			component->SetPos(glm::vec3(5.0f, 5.0f, -5.0f));
+			component->SetRot(glm::vec3(0.0f));
+			component->SetScale(glm::vec3(5.0f));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
+
+		{
+			StageObject_ptr newObject = CreateStageObjectPointer();
 			Render::InteriorObject_ptr component = Object_Cast<Render::InteriorObject>(
 				System::ComponentFactory::CreateComponent(ComponentType::InteriorObjectMesh));
 			component->SetPos(glm::vec3(5.0f));

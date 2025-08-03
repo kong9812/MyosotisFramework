@@ -435,7 +435,7 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
-		m_descriptors->UpdateDescriptorSet();
+		m_descriptors->UpdateMainDescriptorSet();
 
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
@@ -447,7 +447,7 @@ namespace MyosotisFW::System::Render
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
 
-		m_descriptors->ResetInfos();
+		m_descriptors->ResetMainDescriptorSetBuffer();
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -520,7 +520,7 @@ namespace MyosotisFW::System::Render
 			std::vector<Mesh> mesh{ Shape::createShape(shape) };
 			data.push_back(std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>(shape, mesh));
 		}
-		m_descriptors->AddPrimitiveGeometryModel(data);
+		m_descriptors->AddPrimitiveGeometry(data);
 	}
 
 	void RenderSubsystem::initializeRenderResources()

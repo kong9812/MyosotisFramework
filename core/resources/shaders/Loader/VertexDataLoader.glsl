@@ -10,17 +10,22 @@ const uint TANGENT       = 0x00000010;
 const uint COLOR_VEC3    = 0x00000020;
 const uint COLOR_VEC4    = 0x00000040;
 
-// todo.これはMeshLet単位で分ける必要がある
-struct VertexDataMetaData {
-    uint vertexCount;
-    uint primitiveCount;    // 三角形単位(三角形の数)
-    uint vertexAttributeBit;
-    uint unitSize;          // 一枚当たりのサイズ
-    uint offset;
+struct MeshData {
+    uint meshID;
+    uint meshletMetaDataOffset;
+    uint meshletMetaDataCount;
+    uint empty;
 };
 
-struct IndexDataMetaData {
-    uint offset;            // IndexDataの開始位置
+struct MeshletMetaData {
+	uint vertexCount;
+	uint primitiveCount;
+	uint vertexAttributeBit;
+	uint unitSize;
+	uint vertexDataOffset;
+	uint indexDataOffset;
+	uint empty1;
+	uint empty2;
 };
 
 struct VertexData {
@@ -28,19 +33,18 @@ struct VertexData {
     vec3 normal;
     vec2 uv;
     vec4 color;
-    vec4 tangent;
 };
 
-layout (std430, set = 1, binding = 0) readonly buffer VertexMetaBuffer {
-    VertexDataMetaData vertexDataTable[];
+layout (std430, set = 1, binding = 0) readonly buffer MeshDataBuffer {
+    MeshData meshDatas[];
 };
 
-layout (std430, set = 1, binding = 1) readonly buffer AllVertexBuffer {
+layout (std430, set = 1, binding = 1) readonly buffer MeshletMetaDataBuffer {
+    MeshletMetaData meshletMetaDatas[];
+};
+
+layout (std430, set = 1, binding = 2) readonly buffer AllVertexBuffer {
     uint vertexData[];
-};
-
-layout (std430, set = 1, binding = 2) readonly buffer IndexMetaBuffer {
-    IndexDataMetaData indexDataTable[];
 };
 
 layout (std430, set = 1, binding = 3) readonly buffer AllIndexBuffer {
@@ -100,54 +104,56 @@ int VertexDataLoader_LoadInt(uint base) {
     return int(vertexData[base]);
 }
 
-VertexDataMetaData VertexDataLoader_GetVertexDataMetaData(uint index)
+MeshletMetaData VertexDataLoader_GetMeshletMetaData(uint index)
 {
-    return vertexDataTable[nonuniformEXT(index)];
+    return meshletMetaDatas[nonuniformEXT(index)];
 }
 
-uvec3 VertexDataLoader_GetIndexData(uint index, uint indexIndex)
+MeshData VertexDataLoader_GetMeshData(uint index)
 {
-    IndexDataMetaData meta = indexDataTable[nonuniformEXT(index)];
-    uint offset = meta.offset + (3 * indexIndex);
-    return VertexDataLoader_LoadIndexUVec3(offset);
+    return meshDatas[nonuniformEXT(index)];
 }
 
-VertexData VertexDataLoader_GetVertexData(uint index, uint vertexIndex) {
-    VertexDataMetaData meta = vertexDataTable[nonuniformEXT(index)];
-    uint offset = meta.offset + (meta.unitSize * vertexIndex);
+VertexData VertexDataLoader_GetVertexData(uint meshID, uint meshletIndex, uint vertexIndex) {
+    MeshData meshData = meshDatas[nonuniformEXT(meshID)];
+    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshletIndex)];
+    uint offset = meshletMetaData.vertexDataOffset + (meshletMetaData.unitSize * vertexIndex);
     VertexData v;
 
-    if ((meta.vertexAttributeBit & POSITION_VEC3) != 0) {
+    if ((meshletMetaData.vertexAttributeBit & POSITION_VEC3) != 0) {
         v.position = vec4(VertexDataLoader_LoadVec3(offset), 0.0);
         offset += 3;
-    } else if ((meta.vertexAttributeBit & POSITION_VEC4) != 0) {
+    } else if ((meshletMetaData.vertexAttributeBit & POSITION_VEC4) != 0) {
         v.position = VertexDataLoader_LoadVec4(offset);
         offset += 4;
     }
 
-    if ((meta.vertexAttributeBit & NORMAL) != 0) {
+    if ((meshletMetaData.vertexAttributeBit & NORMAL) != 0) {
         v.normal = VertexDataLoader_LoadVec3(offset);
         offset += 3;
     }
 
-    if ((meta.vertexAttributeBit & UV) != 0) {
+    if ((meshletMetaData.vertexAttributeBit & UV) != 0) {
         v.uv = VertexDataLoader_LoadVec2(offset);
         offset += 2;
     }
 
-    if ((meta.vertexAttributeBit & TANGENT) != 0) {
-        v.tangent = VertexDataLoader_LoadVec4(offset);
-        offset += 4;
-    }
-
-    if ((meta.vertexAttributeBit & COLOR_VEC3) != 0) {
+    if ((meshletMetaData.vertexAttributeBit & COLOR_VEC3) != 0) {
         v.color = vec4(VertexDataLoader_LoadVec3(offset), 1.0);
         offset += 3;
-    } else if ((meta.vertexAttributeBit & COLOR_VEC4) != 0) {
+    } else if ((meshletMetaData.vertexAttributeBit & COLOR_VEC4) != 0) {
         v.color = VertexDataLoader_LoadVec4(offset);
         offset += 4;
     }
     return v;
+}
+
+uvec3 VertexDataLoader_GetIndexData(uint meshID, uint meshletIndex, uint indexIndex)
+{
+    MeshData meshData = meshDatas[nonuniformEXT(meshID)];
+    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshletIndex)];
+    uint offset = meshletMetaData.indexDataOffset + (3 * indexIndex);
+    return VertexDataLoader_LoadIndexUVec3(offset);
 }
 
 #endif

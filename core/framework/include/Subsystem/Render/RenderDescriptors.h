@@ -27,17 +27,17 @@ namespace MyosotisFW::System::Render
 		};
 		enum class VertexDescriptorBindingIndex : uint32_t
 		{
-			VERTEX_META_DATA = 0,
+			MESH_DATA = 0,
+			MESHLET_META_DATA,
 			VERTEX_DATA,
-			INDEX_META_DATA,
 			INDEX_DATA,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
 		void UpdateMainCameraData(const CameraData& cameraData);
-		void UpdateDescriptorSet();
+		void UpdateMainDescriptorSet();
 
-		void ResetInfos();
+		void ResetMainDescriptorSetBuffer();
 
 		template<typename T>
 		uint32_t AddStorageBuffer(const T& object)
@@ -56,7 +56,9 @@ namespace MyosotisFW::System::Render
 			return index;
 		}
 
-		void AddPrimitiveGeometryModel(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshData);
+		void AddPrimitiveGeometry(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshData);
+		uint32_t AddCustomMesh(const std::string meshName, std::vector<Mesh> meshData);
+
 		uint32_t AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo);
 		uint32_t AddStorageImageInfo(const VkDescriptorImageInfo& imageInfo);
 
@@ -67,16 +69,22 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSetLayout& GetBindlessVertexDescriptorSetLayout() { return m_vertexDescriptorSetLayout; }
 
 	private:
-		struct VertexMetaData {
-			uint32_t vertexCount;
-			uint32_t primitiveCount;    // 三角形単位(三角形の数)
-			uint32_t vertexAttributeBit;
-			uint32_t unitSize;          // 一枚当たりのサイズ
-			uint32_t offset;
+		struct MeshData {
+			uint32_t meshID;				// MeshID
+			uint32_t meshletMetaDataOffset;	// MeshletMetaDataの開始位置
+			uint32_t meshletMetaDataCount;	// MeshletMetaDataの数
+			uint32_t empty;					// 予約領域(将来の拡張用)
 		};
 
-		struct IndexMetaData {
-			uint32_t offset;            // IndexDataの開始位置
+		struct MeshletMetaData {
+			uint32_t vertexCount;		// 頂点の数
+			uint32_t primitiveCount;    // 三角形単位(三角形の数)
+			uint32_t vertexAttributeBit;// 頂点属性のビットフラグ
+			uint32_t unitSize;          // 一枚当たりのサイズ
+			uint32_t vertexDataOffset;	// VertexDataの開始位置
+			uint32_t indexDataOffset;	// IndexDataの開始位置
+			uint32_t empty1;			// 予約領域(将来の拡張用)
+			uint32_t empty2;			// 予約領域(将来の拡張用)
 		};
 
 	private:
@@ -86,6 +94,7 @@ namespace MyosotisFW::System::Render
 		void createBindlessVertexDescriptorSetLayout();
 		void allocateMainDescriptorSet();
 		void allocateVertexDescriptorSet();
+		void updateVertexDescriptorSet();
 
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
@@ -94,15 +103,21 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSet m_mainDescriptorSet;
 		VkDescriptorSet m_vertexDescriptorSet;
 
+		// Set = 0
 		std::vector<uint32_t> m_storageBufferRawData;
 		std::vector<MetaData> m_storageBufferMetaData;
 		Buffer m_mainCameraDataBuffer;
 		Buffer m_storageBufferRawDataBuffer;
 		Buffer m_storageBufferMetaDataBuffer;
 
-		Buffer m_vertexMetaDataBuffer;
+		// Set = 1
+		std::vector<MeshData> m_meshDatas{};
+		std::vector<MeshletMetaData> m_meshletMetaDatas{};
+		std::vector<float> m_vertexDatas{};
+		std::vector<uint32_t> m_indexDatas{};
+		Buffer m_meshDataBuffer;
+		Buffer m_meshletMetaDataBuffer;
 		Buffer m_vertexDataBuffer;
-		Buffer m_indexMetaDataBuffer;
 		Buffer m_indexDataBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;

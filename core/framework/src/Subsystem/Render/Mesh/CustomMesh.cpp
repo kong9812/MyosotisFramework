@@ -21,9 +21,6 @@ namespace MyosotisFW::System::Render
 		loadAssets();
 		prepareShaderStorageBuffers();
 
-		m_transform.scale = glm::vec3(1.0f);
-		m_transform.rot = glm::vec3(-90.0f, 0.0f, 0.0f);
-
 		// todo.検証処理
 		m_isReady = true;
 	}
@@ -42,7 +39,7 @@ namespace MyosotisFW::System::Render
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
 
-		obj.AddMember("meshPath", rapidjson::Value(m_customMeshInfo.m_meshPath.c_str(), allocator), allocator);
+		obj.AddMember("meshName", rapidjson::Value(m_customMeshInfo.meshName.c_str(), allocator), allocator);
 
 		return obj;
 	}
@@ -51,13 +48,13 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 
-		m_customMeshInfo.m_meshPath = doc["meshPath"].GetString();
+		m_customMeshInfo.meshName = doc["meshName"].GetString();
 	}
 
 	void CustomMesh::loadAssets()
 	{
 		//std::vector<Mesh> meshes = m_resources->GetMeshVertex("Alicia\\Alicia_solid_MMD.FBX");
-		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.m_meshPath);
+		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.meshName);
 		bool firstDataForAABB = true;
 
 		for (int i = 0; i < LOD::Max; i++)

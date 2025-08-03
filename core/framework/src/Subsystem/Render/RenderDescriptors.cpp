@@ -17,9 +17,8 @@ namespace MyosotisFW::System::Render
 		m_mainCameraDataBuffer({}),
 		m_storageBufferRawDataBuffer({}),
 		m_storageBufferMetaDataBuffer({}),
-		m_vertexMetaDataBuffer({}),
+		m_meshletMetaDataBuffer({}),
 		m_vertexDataBuffer({}),
-		m_indexMetaDataBuffer({}),
 		m_indexDataBuffer({}) {
 		createMainCameraBuffer();
 		createDescriptorPool();
@@ -29,9 +28,9 @@ namespace MyosotisFW::System::Render
 		allocateVertexDescriptorSet();
 		m_storageBufferRawDataBuffer.buffer = VK_NULL_HANDLE;
 		m_storageBufferMetaDataBuffer.buffer = VK_NULL_HANDLE;
-		m_vertexMetaDataBuffer.buffer = VK_NULL_HANDLE;
+		m_meshDataBuffer.buffer = VK_NULL_HANDLE;
+		m_meshletMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
-		m_indexMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		m_indexDataBuffer.buffer = VK_NULL_HANDLE;
 	}
 
@@ -52,25 +51,25 @@ namespace MyosotisFW::System::Render
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_storageBufferMetaDataBuffer.buffer, m_storageBufferMetaDataBuffer.allocation);
 			m_storageBufferMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		}
-		if (m_vertexMetaDataBuffer.buffer != VK_NULL_HANDLE)
+		if (m_meshletMetaDataBuffer.buffer != VK_NULL_HANDLE)
 		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexMetaDataBuffer.buffer, m_vertexMetaDataBuffer.allocation);
-			m_vertexMetaDataBuffer.buffer = VK_NULL_HANDLE;
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshletMetaDataBuffer.buffer, m_meshletMetaDataBuffer.allocation);
+			m_meshletMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		}
 		if (m_vertexDataBuffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexDataBuffer.buffer, m_vertexDataBuffer.allocation);
 			m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
 		}
-		if (m_indexMetaDataBuffer.buffer != VK_NULL_HANDLE)
-		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexMetaDataBuffer.buffer, m_indexMetaDataBuffer.allocation);
-			m_indexMetaDataBuffer.buffer = VK_NULL_HANDLE;
-		}
 		if (m_indexDataBuffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexDataBuffer.buffer, m_indexDataBuffer.allocation);
 			m_indexDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		if (m_meshDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshDataBuffer.buffer, m_meshDataBuffer.allocation);
+			m_meshDataBuffer.buffer = VK_NULL_HANDLE;
 		}
 		vkDestroyDescriptorSetLayout(*m_device, m_vertexDescriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorSetLayout(*m_device, m_mainDescriptorSetLayout, m_device->GetAllocationCallbacks());
@@ -144,12 +143,12 @@ namespace MyosotisFW::System::Render
 	{
 		// [descriptor]layout
 		std::vector<VkDescriptorSetLayoutBinding> setLayoutBinding = {
-			// binding: [SSBO] VertexMetaData
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::VERTEX_META_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] MeshData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::MESH_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] MeshletMetaData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::MESHLET_META_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 			// binding: [SSBO] VertexData
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::VERTEX_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
-			// binding: [SSBO] IndexMetaData
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::INDEX_META_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 			// binding: [SSBO] IndexData
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::INDEX_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 		};
@@ -184,6 +183,105 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_vertexDescriptorSet));
 	}
 
+	void RenderDescriptors::updateVertexDescriptorSet()
+	{
+		// 全部クリアしてから
+		if (m_meshDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshDataBuffer.buffer, m_meshDataBuffer.allocation);
+			m_meshDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		if (m_meshletMetaDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshletMetaDataBuffer.buffer, m_meshletMetaDataBuffer.allocation);
+			m_meshletMetaDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		if (m_vertexDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexDataBuffer.buffer, m_vertexDataBuffer.allocation);
+			m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		if (m_indexDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexDataBuffer.buffer, m_indexDataBuffer.allocation);
+			m_indexDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+
+		// writeDescriptorSet
+		std::vector<VkWriteDescriptorSet> writeDescriptorSet{};
+
+		// meshData
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(MeshData) * static_cast<uint32_t>(m_meshDatas.size())),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_meshDataBuffer.buffer,
+			m_meshDataBuffer.allocation,
+			m_meshDataBuffer.allocationInfo,
+			m_meshDataBuffer.descriptor);
+		VkDescriptorBufferInfo meshDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_meshDataBuffer.buffer);
+		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::MESH_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &meshDataDescriptorBufferInfo));
+		memcpy(m_meshDataBuffer.allocationInfo.pMappedData, m_meshDatas.data(),
+			static_cast<uint32_t>(sizeof(MeshData) * static_cast<uint32_t>(m_meshDatas.size())));
+
+		// meshletMetaData
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(MeshletMetaData) * static_cast<uint32_t>(m_meshletMetaDatas.size())),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_vertexDataBuffer.buffer,
+			m_vertexDataBuffer.allocation,
+			m_vertexDataBuffer.allocationInfo,
+			m_vertexDataBuffer.descriptor);
+		VkDescriptorBufferInfo vertexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexDataBuffer.buffer);
+		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::MESHLET_META_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &vertexMetaDataDescriptorBufferInfo));
+		memcpy(m_vertexDataBuffer.allocationInfo.pMappedData, m_meshletMetaDatas.data(),
+			static_cast<uint32_t>(sizeof(MeshletMetaData) * static_cast<uint32_t>(m_meshletMetaDatas.size())));
+
+		// vertexData
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(float)) * static_cast<uint32_t>(m_vertexDatas.size()),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_meshletMetaDataBuffer.buffer,
+			m_meshletMetaDataBuffer.allocation,
+			m_meshletMetaDataBuffer.allocationInfo,
+			m_meshletMetaDataBuffer.descriptor);
+		VkDescriptorBufferInfo vertexDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_meshletMetaDataBuffer.buffer);
+		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::VERTEX_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &vertexDataDescriptorBufferInfo));
+		memcpy(m_meshletMetaDataBuffer.allocationInfo.pMappedData, m_vertexDatas.data(),
+			static_cast<uint32_t>(sizeof(float)) * static_cast<uint32_t>(m_vertexDatas.size()));
+
+		// indexData
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_indexDatas.size()),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_indexDataBuffer.buffer,
+			m_indexDataBuffer.allocation,
+			m_indexDataBuffer.allocationInfo,
+			m_indexDataBuffer.descriptor);
+		VkDescriptorBufferInfo indexDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexDataBuffer.buffer);
+		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::INDEX_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &indexDataDescriptorBufferInfo));
+		memcpy(m_indexDataBuffer.allocationInfo.pMappedData, m_indexDatas.data(),
+			static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_indexDatas.size()));
+
+		// GPUへ!
+		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+	}
+
 	void RenderDescriptors::FreeDescriptorSets(VkDescriptorSet& descriptorSet)
 	{
 		if (descriptorSet != VK_NULL_HANDLE) {
@@ -201,7 +299,7 @@ namespace MyosotisFW::System::Render
 		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 	}
 
-	void RenderDescriptors::UpdateDescriptorSet()
+	void RenderDescriptors::UpdateMainDescriptorSet()
 	{
 		std::vector<VkWriteDescriptorSet> writeDescriptorSet{};
 		VkDescriptorBufferInfo metaDataDescriptorBufferInfo{};
@@ -264,7 +362,7 @@ namespace MyosotisFW::System::Render
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
 	}
 
-	void RenderDescriptors::ResetInfos()
+	void RenderDescriptors::ResetMainDescriptorSetBuffer()
 	{
 		m_storageBufferMetaData.clear();
 		m_storageBufferRawData.clear();
@@ -282,122 +380,68 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderDescriptors::AddPrimitiveGeometryModel(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshData)
+	void RenderDescriptors::AddPrimitiveGeometry(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshDatas)
 	{
-		//Buffer m_vertexMetaDataBuffer;
-		//Buffer m_vertexDataBuffer;
-		//Buffer m_indexMetaDataBuffer;
-		//Buffer m_indexDataBuffer;
-
-		// 今は初期化の際に一回のみ実行できる (todo.今後は追加できるように対応しないと…)
-		ASSERT(m_vertexMetaDataBuffer.buffer == VK_NULL_HANDLE, "VertexMetaDataBuffer is not null!");
-		ASSERT(m_vertexDataBuffer.buffer == VK_NULL_HANDLE, "VertexDataBuffer is not null!");
-		ASSERT(m_indexMetaDataBuffer.buffer == VK_NULL_HANDLE, "IndexMetaDataBuffer is not null!");
-		ASSERT(m_indexDataBuffer.buffer == VK_NULL_HANDLE, "IndexDataBuffer is not null!");
-
-		std::vector<VertexMetaData> vertexMetaDatas{};
-		std::vector<IndexMetaData> indexMetaDatas{};
-		std::vector<float> vertexDatas{};
-		std::vector<uint32_t> indexDatas{};
-		for (const auto& [shape, meshes] : meshData)
+		for (const auto& [shape, meshes] : meshDatas)
 		{
+			// MeshData
+			MeshData meshData{};
+			meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
+			meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
+
 			for (const Mesh& mesh : meshes)
 			{
-				// VertexMetaData
-				VertexMetaData vertexMetaData{};
-				vertexMetaData.vertexCount = mesh.vertex.size() / 13; // (x,y,z,w,uv1X....)
-				vertexMetaData.primitiveCount = mesh.index.size() / 3; // 三角形
-				vertexMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-				vertexMetaData.unitSize = 13;
-				vertexMetaData.offset = vertexDatas.size();
-				vertexMetaDatas.push_back(vertexMetaData);
+				// MeshletMetaData
+				MeshletMetaData meshletMetaData{};
+				meshletMetaData.vertexCount = mesh.vertex.size() / 13; // (x,y,z,w,uv1X....)
+				meshletMetaData.primitiveCount = mesh.index.size() / 3; // 三角形
+				meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+				meshletMetaData.unitSize = 13;
+				meshletMetaData.vertexDataOffset = m_vertexDatas.size();
+				meshletMetaData.indexDataOffset = m_indexDatas.size();	// 今後は計算しないといけない(追加されたときにindexを取るように)
+				m_meshletMetaDatas.push_back(meshletMetaData);
 
 				// VertexData
-				vertexDatas.insert(vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
-
-				// IndexMetaData
-				IndexMetaData indexMetaData{};
-				indexMetaData.offset = indexDatas.size();	// 今後は計算しないといけない(追加されたときにindexを取るように)
-				indexMetaDatas.push_back(indexMetaData);
+				m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 
 				// IndexData
-				indexDatas.insert(indexDatas.end(), mesh.index.begin(), mesh.index.end());
+				m_indexDatas.insert(m_indexDatas.end(), mesh.index.begin(), mesh.index.end());
 			}
+
+			meshData.meshletMetaDataCount = static_cast<uint32_t>(meshes.size()); // MeshMetaDataの数
+			m_meshDatas.push_back(meshData);
 		}
+		updateVertexDescriptorSet();
+	}
 
-		// writeDescriptorSet
-		std::vector<VkWriteDescriptorSet> writeDescriptorSet{};
+	uint32_t RenderDescriptors::AddCustomMesh(const std::string meshName, std::vector<Mesh> meshDatas)
+	{
+		// MeshData
+		MeshData meshData{};
+		meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
+		meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
 
-		// vertexMetaData
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(VertexMetaData) * static_cast<uint32_t>(vertexMetaDatas.size())),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_vertexDataBuffer.buffer,
-			m_vertexDataBuffer.allocation,
-			m_vertexDataBuffer.allocationInfo,
-			m_vertexDataBuffer.descriptor);
-		VkDescriptorBufferInfo vertexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexDataBuffer.buffer);
-		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::VERTEX_META_DATA),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &vertexMetaDataDescriptorBufferInfo));
-		memcpy(m_vertexDataBuffer.allocationInfo.pMappedData, vertexMetaDatas.data(),
-			static_cast<uint32_t>(sizeof(VertexMetaData) * static_cast<uint32_t>(vertexMetaDatas.size())));
+		for (const Mesh& mesh : meshDatas)
+		{
+			// MeshletMetaData
+			MeshletMetaData meshletMetaData{};
+			meshletMetaData.vertexCount = mesh.vertex.size() / 13; // (x,y,z,w,uv1X....)
+			meshletMetaData.primitiveCount = mesh.index.size() / 3; // 三角形
+			meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+			meshletMetaData.unitSize = 13;
+			meshletMetaData.vertexDataOffset = m_vertexDatas.size();
+			m_meshletMetaDatas.push_back(meshletMetaData);
 
-		// vertexData
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(float)) * static_cast<uint32_t>(vertexDatas.size()),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_vertexMetaDataBuffer.buffer,
-			m_vertexMetaDataBuffer.allocation,
-			m_vertexMetaDataBuffer.allocationInfo,
-			m_vertexMetaDataBuffer.descriptor);
-		VkDescriptorBufferInfo vertexDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexMetaDataBuffer.buffer);
-		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::VERTEX_DATA),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &vertexDataDescriptorBufferInfo));
-		memcpy(m_vertexMetaDataBuffer.allocationInfo.pMappedData, vertexDatas.data(),
-			static_cast<uint32_t>(sizeof(float)) * static_cast<uint32_t>(vertexDatas.size()));
+			// VertexData
+			m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 
-		// indexMetaData
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(IndexMetaData)) * static_cast<uint32_t>(indexDatas.size()),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_indexMetaDataBuffer.buffer,
-			m_indexMetaDataBuffer.allocation,
-			m_indexMetaDataBuffer.allocationInfo,
-			m_indexMetaDataBuffer.descriptor);
-		VkDescriptorBufferInfo indexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexMetaDataBuffer.buffer, 0);
-		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::INDEX_META_DATA),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &indexMetaDataDescriptorBufferInfo));
-		memcpy(m_indexMetaDataBuffer.allocationInfo.pMappedData, indexMetaDatas.data(),
-			static_cast<uint32_t>(sizeof(IndexMetaData)) * static_cast<uint32_t>(indexDatas.size()));
+			// IndexData
+			m_indexDatas.insert(m_indexDatas.end(), mesh.index.begin(), mesh.index.end());
+		}
+		meshData.meshletMetaDataCount = static_cast<uint32_t>(meshDatas.size()); // MeshMetaDataの数
+		m_meshDatas.push_back(meshData);
 
-		// indexData
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(indexDatas.size()),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_indexDataBuffer.buffer,
-			m_indexDataBuffer.allocation,
-			m_indexDataBuffer.allocationInfo,
-			m_indexDataBuffer.descriptor);
-		VkDescriptorBufferInfo indexDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexDataBuffer.buffer, 0);
-		writeDescriptorSet.push_back(Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::INDEX_DATA),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &indexDataDescriptorBufferInfo));
-		memcpy(m_indexDataBuffer.allocationInfo.pMappedData, indexDatas.data(),
-			static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(indexDatas.size()));
-
-		// GPUへ!
-		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
+		return 0;
 	}
 
 	uint32_t RenderDescriptors::AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo)

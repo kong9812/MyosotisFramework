@@ -134,8 +134,20 @@ namespace MyosotisFW::System::Render
 		auto vertexData = m_meshVertexData.find(fileName);
 		if (vertexData == m_meshVertexData.end())
 		{
-			// ないなら読み込む
-			m_meshVertexData.emplace(fileName, Utility::Loader::loadFbx(fileName));
+			// 拡張子判定
+			std::string extension = std::filesystem::path(fileName).extension().string();
+			if ((extension == ".fbx") || (extension == ".FBX"))
+			{
+				m_meshVertexData.emplace(fileName, Utility::Loader::loadFbx(fileName));
+			}
+			else if ((extension == ".gltf") || (extension == ".GLTF"))
+			{
+				m_meshVertexData.emplace(fileName, Utility::Loader::loadGltf(fileName));
+			}
+			else
+			{
+				ASSERT(false, "Unsupported mesh file format: " + fileName);
+			}
 		}
 		return m_meshVertexData[fileName];
 	}
