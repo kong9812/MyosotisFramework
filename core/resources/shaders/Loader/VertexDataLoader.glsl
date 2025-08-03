@@ -52,7 +52,7 @@ layout (std430, set = 1, binding = 3) readonly buffer AllUniqueIndexBuffer {
 };
 
 layout (std430, set = 1, binding = 4) readonly buffer AllPrimitivesBuffer {
-    uint primitivesData[];
+    ivec3 primitivesData[];
 };
 
 mat4 VertexDataLoader_LoadMat4(uint base) {
@@ -84,11 +84,11 @@ vec3 VertexDataLoader_LoadVec3(uint base) {
 }
 
 uvec3 VertexDataLoader_LoadPrimitiveUVec3(uint base) {
-    return uvec3(
-        primitivesData[base + 0],
-        primitivesData[base + 1],
-        primitivesData[base + 2]
-    );
+    return primitivesData[base + 0];
+}
+
+uint VertexDataLoader_LoadUniqueIndexDataUint(uint base) {
+    return uniqueIndexData[base + 0];
 }
 
 vec4 VertexDataLoader_LoadVec4(uint base) {
@@ -108,9 +108,10 @@ int VertexDataLoader_LoadInt(uint base) {
     return int(vertexData[base]);
 }
 
-MeshletMetaData VertexDataLoader_GetMeshletMetaData(uint index)
+MeshletMetaData VertexDataLoader_GetMeshletMetaData(uint meshID, uint meshletIndex)
 {
-    return meshletMetaDatas[nonuniformEXT(index)];
+    MeshData meshData = meshDatas[nonuniformEXT(meshID)];   
+    return meshletMetaDatas[nonuniformEXT(meshData.meshletMetaDataOffset + meshletIndex)];
 }
 
 MeshData VertexDataLoader_GetMeshData(uint index)
@@ -120,7 +121,7 @@ MeshData VertexDataLoader_GetMeshData(uint index)
 
 VertexData VertexDataLoader_GetVertexData(uint meshID, uint meshletIndex, uint vertexIndex) {
     MeshData meshData = meshDatas[nonuniformEXT(meshID)];
-    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshletIndex)];
+    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshData.meshletMetaDataOffset + meshletIndex)];
     uint offset = meshletMetaData.vertexDataOffset + (meshletMetaData.unitSize * vertexIndex);
     VertexData v;
 
@@ -155,9 +156,16 @@ VertexData VertexDataLoader_GetVertexData(uint meshID, uint meshletIndex, uint v
 uvec3 VertexDataLoader_GetPrimitivesData(uint meshID, uint meshletIndex, uint primitiveIndex)
 {
     MeshData meshData = meshDatas[nonuniformEXT(meshID)];
-    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshletIndex)];
-    uint offset = meshletMetaData.primitivesOffset + (3 * primitiveIndex);
+    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshData.meshletMetaDataOffset + meshletIndex)];
+    uint offset = meshletMetaData.primitivesOffset + primitiveIndex;
     return VertexDataLoader_LoadPrimitiveUVec3(offset);
 }
 
+uint VertexDataLoader_GetUniqueIndexData(uint meshID, uint meshletIndex, uint uniqueIndex)
+{
+    MeshData meshData = meshDatas[nonuniformEXT(meshID)];
+    MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshData.meshletMetaDataOffset + meshletIndex)];
+    uint offset = meshletMetaData.uniqueIndexOffset + uniqueIndex;
+    return VertexDataLoader_LoadUniqueIndexDataUint(offset);
+}
 #endif

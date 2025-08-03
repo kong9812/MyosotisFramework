@@ -290,6 +290,7 @@ namespace Utility::Loader {
 								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
+								currentUniqueIndex.clear();
 								firstDataForMeshletAABB = true;
 							}
 
@@ -360,6 +361,7 @@ namespace Utility::Loader {
 								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
+								currentUniqueIndex.clear();
 								firstDataForMeshletAABB = true;
 							}
 
@@ -430,6 +432,7 @@ namespace Utility::Loader {
 								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
+								currentUniqueIndex.clear();
 								firstDataForMeshletAABB = true;
 							}
 
@@ -600,6 +603,7 @@ namespace Utility::Loader {
 						currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 						meshData.meshlet.push_back(currentMeshletData);
 						currentMeshletData = MyosotisFW::Meshlet();
+						currentUniqueIndex.clear();
 						firstDataForMeshletAABB = true;
 					}
 

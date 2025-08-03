@@ -11,12 +11,15 @@ namespace MyosotisFW::System::Render
 	// 前方宣言
 	class RenderDevice;
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderDescriptors;
+	TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 	class RenderResources
 	{
 	public:
-		RenderResources(const RenderDevice_ptr& device)
+		RenderResources(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors)
 			:m_device(device),
+			m_descriptors(descriptors),
 			m_shaderModules({}),
 			m_meshVertexData({}),
 			m_images({}),
@@ -42,10 +45,13 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		RenderDevice_ptr m_device;
+		RenderDescriptors_ptr m_descriptors;
+
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexData;
 		std::unordered_map<std::string, VMAImage> m_images;
 		std::unordered_map<std::string, VMAImage> m_cubeImages;
+		std::unordered_map<std::string, uint32_t> m_meshID;
 
 	public:
 		DeviceImage& GetDepthStencil() { return m_depthStencil; }
@@ -56,6 +62,7 @@ namespace MyosotisFW::System::Render
 		VMAImage& GetLightingResult() { return m_lightingResult; }
 		VMAImage& GetMainRenderTarget() { return m_mainRenderTarget; }
 		VMAImage& GetIdMap() { return m_idMap; }
+		uint32_t& GetMeshID(const std::string& fileName);
 
 	protected:
 		// attachments

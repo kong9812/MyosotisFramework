@@ -13,10 +13,10 @@ struct StandardSSBO {
     mat4 model;
     vec4 color;
     uint renderID;
-    uint vertexMetaIndex;
+    uint meshDataIndex;
 };
 
-const uint StandardSSBOSize = 35;
+const uint StandardSSBOSize = 38;
 
 StandardSSBO StandardSSBO_LoadStandardSSBO(uint offset) {
     StandardSSBO ssbo;
@@ -26,8 +26,8 @@ StandardSSBO StandardSSBO_LoadStandardSSBO(uint offset) {
     ssbo.obbData.axisZ = RawDataLoader_LoadVec4(offset + 12);
     ssbo.model = RawDataLoader_LoadMat4(offset + 16);
     ssbo.color = RawDataLoader_LoadVec4(offset + 32);
-    ssbo.renderID = RawDataLoader_LoadUint(offset + 33);
-    ssbo.vertexMetaIndex = RawDataLoader_LoadUint(offset + 34);
+    ssbo.renderID = RawDataLoader_LoadUint(offset + 36);
+    ssbo.meshDataIndex = RawDataLoader_LoadUint(offset + 37);
     return ssbo;
 }
 #endif

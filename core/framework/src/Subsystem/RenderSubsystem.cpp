@@ -369,7 +369,7 @@ namespace MyosotisFW::System::Render
 			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
 				m_deferredRenderPipeline->UpdateDescriptors(staticMeshesPair.staticMesh->GetStaticMeshShaderObject());
-				staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
+				// staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
 			}
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 		}
@@ -525,7 +525,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateRenderResourcesPointer(m_device);
+		m_resources = CreateRenderResourcesPointer(m_device, m_descriptors);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 

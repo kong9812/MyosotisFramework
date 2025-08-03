@@ -440,13 +440,25 @@ namespace MyosotisFW::System::Render
 					m_uniqueIndex.insert(m_uniqueIndex.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
 
 					// primitive
-					m_primitives.insert(m_primitives.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+					size_t count = meshlet.primitives.size();
+					ASSERT(count % 3 == 0, "Cant resize!!"); // 必須条件
+					// 確保する要素数
+					size_t numIvec3 = count / 3;
+					size_t dstOffset = m_primitives.size();
+					m_primitives.resize(dstOffset + numIvec3); // 容量確保＋要素追加
+					// 安全性チェック
+					static_assert(sizeof(glm::ivec3) == sizeof(uint32_t) * 3, "glm::ivec3 layout is not tightly packed!");
+					// memcpy
+					std::memcpy(
+						m_primitives.data() + dstOffset,
+						meshlet.primitives.data(),
+						sizeof(uint32_t) * count
+					);
 				}
 
 				// VertexData
 				m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 			}
-			meshData.meshletMetaDataCount = static_cast<uint32_t>(meshes.size()); // MeshMetaDataの数
 			m_meshDatas.push_back(meshData);
 		}
 		updateVertexDescriptorSet();
@@ -454,6 +466,7 @@ namespace MyosotisFW::System::Render
 
 	uint32_t RenderDescriptors::AddCustomMesh(const std::string meshName, std::vector<Mesh> meshDatas)
 	{
+		uint32_t meshID = static_cast<uint32_t>(m_meshDatas.size());
 		// MeshData
 		MeshDataSSBO meshData{};
 		meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
@@ -470,22 +483,36 @@ namespace MyosotisFW::System::Render
 				meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 				meshletMetaData.unitSize = 13;
 				meshletMetaData.vertexDataOffset = m_vertexDatas.size();
+				meshletMetaData.uniqueIndexOffset = m_uniqueIndex.size();
+				meshletMetaData.primitivesOffset = m_primitives.size();
 				m_meshletMetaDatas.push_back(meshletMetaData);
 
 				// uniqueIndex
 				m_uniqueIndex.insert(m_uniqueIndex.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
 
 				// primitive
-				m_primitives.insert(m_primitives.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+				size_t count = meshlet.primitives.size();
+				ASSERT(count % 3 == 0, "Cant resize!!"); // 必須条件
+				// 確保する要素数
+				size_t numIvec3 = count / 3;
+				size_t dstOffset = m_primitives.size();
+				m_primitives.resize(dstOffset + numIvec3); // 容量確保＋要素追加
+				// 安全性チェック
+				static_assert(sizeof(glm::ivec3) == sizeof(uint32_t) * 3, "glm::ivec3 layout is not tightly packed!");
+				// memcpy
+				std::memcpy(
+					m_primitives.data() + dstOffset,
+					meshlet.primitives.data(),
+					sizeof(uint32_t) * count
+				);
 			}
 
 			// VertexData
 			m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 		}
-		meshData.meshletMetaDataCount = static_cast<uint32_t>(meshDatas.size()); // MeshMetaDataの数
 		m_meshDatas.push_back(meshData);
-
-		return 0;
+		updateVertexDescriptorSet();
+		return meshID;
 	}
 
 	uint32_t RenderDescriptors::AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo)

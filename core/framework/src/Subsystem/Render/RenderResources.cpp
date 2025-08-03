@@ -3,6 +3,7 @@
 #include "RenderDevice.h"
 #include "VK_Loader.h"
 #include "RenderQueue.h"
+#include "RenderDescriptors.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -148,6 +149,7 @@ namespace MyosotisFW::System::Render
 			{
 				ASSERT(false, "Unsupported mesh file format: " + fileName);
 			}
+			m_meshID.try_emplace(fileName, m_descriptors->AddCustomMesh(fileName, m_meshVertexData[fileName]));
 		}
 		return m_meshVertexData[fileName];
 	}
@@ -228,5 +230,10 @@ namespace MyosotisFW::System::Render
 			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
+	}
+
+	uint32_t& RenderResources::GetMeshID(const std::string& fileName)
+	{
+		return m_meshID[fileName];
 	}
 }

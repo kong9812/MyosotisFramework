@@ -1,7 +1,7 @@
 #version 450
 #extension GL_EXT_mesh_shader : require
 #extension GL_GOOGLE_include_directive : require
-// #extension GL_EXT_debug_printf : enable
+#extension GL_EXT_debug_printf : enable
 
 #include "Loader/MainCameraDataLoader.glsl"
 #include "SSBO/StandardSSBO.glsl"
@@ -17,7 +17,9 @@ taskPayloadSharedEXT SharedData sharedData;
 void main()
 {
     // debugPrintfEXT("Hello from task shader!\n");
-    uint objectIndex = gl_WorkGroupID.x;
+    // uint objectIndex = gl_WorkGroupID.x;    // todo. 今は何番目を使うかはわからない
+
+    uint objectIndex = 3;    // todo. 今は何番目を使うかはわからない
 
     RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
@@ -41,11 +43,13 @@ void main()
             break;
         }
     }
+
+    debugPrintfEXT("offset index: %d", meta.dataOffset);
     // 画面に入ってる
     if (visible) 
     {
         sharedData.objectIndex = objectIndex;
-        sharedData.meshIndex = 0; // todo. stardardSSBOから取れるように
+        sharedData.meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
         sharedData.meshletIndex = 0; // todo. それぞれmeshletをカリングして、そこでとれるように        
 	    EmitMeshTasksEXT(1, 1, 1);
     }

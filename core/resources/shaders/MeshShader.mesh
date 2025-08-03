@@ -1,7 +1,7 @@
 #version 450
 #extension GL_EXT_mesh_shader : require
 #extension GL_GOOGLE_include_directive : require
-// #extension GL_EXT_debug_printf : enable
+#extension GL_EXT_debug_printf : enable
 
 #include "Loader/VertexDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
@@ -24,9 +24,8 @@ layout(location = 0) out VertexOutput {
 
 void main()
 {
-    // debugPrintfEXT("mesh index: %d", sharedData.meshIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(sharedData.meshIndex);
-    MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(sharedData.meshletIndex);
+    MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(sharedData.meshIndex, sharedData.meshletIndex);
 
     // 出力する頂点数・プリミティブ数を指定
     if (gl_LocalInvocationIndex == 0) {
@@ -34,16 +33,19 @@ void main()
     }
     barrier();
 
+    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(sharedData.objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(sharedData.objectIndex);
+    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
 
     uint stride = gl_WorkGroupSize.x;
     uint idx = gl_LocalInvocationIndex;
 
+    // debugPrintfEXT("mesh index: %d meslet index: %d meshlet primCount: %d", sharedData.meshIndex, sharedData.meshletIndex, meshletMetaData.primitiveCount);
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletMetaData.vertexCount; i += stride) 
     {
-        VertexData v = VertexDataLoader_GetVertexData(sharedData.meshIndex, sharedData.meshletIndex, i);
+        uint index = VertexDataLoader_GetUniqueIndexData(sharedData.meshIndex, sharedData.meshletIndex, i);
+        VertexData v = VertexDataLoader_GetVertexData(sharedData.meshIndex, sharedData.meshletIndex, index);
         vec4 worldPos = standardSSBO.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
         vertexOutput[i].color = v.color;
@@ -51,8 +53,9 @@ void main()
 
     // プリミティブ処理：同様に分割＋ループで処理
     for (uint i = idx; i < meshletMetaData.primitiveCount; i += stride) 
-    {  
+    {
         uvec3 index = VertexDataLoader_GetPrimitivesData(sharedData.meshIndex, sharedData.meshletIndex, i);
+        debugPrintfEXT("index: %d\nprimitiveIndex[0]: %d primitiveIndex[1]: %d primitiveIndex[2]: %d", i, index.x, index.y, index.z);
         gl_PrimitiveTriangleIndicesEXT[i] = index;
     }
 }

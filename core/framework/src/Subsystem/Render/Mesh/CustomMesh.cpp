@@ -28,10 +28,6 @@ namespace MyosotisFW::System::Render
 	void CustomMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
 		__super::Update(updateData, camera);
-
-		// todo.CustomMesh対応
-		//m_staticMeshShaderObject.SSBO.standardSSBO.vertexMetaIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
-
 		if (!m_isReady) return;
 	}
 
@@ -54,6 +50,7 @@ namespace MyosotisFW::System::Render
 	void CustomMesh::loadAssets()
 	{
 		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.meshName);
+		m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = m_resources->GetMeshID(m_customMeshInfo.meshName);
 
 		// 一時対応
 		std::vector<uint32_t> index{};

@@ -121,7 +121,7 @@ namespace MyosotisFW
 		glm::mat4 model;
 		glm::vec4 color;
 		uint32_t renderID;
-		uint32_t vertexMetaIndex;
+		uint32_t meshDataIndex;
 	};
 
 	struct FrustumCullingShaderObject

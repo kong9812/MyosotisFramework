@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
 		__super::Update(updateData, camera);
-		m_staticMeshShaderObject.SSBO.standardSSBO.vertexMetaIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
+		m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
 
 		if (!m_isReady) return;
 	}
