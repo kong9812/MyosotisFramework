@@ -32,6 +32,7 @@ namespace MyosotisFW::System::Render
 			VERTEX_DATA,
 			UNIQUE_INDEX,
 			PRIMITIVES,
+			TASK_SHADER_TO_MESH_SHADER_DATA,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
@@ -87,6 +88,13 @@ namespace MyosotisFW::System::Render
 			uint32_t primitivesOffset;	// Primitivesの開始位置
 			uint32_t empty;				// 予約領域(将来の拡張用)
 		};
+		struct TaskShaderToMeshShaderData
+		{
+			uint32_t _using;
+			uint32_t objectIndex;
+			uint32_t meshIndex; //todo.Meshlet化
+			uint32_t meshletIndex;
+		};
 
 	private:
 		void createMainCameraBuffer();
@@ -116,12 +124,13 @@ namespace MyosotisFW::System::Render
 		std::vector<MeshletMetaDataSSBO> m_meshletMetaDatas{};
 		std::vector<float> m_vertexDatas{};
 		std::vector<uint32_t> m_uniqueIndex{};
-		std::vector<glm::ivec3> m_primitives{};
+		std::vector<uint32_t> m_primitives{};
 		Buffer m_meshDataBuffer;
 		Buffer m_meshletMetaDataBuffer;
 		Buffer m_vertexDataBuffer;
 		Buffer m_uniqueIndexBuffer;
 		Buffer m_primitivesBuffer;
+		Buffer m_taskShaderToMeshShaderDataBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;
 		std::vector<VkDescriptorImageInfo> m_storageImageInfos;

@@ -259,7 +259,7 @@ namespace Utility::Loader {
 
 					const uint32_t trianglesCount = accessor.count / 3;
 					MyosotisFW::Meshlet currentMeshletData{};
-					std::unordered_set<uint32_t> currentUniqueIndex;
+					std::unordered_set<uint32_t> currentUniqueIndex{};
 					bool firstDataForMeshletAABB = true;
 
 					// glTF supports different component types of indices
@@ -274,7 +274,7 @@ namespace Utility::Loader {
 							};
 
 							// 頂点追加後のサイズ
-							size_t newUnique = currentUniqueIndex.size();
+							size_t newUnique = currentMeshletData.uniqueIndex.size();
 							for (uint32_t i = 0; i < 3; i++)
 							{
 								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
@@ -284,10 +284,9 @@ namespace Utility::Loader {
 							}
 
 							// 制限チェック
-							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
 							{
-								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
 								currentUniqueIndex.clear();
@@ -325,9 +324,15 @@ namespace Utility::Loader {
 							}
 
 							// 三角形追加
-							currentMeshletData.primitives.push_back(triangle[0]);
-							currentMeshletData.primitives.push_back(triangle[1]);
-							currentMeshletData.primitives.push_back(triangle[2]);
+							auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
+							size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
+							auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
+							size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
+							auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
+							size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
+							currentMeshletData.primitives.push_back(index1);
+							currentMeshletData.primitives.push_back(index2);
+							currentMeshletData.primitives.push_back(index3);
 						}
 						if (!currentMeshletData.primitives.empty())
 						{
@@ -345,7 +350,7 @@ namespace Utility::Loader {
 							};
 
 							// 頂点追加後のサイズ
-							size_t newUnique = currentUniqueIndex.size();
+							size_t newUnique = currentMeshletData.uniqueIndex.size();
 							for (uint32_t i = 0; i < 3; i++)
 							{
 								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
@@ -355,10 +360,9 @@ namespace Utility::Loader {
 							}
 
 							// 制限チェック
-							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
 							{
-								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
 								currentUniqueIndex.clear();
@@ -396,9 +400,15 @@ namespace Utility::Loader {
 							}
 
 							// 三角形追加
-							currentMeshletData.primitives.push_back(triangle[0]);
-							currentMeshletData.primitives.push_back(triangle[1]);
-							currentMeshletData.primitives.push_back(triangle[2]);
+							auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
+							size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
+							auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
+							size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
+							auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
+							size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
+							currentMeshletData.primitives.push_back(index1);
+							currentMeshletData.primitives.push_back(index2);
+							currentMeshletData.primitives.push_back(index3);
 						}
 						if (!currentMeshletData.primitives.empty())
 						{
@@ -416,7 +426,7 @@ namespace Utility::Loader {
 							};
 
 							// 頂点追加後のサイズ
-							size_t newUnique = currentUniqueIndex.size();
+							size_t newUnique = currentMeshletData.uniqueIndex.size();
 							for (uint32_t i = 0; i < 3; i++)
 							{
 								if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
@@ -426,10 +436,9 @@ namespace Utility::Loader {
 							}
 
 							// 制限チェック
-							if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-								(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+							if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+								((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
 							{
-								currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 								meshData.meshlet.push_back(currentMeshletData);
 								currentMeshletData = MyosotisFW::Meshlet();
 								currentUniqueIndex.clear();
@@ -467,9 +476,15 @@ namespace Utility::Loader {
 							}
 
 							// 三角形追加
-							currentMeshletData.primitives.push_back(triangle[0]);
-							currentMeshletData.primitives.push_back(triangle[1]);
-							currentMeshletData.primitives.push_back(triangle[2]);
+							auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
+							size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
+							auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
+							size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
+							auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
+							size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
+							currentMeshletData.primitives.push_back(index1);
+							currentMeshletData.primitives.push_back(index2);
+							currentMeshletData.primitives.push_back(index3);
 						}
 						if (!currentMeshletData.primitives.empty())
 						{
@@ -587,7 +602,7 @@ namespace Utility::Loader {
 					triangulate(geomData, polygon, triangle);
 
 					// 頂点追加後のサイズ
-					size_t newUnique = currentUniqueIndex.size();
+					size_t newUnique = currentMeshletData.uniqueIndex.size();
 					for (uint32_t i = 0; i < 3; i++)
 					{
 						if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
@@ -597,10 +612,9 @@ namespace Utility::Loader {
 					}
 
 					// 制限チェック
-					if ((currentUniqueIndex.size() + newUnique > MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-						(currentMeshletData.primitives.size() + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+					if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+						((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
 					{
-						currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 						meshData.meshlet.push_back(currentMeshletData);
 						currentMeshletData = MyosotisFW::Meshlet();
 						currentUniqueIndex.clear();
@@ -638,13 +652,18 @@ namespace Utility::Loader {
 					}
 
 					// 三角形追加
-					currentMeshletData.primitives.push_back(triangle[0]);
-					currentMeshletData.primitives.push_back(triangle[1]);
-					currentMeshletData.primitives.push_back(triangle[2]);
+					auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
+					size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
+					auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
+					size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
+					auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
+					size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
+					currentMeshletData.primitives.push_back(index1);
+					currentMeshletData.primitives.push_back(index2);
+					currentMeshletData.primitives.push_back(index3);
 				}
 				if (!currentMeshletData.primitives.empty())
 				{
-					currentMeshletData.uniqueIndex.insert(currentMeshletData.uniqueIndex.end(), currentUniqueIndex.begin(), currentUniqueIndex.end());
 					meshData.meshlet.push_back(currentMeshletData);
 				}
 				indicesOffset += positions.count;

@@ -3,16 +3,25 @@
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_debug_printf : enable
 
+#include "Loader/VertexDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
 #include "SSBO/StandardSSBO.glsl"
 
-struct SharedData
+layout(push_constant) uniform PushConstant {
+    uint testMeshletCount;
+    uint empty;
+};
+
+struct TaskShaderToMeshShaderData
 {
+    uint _using;
     uint objectIndex;
     uint meshIndex; //todo.Meshlet化
     uint meshletIndex;
 };
-taskPayloadSharedEXT SharedData sharedData;
+layout (std430, set = 1, binding = 5) buffer TaskShaderToMeshShaderDataBuffer {
+    TaskShaderToMeshShaderData taskShaderToMeshShaderDatas[];
+};
 
 void main()
 {
@@ -24,9 +33,10 @@ void main()
     RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+    MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
 
     // Frustum Culling判定 (OBB)
-    bool visible = true;
+    uint renderCount = 0;
     for (int i = 0; i < 6; i++) 
     {
         vec4 plane = cameraData.frustumPlanes[i];
@@ -37,20 +47,26 @@ void main()
             abs(dot(plane.xyz, standardSSBO.obbData.axisX.xyz)) * standardSSBO.obbData.axisX.w +
             abs(dot(plane.xyz, standardSSBO.obbData.axisY.xyz)) * standardSSBO.obbData.axisY.w +
             abs(dot(plane.xyz, standardSSBO.obbData.axisZ.xyz)) * standardSSBO.obbData.axisZ.w;
-        if (d + r < 0.0) 
+        if (d + r >= 0.0) 
         {
-            visible = false;
+            renderCount++;
             break;
         }
     }
 
-    debugPrintfEXT("offset index: %d", meta.dataOffset);
     // 画面に入ってる
-    if (visible) 
+    if (renderCount > 0) 
     {
-        sharedData.objectIndex = objectIndex;
-        sharedData.meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-        sharedData.meshletIndex = 0; // todo. それぞれmeshletをカリングして、そこでとれるように        
-	    EmitMeshTasksEXT(1, 1, 1);
+        uint meshletCount = 0;
+        for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
+        {
+            taskShaderToMeshShaderDatas[i]._using = 1;
+            taskShaderToMeshShaderDatas[i].objectIndex = objectIndex;
+            taskShaderToMeshShaderDatas[i].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
+            taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
+        }
+        debugPrintfEXT("taskShader renderCount: %d\n", meshData.meshletMetaDataCount);
+	    EmitMeshTasksEXT(testMeshletCount, 1, 1);
+	    //EmitMeshTasksEXT(180, 1, 1);
     }
 }

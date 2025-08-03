@@ -248,7 +248,7 @@ target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DI
 source_group("external/stb" FILES ${STB_SOURCES})
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${STB_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
-# RapidJSON
+# tinygltf
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${tinygltf_SOURCE_DIR})
 # vulkan
 find_package(Vulkan REQUIRED)

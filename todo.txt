@@ -22,12 +22,24 @@
 [OK] ・ShaderObjectをpipeline下に配置
 [OK] ・GLSL関数を増やす
 　[OK] ・SSBOデータのロード関連
-
-・GLTFも使いたい…
-・VertexDataLoader.glslを作成
-　・ないデータは0を返せばいいかも
-・MeshShader
-　・64,126分割
+・[OK] FrustumCullingをTaskShaderに移植
+　・[OK] まずはMesh単位
+　　・[OK] 今はQuadなので、頂点数制限に収まる
+・[OK] 頂点関連のDescripotrSetをRenderDescriptorに移行
+・[OK] 全部の頂点データはrenderResourecesから取得できるようにする
+　・[OK] PrimitiveGeometryは事前に定義する
+　・[OK] String, std::vector<Mesh>
+　　・[OK] RenderDescriptor
+　　　・[OK] uint32_t AddModel(string, std::vector<Mesh>)
+　　　　・[OK] runtime mapを持つ
+　　　　・[OK] 同じMesh再利用できるようにstringで判定
+・[OK] ここまで来たらCustomMeshを描画する
+　・[OK] FBXLoadの修正
+　　・[OK] 仮頂点データの追加 (Normalなど)
+　・[OK] glTFLoadの追加
+・[OK] 描画ができたら、Meshlet分割
+・FBXのMeshlet対応
+・Meshletの単体カリング
 
 ・InteriorObejctをStaticMesh化
 ・buffer_referenceで頂点情報を保管

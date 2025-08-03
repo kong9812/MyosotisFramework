@@ -13,11 +13,11 @@ namespace MyosotisFW::System::Render
 		}
 		~MeshShaderRenderPipeline();
 
-		// ShaderObject
-		struct ShaderObject
-		{
-			ShaderBase shaderBase;
-		};
+		// テスト用後で消す
+		struct {
+			uint32_t testMeshletCount;
+			uint32_t empty;
+		}pushConstant;
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);

@@ -20,13 +20,8 @@ namespace MyosotisFW::System::Render
 		m_meshletMetaDataBuffer({}),
 		m_vertexDataBuffer({}),
 		m_uniqueIndexBuffer({}),
-		m_primitivesBuffer({}) {
-		createMainCameraBuffer();
-		createDescriptorPool();
-		createBindlessMainDescriptorSetLayout();
-		createBindlessVertexDescriptorSetLayout();
-		allocateMainDescriptorSet();
-		allocateVertexDescriptorSet();
+		m_primitivesBuffer({}),
+		m_taskShaderToMeshShaderDataBuffer({}) {
 		m_storageBufferRawDataBuffer.buffer = VK_NULL_HANDLE;
 		m_storageBufferMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		m_meshDataBuffer.buffer = VK_NULL_HANDLE;
@@ -34,6 +29,13 @@ namespace MyosotisFW::System::Render
 		m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
 		m_uniqueIndexBuffer.buffer = VK_NULL_HANDLE;
 		m_primitivesBuffer.buffer = VK_NULL_HANDLE;
+		m_taskShaderToMeshShaderDataBuffer.buffer = VK_NULL_HANDLE;
+		createMainCameraBuffer();
+		createDescriptorPool();
+		createBindlessMainDescriptorSetLayout();
+		createBindlessVertexDescriptorSetLayout();
+		allocateMainDescriptorSet();
+		allocateVertexDescriptorSet();
 	}
 
 	RenderDescriptors::~RenderDescriptors()
@@ -77,6 +79,11 @@ namespace MyosotisFW::System::Render
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshDataBuffer.buffer, m_meshDataBuffer.allocation);
 			m_meshDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		if (m_taskShaderToMeshShaderDataBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_taskShaderToMeshShaderDataBuffer.buffer, m_taskShaderToMeshShaderDataBuffer.allocation);
+			m_taskShaderToMeshShaderDataBuffer.buffer = VK_NULL_HANDLE;
 		}
 		vkDestroyDescriptorSetLayout(*m_device, m_vertexDescriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorSetLayout(*m_device, m_mainDescriptorSetLayout, m_device->GetAllocationCallbacks());
@@ -160,10 +167,13 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::UNIQUE_INDEX), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 			// binding: [SSBO] Primitives
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::PRIMITIVES), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] TaskShaderToMeshShaderData
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::TASK_SHADER_TO_MESH_SHADER_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 		};
 
 		// 未使用許可 & バインド後更新 を有効化
 		std::vector<VkDescriptorBindingFlags> descriptorBindingFlags = {
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
@@ -191,6 +201,23 @@ namespace MyosotisFW::System::Render
 	{
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_vertexDescriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_vertexDescriptorSet));
+
+		// TaskShaderToMeshShaderData
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000),
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_taskShaderToMeshShaderDataBuffer.buffer,
+			m_taskShaderToMeshShaderDataBuffer.allocation,
+			m_taskShaderToMeshShaderDataBuffer.allocationInfo,
+			m_taskShaderToMeshShaderDataBuffer.descriptor);
+		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::TASK_SHADER_TO_MESH_SHADER_DATA),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_taskShaderToMeshShaderDataBuffer.descriptor);
+		memset(m_taskShaderToMeshShaderDataBuffer.allocationInfo.pMappedData, 0,
+			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000));
+		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 	}
 
 	void RenderDescriptors::updateVertexDescriptorSet()
@@ -420,7 +447,6 @@ namespace MyosotisFW::System::Render
 			MeshDataSSBO meshData{};
 			meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
 			meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
-
 			for (const Mesh& mesh : meshes)
 			{
 				for (const Meshlet& meshlet : mesh.meshlet)
@@ -428,7 +454,7 @@ namespace MyosotisFW::System::Render
 					// MeshletMetaData
 					MeshletMetaDataSSBO meshletMetaData{};
 					meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
-					meshletMetaData.primitiveCount = meshlet.primitives.size(); // 三角形
+					meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 					meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 					meshletMetaData.unitSize = 13;
 					meshletMetaData.vertexDataOffset = m_vertexDatas.size();
@@ -440,25 +466,13 @@ namespace MyosotisFW::System::Render
 					m_uniqueIndex.insert(m_uniqueIndex.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
 
 					// primitive
-					size_t count = meshlet.primitives.size();
-					ASSERT(count % 3 == 0, "Cant resize!!"); // 必須条件
-					// 確保する要素数
-					size_t numIvec3 = count / 3;
-					size_t dstOffset = m_primitives.size();
-					m_primitives.resize(dstOffset + numIvec3); // 容量確保＋要素追加
-					// 安全性チェック
-					static_assert(sizeof(glm::ivec3) == sizeof(uint32_t) * 3, "glm::ivec3 layout is not tightly packed!");
-					// memcpy
-					std::memcpy(
-						m_primitives.data() + dstOffset,
-						meshlet.primitives.data(),
-						sizeof(uint32_t) * count
-					);
+					m_primitives.insert(m_primitives.end(), meshlet.primitives.begin(), meshlet.primitives.end());
 				}
 
 				// VertexData
 				m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 			}
+			meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
 			m_meshDatas.push_back(meshData);
 		}
 		updateVertexDescriptorSet();
@@ -479,7 +493,7 @@ namespace MyosotisFW::System::Render
 				// MeshletMetaData
 				MeshletMetaDataSSBO meshletMetaData{};
 				meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
-				meshletMetaData.primitiveCount = meshlet.primitives.size(); // 三角形
+				meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 				meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 				meshletMetaData.unitSize = 13;
 				meshletMetaData.vertexDataOffset = m_vertexDatas.size();
@@ -491,25 +505,13 @@ namespace MyosotisFW::System::Render
 				m_uniqueIndex.insert(m_uniqueIndex.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
 
 				// primitive
-				size_t count = meshlet.primitives.size();
-				ASSERT(count % 3 == 0, "Cant resize!!"); // 必須条件
-				// 確保する要素数
-				size_t numIvec3 = count / 3;
-				size_t dstOffset = m_primitives.size();
-				m_primitives.resize(dstOffset + numIvec3); // 容量確保＋要素追加
-				// 安全性チェック
-				static_assert(sizeof(glm::ivec3) == sizeof(uint32_t) * 3, "glm::ivec3 layout is not tightly packed!");
-				// memcpy
-				std::memcpy(
-					m_primitives.data() + dstOffset,
-					meshlet.primitives.data(),
-					sizeof(uint32_t) * count
-				);
+				m_primitives.insert(m_primitives.end(), meshlet.primitives.begin(), meshlet.primitives.end());
 			}
 
 			// VertexData
 			m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
 		}
+		meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
 		m_meshDatas.push_back(meshData);
 		updateVertexDescriptorSet();
 		return meshID;

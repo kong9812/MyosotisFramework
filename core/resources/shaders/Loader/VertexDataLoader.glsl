@@ -52,7 +52,7 @@ layout (std430, set = 1, binding = 3) readonly buffer AllUniqueIndexBuffer {
 };
 
 layout (std430, set = 1, binding = 4) readonly buffer AllPrimitivesBuffer {
-    ivec3 primitivesData[];
+    uint primitivesData[];
 };
 
 mat4 VertexDataLoader_LoadMat4(uint base) {
@@ -84,7 +84,10 @@ vec3 VertexDataLoader_LoadVec3(uint base) {
 }
 
 uvec3 VertexDataLoader_LoadPrimitiveUVec3(uint base) {
-    return primitivesData[base + 0];
+    return uvec3(
+        primitivesData[base + 0],
+        primitivesData[base + 1],
+        primitivesData[base + 2]);
 }
 
 uint VertexDataLoader_LoadUniqueIndexDataUint(uint base) {
@@ -157,7 +160,7 @@ uvec3 VertexDataLoader_GetPrimitivesData(uint meshID, uint meshletIndex, uint pr
 {
     MeshData meshData = meshDatas[nonuniformEXT(meshID)];
     MeshletMetaData meshletMetaData = meshletMetaDatas[nonuniformEXT(meshData.meshletMetaDataOffset + meshletIndex)];
-    uint offset = meshletMetaData.primitivesOffset + primitiveIndex;
+    uint offset = meshletMetaData.primitivesOffset + (primitiveIndex * 3);
     return VertexDataLoader_LoadPrimitiveUVec3(offset);
 }
 

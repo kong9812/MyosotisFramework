@@ -14,6 +14,7 @@
 #include "ShadowMapRenderPass.h"
 #include "MainRenderPass.h"
 #include "EditorFinalCompositionRenderPass.h"
+#include "MeshShaderRenderPass.h"
 
 #include "SkyboxRenderPipeline.h"
 #include "ShadowMapRenderPipeline.h"
@@ -22,6 +23,7 @@
 #include "LightingRenderPipeline.h"
 #include "EditorFinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
+#include "MeshShaderRenderPipeline.h"
 
 #include "AppInfo.h"
 
@@ -60,6 +62,9 @@ namespace MyosotisFW::System::Render
 		{
 			ImGui::Text("Selected Object: %s", m_selectedObject.Get()->GetName().c_str());
 		}
+		uint32_t min = 1;
+		uint32_t max = 55;
+		ImGui::SliderScalar("ShadowMapSize", ImGuiDataType_U32, &m_meshShaderRenderPipeline->pushConstant.testMeshletCount, &min, &max);
 		ImGui::End();
 
 		__super::Update(updateData);
@@ -151,6 +156,9 @@ namespace MyosotisFW::System::Render
 
 		m_editorRenderPass = CreateEditorRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
 		m_editorRenderPass->Initialize();
+
+		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_meshShaderRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
@@ -180,6 +188,9 @@ namespace MyosotisFW::System::Render
 		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
+
+		m_meshShaderRenderPipeline = CreateMeshShaderRenderPipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)

@@ -59,7 +59,7 @@ namespace MyosotisFW::System::GameDirector {
 			component->SetCustomMeshInfo(customMeshInfo);
 			component->SetPos(glm::vec3(5.0f, 5.0f, -5.0f));
 			component->SetRot(glm::vec3(0.0f));
-			component->SetScale(glm::vec3(5.0f));
+			component->SetScale(glm::vec3(50.0f));
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}

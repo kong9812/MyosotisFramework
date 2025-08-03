@@ -38,6 +38,8 @@ target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${stduuid_SOURCE_DIR}/
 source_group("external/stb" FILES ${STB_SOURCES})
 target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${STB_SOURCES})
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${stb_SOURCE_DIR})
+# tinygltf
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${tinygltf_SOURCE_DIR})
 # vulkan
 find_package(Vulkan REQUIRED)
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
