@@ -66,7 +66,7 @@ void main()
             taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
         }
         debugPrintfEXT("taskShader renderCount: %d\n", meshData.meshletMetaDataCount);
-	    EmitMeshTasksEXT(testMeshletCount, 1, 1);
+	    EmitMeshTasksEXT(meshData.meshletMetaDataCount, 1, 1);
 	    //EmitMeshTasksEXT(180, 1, 1);
     }
 }

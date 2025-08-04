@@ -38,7 +38,7 @@
 　　・[OK] 仮頂点データの追加 (Normalなど)
 　・[OK] glTFLoadの追加
 ・[OK] 描画ができたら、Meshlet分割
-・FBXのMeshlet対応
+・[OK] FBXのMeshlet対応
 ・Meshletの単体カリング
 
 ・InteriorObejctをStaticMesh化

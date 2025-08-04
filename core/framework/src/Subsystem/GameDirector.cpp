@@ -55,10 +55,10 @@ namespace MyosotisFW::System::GameDirector {
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish.gltf";
+			customMeshInfo.meshName = "BarramundiFish.fbx";
 			component->SetCustomMeshInfo(customMeshInfo);
 			component->SetPos(glm::vec3(5.0f, 5.0f, -5.0f));
-			component->SetRot(glm::vec3(0.0f));
+			component->SetRot(glm::vec3(-90.0f, 0.0f, 0.0f));
 			component->SetScale(glm::vec3(50.0f));
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);

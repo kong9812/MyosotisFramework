@@ -62,9 +62,6 @@ namespace MyosotisFW::System::Render
 		{
 			ImGui::Text("Selected Object: %s", m_selectedObject.Get()->GetName().c_str());
 		}
-		uint32_t min = 1;
-		uint32_t max = 55;
-		ImGui::SliderScalar("ShadowMapSize", ImGuiDataType_U32, &m_meshShaderRenderPipeline->pushConstant.testMeshletCount, &min, &max);
 		ImGui::End();
 
 		__super::Update(updateData);

@@ -15,8 +15,6 @@ namespace MyosotisFW::System::Render
 
 	void MeshShaderRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		pushConstant.testMeshletCount = 55;
-
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
 		prepareRenderPipeline(resources, renderPass);
@@ -28,28 +26,15 @@ namespace MyosotisFW::System::Render
 		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-			0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
 		uint32_t meshletGroupCount = 1;	// 仮 (これはMeshIDにするのもいいかも)
 		m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
 	}
 
 	void MeshShaderRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		// push constant
-		std::vector<VkPushConstantRange> pushConstantRange = {
-			// VS
-			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-				0,
-				static_cast<uint32_t>(sizeof(pushConstant))),
-		};
-
 		// [pipeline]layout
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout(), m_descriptors->GetBindlessVertexDescriptorSetLayout() };
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
-		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
-		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline
