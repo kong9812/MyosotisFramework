@@ -27,6 +27,8 @@ layout(location = 0) out VertexOutput {
 
 void main()
 {
+    debugPrintfEXT("MeshShader!!!!!");
+
     TaskShaderToMeshShaderData taskShaderToMeshShaderData = taskShaderToMeshShaderDatas[gl_WorkGroupID.x];
     if (taskShaderToMeshShaderData._using == 0)
     {
@@ -57,10 +59,10 @@ void main()
         uint index = VertexDataLoader_GetUniqueIndexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i);
         VertexData v = VertexDataLoader_GetVertexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index);
         // debugPrintfEXT("Mesh Shader workGroupID: %d", gl_WorkGroupID.x);
-        if (taskShaderToMeshShaderData.meshletIndex == 1)
-        {
-            debugPrintfEXT("meshIndex: %d meshletIndex:%d VertexIndex: %d\nx: %f y: %f z: %f", taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index, v.position.x, v.position.y, v.position.z);
-        }
+        // if (taskShaderToMeshShaderData.meshletIndex == 1)
+        // {
+        //     debugPrintfEXT("meshIndex: %d meshletIndex:%d VertexIndex: %d\nx: %f y: %f z: %f", taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index, v.position.x, v.position.y, v.position.z);
+        // }
         vec4 worldPos = standardSSBO.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
         vertexOutput[i].color = v.color;

@@ -313,6 +313,21 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
+		// 見えない時もTaskShaderのカリング処理ができるように更新
+		for (StageObject_ptr& object : m_objects)
+		{
+			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
+			for (ComponentBase_ptr& component : components)
+			{
+				if (IsStaticMesh(component->GetType()))
+				{
+					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
+					m_deferredRenderPipeline->UpdateDescriptors(staticMesh->GetStaticMeshShaderObject());
+					//m_descriptors->AddStorageBuffer(staticMesh->GetStaticMeshShaderObject());
+				}
+			}
+		}
+
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
 		// main render pass
@@ -368,7 +383,7 @@ namespace MyosotisFW::System::Render
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.2f, 1.0f, 0.2f), "Deferred Render"));
 			for (TransparentStaticMesh& staticMeshesPair : staticMeshes)
 			{
-				m_deferredRenderPipeline->UpdateDescriptors(staticMeshesPair.staticMesh->GetStaticMeshShaderObject());
+				// m_deferredRenderPipeline->UpdateDescriptors(staticMeshesPair.staticMesh->GetStaticMeshShaderObject());
 				// staticMeshesPair.staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::Deferred);
 			}
 			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
