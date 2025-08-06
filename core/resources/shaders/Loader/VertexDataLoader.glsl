@@ -11,6 +11,8 @@ const uint COLOR_VEC3    = 0x00000020;
 const uint COLOR_VEC4    = 0x00000040;
 
 struct MeshData {
+    vec4 AABBMin;
+    vec4 AABBMax;
     uint meshID;
     uint meshletMetaDataOffset;
     uint meshletMetaDataCount;
@@ -18,7 +20,9 @@ struct MeshData {
 };
 
 struct MeshletMetaData {
-	uint vertexCount;
+	vec4 AABBMin;
+    vec4 AABBMax;
+    uint vertexCount;
 	uint primitiveCount;
 	uint vertexAttributeBit;
 	uint unitSize;

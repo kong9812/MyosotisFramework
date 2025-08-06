@@ -27,7 +27,7 @@ layout(location = 0) out VertexOutput {
 
 void main()
 {
-    debugPrintfEXT("MeshShader!!!!!");
+    // debugPrintfEXT("MeshShader!!!!!");
 
     TaskShaderToMeshShaderData taskShaderToMeshShaderData = taskShaderToMeshShaderDatas[gl_WorkGroupID.x];
     if (taskShaderToMeshShaderData._using == 0)

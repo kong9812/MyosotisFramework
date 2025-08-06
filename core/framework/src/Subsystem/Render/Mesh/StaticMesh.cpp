@@ -80,8 +80,10 @@ namespace MyosotisFW::System::Render
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::scale(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::vec3(m_transform.scale));
-		m_staticMeshShaderObject.SSBO.standardSSBO.obbData = GetWorldOBBData();
 		m_staticMeshShaderObject.SSBO.standardSSBO.renderID = m_renderID;
+		m_staticMeshShaderObject.SSBO.standardSSBO.position = glm::vec4(m_transform.pos, 0.0f);
+		m_staticMeshShaderObject.SSBO.standardSSBO.rotation = glm::vec4(m_transform.rot, 0.0f);
+		m_staticMeshShaderObject.SSBO.standardSSBO.scale = glm::vec4(m_transform.scale, 0.0f);
 		m_shadowMapShaderObject.SSBO.standardSSBO = m_staticMeshShaderObject.SSBO.standardSSBO;
 	}
 

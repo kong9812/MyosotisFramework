@@ -36,60 +36,36 @@ void main()
     StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
 
-    debugPrintfEXT("center: x: %f y: %f z: %f", standardSSBO.obbData.center.x, standardSSBO.obbData.center.y, standardSSBO.obbData.center.z);
-    debugPrintfEXT("axisX: x: %f y: %f z: %f", standardSSBO.obbData.axisX.x, standardSSBO.obbData.axisX.y, standardSSBO.obbData.axisX.z);
-    debugPrintfEXT("axisY: x: %f y: %f z: %f", standardSSBO.obbData.axisY.x, standardSSBO.obbData.axisY.y, standardSSBO.obbData.axisY.z);
-    debugPrintfEXT("axisZ: x: %f y: %f z: %f", standardSSBO.obbData.axisZ.x, standardSSBO.obbData.axisZ.y, standardSSBO.obbData.axisZ.z);
+    // debugPrintfEXT("center: x: %f y: %f z: %f", standardSSBO.obbData.center.x, standardSSBO.obbData.center.y, standardSSBO.obbData.center.z);
+    // debugPrintfEXT("axisX: x: %f y: %f z: %f", standardSSBO.obbData.axisX.x, standardSSBO.obbData.axisX.y, standardSSBO.obbData.axisX.z);
+    // debugPrintfEXT("axisY: x: %f y: %f z: %f", standardSSBO.obbData.axisY.x, standardSSBO.obbData.axisY.y, standardSSBO.obbData.axisY.z);
+    // debugPrintfEXT("axisZ: x: %f y: %f z: %f", standardSSBO.obbData.axisZ.x, standardSSBO.obbData.axisZ.y, standardSSBO.obbData.axisZ.z);
 
-    debugPrintfEXT("plane0: x: %f y: %f z: %f w: %f", cameraData.frustumPlanes[1].x, cameraData.frustumPlanes[1].y, cameraData.frustumPlanes[1].z, cameraData.frustumPlanes[1].w);
+    // debugPrintfEXT("plane0: x: %f y: %f z: %f w: %f", cameraData.frustumPlanes[1].x, cameraData.frustumPlanes[1].y, cameraData.frustumPlanes[1].z, cameraData.frustumPlanes[1].w);
 
-    if (FrustumCulling_IsVisible(standardSSBO.obbData))
+    OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+    uint meshletCount = 0;
+    if (FrustumCulling_IsVisible(obbData))
     {
         // 画面に入ってる
-        uint meshletCount = 0;
         for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
         {
-            taskShaderToMeshShaderDatas[i]._using = 1;
-            taskShaderToMeshShaderDatas[i].objectIndex = objectIndex;
-            taskShaderToMeshShaderDatas[i].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-            taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
-            meshletCount++;
+            MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
+            OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+
+            if (FrustumCulling_IsVisible(meshletObbData))
+            {           
+                taskShaderToMeshShaderDatas[i]._using = 1;
+                taskShaderToMeshShaderDatas[i].objectIndex = objectIndex;
+                taskShaderToMeshShaderDatas[i].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
+                taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
+                meshletCount++;
+            }
         }
-	    EmitMeshTasksEXT(meshletCount, 1, 1);
     }
-
-    // // Frustum Culling判定 (OBB)
-    // uint renderCount = 0;
-    // for (int i = 0; i < 6; i++) 
-    // {
-    //     vec4 plane = cameraData.frustumPlanes[i];
-    //     // OBB中心から平面までの距離
-    //     float d = dot(plane.xyz, standardSSBO.obbData.center.xyz) + plane.w;
-    //     // OBB各軸を平面法線に投影した長さの合計が半径
-    //     float r = 
-    //         abs(dot(plane.xyz, standardSSBO.obbData.axisX.xyz)) * standardSSBO.obbData.axisX.w +
-    //         abs(dot(plane.xyz, standardSSBO.obbData.axisY.xyz)) * standardSSBO.obbData.axisY.w +
-    //         abs(dot(plane.xyz, standardSSBO.obbData.axisZ.xyz)) * standardSSBO.obbData.axisZ.w;
-    //     if (d + r >= 0.0) 
-    //     {
-    //         renderCount++;
-    //         break;
-    //     }
-    // }
-
-    // // 画面に入ってる
-    // if (renderCount > 0) 
-    // {
-    //     uint meshletCount = 0;
-    //     for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
-    //     {
-    //         taskShaderToMeshShaderDatas[i]._using = 1;
-    //         taskShaderToMeshShaderDatas[i].objectIndex = objectIndex;
-    //         taskShaderToMeshShaderDatas[i].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-    //         taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
-    //     }
-    //     debugPrintfEXT("taskShader renderCount: %d\n", meshData.meshletMetaDataCount);
-	//     EmitMeshTasksEXT(meshData.meshletMetaDataCount, 1, 1);
-	//     //EmitMeshTasksEXT(180, 1, 1);
-    // }
+    if (meshletCount > 0)
+    {
+        debugPrintfEXT("taskShader renderCount: %d\n", meshletCount);
+        EmitMeshTasksEXT(meshletCount, 1, 1);
+    }
 }

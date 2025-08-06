@@ -443,16 +443,20 @@ namespace MyosotisFW::System::Render
 	{
 		for (const auto& [shape, meshes] : meshDatas)
 		{
-			// MeshData
-			MeshDataSSBO meshData{};
-			meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
-			meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
 			for (const Mesh& mesh : meshes)
 			{
+				// MeshData
+				MeshDataSSBO meshData{};
+				meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
+				meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
+				meshData.AABBMin = glm::vec4(mesh.min, 0.0f);
+				meshData.AABBMax = glm::vec4(mesh.max, 0.0f);
 				for (const Meshlet& meshlet : mesh.meshlet)
 				{
 					// MeshletMetaData
 					MeshletMetaDataSSBO meshletMetaData{};
+					meshletMetaData.AABBMin = glm::vec4(meshlet.min, 0.0f);
+					meshletMetaData.AABBMax = glm::vec4(meshlet.max, 0.0f);
 					meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 					meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 					meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
@@ -471,9 +475,9 @@ namespace MyosotisFW::System::Render
 
 				// VertexData
 				m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
+				meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
+				m_meshDatas.push_back(meshData);
 			}
-			meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
-			m_meshDatas.push_back(meshData);
 		}
 		updateVertexDescriptorSet();
 	}
@@ -481,17 +485,22 @@ namespace MyosotisFW::System::Render
 	uint32_t RenderDescriptors::AddCustomMesh(const std::string meshName, std::vector<Mesh> meshDatas)
 	{
 		uint32_t meshID = static_cast<uint32_t>(m_meshDatas.size());
-		// MeshData
-		MeshDataSSBO meshData{};
-		meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
-		meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
 
 		for (const Mesh& mesh : meshDatas)
 		{
+			// MeshData
+			MeshDataSSBO meshData{};
+			meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
+			meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
+			meshData.AABBMin = glm::vec4(mesh.min, 0.0f);
+			meshData.AABBMax = glm::vec4(mesh.max, 0.0f);
+
 			for (const Meshlet& meshlet : mesh.meshlet)
 			{
 				// MeshletMetaData
 				MeshletMetaDataSSBO meshletMetaData{};
+				meshletMetaData.AABBMin = glm::vec4(meshlet.min, 0.0f);
+				meshletMetaData.AABBMax = glm::vec4(meshlet.max, 0.0f);
 				meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 				meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 				meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
@@ -510,9 +519,9 @@ namespace MyosotisFW::System::Render
 
 			// VertexData
 			m_vertexDatas.insert(m_vertexDatas.end(), mesh.vertex.begin(), mesh.vertex.end());
+			meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
+			m_meshDatas.push_back(meshData);
 		}
-		meshData.meshletMetaDataCount = static_cast<uint32_t>(m_meshletMetaDatas.size()) - meshData.meshletMetaDataOffset; // MeshMetaDataの個数
-		m_meshDatas.push_back(meshData);
 		updateVertexDescriptorSet();
 		return meshID;
 	}

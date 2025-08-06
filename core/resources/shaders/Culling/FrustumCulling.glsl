@@ -4,6 +4,13 @@
 #include "../SSBO/StandardSSBO.glsl"
 #include "../Loader/MainCameraDataLoader.glsl"
 
+struct OBBData {
+    vec4 center;
+	vec4 axisX;
+	vec4 axisY;
+	vec4 axisZ;
+};
+
 mat3 FrustumCulling_RotateX(float angle) {
     float c = cos(angle);
     float s = sin(angle);
@@ -34,9 +41,9 @@ mat3 FrustumCulling_RotateZ(float angle) {
     );
 }
 
-StardardOBBData FrustumCulling_CreateStardardOBBData(vec3 aabbMin, vec3 aabbMax, vec3 position, vec3 scale, vec3 rotation)
+OBBData FrustumCulling_CreateOBBData(vec3 aabbMin, vec3 aabbMax, vec3 position, vec3 rotation, vec3 scale)
 {
-    StardardOBBData obbData;
+    OBBData obbData;
     vec3 localExtent = (aabbMax - aabbMin) * 0.5;
     vec3 centerLocal = (aabbMax + aabbMin) * 0.5;
     vec3 scaleExtent = localExtent * scale;
@@ -63,7 +70,7 @@ StardardOBBData FrustumCulling_CreateStardardOBBData(vec3 aabbMin, vec3 aabbMax,
     return obbData;
 }
 
-bool FrustumCulling_IsVisible(StardardOBBData obbData)
+bool FrustumCulling_IsVisible(OBBData obbData)
 {
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     for (int i = 0; i < 6; i++) 

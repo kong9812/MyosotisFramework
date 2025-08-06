@@ -2,32 +2,27 @@
 #define STANDARDSSBO
 #include "../Loader/RawDataLoader.glsl"
 
-struct StardardOBBData {
-    vec4 center;
-	vec4 axisX;
-	vec4 axisY;
-	vec4 axisZ;
-};
 struct StandardSSBO {
-    StardardOBBData obbData;
     mat4 model;
+    vec4 position;
+    vec4 rotation;
+    vec4 scale;
     vec4 color;
     uint renderID;
     uint meshDataIndex;
 };
 
-const uint StandardSSBOSize = 38;
+const uint StandardSSBOSize = 34;
 
 StandardSSBO StandardSSBO_LoadStandardSSBO(uint offset) {
     StandardSSBO ssbo;
-    ssbo.obbData.center = RawDataLoader_LoadVec4(offset + 0);
-    ssbo.obbData.axisX = RawDataLoader_LoadVec4(offset + 4);
-    ssbo.obbData.axisY = RawDataLoader_LoadVec4(offset + 8);
-    ssbo.obbData.axisZ = RawDataLoader_LoadVec4(offset + 12);
-    ssbo.model = RawDataLoader_LoadMat4(offset + 16);
-    ssbo.color = RawDataLoader_LoadVec4(offset + 32);
-    ssbo.renderID = RawDataLoader_LoadUint(offset + 36);
-    ssbo.meshDataIndex = RawDataLoader_LoadUint(offset + 37);
+    ssbo.model = RawDataLoader_LoadMat4(offset + 0);
+    ssbo.position = RawDataLoader_LoadVec4(offset + 16);
+    ssbo.rotation = RawDataLoader_LoadVec4(offset + 20);
+    ssbo.scale = RawDataLoader_LoadVec4(offset + 24);
+    ssbo.color = RawDataLoader_LoadVec4(offset + 28);
+    ssbo.renderID = RawDataLoader_LoadUint(offset + 32);
+    ssbo.meshDataIndex = RawDataLoader_LoadUint(offset + 33);
     return ssbo;
 }
 #endif
