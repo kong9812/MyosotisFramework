@@ -9,6 +9,8 @@
 #include "Application.h"
 #include "ApplicationInterface.h"
 
+#include "iglm.h"
+
 #ifdef FWDLL
 namespace {
 	constexpr const char* g_dll = "MyosotisDLL.dll";
@@ -86,6 +88,18 @@ int main()
 #else
 int main()
 {
+	glm::vec3 min = glm::vec3(-0.127930f, -0.893311f, 0.660156f);
+	glm::vec3 max = glm::vec3(0.121704f, -0.737188f, 0.726406f);
+	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 scale = glm::vec3(5.0f, 5.0f, 5.0f);
+
+	glm::vec3 localCenter = (min + max) * 0.5f;
+	float localRadius = glm::length(max - min) * 0.5f;
+
+	glm::vec3 worldCenter = position + localCenter;
+	float maxScale = glm::max(scale.x, glm::max(scale.y, scale.z));
+	float worldRadius = localRadius * maxScale;
+
 	std::cout << std::filesystem::current_path() << std::endl;
 	Application* application = new Application();
 	application->Initialize(false);

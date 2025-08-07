@@ -57,6 +57,9 @@ namespace MyosotisFW
 
 			// 回転を適用
 			glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transform.rot)));
+			auto testX = rotMat * glm::vec3(1.0f, 0.0f, 0.0f);
+			auto testY = rotMat * glm::vec3(0.0f, 1.0f, 0.0f);
+			auto testZ = rotMat * glm::vec3(0.0f, 0.0f, 1.0f);
 			obbData.axisX = glm::vec4(rotMat * glm::vec3(1.0f, 0.0f, 0.0f), scaleExtent.x);
 			obbData.axisY = glm::vec4(rotMat * glm::vec3(0.0f, 1.0f, 0.0f), scaleExtent.y);
 			obbData.axisZ = glm::vec4(rotMat * glm::vec3(0.0f, 0.0f, 1.0f), scaleExtent.z);

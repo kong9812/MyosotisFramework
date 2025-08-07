@@ -401,6 +401,18 @@ namespace Utility::Vulkan::CreateInfo
 		return sd;
 	}
 
+	inline VkSubpassDescription subpassDescription_color_depth(
+		const VkAttachmentReference& colorAttachment,
+		const VkAttachmentReference& depthStencilAttachment)
+	{
+		VkSubpassDescription sd{};
+		sd.pipelineBindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+		sd.colorAttachmentCount = 1;
+		sd.pColorAttachments = &colorAttachment;
+		sd.pDepthStencilAttachment = &depthStencilAttachment;
+		return sd;
+	}
+
 	inline VkSubpassDependency subpassDependency(
 		const uint32_t& srcSubpass,
 		const uint32_t& dstSubpass,

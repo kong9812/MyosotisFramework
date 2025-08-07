@@ -26,9 +26,6 @@ layout (std430, set = 1, binding = 5) buffer TaskShaderToMeshShaderDataBuffer {
 
 void main()
 {
-    // debugPrintfEXT("Hello from task shader!\n");
-    // uint objectIndex = gl_WorkGroupID.x;    // todo. 今は何番目を使うかはわからない
-
     uint objectIndex = 1;    // todo. 今は何番目を使うかはわからない
 
     RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
@@ -36,14 +33,10 @@ void main()
     StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
 
-    // debugPrintfEXT("center: x: %f y: %f z: %f", standardSSBO.obbData.center.x, standardSSBO.obbData.center.y, standardSSBO.obbData.center.z);
-    // debugPrintfEXT("axisX: x: %f y: %f z: %f", standardSSBO.obbData.axisX.x, standardSSBO.obbData.axisX.y, standardSSBO.obbData.axisX.z);
-    // debugPrintfEXT("axisY: x: %f y: %f z: %f", standardSSBO.obbData.axisY.x, standardSSBO.obbData.axisY.y, standardSSBO.obbData.axisY.z);
-    // debugPrintfEXT("axisZ: x: %f y: %f z: %f", standardSSBO.obbData.axisZ.x, standardSSBO.obbData.axisZ.y, standardSSBO.obbData.axisZ.z);
-
-    // debugPrintfEXT("plane0: x: %f y: %f z: %f w: %f", cameraData.frustumPlanes[1].x, cameraData.frustumPlanes[1].y, cameraData.frustumPlanes[1].z, cameraData.frustumPlanes[1].w);
 
     OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+    debugPrintfEXT("scale:\n x: %f y: %f z: %f", standardSSBO.scale.x, standardSSBO.scale.y, standardSSBO.scale.z);
+
     uint meshletCount = 0;
     if (FrustumCulling_IsVisible(obbData))
     {
@@ -51,21 +44,29 @@ void main()
         for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
         {
             MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
-            OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
 
+            OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+            // SphereData sphereData = FrustumCulling_CreateBoundingSphere(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.scale.xyz);
+            
+            //if (FrustumCulling_IsVisible_Sphere(sphereData))
             if (FrustumCulling_IsVisible(meshletObbData))
-            {           
-                taskShaderToMeshShaderDatas[i]._using = 1;
-                taskShaderToMeshShaderDatas[i].objectIndex = objectIndex;
-                taskShaderToMeshShaderDatas[i].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-                taskShaderToMeshShaderDatas[i].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
+            {
+                taskShaderToMeshShaderDatas[meshletCount]._using = 1;
+                taskShaderToMeshShaderDatas[meshletCount].objectIndex = objectIndex;
+                taskShaderToMeshShaderDatas[meshletCount].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
+                taskShaderToMeshShaderDatas[meshletCount].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
+                debugPrintfEXT("OK Task: %d MeshletID: %d", meshletCount, i);
                 meshletCount++;
+            }
+            else
+            {
+                taskShaderToMeshShaderDatas[i]._using = 0;
             }
         }
     }
     if (meshletCount > 0)
     {
-        debugPrintfEXT("taskShader renderCount: %d\n", meshletCount);
+        debugPrintfEXT("render meshletCount: %d", meshletCount);
         EmitMeshTasksEXT(meshletCount, 1, 1);
     }
 }

@@ -16,6 +16,14 @@
 // [Vec3]Color
 // [Vec4]Color
 
+// 座標系
+// Y ↑+
+// Y ↓-
+// X ←-
+// X →+
+// Z ↑+
+// Z ↓-
+
 namespace MyosotisFW::System::Render::Shape
 {
 	enum class PrimitiveGeometryShape
@@ -38,57 +46,62 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, nx, ny, nz, uvx, uvy, r, g, b, a,)
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
-			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 0
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 1
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 2
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 3
+			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 3
+			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 2
+			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 0
+			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,		// 1
 
-			// 背面 (0, 0, 1)
-			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 4
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 5
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 6
-			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 7
+			 // 背面 (0, 0, 1)
+			  halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 6
+			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 7
+			  halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 5
+			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 4
 
-			// 上面 (0, 1, 0)
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
-			-halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
+			 // 上面 (0, 1, 0)
+			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
+			  halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
+			 -halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
+			  halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
 
-			// 下面 (0, -1, 0)
-			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 12
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 13
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 14
-			-halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 15
+			  // 下面 (0, -1, 0)
+			   halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 14
+			  -halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 15
+			   halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 13
+			  -halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 12
 
-			// 右面 (1, 0, 0)
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 16
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 17
-			 halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 18
-			 halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 19
+			  // 右面 (1, 0, 0)
+			   halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 17
+			   halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 18
+			   halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 16
+			   halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 19
 
-			 // 左面 (-1, 0, 0)
-			 -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 20
-			 -halfSize + center.x,  halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 21
-			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 22
-			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 23
+			   // 左面 (-1, 0, 0)
+			   -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 20
+			   -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 23
+			   -halfSize + center.x,  halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 21
+			   -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 22
 		};
 		meshlet.primitives = {
-			0,	2,	1,	0,	3,	2,	// 前面
-			4,	5,	6,	4,	6,	7,	// 背面
-			8,	10,	9,	8,	11,	10,	// 上面
-			12, 13,	14,	12,	14,	15,	// 下面
-			16, 17,	18,	16,	18,	19,	// 右面
-			20, 22,	21,	20,	23,	22	// 左面
+			0,	1,	2,	2,	1,	3,	// 前面
+			4,	5,	6,	6,	5,	7,	// 背面
+			8,	9,	10,	10,	9,	11,	// 上面
+			12, 13,	14,	14,	13,	15,	// 下面
+			16, 17,	18,	18,	17,	19,	// 右面
+			20, 21,	22,	22,	21,	23	// 左面
 		};
-		for (uint32_t index : meshlet.primitives)
+		for (uint32_t& index : meshlet.primitives)
 		{
 			if (uniqueVertexIndices.insert(index).second)
 			{
 				meshlet.uniqueIndex.push_back(index);
 			}
+			else
+			{
+				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
+				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
+				index = indexInUnique;
+			}
 		}
-		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
 		meshlet.min = center - glm::vec3(halfSize);
 		meshlet.max = center + glm::vec3(halfSize);
 		mesh.meshlet.push_back(meshlet);
@@ -105,14 +118,14 @@ namespace MyosotisFW::System::Render::Shape
 		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
-			// 上面 (0, 1, 0)
-			-halfSize + center.x,  center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
-			 halfSize + center.x,  center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
-			 halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
-			-halfSize + center.x,  center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
+			// 前面 (0, 0, -1)
+			-halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 3
+			 halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 2
+			-halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 0
+			 halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,		// 1
 		};
 		meshlet.primitives = {
-			0,	2,	1,	0,	3,	2,	// 上面
+			0,	1,	2,	2,	1,	3,	// 前面
 		};
 		for (uint32_t index : meshlet.primitives)
 		{
@@ -120,10 +133,15 @@ namespace MyosotisFW::System::Render::Shape
 			{
 				meshlet.uniqueIndex.push_back(index);
 			}
+			else
+			{
+				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
+				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
+				index = indexInUnique;
+			}
 		}
-		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
-		meshlet.min = center - glm::vec3(halfSize, 0.0f, halfSize);
-		meshlet.max = center + glm::vec3(halfSize, 0.0f, halfSize);
+		meshlet.min = center - glm::vec3(halfSize, halfSize, 0.0f);
+		meshlet.max = center + glm::vec3(halfSize, halfSize, 0.0f);
 		mesh.meshlet.push_back(meshlet);
 		mesh.min = meshlet.min;
 		mesh.max = meshlet.max;
@@ -169,8 +187,13 @@ namespace MyosotisFW::System::Render::Shape
 			{
 				meshlet.uniqueIndex.push_back(index);
 			}
+			else
+			{
+				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
+				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
+				index = indexInUnique;
+			}
 		}
-		meshlet.uniqueIndex.insert(meshlet.uniqueIndex.end(), uniqueVertexIndices.begin(), uniqueVertexIndices.end());
 		meshlet.min = center - glm::vec3(radius, radius, 0.0f);
 		meshlet.max = center + glm::vec3(radius, radius, 0.0f);
 		mesh.meshlet.push_back(meshlet);
@@ -181,6 +204,7 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
+	// todo.今は一つのMeshletにまとめているので、壊れてる…
 	inline Mesh createSphere(float size = 1.0f, glm::vec4 color = { 1.0f,1.0f,1.0f,1.0f }, glm::vec3 center = { 0.0f,0.0f,0.0f }, uint32_t side = 4)
 	{
 		float radius = size * 0.5f;
@@ -227,6 +251,12 @@ namespace MyosotisFW::System::Render::Shape
 			if (uniqueVertexIndices.insert(index).second)
 			{
 				meshlet.uniqueIndex.push_back(index);
+			}
+			else
+			{
+				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
+				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
+				index = indexInUnique;
 			}
 		}
 		meshlet.min = center - glm::vec3(radius, radius, 0.0f);

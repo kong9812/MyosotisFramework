@@ -215,7 +215,10 @@ namespace MyosotisFW::System::Render
 		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
 			static_cast<uint32_t>(VertexDescriptorBindingIndex::TASK_SHADER_TO_MESH_SHADER_DATA),
 			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_taskShaderToMeshShaderDataBuffer.descriptor);
-		memset(m_taskShaderToMeshShaderDataBuffer.allocationInfo.pMappedData, 0,
+		TaskShaderToMeshShaderData tmpData[1000] = { 0 };
+		memset(tmpData, 0,
+			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000));
+		memcpy(m_taskShaderToMeshShaderDataBuffer.allocationInfo.pMappedData, tmpData,
 			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000));
 		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 	}

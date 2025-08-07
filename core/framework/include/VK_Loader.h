@@ -272,6 +272,9 @@ namespace Utility::Loader {
 								buf[primitiveIndex * 3 + 1],
 								buf[primitiveIndex * 3 + 2]
 							};
+							glm::vec3 v0 = glm::make_vec3(&positionBuffer[triangle[0] * 3]);
+							glm::vec3 v1 = glm::make_vec3(&positionBuffer[triangle[1] * 3]);
+							glm::vec3 v2 = glm::make_vec3(&positionBuffer[triangle[2] * 3]);
 
 							// 頂点追加後のサイズ
 							size_t newUnique = currentMeshletData.uniqueIndex.size();
@@ -305,22 +308,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.min.x = positionBuffer[triangle[0]];
-								currentMeshletData.min.y = positionBuffer[triangle[1]];
-								currentMeshletData.min.z = positionBuffer[triangle[2]];
-								currentMeshletData.max.x = positionBuffer[triangle[0]];
-								currentMeshletData.max.y = positionBuffer[triangle[1]];
-								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(v0, glm::min(v1, v2));
+								currentMeshletData.max = glm::max(v0, glm::max(v1, v2));
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
-								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
-								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
-								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
-								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
-								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(currentMeshletData.min, glm::min(v0, glm::min(v1, v2)));
+								currentMeshletData.max = glm::max(currentMeshletData.max, glm::max(v0, glm::max(v1, v2)));
 							}
 
 							// 三角形追加
@@ -348,6 +343,9 @@ namespace Utility::Loader {
 								buf[primitiveIndex * 3 + 1],
 								buf[primitiveIndex * 3 + 2]
 							};
+							glm::vec3 v0 = glm::make_vec3(&positionBuffer[triangle[0] * 3]);
+							glm::vec3 v1 = glm::make_vec3(&positionBuffer[triangle[1] * 3]);
+							glm::vec3 v2 = glm::make_vec3(&positionBuffer[triangle[2] * 3]);
 
 							// 頂点追加後のサイズ
 							size_t newUnique = currentMeshletData.uniqueIndex.size();
@@ -381,22 +379,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.min.x = positionBuffer[triangle[0]];
-								currentMeshletData.min.y = positionBuffer[triangle[1]];
-								currentMeshletData.min.z = positionBuffer[triangle[2]];
-								currentMeshletData.max.x = positionBuffer[triangle[0]];
-								currentMeshletData.max.y = positionBuffer[triangle[1]];
-								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(v0, glm::min(v1, v2));
+								currentMeshletData.max = glm::max(v0, glm::max(v1, v2));
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
-								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
-								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
-								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
-								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
-								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(currentMeshletData.min, glm::min(v0, glm::min(v1, v2)));
+								currentMeshletData.max = glm::max(currentMeshletData.max, glm::max(v0, glm::max(v1, v2)));
 							}
 
 							// 三角形追加
@@ -424,6 +414,9 @@ namespace Utility::Loader {
 								buf[primitiveIndex * 3 + 1],
 								buf[primitiveIndex * 3 + 2]
 							};
+							glm::vec3 v0 = glm::make_vec3(&positionBuffer[triangle[0] * 3]);
+							glm::vec3 v1 = glm::make_vec3(&positionBuffer[triangle[1] * 3]);
+							glm::vec3 v2 = glm::make_vec3(&positionBuffer[triangle[2] * 3]);
 
 							// 頂点追加後のサイズ
 							size_t newUnique = currentMeshletData.uniqueIndex.size();
@@ -457,22 +450,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.min.x = positionBuffer[triangle[0]];
-								currentMeshletData.min.y = positionBuffer[triangle[1]];
-								currentMeshletData.min.z = positionBuffer[triangle[2]];
-								currentMeshletData.max.x = positionBuffer[triangle[0]];
-								currentMeshletData.max.y = positionBuffer[triangle[1]];
-								currentMeshletData.max.z = positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(v0, glm::min(v1, v2));
+								currentMeshletData.max = glm::max(v0, glm::max(v1, v2));
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.min.x = currentMeshletData.min.x < positionBuffer[triangle[0]] ? currentMeshletData.min.x : positionBuffer[triangle[0]];
-								currentMeshletData.min.y = currentMeshletData.min.y < positionBuffer[triangle[1]] ? currentMeshletData.min.y : positionBuffer[triangle[1]];
-								currentMeshletData.min.z = currentMeshletData.min.z < positionBuffer[triangle[2]] ? currentMeshletData.min.z : positionBuffer[triangle[2]];
-								currentMeshletData.max.x = currentMeshletData.max.x > positionBuffer[triangle[0]] ? currentMeshletData.max.x : positionBuffer[triangle[0]];
-								currentMeshletData.max.y = currentMeshletData.max.y > positionBuffer[triangle[1]] ? currentMeshletData.max.y : positionBuffer[triangle[1]];
-								currentMeshletData.max.z = currentMeshletData.max.z > positionBuffer[triangle[2]] ? currentMeshletData.max.z : positionBuffer[triangle[2]];
+								currentMeshletData.min = glm::min(currentMeshletData.min, glm::min(v0, glm::min(v1, v2)));
+								currentMeshletData.max = glm::max(currentMeshletData.max, glm::max(v0, glm::max(v1, v2)));
 							}
 
 							// 三角形追加
