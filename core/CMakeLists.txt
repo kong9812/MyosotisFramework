@@ -92,7 +92,7 @@ set_target_properties(glm PROPERTIES FOLDER "external")
 FetchContent_Declare(
    ofbx
    GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
-   GIT_TAG master
+   GIT_TAG 82a43d9191f2250145fddc219b4083667c33f2a5
 )
 FetchContent_MakeAvailable(ofbx)
 set(ofbx_SOURCES_DIR ${FETCHCONTENT_BASE_DIR}/ofbx-src)
@@ -185,7 +185,7 @@ FetchContent_MakeAvailable(stduuid)
 FetchContent_Declare(
     stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG master
+    GIT_TAG f58f558c120e9b32c217290b80bad1a0729fbb2c
 )
 FetchContent_MakeAvailable(stb)
 set(STB_SOURCES
@@ -196,7 +196,7 @@ set(STB_SOURCES
 FetchContent_Declare(
     tinygltf
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG release
+    GIT_TAG 37250b3470b517fd6823ee82d6e0495695bb7924
 )
 set(TINYGLTF_HEADER_ONLY ON CACHE BOOL "" FORCE)
 set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE BOOL "" FORCE)
