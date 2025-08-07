@@ -89,6 +89,11 @@ Once the environment setup is complete, you can use the following batch file to 
 - **Interior Mapping**  
 ![interiorMapping](https://github.com/kong9812/MyosotisFramework/blob/main/demo/interiorMapping.gif)
 
+- **Meshlet**  
+  Meshlets are currently split in a super basic way (just by index).  
+  Hoping to switch to something like Greedy Clustering later for better results.  
+![Meshlet](https://github.com/user-attachments/assets/c7d42882-1cc3-4f43-883c-cf89e892d9ca)
+
 ---
 
 ## License
