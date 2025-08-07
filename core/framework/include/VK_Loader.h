@@ -585,6 +585,9 @@ namespace Utility::Loader {
 					const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
 					std::vector<uint32_t> triangle{};
 					triangulate(geomData, polygon, triangle);
+					glm::vec3 v0 = glm::vec3(positions.get(triangle[0]).x, positions.get(triangle[0]).y, positions.get(triangle[0]).z);
+					glm::vec3 v1 = glm::vec3(positions.get(triangle[1]).x, positions.get(triangle[1]).y, positions.get(triangle[1]).z);
+					glm::vec3 v2 = glm::vec3(positions.get(triangle[2]).x, positions.get(triangle[2]).y, positions.get(triangle[2]).z);
 
 					// 頂点追加後のサイズ
 					size_t newUnique = currentMeshletData.uniqueIndex.size();
@@ -618,22 +621,14 @@ namespace Utility::Loader {
 					// AABB更新
 					if (firstDataForMeshletAABB)
 					{
-						currentMeshletData.min.x = positions.get(triangle[0]).x;
-						currentMeshletData.min.y = positions.get(triangle[1]).y;
-						currentMeshletData.min.z = positions.get(triangle[2]).z;
-						currentMeshletData.max.x = positions.get(triangle[0]).x;
-						currentMeshletData.max.y = positions.get(triangle[1]).y;
-						currentMeshletData.max.z = positions.get(triangle[2]).z;
+						currentMeshletData.min = glm::min(v0, glm::min(v1, v2));
+						currentMeshletData.max = glm::max(v0, glm::max(v1, v2));
 						firstDataForMeshletAABB = false;
 					}
 					else
 					{
-						currentMeshletData.min.x = currentMeshletData.min.x < positions.get(triangle[0]).x ? currentMeshletData.min.x : positions.get(triangle[0]).x;
-						currentMeshletData.min.y = currentMeshletData.min.y < positions.get(triangle[1]).y ? currentMeshletData.min.y : positions.get(triangle[1]).y;
-						currentMeshletData.min.z = currentMeshletData.min.z < positions.get(triangle[2]).z ? currentMeshletData.min.z : positions.get(triangle[2]).z;
-						currentMeshletData.max.x = currentMeshletData.max.x > positions.get(triangle[0]).x ? currentMeshletData.max.x : positions.get(triangle[0]).x;
-						currentMeshletData.max.y = currentMeshletData.max.y > positions.get(triangle[1]).y ? currentMeshletData.max.y : positions.get(triangle[1]).y;
-						currentMeshletData.max.z = currentMeshletData.max.z > positions.get(triangle[2]).z ? currentMeshletData.max.z : positions.get(triangle[2]).z;
+						currentMeshletData.min = glm::min(currentMeshletData.min, glm::min(v0, glm::min(v1, v2)));
+						currentMeshletData.max = glm::max(currentMeshletData.max, glm::max(v0, glm::max(v1, v2)));
 					}
 
 					// 三角形追加
