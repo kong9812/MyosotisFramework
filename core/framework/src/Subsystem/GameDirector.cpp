@@ -51,19 +51,36 @@ namespace MyosotisFW::System::GameDirector {
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
+		for (uint32_t i = 0; i < 4; i++)
 		{
-			StageObject_ptr newObject = CreateStageObjectPointer();
-			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
-			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
-			component->SetCustomMeshInfo(customMeshInfo);
-			component->SetPos(glm::vec3(0.0f));
-			component->SetRot(glm::vec3(90.0f, 0.0f, 0.0f));
-			component->SetScale(glm::vec3(100.0f));
-			newObject->AddComponent(component);
-			m_renderSubsystem->RegisterObject(newObject);
+			{
+				StageObject_ptr newObject = CreateStageObjectPointer();
+				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+					System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+				CustomMeshInfo customMeshInfo{};
+				customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
+				component->SetCustomMeshInfo(customMeshInfo);
+				component->SetPos(glm::vec3(-2.5f, 0.0f, 5.0f * i));
+				component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+				component->SetScale(glm::vec3(2.0f));
+				newObject->AddComponent(component);
+				m_renderSubsystem->RegisterObject(newObject);
+			}
+			{
+				StageObject_ptr newObject = CreateStageObjectPointer();
+				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+					System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+				CustomMeshInfo customMeshInfo{};
+				customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
+				component->SetCustomMeshInfo(customMeshInfo);
+				component->SetPos(glm::vec3(2.5f, 0.0f, 5.0f * i));
+				component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+				component->SetScale(glm::vec3(10.0f));
+				newObject->AddComponent(component);
+				m_renderSubsystem->RegisterObject(newObject);
+			}
 		}
+
 
 		//{
 		//	StageObject_ptr newObject = CreateStageObjectPointer();

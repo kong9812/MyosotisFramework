@@ -20,6 +20,7 @@ namespace MyosotisFW::System::Render
 		enum class MainDescriptorBindingIndex : uint32_t
 		{
 			MAIN_CAMERA_DATA = 0,
+			STANDARD_SSBO,
 			META_DATA,
 			STORAGE_BUFFER,
 			COMBINED_IMAGE_SAMPLER,
@@ -33,13 +34,15 @@ namespace MyosotisFW::System::Render
 			UNIQUE_INDEX,
 			PRIMITIVES,
 			TASK_SHADER_TO_MESH_SHADER_DATA,
+			MESHLET_COUNT,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
 		void UpdateMainCameraData(const CameraData& cameraData);
 		void UpdateMainDescriptorSet();
+		void ResetMeshletCount();
 
-		void ResetMainDescriptorSetBuffer();
+		void ResetMainDescriptorSet();
 
 		template<typename T>
 		uint32_t AddStorageBuffer(const T& object)
@@ -63,7 +66,9 @@ namespace MyosotisFW::System::Render
 
 		uint32_t AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo);
 		uint32_t AddStorageImageInfo(const VkDescriptorImageInfo& imageInfo);
+		uint32_t AddStandardSSBO(const StandardSSBO& ssbo);
 
+		uint32_t GetStandardSSBOCount() const { return static_cast<uint32_t>(m_standardSSBOs.size()); }
 		VkDescriptorPool& GetDescriptorPool() { return m_descriptorPool; }
 		VkDescriptorSet& GetBindlessMainDescriptorSet() { return m_mainDescriptorSet; }
 		VkDescriptorSet& GetBindlessVertexDescriptorSet() { return m_vertexDescriptorSet; }
@@ -108,6 +113,8 @@ namespace MyosotisFW::System::Render
 		void allocateMainDescriptorSet();
 		void allocateVertexDescriptorSet();
 		void updateVertexDescriptorSet();
+		void destroyMainDescriptorSetBuffer();
+		void destroyVertexDescriptorSetBuffer();
 
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;
@@ -117,9 +124,11 @@ namespace MyosotisFW::System::Render
 		VkDescriptorSet m_vertexDescriptorSet;
 
 		// Set = 0
+		std::vector<StandardSSBO> m_standardSSBOs;
 		std::vector<uint32_t> m_storageBufferRawData;
 		std::vector<MetaData> m_storageBufferMetaData;
 		Buffer m_mainCameraDataBuffer;
+		Buffer m_standardSSBOBuffer;
 		Buffer m_storageBufferRawDataBuffer;
 		Buffer m_storageBufferMetaDataBuffer;
 
@@ -135,6 +144,7 @@ namespace MyosotisFW::System::Render
 		Buffer m_uniqueIndexBuffer;
 		Buffer m_primitivesBuffer;
 		Buffer m_taskShaderToMeshShaderDataBuffer;
+		Buffer m_meshletCountBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;
 		std::vector<VkDescriptorImageInfo> m_storageImageInfos;

@@ -53,7 +53,7 @@ namespace MyosotisFW::System::Render
 		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
-
+		uint32_t GetStandardSSBOIndex() const { return m_staticMeshShaderObject.pushConstant.StandardSSBOIndex; }
 	protected:
 		virtual void loadAssets() {}
 		virtual void prepareShaderStorageBuffers() {}

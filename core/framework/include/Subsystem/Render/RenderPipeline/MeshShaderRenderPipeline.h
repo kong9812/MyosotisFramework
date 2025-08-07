@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render
 		~MeshShaderRenderPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount);
 
 	private:
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;

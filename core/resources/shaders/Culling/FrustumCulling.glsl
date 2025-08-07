@@ -3,7 +3,6 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_EXT_debug_printf : enable
 
-#include "../SSBO/StandardSSBO.glsl"
 #include "../Loader/MainCameraDataLoader.glsl"
 
 struct OBBData {

@@ -274,6 +274,20 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
+
+		for (StageObject_ptr& object : m_objects)
+		{
+			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
+			for (ComponentBase_ptr& component : components)
+			{
+				if (IsStaticMesh(component->GetType()))
+				{
+					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
+					staticMesh->GetStaticMeshShaderObject().pushConstant.StandardSSBOIndex = m_descriptors->AddStandardSSBO(staticMesh->GetStaticMeshShaderObject().SSBO.standardSSBO);
+					//m_descriptors->AddStorageBuffer(staticMesh->GetStaticMeshShaderObject());
+				}
+			}
+		}
 	}
 
 	void RenderSubsystem::ShadowRender()
@@ -298,7 +312,7 @@ namespace MyosotisFW::System::Render
 				if (IsStaticMesh(component->GetType()))
 				{
 					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					m_shadowMapRenderPipeline->UpdateDescriptors(staticMesh->GetShadowMapShaderObject());
+					m_shadowMapRenderPipeline->UpdateDescriptors(staticMesh->GetShadowMapShaderObject(), staticMesh->GetStandardSSBOIndex());
 					staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
 				}
 			}
@@ -312,21 +326,6 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
-
-		// 見えない時もTaskShaderのカリング処理ができるように更新
-		for (StageObject_ptr& object : m_objects)
-		{
-			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
-			for (ComponentBase_ptr& component : components)
-			{
-				if (IsStaticMesh(component->GetType()))
-				{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					m_deferredRenderPipeline->UpdateDescriptors(staticMesh->GetStaticMeshShaderObject());
-					//m_descriptors->AddStorageBuffer(staticMesh->GetStaticMeshShaderObject());
-				}
-			}
-		}
 
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 
@@ -419,7 +418,7 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_meshShaderRenderPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_meshShaderRenderPipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 
@@ -462,7 +461,7 @@ namespace MyosotisFW::System::Render
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
 
-		m_descriptors->ResetMainDescriptorSetBuffer();
+		m_descriptors->ResetMainDescriptorSet();
 	}
 
 	void RenderSubsystem::ResetGameStage()

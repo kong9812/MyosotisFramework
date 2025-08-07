@@ -1,12 +1,12 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
 
+#include "Loader/RawDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
-#include "SSBO/StandardSSBO.glsl"
 
 layout(push_constant) uniform PushConstant {
-    uint objectIndex;
-    uint textureId;
+    uint StandardSSBOIndex;
+    uint TextureId;
 };
 
 layout (location = 0) in vec4 inPosition;
@@ -19,9 +19,8 @@ layout (location = 1) out flat uint outRenderID;
 
 void main() 
 {
-    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(StandardSSBOIndex);
 
     outUVW = inPosition.xyz;
     outRenderID = standardSSBO.renderID;

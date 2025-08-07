@@ -3,9 +3,9 @@
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_debug_printf : enable
 
+#include "Loader/RawDataLoader.glsl"
 #include "Loader/VertexDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
-#include "SSBO/StandardSSBO.glsl"
 
 layout(local_size_x = 64) in;
 layout(triangles, max_vertices = 64, max_primitives = 124) out;
@@ -43,13 +43,8 @@ void main()
     {
         return;
     }
-    else
-    {
-        // OKが来てない！！？！！
-        debugPrintfEXT("YES!! gl_WorkGroupID: %d meshletID: %d", gl_WorkGroupID.x, taskShaderToMeshShaderData.meshletIndex);
-    }
 
-    // debugPrintfEXT("Mesh Shader workGroupID: %d", gl_WorkGroupID.x);
+    barrier();
 
     MeshData meshData = VertexDataLoader_GetMeshData(taskShaderToMeshShaderData.meshIndex);
     MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex);
@@ -60,21 +55,17 @@ void main()
     }
     barrier();
 
-    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(taskShaderToMeshShaderData.objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(taskShaderToMeshShaderData.objectIndex);
 
     uint stride = gl_WorkGroupSize.x;
     uint idx = gl_LocalInvocationIndex;
 
-    // debugPrintfEXT("mesh index: %d meslet index: %d meshlet primCount: %d", sharedData.meshIndex, sharedData.meshletIndex, meshletMetaData.primitiveCount);
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletMetaData.vertexCount; i += stride) 
     {
         uint index = VertexDataLoader_GetUniqueIndexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i);
         VertexData v = VertexDataLoader_GetVertexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index);
-        // debugPrintfEXT("Mesh Shader workGroupID: %d", gl_WorkGroupID.x);
-        // debugPrintfEXT("meshIndex: %d meshletIndex:%d VertexIndex: %d\nx: %f y: %f z: %f", taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index, v.position.x, v.position.y, v.position.z);
         vec4 worldPos = standardSSBO.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
         vertexOutput[i].color = randomColor(taskShaderToMeshShaderData.meshletIndex);
@@ -88,8 +79,6 @@ void main()
         if (taskShaderToMeshShaderData.meshletIndex == 5)
         {
             uint offset = meshletMetaData.primitivesOffset + (i * 3);
-            // debugPrintfEXT("meshIndex: %d meshletIndex:%d primitiveIndex: %d\noffset: %d", taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i, offset);
-            // debugPrintfEXT("meshIndex: %d meshletIndex:%d primitiveIndex: %d\nx: %d y: %d z: %d", taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i, index.x, index.y, index.z);
         }
         gl_PrimitiveTriangleIndicesEXT[i] = index;
     }

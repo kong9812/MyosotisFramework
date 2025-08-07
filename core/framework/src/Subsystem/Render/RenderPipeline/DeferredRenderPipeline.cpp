@@ -31,13 +31,8 @@ namespace MyosotisFW::System::Render
 	{
 		if (shaderObject.useNormalMap)
 		{
-			shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
 			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(shaderObject.normalMap.sampler, shaderObject.normalMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			shaderObject.pushConstant.textureId = m_descriptors->AddStorageBuffer(descriptorImageInfo);
-		}
-		else
-		{
-			shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
+			shaderObject.pushConstant.TextureId = m_descriptors->AddStorageBuffer(descriptorImageInfo);
 		}
 	}
 

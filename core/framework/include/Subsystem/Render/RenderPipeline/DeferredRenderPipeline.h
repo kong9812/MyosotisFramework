@@ -22,8 +22,8 @@ namespace MyosotisFW::System::Render
 			Image normalMap;
 
 			struct {
-				uint32_t objectIndex;
-				uint32_t textureId;
+				uint32_t StandardSSBOIndex;
+				uint32_t TextureId;
 			}pushConstant;
 
 			struct {

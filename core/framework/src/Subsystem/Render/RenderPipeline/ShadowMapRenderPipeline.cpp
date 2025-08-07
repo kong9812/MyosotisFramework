@@ -49,11 +49,11 @@ namespace MyosotisFW::System::Render
 		shaderObject.shaderBase.descriptorSet = m_descriptors->GetBindlessMainDescriptorSet();
 	}
 
-	void ShadowMapRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject)
+	void ShadowMapRenderPipeline::UpdateDescriptors(ShaderObject& shaderObject, const uint32_t& standardSSBOIndex)
 	{
 		shaderObject.SSBO.lightSSBO = GetDirectionalLightInfo();
-		shaderObject.pushConstant.objectIndex = m_descriptors->AddStorageBuffer(shaderObject.SSBO);
-		shaderObject.pushConstant.textureId = m_descriptors->AddCombinedImageSamplerInfo(m_shadowMapDescriptorImageInfo);
+		shaderObject.pushConstant.RawDataMetaDataOffset = m_descriptors->AddStorageBuffer(shaderObject.SSBO.lightSSBO);
+		shaderObject.pushConstant.StandardSSBOIndex = standardSSBOIndex;
 	}
 
 	DirectionalLightSSBO ShadowMapRenderPipeline::GetDirectionalLightInfo()

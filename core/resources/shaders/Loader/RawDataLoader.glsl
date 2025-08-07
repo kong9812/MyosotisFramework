@@ -7,11 +7,26 @@ struct RawDataMetaData {
     uint dataOffset;
 };
 
-layout (std430, set = 0, binding = 1) readonly buffer MetaBuffer {
+struct StandardSSBO {
+    mat4 model;
+    vec4 position;
+    vec4 rotation;
+    vec4 scale;
+    vec4 color;
+    uint renderID;
+    uint meshDataIndex;
+    uint padding[2];
+};
+
+layout (std430, set = 0, binding = 1) readonly buffer StandardSSBOBuffer {
+    StandardSSBO ssbo[];
+};
+
+layout (std430, set = 0, binding = 2) readonly buffer MetaBuffer {
     RawDataMetaData rawDataTable[];
 };
 
-layout (std430, set = 0, binding = 2) readonly buffer AllDataBuffer {
+layout (std430, set = 0, binding = 3) readonly buffer AllDataBuffer {
     uint rawData[];
 };
 
@@ -62,5 +77,9 @@ int RawDataLoader_LoadInt(uint base) {
 
 RawDataMetaData RawDataLoader_GetRawDataMetaData(uint index) {
     return rawDataTable[nonuniformEXT(index)];
+}
+
+StandardSSBO RawDataLoader_LoadStandardSSBO(uint index) {
+    return ssbo[nonuniformEXT(index)];
 }
 #endif

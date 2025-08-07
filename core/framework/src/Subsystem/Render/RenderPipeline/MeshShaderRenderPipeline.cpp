@@ -20,13 +20,13 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 	}
 
-	void MeshShaderRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
+	void MeshShaderRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount)
 	{
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		uint32_t meshletGroupCount = 1;	// 仮 (これはMeshIDにするのもいいかも)
+		uint32_t meshletGroupCount = meshCount;
 		m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
 	}
 

@@ -8,8 +8,8 @@ layout (location = 1) in flat uint inRenderID;
 
 layout (binding = 2) uniform samplerCube SamplerCube[];
 layout (push_constant) uniform PushConstant {
-    uint objectIndex;
-    uint textureId;
+    uint StandardSSBOIndex;
+    uint TextureId;
 };
 
 layout (location = 0) out vec4 outPosition;
@@ -20,5 +20,5 @@ layout (location = 3) out uint outRenderID;
 void main() 
 {
     outRenderID = inRenderID;
-    outBaseColor = SamplerCubeLoader_GetTexture(textureId, inUVW);
+    outBaseColor = SamplerCubeLoader_GetTexture(TextureId, inUVW);
 }

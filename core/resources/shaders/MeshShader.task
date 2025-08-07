@@ -3,13 +3,13 @@
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_debug_printf : enable
 
+#include "Loader/RawDataLoader.glsl"
 #include "Loader/VertexDataLoader.glsl"
 #include "Loader/MainCameraDataLoader.glsl"
-#include "SSBO/StandardSSBO.glsl"
 #include "Culling/FrustumCulling.glsl"
 
 layout(push_constant) uniform PushConstant {
-    uint testMeshletCount;
+    uint StandardSSBOCount;
     uint empty;
 };
 
@@ -23,21 +23,23 @@ struct TaskShaderToMeshShaderData
 layout (std430, set = 1, binding = 5) buffer TaskShaderToMeshShaderDataBuffer {
     TaskShaderToMeshShaderData taskShaderToMeshShaderDatas[];
 };
+layout (std430, set = 1, binding = 6) buffer MeshletCountBuffer {
+    uint meshletCount;
+};
 
 void main()
 {
-    uint objectIndex = 1;    // todo. 今は何番目を使うかはわからない
+    uint objectIndex = gl_WorkGroupID.x;    // todo. 今は何番目を使うかはわからない
+    debugPrintfEXT("object index: %d", objectIndex);
 
-    RawDataMetaData meta = RawDataLoader_GetRawDataMetaData(objectIndex);
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = StandardSSBO_LoadStandardSSBO(meta.dataOffset + 0);
+    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(objectIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
-
+    debugPrintfEXT("gl_WorkGroupID: %d meshDataIndex: %d meshletCount: %d",
+     gl_WorkGroupID.x, standardSSBO.meshDataIndex, meshData.meshletMetaDataCount);
 
     OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
-    debugPrintfEXT("scale:\n x: %f y: %f z: %f", standardSSBO.scale.x, standardSSBO.scale.y, standardSSBO.scale.z);
 
-    uint meshletCount = 0;
     if (FrustumCulling_IsVisible(obbData))
     {
         // 画面に入ってる
@@ -51,19 +53,17 @@ void main()
             //if (FrustumCulling_IsVisible_Sphere(sphereData))
             if (FrustumCulling_IsVisible(meshletObbData))
             {
-                taskShaderToMeshShaderDatas[meshletCount]._using = 1;
-                taskShaderToMeshShaderDatas[meshletCount].objectIndex = objectIndex;
-                taskShaderToMeshShaderDatas[meshletCount].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-                taskShaderToMeshShaderDatas[meshletCount].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
-                debugPrintfEXT("OK Task: %d MeshletID: %d", meshletCount, i);
-                meshletCount++;
-            }
-            else
-            {
-                taskShaderToMeshShaderDatas[i]._using = 0;
+                uint index = atomicAdd(meshletCount, 1);
+                taskShaderToMeshShaderDatas[index]._using = 1;
+                taskShaderToMeshShaderDatas[index].objectIndex = objectIndex;
+                taskShaderToMeshShaderDatas[index].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
+                taskShaderToMeshShaderDatas[index].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
+                debugPrintfEXT("OK Task: %d objectIndex: %d MeshletID: %d", index, objectIndex, i);
             }
         }
     }
+    barrier();
+    debugPrintfEXT("EmitMeshTasksEXT count: %d", meshletCount);
     if (meshletCount > 0)
     {
         debugPrintfEXT("render meshletCount: %d", meshletCount);

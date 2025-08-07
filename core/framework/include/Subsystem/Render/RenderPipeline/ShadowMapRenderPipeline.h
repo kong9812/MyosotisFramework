@@ -20,8 +20,8 @@ namespace MyosotisFW::System::Render
 			ShaderBase shaderBase;
 
 			struct {
-				uint32_t objectIndex;
-				uint32_t textureId;
+				uint32_t RawDataMetaDataOffset;
+				uint32_t StandardSSBOIndex;
 			}pushConstant;
 
 			struct {
@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void CreateShaderObject(ShaderObject& shaderObject);
-		void UpdateDescriptors(ShaderObject& shaderObject);
+		void UpdateDescriptors(ShaderObject& shaderObject, const uint32_t& standardSSBOIndex);
 
 		DirectionalLightSSBO GetDirectionalLightInfo();
 		VkDescriptorImageInfo GetShadowMapDescriptorImageInfo() { return m_shadowMapDescriptorImageInfo; }
