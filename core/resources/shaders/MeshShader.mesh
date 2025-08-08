@@ -25,6 +25,13 @@ layout(location = 0) out VertexOutput {
 	vec4 color;
 } vertexOutput[];
 
+struct Payload {
+    uint StandardSSBOIndex;
+    uint MeshletIndex[2000];
+};
+// max: 16kb
+taskPayloadSharedEXT Payload payload;
+
 vec4 randomColor(float seed)
 {
     // ハッシュ関数的に疑似乱数を生成
@@ -36,18 +43,19 @@ vec4 randomColor(float seed)
 
 void main()
 {
-    // debugPrintfEXT("MeshShader!!!!!");
+    uint standardSSBOIndex = payload.StandardSSBOIndex;
+    uint meshletIndex = payload.MeshletIndex[gl_WorkGroupID.x];
 
-    TaskShaderToMeshShaderData taskShaderToMeshShaderData = taskShaderToMeshShaderDatas[gl_WorkGroupID.x];
-    if (taskShaderToMeshShaderData._using == 0)
-    {
-        return;
-    }
+    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
+    uint meshDataIndex = standardSSBO.meshDataIndex;
+
+    debugPrintfEXT("mesh shader gl_WorkGroupID.x: %d threadID: %d StandardSSBOIndex: %d MeshDataIndex: %d MeshletIndex: %d",
+     gl_WorkGroupID.x, gl_LocalInvocationID.x, payload.StandardSSBOIndex, meshDataIndex, payload.MeshletIndex[gl_WorkGroupID.x]);
 
     barrier();
 
-    MeshData meshData = VertexDataLoader_GetMeshData(taskShaderToMeshShaderData.meshIndex);
-    MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex);
+    MeshData meshData = VertexDataLoader_GetMeshData(meshDataIndex);
+    MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(meshDataIndex, meshletIndex);
 
     // 出力する頂点数・プリミティブ数を指定
     if (gl_LocalInvocationIndex == 0) {
@@ -56,7 +64,7 @@ void main()
     barrier();
 
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(taskShaderToMeshShaderData.objectIndex);
+    
 
     uint stride = gl_WorkGroupSize.x;
     uint idx = gl_LocalInvocationIndex;
@@ -64,24 +72,17 @@ void main()
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletMetaData.vertexCount; i += stride) 
     {
-        uint index = VertexDataLoader_GetUniqueIndexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i);
-        VertexData v = VertexDataLoader_GetVertexData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, index);
+        uint index = VertexDataLoader_GetUniqueIndexData(meshDataIndex, meshletIndex, i);
+        VertexData v = VertexDataLoader_GetVertexData(meshDataIndex, meshletIndex, index);
         vec4 worldPos = standardSSBO.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
-        vertexOutput[i].color = randomColor(taskShaderToMeshShaderData.meshletIndex);
+        vertexOutput[i].color = randomColor(meshletIndex);
     }
 
     // プリミティブ処理：同様に分割＋ループで処理
     for (uint i = idx; i < meshletMetaData.primitiveCount; i += stride) 
     {
-        uvec3 index = VertexDataLoader_GetPrimitivesData(taskShaderToMeshShaderData.meshIndex, taskShaderToMeshShaderData.meshletIndex, i);
-        
-        if (taskShaderToMeshShaderData.meshletIndex == 5)
-        {
-            uint offset = meshletMetaData.primitivesOffset + (i * 3);
-        }
+        uvec3 index = VertexDataLoader_GetPrimitivesData(meshDataIndex, meshletIndex, i);        
         gl_PrimitiveTriangleIndicesEXT[i] = index;
     }
-
-    taskShaderToMeshShaderData._using = 0;
 }

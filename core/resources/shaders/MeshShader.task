@@ -13,33 +13,28 @@ layout(push_constant) uniform PushConstant {
     uint empty;
 };
 
-struct TaskShaderToMeshShaderData
-{
-    uint _using;
-    uint objectIndex;
-    uint meshIndex; //todo.Meshlet化
-    uint meshletIndex;
+struct Payload {
+    uint StandardSSBOIndex;
+    uint MeshletIndex[2000];
 };
-layout (std430, set = 1, binding = 5) buffer TaskShaderToMeshShaderDataBuffer {
-    TaskShaderToMeshShaderData taskShaderToMeshShaderDatas[];
-};
+// max: 16kb
+taskPayloadSharedEXT Payload payload;
+
 layout (std430, set = 1, binding = 6) buffer MeshletCountBuffer {
     uint meshletCount;
 };
 
 void main()
 {
-    uint objectIndex = gl_WorkGroupID.x;    // todo. 今は何番目を使うかはわからない
-    debugPrintfEXT("object index: %d", objectIndex);
+    uint standardSSBOIndex = gl_WorkGroupID.x;
 
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(objectIndex);
+    StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
-    debugPrintfEXT("gl_WorkGroupID: %d meshDataIndex: %d meshletCount: %d",
-     gl_WorkGroupID.x, standardSSBO.meshDataIndex, meshData.meshletMetaDataCount);
 
     OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
 
+    uint localMeshletCount = 0;
     if (FrustumCulling_IsVisible(obbData))
     {
         // 画面に入ってる
@@ -53,20 +48,15 @@ void main()
             //if (FrustumCulling_IsVisible_Sphere(sphereData))
             if (FrustumCulling_IsVisible(meshletObbData))
             {
-                uint index = atomicAdd(meshletCount, 1);
-                taskShaderToMeshShaderDatas[index]._using = 1;
-                taskShaderToMeshShaderDatas[index].objectIndex = objectIndex;
-                taskShaderToMeshShaderDatas[index].meshIndex = standardSSBO.meshDataIndex; // todo. stardardSSBOから取れるように
-                taskShaderToMeshShaderDatas[index].meshletIndex = i; // todo. それぞれmeshletをカリングして、そこでとれるように        
-                debugPrintfEXT("OK Task: %d objectIndex: %d MeshletID: %d", index, objectIndex, i);
+                payload.MeshletIndex[localMeshletCount] = i;
+                localMeshletCount++;
             }
         }
     }
     barrier();
-    debugPrintfEXT("EmitMeshTasksEXT count: %d", meshletCount);
-    if (meshletCount > 0)
+    if (localMeshletCount > 0)
     {
-        debugPrintfEXT("render meshletCount: %d", meshletCount);
-        EmitMeshTasksEXT(meshletCount, 1, 1);
+        payload.StandardSSBOIndex = standardSSBOIndex;
+        EmitMeshTasksEXT(localMeshletCount, 1, 1);
     }
 }
