@@ -20,8 +20,7 @@ namespace MyosotisFW::System::Render
 		m_meshletMetaDataBuffer({}),
 		m_vertexDataBuffer({}),
 		m_uniqueIndexBuffer({}),
-		m_primitivesBuffer({}),
-		m_taskShaderToMeshShaderDataBuffer({}) {
+		m_primitivesBuffer({}) {
 		m_storageBufferRawDataBuffer.buffer = VK_NULL_HANDLE;
 		m_storageBufferMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		m_meshDataBuffer.buffer = VK_NULL_HANDLE;
@@ -29,7 +28,6 @@ namespace MyosotisFW::System::Render
 		m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
 		m_uniqueIndexBuffer.buffer = VK_NULL_HANDLE;
 		m_primitivesBuffer.buffer = VK_NULL_HANDLE;
-		m_taskShaderToMeshShaderDataBuffer.buffer = VK_NULL_HANDLE;
 		createMainCameraBuffer();
 		createDescriptorPool();
 		createBindlessMainDescriptorSetLayout();
@@ -40,27 +38,19 @@ namespace MyosotisFW::System::Render
 
 	RenderDescriptors::~RenderDescriptors()
 	{
-		// reset main descriptor set buffer
+		// destroy mainDescriptorSet's buffer
 		destroyMainDescriptorSetBuffer();
 
-		// reset vertex descriptor set buffer
+		// destroy vertexDescriptorSet's buffer
 		destroyVertexDescriptorSetBuffer();
 
+		// destroy main camera buffer
 		if (m_mainCameraDataBuffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_mainCameraDataBuffer.buffer, m_mainCameraDataBuffer.allocation);
 			m_mainCameraDataBuffer.buffer = VK_NULL_HANDLE;
 		}
-		if (m_taskShaderToMeshShaderDataBuffer.buffer != VK_NULL_HANDLE)
-		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_taskShaderToMeshShaderDataBuffer.buffer, m_taskShaderToMeshShaderDataBuffer.allocation);
-			m_taskShaderToMeshShaderDataBuffer.buffer = VK_NULL_HANDLE;
-		}
-		if (m_meshletCountBuffer.buffer != VK_NULL_HANDLE)
-		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_meshletCountBuffer.buffer, m_meshletCountBuffer.allocation);
-			m_meshletCountBuffer.buffer = VK_NULL_HANDLE;
-		}
+
 		vkDestroyDescriptorSetLayout(*m_device, m_vertexDescriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorSetLayout(*m_device, m_mainDescriptorSetLayout, m_device->GetAllocationCallbacks());
 		vkDestroyDescriptorPool(*m_device, m_descriptorPool, m_device->GetAllocationCallbacks());
@@ -146,10 +136,6 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::UNIQUE_INDEX), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 			// binding: [SSBO] Primitives
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::PRIMITIVES), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
-			// binding: [SSBO] TaskShaderToMeshShaderData
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::TASK_SHADER_TO_MESH_SHADER_DATA), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
-			// binding: [SSBO] MeshletCount
-			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::MESHLET_COUNT), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 		};
 
 		// 未使用許可 & バインド後更新 を有効化
@@ -159,8 +145,6 @@ namespace MyosotisFW::System::Render
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
-			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
-			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
 		};
 		VkDescriptorSetLayoutBindingFlagsCreateInfo descriptorSetLayoutBindingFlagsCreateInfo{};
 		descriptorSetLayoutBindingFlagsCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
@@ -183,44 +167,6 @@ namespace MyosotisFW::System::Render
 	{
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_vertexDescriptorSetLayout);
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_vertexDescriptorSet));
-
-		// TaskShaderToMeshShaderData
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_taskShaderToMeshShaderDataBuffer.buffer,
-			m_taskShaderToMeshShaderDataBuffer.allocation,
-			m_taskShaderToMeshShaderDataBuffer.allocationInfo,
-			m_taskShaderToMeshShaderDataBuffer.descriptor);
-		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::TASK_SHADER_TO_MESH_SHADER_DATA),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_taskShaderToMeshShaderDataBuffer.descriptor);
-		TaskShaderToMeshShaderData tmpData[1000] = { 0 };
-		memset(tmpData, 0,
-			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000));
-		memcpy(m_taskShaderToMeshShaderDataBuffer.allocationInfo.pMappedData, tmpData,
-			static_cast<uint32_t>(sizeof(TaskShaderToMeshShaderData) * 1000));
-		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
-
-		// MeshletCount
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			static_cast<uint32_t>(sizeof(uint32_t)),
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			m_meshletCountBuffer.buffer,
-			m_meshletCountBuffer.allocation,
-			m_meshletCountBuffer.allocationInfo,
-			m_meshletCountBuffer.descriptor);
-		VkWriteDescriptorSet meshletCountWriteDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
-			static_cast<uint32_t>(VertexDescriptorBindingIndex::MESHLET_COUNT),
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &m_meshletCountBuffer.descriptor);
-		uint32_t tmpMeshletCountData = 0;
-		memcpy(m_meshletCountBuffer.allocationInfo.pMappedData, &tmpMeshletCountData,
-			static_cast<uint32_t>(sizeof(uint32_t)));
-		vkUpdateDescriptorSets(*m_device, 1, &meshletCountWriteDescriptorSet, 0, nullptr);
 	}
 
 	void RenderDescriptors::updateVertexDescriptorSet()
@@ -467,16 +413,6 @@ namespace MyosotisFW::System::Render
 				static_cast<uint32_t>(m_storageImageInfos.size())));
 		}
 		vkUpdateDescriptorSets(*m_device, static_cast<uint32_t>(writeDescriptorSet.size()), writeDescriptorSet.data(), 0, nullptr);
-
-
-		uint32_t tmpMeshletCountData = 0;
-		memcpy(m_meshletCountBuffer.allocationInfo.pMappedData, &tmpMeshletCountData,
-			static_cast<uint32_t>(sizeof(uint32_t)));
-	}
-
-	void RenderDescriptors::ResetMeshletCount()
-	{
-
 	}
 
 	void RenderDescriptors::ResetMainDescriptorSet()

@@ -302,7 +302,7 @@ namespace MyosotisFW::System::Render
 
 		m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		for (StageObject_ptr& object : m_objects)
+		/*for (StageObject_ptr& object : m_objects)
 		{
 			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::CustomMesh, true);
 			std::vector<ComponentBase_ptr> subComponents = object->FindAllComponents(ComponentType::PrimitiveGeometryMesh, true);
@@ -316,7 +316,7 @@ namespace MyosotisFW::System::Render
 					staticMesh->BindCommandBuffer(currentCommandBuffer, RenderPipelineType::ShadowMap);
 				}
 			}
-		}
+		}*/
 
 		m_shadowMapRenderPass->EndRender(currentCommandBuffer);
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);

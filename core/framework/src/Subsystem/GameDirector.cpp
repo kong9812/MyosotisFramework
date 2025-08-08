@@ -51,6 +51,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
+		// パフォーマンステスト用
 		for (uint32_t i = 0; i < 10; i++)
 		{
 			for (uint32_t j = 0; j < 10; j++)
@@ -62,7 +63,7 @@ namespace MyosotisFW::System::GameDirector {
 					CustomMeshInfo customMeshInfo{};
 					customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(-2.5f + (5.0f * j), 0.0f, 5.0f * i));
+					component->SetPos(glm::vec3(5.0f * j, 0.0f, 5.0f * i));
 					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 					component->SetScale(glm::vec3(2.0f));
 					newObject->AddComponent(component);
@@ -75,7 +76,7 @@ namespace MyosotisFW::System::GameDirector {
 					CustomMeshInfo customMeshInfo{};
 					customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
 					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(2.5f + (5.0f * j), 5.0f, 5.0f * i));
+					component->SetPos(glm::vec3(5.0f * j, 5.0f, 5.0f * i));
 					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 					component->SetScale(glm::vec3(10.0f));
 					newObject->AddComponent(component);
@@ -83,6 +84,21 @@ namespace MyosotisFW::System::GameDirector {
 				}
 			}
 		}
+
+		//{
+		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+		//		System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+		//	CustomMeshInfo customMeshInfo{};
+		//	customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
+		//	component->SetCustomMeshInfo(customMeshInfo);
+		//	component->SetPos(glm::vec3(5.0f, 0.0f, 5.0f));
+		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		//	component->SetScale(glm::vec3(10.0f));
+		//	newObject->AddComponent(component);
+		//	m_renderSubsystem->RegisterObject(newObject);
+		//}
+
 
 		//{
 		//	StageObject_ptr newObject = CreateStageObjectPointer();

@@ -8,11 +8,6 @@
 #include "Loader/MainCameraDataLoader.glsl"
 #include "Culling/FrustumCulling.glsl"
 
-layout(push_constant) uniform PushConstant {
-    uint StandardSSBOCount;
-    uint empty;
-};
-
 struct Payload {
     uint StandardSSBOIndex;
     uint MeshletIndex[2000];
@@ -20,15 +15,10 @@ struct Payload {
 // max: 16kb
 taskPayloadSharedEXT Payload payload;
 
-layout (std430, set = 1, binding = 6) buffer MeshletCountBuffer {
-    uint meshletCount;
-};
-
 void main()
 {
     uint standardSSBOIndex = gl_WorkGroupID.x;
 
-    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
 
