@@ -1,0 +1,28 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+
+#include "../Loader/Sampler2DLoader.glsl"
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout (set = 0, binding = 5, rgba32f) writeonly uniform image2D Image2D[];
+
+layout(push_constant) uniform PushConstant {
+    ivec2 desSize;
+    uint hiZImageID;
+    uint primaryDepthSamplerID;
+};
+
+void main()
+{
+    // テクスチャ座標
+    ivec2 xy = ivec2(gl_GlobalInvocationID.xy);
+    if (xy.x >= desSize.x || xy.y >= desSize.y) return; // 範囲チェック
+
+    // mip0からdepth値を取り出す
+    float d = Sampler2DLoader_TexelFetch(primaryDepthSamplerID, xy, 0).r;
+
+    // 同じDepthをMaxを書き込む
+    imageStore(Image2D[hiZImageID], xy, vec4(d, 0.0, 0.0, 0.0));
+}

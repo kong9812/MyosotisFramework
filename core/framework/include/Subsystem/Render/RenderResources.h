@@ -31,7 +31,9 @@ namespace MyosotisFW::System::Render
 			m_shadowMap({}),
 			m_lightingResult({}),
 			m_mainRenderTarget({}),
-			m_idMap({}) {
+			m_idMap({}),
+			m_hiZDepthMap({}),
+			m_primaryDepthStencil({}) {
 		}
 		~RenderResources();
 
@@ -64,6 +66,9 @@ namespace MyosotisFW::System::Render
 		VMAImage& GetIdMap() { return m_idMap; }
 		uint32_t& GetMeshID(const std::string& fileName);
 
+		VMAMipImage& GetHiZDepthMap() { return m_hiZDepthMap; }
+		VMAImage& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
+
 	protected:
 		// attachments
 		DeviceImage m_depthStencil;
@@ -75,6 +80,9 @@ namespace MyosotisFW::System::Render
 		VMAImage m_lightingResult;
 		VMAImage m_mainRenderTarget;
 		VMAImage m_idMap;
+
+		VMAMipImage m_hiZDepthMap;
+		VMAImage m_primaryDepthStencil;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

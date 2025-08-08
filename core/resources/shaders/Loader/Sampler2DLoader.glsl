@@ -12,4 +12,9 @@ vec4 Sampler2DLoader_GetTexture(uint textureId, vec2 offset) {
     return texture(Sampler2D[textureId], offset);
 }
 
+vec4 Sampler2DLoader_TexelFetch(uint textureId, ivec2 P, int lod)
+{
+    return texelFetch(Sampler2D[textureId], P, lod);
+}
+
 #endif

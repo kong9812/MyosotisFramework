@@ -28,6 +28,7 @@ namespace MyosotisFW::System::Render
 		m_vertexDataBuffer.buffer = VK_NULL_HANDLE;
 		m_uniqueIndexBuffer.buffer = VK_NULL_HANDLE;
 		m_primitivesBuffer.buffer = VK_NULL_HANDLE;
+		m_standardSSBOBuffer.buffer = VK_NULL_HANDLE;
 		createMainCameraBuffer();
 		createDescriptorPool();
 		createBindlessMainDescriptorSetLayout();

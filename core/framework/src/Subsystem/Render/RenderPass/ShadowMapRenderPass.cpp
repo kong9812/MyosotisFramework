@@ -57,7 +57,7 @@ namespace MyosotisFW::System::Render
 	void ShadowMapRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(1);
-		clearValues[0] = AppInfo::g_depthClearValues;
+		clearValues[0] = AppInfo::g_depthStencilClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];

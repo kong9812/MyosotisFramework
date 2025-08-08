@@ -242,7 +242,7 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->Update(updateData);
 
 			m_renderSubsystem->BeginRender();
-			m_renderSubsystem->FrustumCulling();
+			m_renderSubsystem->BeginCompute();
 			m_renderSubsystem->ShadowRender();
 			m_renderSubsystem->MainRender();
 			m_renderSubsystem->MeshShaderRender();

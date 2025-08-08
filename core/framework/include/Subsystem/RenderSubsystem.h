@@ -57,6 +57,9 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
 		class MeshShaderRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPipeline);
+
+		class HiZDepthComputePipeline;
+		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
 	}
 }
 
@@ -76,7 +79,6 @@ namespace MyosotisFW::System::Render
 			m_computeCommandPool(VK_NULL_HANDLE),
 			m_transferCommandPool(VK_NULL_HANDLE),
 			m_currentBufferIndex(0),
-			m_descriptorPool(VK_NULL_HANDLE),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
 			m_shadowMapRenderPass(nullptr),
@@ -91,6 +93,7 @@ namespace MyosotisFW::System::Render
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
 			m_meshShaderRenderPipeline(nullptr),
+			m_hiZDepthComputePipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
@@ -108,7 +111,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
-		void FrustumCulling();
+		void BeginCompute();
 		void BeginRender();
 		void ShadowRender();
 		void MainRender();
@@ -126,13 +129,13 @@ namespace MyosotisFW::System::Render
 		void initializeRenderDescriptors();
 		virtual void initializeRenderResources();
 		void initializeCommandPool();
-		void initializeFrustumCulling();
 		void initializeSemaphore();
 		void initializeFence();
 		void initializeSubmitInfo();
 		void initializeDebugUtils(const VkInstance& instance);
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
+		virtual void initializeComputePipeline();
 		virtual void resizeRenderPass(const uint32_t& width, const uint32_t& height);
 
 	protected:
@@ -162,9 +165,6 @@ namespace MyosotisFW::System::Render
 
 		uint32_t m_currentBufferIndex;
 
-		VkDescriptorPool m_descriptorPool;
-		FrustumCullingShaderObject m_frustumCullingShaderObject;
-
 		std::vector<StageObject_ptr> m_objects;
 
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
@@ -185,6 +185,10 @@ namespace MyosotisFW::System::Render
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
 		MeshShaderRenderPipeline_ptr m_meshShaderRenderPipeline;
+
+	protected:
+		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
+
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

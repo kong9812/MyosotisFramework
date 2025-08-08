@@ -56,6 +56,10 @@ namespace MyosotisFW::AppInfo
 	constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
 	// 指定DepthFormat
 	constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+	// 指定Primary DepthFormat
+	constexpr VkFormat g_primaryDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
+	// 指定Hi-Z DepthFormat
+	constexpr VkFormat g_hiZDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定画像フォーマット ([deferred] position)
 	constexpr VkFormat g_deferredPositionFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT; // HDR&精密な色管理が可能
 	// 指定画像フォーマット ([deferred] normal)
@@ -68,14 +72,18 @@ namespace MyosotisFW::AppInfo
 	constexpr VkFormat g_idMapFormat = VkFormat::VK_FORMAT_R32_UINT;
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
+	// 指定Hi-Z Mipmapレベル数
+	constexpr uint32_t g_hiZMipLevels = 2;
 
 	// シャドウマップサイズ
 	constexpr uint32_t g_shadowMapSize = 2048;
 
 	// 背景色
 	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 0.0f };
+	// depth/stencil
+	constexpr VkClearValue g_depthStencilClearValues = { 1.0f, 0.0f };
 	// depth
-	constexpr VkClearValue g_depthClearValues = { 1.0f, 0.0f };
+	constexpr VkClearValue g_depthClearValues = { 1.0f };
 
 	// [デフォルト]カメラ位置
 	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 0.0f, -20.0f);

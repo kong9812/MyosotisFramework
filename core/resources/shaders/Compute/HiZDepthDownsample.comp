@@ -1,0 +1,38 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+
+#include "../Loader/Sampler2DLoader.glsl"
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout (set = 0, binding = 5, rgba32f) writeonly uniform image2D Image2D[];
+
+layout(push_constant) uniform PushConstant {
+    ivec2 dstSize;
+    uint hiZImageID;
+    uint hiZSamplerID;
+    int srcMip;
+};
+
+void main()
+{
+    // テクスチャ座標
+    ivec2 xy = ivec2(gl_GlobalInvocationID.xy);
+    if (xy.x >= dstSize.x || xy.y >= dstSize.y) return; // 範囲チェック
+
+    // srcの座標: dst*2から 2x2↓
+    ivec2 srcBase = xy * 2;
+
+    // mipXからdepth値を取り出す
+    float s00 = Sampler2DLoader_TexelFetch(hiZSamplerID, srcBase + ivec2(0,0), srcMip).r;
+    float s10 = Sampler2DLoader_TexelFetch(hiZSamplerID, srcBase + ivec2(1,0), srcMip).r;
+    float s01 = Sampler2DLoader_TexelFetch(hiZSamplerID, srcBase + ivec2(0,1), srcMip).r;
+    float s11 = Sampler2DLoader_TexelFetch(hiZSamplerID, srcBase + ivec2(1,1), srcMip).r;
+
+    // 2x2のデータから最大値を取り出して
+    float maxD = max(max(s00, s10), max(s01, s11));
+
+    // mipXのxyにMaxを書き込む
+    imageStore(Image2D[hiZImageID], xy, vec4(maxD, 0.0, 0.0, 0.0));
+}

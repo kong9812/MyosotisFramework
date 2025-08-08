@@ -5,6 +5,7 @@
 
 #include "../Loader/MainCameraDataLoader.glsl"
 
+//ref: https://www.youtube.com/watch?v=h_Aqol0oTs4
 bool BackfaceCulling_IsVisible(vec3 v0, vec3 v1, vec3 v2)
 {
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();

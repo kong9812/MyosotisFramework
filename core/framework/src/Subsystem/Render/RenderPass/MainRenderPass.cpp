@@ -134,7 +134,7 @@ namespace MyosotisFW::System::Render
 		clearValues[static_cast<uint32_t>(Attachments::GBufferNormal)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::GBufferBaseColor)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::IdMap)] = AppInfo::g_colorClearValues;
-		clearValues[static_cast<uint32_t>(Attachments::DepthStencil)] = AppInfo::g_depthClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::DepthStencil)] = AppInfo::g_depthStencilClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];

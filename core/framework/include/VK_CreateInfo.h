@@ -168,6 +168,23 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkImageCreateInfo imageCreateInfoForHiZDepthStencil(const VkFormat& format, const uint32_t& width, const uint32_t& height, const uint32_t& mipLevels)
+	{
+		VkImageCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		ci.imageType = VkImageType::VK_IMAGE_TYPE_2D;
+		ci.format = format;
+		ci.extent.width = width;
+		ci.extent.height = height;
+		ci.extent.depth = 1;
+		ci.mipLevels = mipLevels;
+		ci.arrayLayers = 1;
+		ci.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ci.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+		ci.usage = VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		return ci;
+	}
+
 	inline VkImageCreateInfo imageCreateInfoForAttachment(const VkFormat& format, const uint32_t& width, const uint32_t& height)
 	{
 		VkImageCreateInfo ci{};
@@ -236,6 +253,23 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkImageViewCreateInfo imageViewCreateInfoForDepth(const VkImage& image, const VkFormat& format)
+	{
+		VkImageViewCreateInfo ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		ci.image = image;
+		ci.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+		ci.format = format;
+		ci.components = {
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
+		};
+		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT);
+		return ci;
+	}
+
 	inline VkImageViewCreateInfo imageViewCreateInfoForAttachment(const VkImage& image, const VkFormat& format)
 	{
 		VkImageViewCreateInfo ci{};
@@ -293,17 +327,33 @@ namespace Utility::Vulkan::CreateInfo
 		return ad;
 	}
 
-	inline VkAttachmentDescription attachmentDescriptionForDepthStencil(const VkFormat& format)
+	inline VkAttachmentDescription attachmentDescriptionForDepthStencil(const VkFormat& format,
+		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR)
 	{
 		VkAttachmentDescription ad{};
 		ad.format = format;
 		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-		ad.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		ad.loadOp = loadOp;
 		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
 		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
 		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		return ad;
+	}
+
+	inline VkAttachmentDescription attachmentDescriptionForDepth(const VkFormat& format,
+		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR)
+	{
+		VkAttachmentDescription ad{};
+		ad.format = format;
+		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+		ad.loadOp = loadOp;
+		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		return ad;
 	}
 

@@ -55,6 +55,15 @@ namespace MyosotisFW
 		VmaAllocationInfo allocationInfo;
 	};
 
+	struct VMAMipImage
+	{
+		VkImage image;
+		std::vector<VkImageView> view;
+		std::vector<VkSampler> sampler;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
+	};
+
 	struct Buffer
 	{
 		VkBuffer buffer;
@@ -136,15 +145,6 @@ namespace MyosotisFW
 			VkDescriptorSetLayout descriptorSetLayout;
 			VkPipeline pipeline;
 		}shaderBase;		// todo.
-
-		struct
-		{
-			Buffer buffer;
-			struct
-			{
-				glm::vec4 planes[6];	// 視錐台平面情報
-			}data;
-		}frustumPlanesUBO;				// UBO
 
 		struct
 		{

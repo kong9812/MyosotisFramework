@@ -164,7 +164,7 @@ namespace MyosotisFW::System::Render
 		VkPhysicalDeviceFeatures features{};
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
 
-		// 物理デバイス機能を指定
+		// ディスクリプタインデックス機能
 		VkPhysicalDeviceDescriptorIndexingFeatures physicalDeviceDescriptorIndexingFeatures = {};
 		physicalDeviceDescriptorIndexingFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 		// SSBO 配列
@@ -180,6 +180,11 @@ namespace MyosotisFW::System::Render
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;  // テクスチャ
 		physicalDeviceDescriptorIndexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;  // 画像
 
+		// デップス・ステンシルレイアウトを分離する機能
+		VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures separateDepthStencilFeatures{};
+		separateDepthStencilFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES;
+		separateDepthStencilFeatures.separateDepthStencilLayouts = VK_TRUE;
+
 		// Maintenance4 機能
 		VkPhysicalDeviceMaintenance4Features physicalDeviceMaintenance4Features{};
 		physicalDeviceMaintenance4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
@@ -192,7 +197,8 @@ namespace MyosotisFW::System::Render
 		physicalDeviceMeshShaderFeaturesEXT.meshShader = VK_TRUE;
 
 		// pNextチェーン
-		physicalDeviceDescriptorIndexingFeatures.pNext = &physicalDeviceMaintenance4Features;
+		physicalDeviceDescriptorIndexingFeatures.pNext = &separateDepthStencilFeatures;
+		separateDepthStencilFeatures.pNext = &physicalDeviceMaintenance4Features;
 		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
 
 		// create device

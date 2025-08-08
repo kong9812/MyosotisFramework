@@ -11,6 +11,9 @@ namespace MyosotisFW::System::Render
 	{
 		{// attachment
 			vkDestroySampler(*m_device, m_shadowMap.sampler, m_device->GetAllocationCallbacks());
+			for (VkSampler& sampler : m_hiZDepthMap.sampler)
+				vkDestroySampler(*m_device, sampler, m_device->GetAllocationCallbacks());
+			vkDestroySampler(*m_device, m_primaryDepthStencil.sampler, m_device->GetAllocationCallbacks());
 
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
@@ -19,6 +22,8 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap.image, m_hiZDepthMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_primaryDepthStencil.image, m_primaryDepthStencil.allocation);
 
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
@@ -27,6 +32,9 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
+			for (VkImageView& view : m_hiZDepthMap.view)
+				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_primaryDepthStencil.view, m_device->GetAllocationCallbacks());
 
 			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
@@ -116,6 +124,34 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_idMap.image, &m_idMap.allocation, &m_idMap.allocationInfo));
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_idMap.image, AppInfo::g_idMapFormat);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_idMap.view));
+		}
+
+		{// Hi-Z DepthMap (MipLevels: 3)
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, AppInfo::g_hiZMipLevels);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_hiZDepthMap.image, &m_hiZDepthMap.allocation, &m_hiZDepthMap.allocationInfo));
+			m_hiZDepthMap.view.resize(AppInfo::g_hiZMipLevels);
+			m_hiZDepthMap.sampler.resize(AppInfo::g_hiZMipLevels);
+			for (uint8_t i = 0; i < AppInfo::g_hiZMipLevels; i++)
+			{
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
+				imageViewCreateInfo.subresourceRange.baseMipLevel = i;
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.view[i]));
+				VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+				VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.sampler[i]));
+			}
+		}
+
+		{// Primary Depth Map
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_primaryDepthFormat, width, height);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_primaryDepthStencil.image, &m_primaryDepthStencil.allocation, &m_primaryDepthStencil.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_primaryDepthStencil.image, AppInfo::g_primaryDepthFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_primaryDepthStencil.view));
+			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_primaryDepthStencil.sampler));
 		}
 	}
 
