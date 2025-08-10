@@ -23,6 +23,6 @@ void main()
     // mip0からdepth値を取り出す
     float d = Sampler2DLoader_TexelFetch(primaryDepthSamplerID, xy, 0).r;
 
-    // 同じDepthをMaxを書き込む
+    // 同じDepthを同じ値を書き込む
     imageStore(Image2D[hiZImageID], xy, vec4(d, 0.0, 0.0, 0.0));
 }

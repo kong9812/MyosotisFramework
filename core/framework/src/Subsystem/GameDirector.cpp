@@ -44,17 +44,28 @@ namespace MyosotisFW::System::GameDirector {
 		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
-		//	component->SetPos(glm::vec3(5.0f));
-		//	component->SetRot(glm::vec3(40.0f, 0.0f, 0.0f));
+		//	component->SetPos(glm::vec3(0.0f));
+		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 		//	component->SetScale(glm::vec3(5.0f));
+		//	newObject->AddComponent(component);
+		//	m_renderSubsystem->RegisterObject(newObject);
+		//}
+		//{
+		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
+		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
+		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
+		//	component->SetPos(glm::vec3(0.0f, 0.0f, 6.0f));
+		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		//	component->SetScale(glm::vec3(3.0f));
 		//	newObject->AddComponent(component);
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
 		// パフォーマンステスト用
-		for (uint32_t i = 0; i < 10; i++)
+		for (uint32_t x = 0; x < 10; x++)
 		{
-			for (uint32_t j = 0; j < 10; j++)
+			for (uint32_t z = 0; z < 10; z++)
 			{
 				{
 					StageObject_ptr newObject = CreateStageObjectPointer();
@@ -63,7 +74,7 @@ namespace MyosotisFW::System::GameDirector {
 					CustomMeshInfo customMeshInfo{};
 					customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(5.0f * j, 0.0f, 5.0f * i));
+					component->SetPos(glm::vec3(-20.0f + (5.0f * x), 0.0f, 50.0f + (5.0f * z)));
 					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 					component->SetScale(glm::vec3(2.0f));
 					newObject->AddComponent(component);
@@ -76,7 +87,7 @@ namespace MyosotisFW::System::GameDirector {
 					CustomMeshInfo customMeshInfo{};
 					customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
 					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(5.0f * j, 5.0f, 5.0f * i));
+					component->SetPos(glm::vec3(-20.0f + (5.0f * x), 5.0f, 50.0f + (5.0f * z)));
 					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 					component->SetScale(glm::vec3(10.0f));
 					newObject->AddComponent(component);
@@ -85,20 +96,57 @@ namespace MyosotisFW::System::GameDirector {
 			}
 		}
 
+		//// パフォーマンステスト用
+		//for (uint32_t x = 0; x < 10; x++)
+		//{
+		//	for (uint32_t z = 0; z < 10; z++)
+		//	{
+		//		for (uint32_t y = 0; y < 10; y++)
+		//		{
+		//			{
+		//				StageObject_ptr newObject = CreateStageObjectPointer();
+		//				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+		//					System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+		//				CustomMeshInfo customMeshInfo{};
+		//				customMeshInfo.meshName = "Cube/Cube.gltf";
+		//				component->SetCustomMeshInfo(customMeshInfo);
+		//				component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 2.0f * z));
+		//				component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		//				component->SetScale(glm::vec3(0.1f));
+		//				newObject->AddComponent(component);
+		//				m_renderSubsystem->RegisterObject(newObject);
+		//			}
+		//		}
+		//	}
+		//}
+
+		{
+			StageObject_ptr newObject = CreateStageObjectPointer();
+			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+			CustomMeshInfo customMeshInfo{};
+			customMeshInfo.meshName = "Cube/Cube.gltf";
+			component->SetCustomMeshInfo(customMeshInfo);
+			component->SetPos(glm::vec3(0.0f, 0.0f, 10.0f));
+			component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+			component->SetScale(glm::vec3(3.0f, 3.0f, 0.1f));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
+
 		//{
 		//	StageObject_ptr newObject = CreateStageObjectPointer();
 		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//	CustomMeshInfo customMeshInfo{};
-		//	customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
+		//	customMeshInfo.meshName = "Cube/Cube.gltf";
 		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	component->SetPos(glm::vec3(5.0f, 0.0f, 5.0f));
+		//	component->SetPos(glm::vec3(0.0f, 0.0f, 15.0f));
 		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		//	component->SetScale(glm::vec3(10.0f));
+		//	component->SetScale(glm::vec3(1.0f));
 		//	newObject->AddComponent(component);
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
-
 
 		//{
 		//	StageObject_ptr newObject = CreateStageObjectPointer();

@@ -11,8 +11,7 @@ namespace MyosotisFW::System::Render
 	{
 		{// attachment
 			vkDestroySampler(*m_device, m_shadowMap.sampler, m_device->GetAllocationCallbacks());
-			for (VkSampler& sampler : m_hiZDepthMap.sampler)
-				vkDestroySampler(*m_device, sampler, m_device->GetAllocationCallbacks());
+			vkDestroySampler(*m_device, m_hiZDepthMap.sampler, m_device->GetAllocationCallbacks());
 			vkDestroySampler(*m_device, m_primaryDepthStencil.sampler, m_device->GetAllocationCallbacks());
 
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
@@ -32,10 +31,10 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
-			for (VkImageView& view : m_hiZDepthMap.view)
+			vkDestroyImageView(*m_device, m_hiZDepthMap.view, m_device->GetAllocationCallbacks());
+			for (VkImageView& view : m_hiZDepthMap.mipView)
 				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_primaryDepthStencil.view, m_device->GetAllocationCallbacks());
-
 			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
 			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
@@ -128,18 +127,23 @@ namespace MyosotisFW::System::Render
 
 		{// Hi-Z DepthMap (MipLevels: 3)
 			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, AppInfo::g_hiZMipLevels);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT |
+				VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_hiZDepthMap.image, &m_hiZDepthMap.allocation, &m_hiZDepthMap.allocationInfo));
-			m_hiZDepthMap.view.resize(AppInfo::g_hiZMipLevels);
-			m_hiZDepthMap.sampler.resize(AppInfo::g_hiZMipLevels);
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
+			imageViewCreateInfo.subresourceRange.levelCount = AppInfo::g_hiZMipLevels;
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.view));
+			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+			samplerCreateInfo.compareEnable = VK_FALSE;
+			samplerCreateInfo.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.sampler));
+			m_hiZDepthMap.mipView.resize(AppInfo::g_hiZMipLevels);
 			for (uint8_t i = 0; i < AppInfo::g_hiZMipLevels; i++)
 			{
 				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
 				imageViewCreateInfo.subresourceRange.baseMipLevel = i;
-				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.view[i]));
-				VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-				VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.sampler[i]));
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.mipView[i]));
 			}
 		}
 

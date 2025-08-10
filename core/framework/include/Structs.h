@@ -58,8 +58,9 @@ namespace MyosotisFW
 	struct VMAMipImage
 	{
 		VkImage image;
-		std::vector<VkImageView> view;
-		std::vector<VkSampler> sampler;
+		VkImageView view;
+		std::vector<VkImageView> mipView;
+		VkSampler sampler;
 		VmaAllocation allocation;
 		VmaAllocationInfo allocationInfo;
 	};

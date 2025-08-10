@@ -17,6 +17,14 @@ namespace MyosotisFW::System::Render
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount);
 
 	private:
+		struct {
+			uint32_t hiZSamplerID;
+			uint32_t checkFalseNegativeMesh;
+		}pushConstant;
+
+		uint32_t m_hiZSamplerID;
+		uint32_t m_primaryDepthSamplerID;
+
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;

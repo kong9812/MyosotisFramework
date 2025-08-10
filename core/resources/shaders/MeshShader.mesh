@@ -78,6 +78,10 @@ void main()
         VertexData v = VertexDataLoader_GetVertexData(meshDataIndex, meshletIndex, index);
         vec4 worldPos = standardSSBO.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
+        
+        vec4 result = cameraData.projection * cameraData.view * worldPos;
+        // debugPrintfEXT("result x: %f y: %f z: %f w: %f", result.x, result.y, result.z, result.w);
+        
         vertexOutput[i].color = randomColor(meshletIndex);
     }
 

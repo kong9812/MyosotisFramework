@@ -73,7 +73,7 @@ namespace MyosotisFW::AppInfo
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
 	// 指定Hi-Z Mipmapレベル数
-	constexpr uint32_t g_hiZMipLevels = 2;
+	constexpr uint32_t g_hiZMipLevels = 5;
 
 	// シャドウマップサイズ
 	constexpr uint32_t g_shadowMapSize = 2048;
@@ -98,9 +98,9 @@ namespace MyosotisFW::AppInfo
 	// [デフォルト]カメラ FOV
 	constexpr float g_cameraFov = 60.0f;
 	// [デフォルト]カメラ Far
-	constexpr float g_cameraFar = 1000.0f;
+	constexpr float g_cameraFar = 256.0f;
 	// [デフォルト]カメラ Near
-	constexpr float g_cameraNear = 0.01f;
+	constexpr float g_cameraNear = 1.0f;
 
 	// [フォルダ]リソース
 	constexpr const char* g_resourcesFolder = ".\\resources\\";

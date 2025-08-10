@@ -20,7 +20,8 @@ namespace MyosotisFW::System::Render
 		m_meshletMetaDataBuffer({}),
 		m_vertexDataBuffer({}),
 		m_uniqueIndexBuffer({}),
-		m_primitivesBuffer({}) {
+		m_primitivesBuffer({}),
+		m_falseNegativeStandardSSBOIndexBuffer({}) {
 		m_storageBufferRawDataBuffer.buffer = VK_NULL_HANDLE;
 		m_storageBufferMetaDataBuffer.buffer = VK_NULL_HANDLE;
 		m_meshDataBuffer.buffer = VK_NULL_HANDLE;
@@ -29,12 +30,14 @@ namespace MyosotisFW::System::Render
 		m_uniqueIndexBuffer.buffer = VK_NULL_HANDLE;
 		m_primitivesBuffer.buffer = VK_NULL_HANDLE;
 		m_standardSSBOBuffer.buffer = VK_NULL_HANDLE;
-		createMainCameraBuffer();
+		m_falseNegativeStandardSSBOIndexBuffer.buffer = VK_NULL_HANDLE;
 		createDescriptorPool();
 		createBindlessMainDescriptorSetLayout();
 		createBindlessVertexDescriptorSetLayout();
 		allocateMainDescriptorSet();
 		allocateVertexDescriptorSet();
+		createMainCameraBuffer();
+		createFalseNegativeStandardSSBOIndexBuffer();
 	}
 
 	RenderDescriptors::~RenderDescriptors()
@@ -50,6 +53,12 @@ namespace MyosotisFW::System::Render
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_mainCameraDataBuffer.buffer, m_mainCameraDataBuffer.allocation);
 			m_mainCameraDataBuffer.buffer = VK_NULL_HANDLE;
+		}
+		// destroy false negative standard SSBO index buffer
+		if (m_falseNegativeStandardSSBOIndexBuffer.buffer != VK_NULL_HANDLE)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_falseNegativeStandardSSBOIndexBuffer.buffer, m_falseNegativeStandardSSBOIndexBuffer.allocation);
+			m_falseNegativeStandardSSBOIndexBuffer.buffer = VK_NULL_HANDLE;
 		}
 
 		vkDestroyDescriptorSetLayout(*m_device, m_vertexDescriptorSetLayout, m_device->GetAllocationCallbacks());
@@ -69,6 +78,25 @@ namespace MyosotisFW::System::Render
 			m_mainCameraDataBuffer.allocation,
 			m_mainCameraDataBuffer.allocationInfo,
 			m_mainCameraDataBuffer.descriptor);
+	}
+
+	void RenderDescriptors::createFalseNegativeStandardSSBOIndexBuffer()
+	{
+		// false negative standard SSBO index
+		vmaTools::ShaderBufferObjectAllocate(
+			*m_device,
+			m_device->GetVmaAllocator(),
+			static_cast<uint32_t>(sizeof(uint32_t)) + (static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(2000)),	// uint size + 2000個
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			m_falseNegativeStandardSSBOIndexBuffer.buffer,
+			m_falseNegativeStandardSSBOIndexBuffer.allocation,
+			m_falseNegativeStandardSSBOIndexBuffer.allocationInfo,
+			m_falseNegativeStandardSSBOIndexBuffer.descriptor);
+		VkDescriptorBufferInfo falseNegativeStandardSSBOIndexDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_falseNegativeStandardSSBOIndexBuffer.buffer);
+		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_vertexDescriptorSet,
+			static_cast<uint32_t>(VertexDescriptorBindingIndex::FALSE_NEGATIVE_STANDARD_SSBO_INDEX),
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &falseNegativeStandardSSBOIndexDescriptorBufferInfo);
+		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 	}
 
 	void RenderDescriptors::createDescriptorPool()
@@ -137,10 +165,13 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::UNIQUE_INDEX), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 			// binding: [SSBO] Primitives
 			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::PRIMITIVES), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
+			// binding: [SSBO] FalseNegativeStandardSSBOIndex
+			Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(static_cast<uint32_t>(VertexDescriptorBindingIndex::FALSE_NEGATIVE_STANDARD_SSBO_INDEX), VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VkShaderStageFlagBits::VK_SHADER_STAGE_ALL),
 		};
 
 		// 未使用許可 & バインド後更新 を有効化
 		std::vector<VkDescriptorBindingFlags> descriptorBindingFlags = {
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
 			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
@@ -520,7 +551,7 @@ namespace MyosotisFW::System::Render
 		// 同じimageViewがあるかどうかを確認重複画像を再度入れないように
 		auto it = std::find_if(m_combinedImageSamplersImageInfos.begin(), m_combinedImageSamplersImageInfos.end(), [=](VkDescriptorImageInfo v)
 			{
-				return v.imageView == imageInfo.imageView;
+				return (v.imageView == imageInfo.imageView) && (imageInfo.sampler == imageInfo.sampler);
 			});
 		if (it != m_combinedImageSamplersImageInfos.end())
 		{

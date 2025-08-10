@@ -343,7 +343,8 @@ namespace Utility::Vulkan::CreateInfo
 	}
 
 	inline VkAttachmentDescription attachmentDescriptionForDepth(const VkFormat& format,
-		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR)
+		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
 	{
 		VkAttachmentDescription ad{};
 		ad.format = format;
@@ -352,7 +353,7 @@ namespace Utility::Vulkan::CreateInfo
 		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
 		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
 		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+		ad.initialLayout = initialLayout;
 		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		return ad;
 	}
@@ -1084,22 +1085,26 @@ namespace Utility::Vulkan::CreateInfo
 		return imageCopy;
 	}
 
-	inline VkSamplerCreateInfo samplerCreateInfo()
+	inline VkSamplerCreateInfo samplerCreateInfo(
+		const bool& compareEnable = VK_TRUE,
+		const VkFilter& magFilter = VkFilter::VK_FILTER_LINEAR,
+		const VkFilter& minFilter = VkFilter::VK_FILTER_LINEAR,
+		const float& maxLod = 1.0f,
+		const VkSamplerMipmapMode& mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR)
 	{
 		VkSamplerCreateInfo ci{};
 		ci.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		ci.maxAnisotropy = 1.0f;
-		ci.magFilter = VK_FILTER_LINEAR;
-		ci.minFilter = VK_FILTER_LINEAR;
-		ci.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		ci.magFilter = magFilter;
+		ci.minFilter = minFilter;
+		ci.mipmapMode = mipmapMode;
 		ci.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 		ci.addressModeV = ci.addressModeU;
 		ci.addressModeW = ci.addressModeU;
-		ci.compareEnable = VK_TRUE;
+		ci.compareEnable = compareEnable;
 		ci.mipLodBias = 0.0f;
 		ci.maxAnisotropy = 1.0f;
 		ci.minLod = 0.0f;
-		ci.maxLod = 1.0f;
+		ci.maxLod = maxLod;
 		ci.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		return ci;
 	}

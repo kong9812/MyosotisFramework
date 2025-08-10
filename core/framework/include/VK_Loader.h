@@ -180,25 +180,14 @@ namespace Utility::Loader {
 						// aabb
 						if (firstDataForAABB)
 						{
-							meshData.min.x = positionBuffer ? positionBuffer[vertex * 3 + 0] : 0.0f;
-							meshData.min.y = positionBuffer ? positionBuffer[vertex * 3 + 1] : 0.0f;
-							meshData.min.z = positionBuffer ? positionBuffer[vertex * 3 + 2] : 0.0f;
-							meshData.max.x = meshData.min.x;
-							meshData.max.y = meshData.min.y;
-							meshData.max.z = meshData.min.z;
+							meshData.min = v;
+							meshData.max = v;
 							firstDataForAABB = false;
 						}
 						else
 						{
-							if (positionBuffer)
-							{
-								meshData.min.x = meshData.min.x < v.x ? meshData.min.x : v.x;
-								meshData.min.y = meshData.min.y < v.y ? meshData.min.y : v.y;
-								meshData.min.z = meshData.min.z < v.z ? meshData.min.z : v.z;
-								meshData.max.x = meshData.max.x > v.x ? meshData.max.x : v.x;
-								meshData.max.y = meshData.max.y > v.y ? meshData.max.y : v.y;
-								meshData.max.z = meshData.max.z > v.z ? meshData.max.z : v.z;
-							}
+							meshData.min = glm::min(meshData.min, v);
+							meshData.max = glm::max(meshData.max, v);
 						}
 					}
 					else

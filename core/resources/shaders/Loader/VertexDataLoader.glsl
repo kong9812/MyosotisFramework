@@ -59,6 +59,11 @@ layout (std430, set = 1, binding = 4) readonly buffer AllPrimitivesBuffer {
     uint primitivesData[];
 };
 
+layout (std430, set = 1, binding = 5) buffer AllFalseNegativeBuffer {
+    uint dataSize;
+    uint falseNegativeStandardSSBOIndex[];
+};
+
 mat4 VertexDataLoader_LoadMat4(uint base) {
     return mat4(
         vec4(uintBitsToFloat(vertexData[base +  0]), uintBitsToFloat(vertexData[base +  1]),
@@ -175,4 +180,29 @@ uint VertexDataLoader_GetUniqueIndexData(uint meshID, uint meshletIndex, uint un
     uint offset = meshletMetaData.uniqueIndexOffset + uniqueIndex;
     return VertexDataLoader_LoadUniqueIndexDataUint(offset);
 }
+
+// StandardSSBOにアクセスするためのIndex
+uint VertexDataLoader_GetFalseNegativeStandardSSBOIndex(uint index)
+{
+    return falseNegativeStandardSSBOIndex[nonuniformEXT(index)];
+}
+
+// Reset false negative size
+void VertexDataLoader_ResetFalseNegativeSize()
+{
+    dataSize = 0;
+}
+
+// Reset false negative size
+uint VertexDataLoader_GetFalseNegativeSize()
+{
+    return dataSize;
+}
+
+// increment
+uint VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex()
+{
+    return atomicAdd(dataSize, 1);
+}
+
 #endif

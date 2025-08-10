@@ -5,8 +5,14 @@
 
 #include "Loader/RawDataLoader.glsl"
 #include "Loader/VertexDataLoader.glsl"
-#include "Loader/MainCameraDataLoader.glsl"
+#include "Loader/Sampler2DLoader.glsl"
 #include "Culling/FrustumCulling.glsl"
+#include "Culling/2PhaseOcclusionCulling.glsl"
+
+layout(push_constant) uniform PushConstant {
+    uint hiZSamplerID;
+    uint checkFalseNegativeMesh;
+};
 
 struct Payload {
     uint StandardSSBOIndex;
@@ -18,6 +24,15 @@ taskPayloadSharedEXT Payload payload;
 void main()
 {
     uint standardSSBOIndex = gl_WorkGroupID.x;
+    int mipLevel = 2;
+    if (checkFalseNegativeMesh == 1)
+    {
+        if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
+        standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
+        mipLevel = 0;
+    }
+    VertexDataLoader_ResetFalseNegativeSize();
+    barrier();
 
     StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
@@ -25,27 +40,41 @@ void main()
     OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
 
     uint localMeshletCount = 0;
+    // Mesh単位のフラスタムカリング
     if (FrustumCulling_IsVisible(obbData))
     {
-        // 画面に入ってる
-        for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
+        if (TwoPhaseOcclusionCulling_IsVisible(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO, hiZSamplerID, mipLevel))
         {
-            MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
-
-            OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
-            // SphereData sphereData = FrustumCulling_CreateBoundingSphere(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.scale.xyz);
-            
-            //if (FrustumCulling_IsVisible_Sphere(sphereData))
-            if (FrustumCulling_IsVisible(meshletObbData))
+            for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
             {
-                payload.MeshletIndex[localMeshletCount] = i;
-                localMeshletCount++;
+                MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
+
+                OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+                // SphereData sphereData = FrustumCulling_CreateBoundingSphere(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.scale.xyz);
+
+                //if (FrustumCulling_IsVisible_Sphere(sphereData))
+                // Meshlet単位のフラスタムカリング
+                if (FrustumCulling_IsVisible(meshletObbData))
+                {
+                    // フェーズ1 オクルージョンカリング (Mip1)
+                    // if (TwoPhaseOcclusionCulling_IsVisible_Phase1(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO, hiZSamplerID, 1))
+                    // {
+                        payload.MeshletIndex[localMeshletCount] = i;
+                        localMeshletCount++;
+                    // }
+                }
             }
         }
+        // else
+        // {
+        //     uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
+        //     falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
+        // }
     }
     barrier();
     if (localMeshletCount > 0)
     {
+        debugPrintfEXT("RENDER!");
         payload.StandardSSBOIndex = standardSSBOIndex;
         EmitMeshTasksEXT(localMeshletCount, 1, 1);
     }

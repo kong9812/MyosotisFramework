@@ -33,6 +33,7 @@ namespace MyosotisFW::System::Render
 			VERTEX_DATA,
 			UNIQUE_INDEX,
 			PRIMITIVES,
+			FALSE_NEGATIVE_STANDARD_SSBO_INDEX,
 		};
 
 		void FreeDescriptorSets(VkDescriptorSet& descriptorSet);
@@ -97,6 +98,7 @@ namespace MyosotisFW::System::Render
 
 	private:
 		void createMainCameraBuffer();
+		void createFalseNegativeStandardSSBOIndexBuffer();
 		void createDescriptorPool();
 		void createBindlessMainDescriptorSetLayout();
 		void createBindlessVertexDescriptorSetLayout();
@@ -133,6 +135,7 @@ namespace MyosotisFW::System::Render
 		Buffer m_vertexDataBuffer;
 		Buffer m_uniqueIndexBuffer;
 		Buffer m_primitivesBuffer;
+		Buffer m_falseNegativeStandardSSBOIndexBuffer;
 
 		std::vector<VkDescriptorImageInfo> m_combinedImageSamplersImageInfos;
 		std::vector<VkDescriptorImageInfo> m_storageImageInfos;

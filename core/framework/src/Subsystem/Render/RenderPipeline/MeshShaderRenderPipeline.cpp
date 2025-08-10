@@ -18,6 +18,16 @@ namespace MyosotisFW::System::Render
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
 		prepareRenderPipeline(resources, renderPass);
+
+		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+			resources->GetHiZDepthMap().sampler, resources->GetHiZDepthMap().view,
+			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_hiZSamplerID = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
+
+		descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
+			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_primaryDepthSamplerID = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
 	}
 
 	void MeshShaderRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount)
@@ -26,15 +36,30 @@ namespace MyosotisFW::System::Render
 		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
+		pushConstant.hiZSamplerID = m_hiZSamplerID;
+		pushConstant.checkFalseNegativeMesh = 0; // Disable false negative mesh check
+		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
+			0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
 		uint32_t meshletGroupCount = meshCount;
 		m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
 	}
 
 	void MeshShaderRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
+		// push constant
+		std::vector<VkPushConstantRange> pushConstantRange = {
+			// VS
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
+				0,
+				static_cast<uint32_t>(sizeof(pushConstant))),
+		};
+
 		// [pipeline]layout
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout(), m_descriptors->GetBindlessVertexDescriptorSetLayout() };
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
+		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// pipeline

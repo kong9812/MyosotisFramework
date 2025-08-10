@@ -33,14 +33,14 @@ namespace MyosotisFW::System::Render
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_hiZDepthFormat),				// [1] depth/stencil
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat),	// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
 		// Render subpass
 		VkAttachmentReference renderSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference renderSubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthStencil), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+		VkAttachmentReference renderSubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::PrimaryDepth), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_depth(renderSubpassColorAttachmentReferences, renderSubpassDepthAttachmentReference));
 
 		std::vector<VkSubpassDependency> dependencies = {
@@ -83,7 +83,7 @@ namespace MyosotisFW::System::Render
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
-		clearValues[static_cast<uint32_t>(Attachments::DepthStencil)] = AppInfo::g_depthClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];
@@ -108,7 +108,7 @@ namespace MyosotisFW::System::Render
 		m_framebuffers.resize(1);
 
 		attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
-		attachments[static_cast<uint32_t>(Attachments::DepthStencil)] = m_resources->GetPrimaryDepthStencil().view;
+		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
 
 		VkFramebufferCreateInfo frameBufferCreateInfo = {};
 		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
