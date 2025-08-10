@@ -65,6 +65,7 @@ void main()
     {
         // プリミティブサイズ
         primitiveCount = 0;
+        // debugPrintfEXT("RENDER!");
     }
     barrier();
 

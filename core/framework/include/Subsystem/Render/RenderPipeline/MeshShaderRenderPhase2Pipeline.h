@@ -5,13 +5,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	class MeshShaderRenderPipeline : public RenderPipelineBase
+	class MeshShaderRenderPhase2Pipeline : public RenderPipelineBase
 	{
 	public:
-		MeshShaderRenderPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+		MeshShaderRenderPhase2Pipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
 			RenderPipelineBase(device, descriptors) {
 		}
-		~MeshShaderRenderPipeline();
+		~MeshShaderRenderPhase2Pipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount);
@@ -28,6 +28,8 @@ namespace MyosotisFW::System::Render
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;
+
+		VkImage test;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(MeshShaderRenderPipeline);
+	TYPEDEF_SHARED_PTR_ARGS(MeshShaderRenderPhase2Pipeline);
 }

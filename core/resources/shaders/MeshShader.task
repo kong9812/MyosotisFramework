@@ -24,13 +24,18 @@ taskPayloadSharedEXT Payload payload;
 void main()
 {
     uint standardSSBOIndex = gl_WorkGroupID.x;
-    int mipLevel = 2;
+    int mipLevel = 4;
     if (checkFalseNegativeMesh == 1)
     {
         if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
         standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
         mipLevel = 0;
     }
+    else if (checkFalseNegativeMesh == 2)
+    {
+        mipLevel = 0;
+    }
+    
     VertexDataLoader_ResetFalseNegativeSize();
     barrier();
 
@@ -65,16 +70,16 @@ void main()
                 }
             }
         }
-        // else
-        // {
-        //     uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
-        //     falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
-        // }
+        else
+        {
+            debugPrintfEXT("yeah!");
+            uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
+            falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
+        }
     }
     barrier();
     if (localMeshletCount > 0)
     {
-        debugPrintfEXT("RENDER!");
         payload.StandardSSBOIndex = standardSSBOIndex;
         EmitMeshTasksEXT(localMeshletCount, 1, 1);
     }

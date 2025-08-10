@@ -103,8 +103,7 @@ namespace MyosotisFW::System::Render
 			uint32_t dstMip = 1;
 			glm::ivec2 mipSize = glm::ivec2(screenSize.x, screenSize.y);
 
-			// 1) 最初に mip1～最後までを UNDEFINED->GENERAL に遷移（初期化）
-			{
+			{// mip1を UNDEFINED->GENERALに遷移
 				VkImageMemoryBarrier barrier{};
 				barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 				barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -119,7 +118,6 @@ namespace MyosotisFW::System::Render
 				barrier.subresourceRange.layerCount = 1;
 				barrier.srcAccessMask = 0;
 				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-
 				vkCmdPipelineBarrier(
 					commandBuffer,
 					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,

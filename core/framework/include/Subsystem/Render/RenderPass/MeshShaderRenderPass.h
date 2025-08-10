@@ -13,7 +13,8 @@ namespace MyosotisFW::System::Render
 	public:
 		enum class SubPass : uint32_t
 		{
-			Render,
+			Phase1,
+			Phase2,
 			COUNT
 		};
 

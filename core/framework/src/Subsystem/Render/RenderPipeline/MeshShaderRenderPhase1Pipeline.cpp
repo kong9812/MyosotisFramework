@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "MeshShaderRenderPipeline.h"
+#include "MeshShaderRenderPhase1Pipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -7,13 +7,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	MeshShaderRenderPipeline::~MeshShaderRenderPipeline()
+	MeshShaderRenderPhase1Pipeline::~MeshShaderRenderPhase1Pipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void MeshShaderRenderPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void MeshShaderRenderPhase1Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
@@ -28,24 +28,28 @@ namespace MyosotisFW::System::Render
 			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
 			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_primaryDepthSamplerID = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
+
+		test = resources->GetPrimaryDepthStencil().image;
 	}
 
-	void MeshShaderRenderPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount)
+	void MeshShaderRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount)
 	{
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-		std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
-			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		pushConstant.hiZSamplerID = m_hiZSamplerID;
-		pushConstant.checkFalseNegativeMesh = 0; // Disable false negative mesh check
-		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-			0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
-		uint32_t meshletGroupCount = meshCount;
-		m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
+		{// Phase1Render
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+			std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
+				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
+			pushConstant.hiZSamplerID = m_hiZSamplerID;
+			pushConstant.checkFalseNegativeMesh = 0; // Disable false negative mesh check
+			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
+				0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+			uint32_t meshletGroupCount = meshCount;
+			m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
+		}
 	}
 
-	void MeshShaderRenderPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void MeshShaderRenderPhase1Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {

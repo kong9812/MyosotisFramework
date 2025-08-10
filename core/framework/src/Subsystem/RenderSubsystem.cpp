@@ -28,7 +28,8 @@
 #include "LightingRenderPipeline.h"
 #include "FinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
-#include "MeshShaderRenderPipeline.h"
+#include "MeshShaderRenderPhase1Pipeline.h"
+#include "MeshShaderRenderPhase2Pipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -298,7 +299,11 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_meshShaderRenderPipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+		m_meshShaderRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+
+		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
+		m_meshShaderRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 
@@ -518,8 +523,10 @@ namespace MyosotisFW::System::Render
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
 
-		m_meshShaderRenderPipeline = CreateMeshShaderRenderPipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()

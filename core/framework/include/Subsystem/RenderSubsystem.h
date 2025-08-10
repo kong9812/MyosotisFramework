@@ -55,8 +55,10 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPipeline);
 		class InteriorObjectDeferredRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
-		class MeshShaderRenderPipeline;
-		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPipeline);
+		class MeshShaderRenderPhase1Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPhase1Pipeline);
+		class MeshShaderRenderPhase2Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPhase2Pipeline);
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
@@ -92,7 +94,8 @@ namespace MyosotisFW::System::Render
 			m_compositionRenderPipeline(nullptr),
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
-			m_meshShaderRenderPipeline(nullptr),
+			m_meshShaderRenderPhase1Pipeline(nullptr),
+			m_meshShaderRenderPhase2Pipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
@@ -184,11 +187,10 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
-		MeshShaderRenderPipeline_ptr m_meshShaderRenderPipeline;
-
+		MeshShaderRenderPhase1Pipeline_ptr m_meshShaderRenderPhase1Pipeline;
+		MeshShaderRenderPhase2Pipeline_ptr m_meshShaderRenderPhase2Pipeline;
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
-
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

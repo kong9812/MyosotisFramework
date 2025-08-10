@@ -58,6 +58,14 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
         }
     }
 
+    // if (minDepth > prevDepthMax)
+    // {
+    //     debugPrintfEXT("minTexel x: %d y: %d maxTexel x: %d y: %d\nminDepth: %f, prevDepthMax: %f",
+    //     minTexel.x, minTexel.y,
+    //     maxTexel.x, maxTexel.y,
+    //     minDepth, prevDepthMax);
+    // } 
+
     return minDepth <= prevDepthMax;
 }
 #endif
