@@ -94,6 +94,9 @@ Once the environment setup is complete, you can use the following batch file to 
   Hoping to switch to something like Greedy Clustering later for better results.  
 ![Meshlet](https://github.com/user-attachments/assets/d521eb41-fe99-4d7d-8b83-4a35eabcfbad)
 
+- **2-phase Occlusion Culling**
+  
+
 ---
 
 ## License
