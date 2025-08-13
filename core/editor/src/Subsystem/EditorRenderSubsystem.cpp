@@ -23,7 +23,8 @@
 #include "LightingRenderPipeline.h"
 #include "EditorFinalCompositionRenderPipeline.h"
 #include "InteriorObjectDeferredRenderPipeline.h"
-#include "MeshShaderRenderPipeline.h"
+#include "MeshShaderRenderPhase1Pipeline.h"
+#include "MeshShaderRenderPhase2Pipeline.h"
 
 #include "AppInfo.h"
 
@@ -186,8 +187,10 @@ namespace MyosotisFW::System::Render
 		m_compositionRenderPipeline->CreateShaderObject();
 		m_finalCompositionRenderPipeline->CreateShaderObject();
 
-		m_meshShaderRenderPipeline = CreateMeshShaderRenderPipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
+		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
