@@ -9,78 +9,126 @@
 #include "Culling/FrustumCulling.glsl"
 #include "Culling/2PhaseOcclusionCulling.glsl"
 
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+
 layout(push_constant) uniform PushConstant {
     uint hiZSamplerID;
     uint checkFalseNegativeMesh;
 };
 
+const uint MeshletMax = 2000;
+
 struct Payload {
     uint StandardSSBOIndex;
-    uint MeshletIndex[2000];
+    uint MeshletIndex[MeshletMax];
 };
 // max: 16kb
 taskPayloadSharedEXT Payload payload;
 
+// 最終的にMeshlet見えてる枚数
+shared uint localMeshletCount;
+
+// memo
+// 複雑になってきたので、いったんわかりやすさを優先にするため、
+// 処理を再分割し無駄のifも多く含むが、いったん良しとする。
+// memo
+
 void main()
 {
+    // forループの際にスレッドそれぞれのインクリメント値
+    const uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+
+    // CPPから指定スレッドIDを使ってメッシュオブジェクト処理の分割を行う
     uint standardSSBOIndex = gl_WorkGroupID.x;
+
+    // 初期(フェーズ1)のmipマップ指定
     int mipLevel = 4;
+
+    // フェーズ判定
     if (checkFalseNegativeMesh == 1)
     {
+        // このスレッドIDオブジェクトはフェーズ1で処理できた
         if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
+
+        debugPrintfEXT("phase2: %d", VertexDataLoader_GetFalseNegativeSize());
+
+        // オブジェクトIndexを取り出す
         standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
-        mipLevel = 0;
-    }
-    else if (checkFalseNegativeMesh == 2)
-    {
+
+        // 詳細チェックを行うためのmipmap (primary depthは mip0 しかない)
         mipLevel = 0;
     }
     
+    // 前フレームで使ってた値のリセット (フェーズ1しかいらないけど、まぁいいか？)
     VertexDataLoader_ResetFalseNegativeSize();
+
+    // データの整合性を保つためにバリアを張っておく
     barrier();
 
+    // オブジェクトデータ取得
     StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
     MeshData meshData = VertexDataLoader_GetMeshData(standardSSBO.meshDataIndex);
 
+    // OBBデータの作成
     OBBData obbData = FrustumCulling_CreateOBBData(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
 
-    uint localMeshletCount = 0;
-    // Mesh単位のフラスタムカリング
-    if (FrustumCulling_IsVisible(obbData))
+    // 1. フラスタムカリング
+    bool visible = FrustumCulling_IsVisible(obbData);
+    if (!visible) return;
+
+    // 2. 2PhaseOccCulling
+    visible = TwoPhaseOcclusionCulling_IsVisible(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO, hiZSamplerID, mipLevel);
+    // フェーズ2のチャンスを与える
+    if (!visible)
     {
-        if (TwoPhaseOcclusionCulling_IsVisible(meshData.AABBMin.xyz, meshData.AABBMax.xyz, standardSSBO, hiZSamplerID, mipLevel))
+        debugPrintfEXT("gl_LocalInvocationIndex: %d checkFalseNegativeMesh: %d", gl_LocalInvocationIndex, checkFalseNegativeMesh);
+        if (gl_LocalInvocationIndex == 0 && checkFalseNegativeMesh == 0)
         {
-            for (uint i = 0; i < meshData.meshletMetaDataCount; i++)
+            uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
+            debugPrintfEXT("falseNegativeIndex: %d", falseNegativeIndex);
+            falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
+        }
+        return;
+    }
+
+    {// 3. それぞれのMeshlet判定
+        // 初期化 (0番目のみ実行する)
+        if (gl_LocalInvocationIndex == 0)
+        {
+            localMeshletCount = 0;
+        }
+        barrier();
+
+        // 全部の枚数をforで回す (スレッド分割)
+        for (uint i = gl_LocalInvocationIndex; i < meshData.meshletMetaDataCount; i += stride)
+        {
+            // Meshletデータ取得
+            MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
+            
+            // OBBデータの作成
+            obbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
+            
+            // 可視判定
+            visible = FrustumCulling_IsVisible(obbData);
+            if (visible)
             {
-                MeshletMetaData meshletMetaData = VertexDataLoader_GetMeshletMetaData(standardSSBO.meshDataIndex, i);
-
-                OBBData meshletObbData = FrustumCulling_CreateOBBData(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.rotation.xyz, standardSSBO.scale.xyz);
-                // SphereData sphereData = FrustumCulling_CreateBoundingSphere(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO.position.xyz, standardSSBO.scale.xyz);
-
-                //if (FrustumCulling_IsVisible_Sphere(sphereData))
-                // Meshlet単位のフラスタムカリング
-                if (FrustumCulling_IsVisible(meshletObbData))
+                uint payloadIndex = atomicAdd(localMeshletCount, 1);
+                if (payloadIndex < MeshletMax)  // 制限を超えないように
                 {
-                    // フェーズ1 オクルージョンカリング (Mip1)
-                    // if (TwoPhaseOcclusionCulling_IsVisible_Phase1(meshletMetaData.AABBMin.xyz, meshletMetaData.AABBMax.xyz, standardSSBO, hiZSamplerID, 1))
-                    // {
-                        payload.MeshletIndex[localMeshletCount] = i;
-                        localMeshletCount++;
-                    // }
+                    payload.MeshletIndex[payloadIndex] = i;    // payloadに見えるMeshletのIDを保管
                 }
             }
         }
-        else
-        {
-            debugPrintfEXT("yeah!");
-            uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
-            falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
-        }
     }
+
+    // データ整合性を保つ
     barrier();
-    if (localMeshletCount > 0)
+
+    // 3.で見える判定出たMeshletが1枚でもあったらMeshへGO (0番目のみ実行する)
+    if (localMeshletCount > 0 && gl_LocalInvocationIndex == 0)
     {
-        payload.StandardSSBOIndex = standardSSBOIndex;
-        EmitMeshTasksEXT(localMeshletCount, 1, 1);
+        // debugPrintfEXT("render");
+        payload.StandardSSBOIndex = standardSSBOIndex;  // このスレッドで処理したオブジェクトIDをMeshシェーダに教える
+        EmitMeshTasksEXT(localMeshletCount, 1, 1);      // todo. 全部使ってもいいかなぁ(さらに分散？)… (Meshシェーダ起こす負荷が高くなければ…)
     }
 }

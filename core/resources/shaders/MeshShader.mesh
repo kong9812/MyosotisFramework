@@ -11,17 +11,6 @@
 layout(local_size_x = 64) in;
 layout(triangles, max_vertices = 64, max_primitives = 124) out;
 
-struct TaskShaderToMeshShaderData
-{
-    uint _using;
-    uint objectIndex;
-    uint meshIndex; //todo.Meshlet化
-    uint meshletIndex;
-};
-layout (std430, set = 1, binding = 5) buffer TaskShaderToMeshShaderDataBuffer {
-    TaskShaderToMeshShaderData taskShaderToMeshShaderDatas[];
-};
-
 layout(location = 0) out VertexOutput {
 	vec4 color;
 } vertexOutput[];
@@ -46,6 +35,8 @@ shared uint primitiveCount;
 
 void main()
 {
+    // debugPrintfEXT("Thread: %d", gl_LocalInvocationIndex);
+
     // データ関連
     uint standardSSBOIndex = payload.StandardSSBOIndex;
     uint meshletIndex = payload.MeshletIndex[gl_WorkGroupID.x];

@@ -6,57 +6,151 @@
 #include "../Loader/Sampler2DLoader.glsl"
 #include "../Loader/MainCameraDataLoader.glsl"
 
-//ref: https://sites.google.com/site/monshonosuana/directx%E3%81%AE%E8%A9%B1/directx%E3%81%AE%E8%A9%B1-%E7%AC%AC177%E5%9B%9E?authuser=0
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+
+// 共有バッファ
+// memo: 計算はそれぞれやってから共有バッファに値を入れる
+shared vec2 sMinUV;
+shared vec2 sMaxUV;
+shared float sMinDepth;
+shared float sPrevDepthMax;
+shared bool sVisible;
+
+// 8頂点の一時置き場（共有配列）
+shared vec2  sLocalUV[8];
+shared float sLocalDepth[8];
+// local_size_x = 16, local_size_y = 8, local_size_z = 1
+shared float sLocalPrevDepthMax[gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z];
+
+// マルチスレッド
 bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO standardSSBO, uint hiZSamplerID, int mipLevel)
 {
+    // forループの際にスレッドそれぞれのインクリメント値
+    const uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+    
+    // カメラデータ取得
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    // AABBの8頂点をスクリーン座標に投影し、矩形を作る
-    vec3 corners[8] = vec3[](
-        vec3(aabbMin.x, aabbMin.y, aabbMin.z),   // - - -
-        vec3(aabbMax.x, aabbMax.y, aabbMax.z),   // + + +
-        vec3(aabbMax.x, aabbMin.y, aabbMin.z),   // + - -
-        vec3(aabbMin.x, aabbMax.y, aabbMin.z),   // - + -
-        vec3(aabbMin.x, aabbMin.y, aabbMax.z),   // - - +
-        vec3(aabbMax.x, aabbMax.y, aabbMin.z),   // + + -
-        vec3(aabbMin.x, aabbMax.y, aabbMax.z),   // - + +
-        vec3(aabbMax.x, aabbMin.y, aabbMax.z)    // + - +
-    );
-    // Mesh矩形AABBの最小Depth・AABBのUVを取り出す
-    vec2 minUV = vec2( 1.0);    // [スクリーンスペース] 矩形の範囲 min
-    vec2 maxUV = vec2(-1.0);    // [スクリーンスペース] 矩形の範囲 max
-    float minDepth = 1.0;       // 矩形の最大深度
-    for (int i = 0; i < 8; i++) 
+
+    // 初期化 (0番目のみ実行する)
+    if (gl_LocalInvocationIndex == 0)
     {
-        vec4 clip = cameraData.projection * cameraData.view * (standardSSBO.model * vec4(corners[i], 1.0));
+        sMinUV = vec2( 1.0);    // [スクリーンスペース] 矩形の範囲 min
+        sMaxUV = vec2(-1.0);    // [スクリーンスペース] 矩形の範囲 max
+        sMinDepth = 1.0;        // 矩形の最小深度
+        sPrevDepthMax = 0.0;    // depthBufferの最大深度
+    }
+    barrier();
+
+    // AABBの8頂点をスクリーン座標に投影し、矩形を作る (最初の8スレッドのみ計算)
+    // ローカルバッファ
+    if (gl_LocalInvocationIndex < 8)
+    {    
+        vec3 corners[8] = vec3[](
+            vec3(aabbMin.x, aabbMin.y, aabbMin.z),   // - - -
+            vec3(aabbMax.x, aabbMax.y, aabbMax.z),   // + + +
+            vec3(aabbMax.x, aabbMin.y, aabbMin.z),   // + - -
+            vec3(aabbMin.x, aabbMax.y, aabbMin.z),   // - + -
+            vec3(aabbMin.x, aabbMin.y, aabbMax.z),   // - - +
+            vec3(aabbMax.x, aabbMax.y, aabbMin.z),   // + + -
+            vec3(aabbMin.x, aabbMax.y, aabbMax.z),   // - + +
+            vec3(aabbMax.x, aabbMin.y, aabbMax.z)    // + - +
+        );
+        vec4 clip = cameraData.projection * cameraData.view * (standardSSBO.model * vec4(corners[gl_LocalInvocationIndex], 1.0));
         vec3 ndc = clip.xyz / clip.w;   // クリップ座標 -> NDC [-1~1]
         vec2 uv = ndc.xy * 0.5 + 0.5;   // NDC座標 -> UV [0~1]
-        minUV = min(minUV, uv);
-        maxUV = max(maxUV, uv);
-        minDepth = min(minDepth, ndc.z);    // NDC.z: 深度 -> [0~1]に変換
+        sLocalUV[gl_LocalInvocationIndex] = uv;        
+        sLocalDepth[gl_LocalInvocationIndex] = ndc.z;
+        // debugPrintfEXT("sLocalDepth[%d]: %f", gl_LocalInvocationIndex, sLocalDepth[gl_LocalInvocationIndex]);
     }
+    barrier();
 
-    // UV範囲制限
-    minUV = clamp(minUV, vec2(0.0), vec2(1.0));
-    maxUV = clamp(maxUV, vec2(0.0), vec2(1.0));
+    // atomicMinとatomicMaxを使わずthread==0で処理してもらう
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sMinUV = sLocalUV[0];
+        sMaxUV = sLocalUV[0];
+        sMinDepth = sLocalDepth[0];
 
+        for (uint i = 1; i < 8; i++)
+        {
+            sMinUV.x = min(sMinUV.x, sLocalUV[i].x);
+            sMinUV.y = min(sMinUV.y, sLocalUV[i].y);
+            sMaxUV.x = max(sMaxUV.x, sLocalUV[i].x);
+            sMaxUV.y = max(sMaxUV.y, sLocalUV[i].y);
+            sMinDepth = min(sMinDepth, sLocalDepth[i]);
+        }
+    }
+    barrier();
+
+    // debugPrintfEXT("sMinUV x: %f y: %f sMaxUV x: %f y: %f\nsMinDepth: %f",
+    //  sMinUV.x, sMinUV.y, sMaxUV.x, sMaxUV.y, sMinDepth);
+
+    // 制限を超えないように
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sMinUV = clamp(sMinUV, vec2(0.0), vec2(1.0));
+        sMaxUV = clamp(sMaxUV, vec2(0.0), vec2(1.0));
+    }
+    barrier();
+
+    // ここからは一番重く、スレッド分割が期待できるところ
+    // デップステクスチャのサイズ (mip指定)
     ivec2 mipTexSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, mipLevel);
 
-    // minUV～maxUVをテクセル座標に変換
-    ivec2 minTexel = ivec2(minUV * vec2(mipTexSize));
-    ivec2 maxTexel = ivec2(maxUV * vec2(mipTexSize));
+    // depth画像のテクセル位置に変換
+    ivec2 minTexel = ivec2(sMinUV * vec2(mipTexSize));
+    ivec2 maxTexel = ivec2(sMaxUV * vec2(mipTexSize));
 
-    // 範囲内全テクセルでループ
-    float prevDepthMax = 0.0;
-    for (int y = minTexel.y; y <= maxTexel.y; y++) {
-        for (int x = minTexel.x; x <= maxTexel.x; x++) {
-            // UVに戻す
-            vec2 uv = (vec2(x, y) + 0.5) / vec2(mipTexSize); // ピクセル中心をUVに
+    // 制限
+    minTexel = max(minTexel, ivec2(0));
+    maxTexel = min(maxTexel, mipTexSize - ivec2(1));
+    barrier();
 
-            // 深度取得
-            float d = texelFetch(Sampler2D[hiZSamplerID], ivec2(x, y), mipLevel).r;
-            prevDepthMax = max(prevDepthMax, d);
+    // AABB矩形が0なら見える
+    if (maxTexel.x <= minTexel.x || maxTexel.y <= minTexel.y) 
+    {
+        return true;
+    }
+
+    // テクセル数
+    uint width  = uint(maxTexel.x - minTexel.x + 1);
+    uint height = uint(maxTexel.y - minTexel.y + 1);
+    uint totalSize = width * height;
+
+    // ローカルスレッドの最大
+    float localMax = 0.0;
+
+    // いよいよfor
+    for (uint i = gl_LocalInvocationIndex; i < totalSize; i += stride)
+    {
+        uint ix = i % width;  // x (eg: 10*20の画像なら 10~19の時 0~9が出てくる、x軸の位置)
+        uint iy = i / width;  // y (eg: 10*20の画像なら 12の時 1出てくる、y軸の位置)
+        ivec2 tc = ivec2(int(ix) + minTexel.x, int(iy) + minTexel.y);   // depthにあるAABBの位置の左上位置から計算
+        float d = texelFetch(Sampler2D[hiZSamplerID], tc, mipLevel).r;
+        localMax = max(localMax, d);
+    }
+    sLocalPrevDepthMax[gl_LocalInvocationIndex] = localMax;
+    barrier();
+
+    // todo. もっといい方法がないかなぁ…
+    if (gl_LocalInvocationIndex == 0)
+    {
+        uint loopCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+        for(uint i = 0; i < loopCount; i++)
+        {
+            sPrevDepthMax = max(sPrevDepthMax, sLocalPrevDepthMax[i]);
         }
-    } 
-    return minDepth <= prevDepthMax;
+    }
+    barrier();
+
+    // 判定
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sVisible = (sMinDepth <= sPrevDepthMax);
+        debugPrintfEXT("sMinDepth: %f sPrevDepthMax: %f", sMinDepth, sPrevDepthMax);
+    }
+    barrier();
+
+    return sVisible;
 }
 #endif

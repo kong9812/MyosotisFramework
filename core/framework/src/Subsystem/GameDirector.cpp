@@ -63,9 +63,10 @@ namespace MyosotisFW::System::GameDirector {
 		//}
 
 		// パフォーマンステスト用
-		for (uint32_t x = 0; x < 10; x++)
+		const uint32_t objectCount = 30;
+		for (uint32_t x = 0; x < objectCount; x++)
 		{
-			for (uint32_t z = 0; z < 10; z++)
+			for (uint32_t z = 0; z < objectCount; z++)
 			{
 				{
 					StageObject_ptr newObject = CreateStageObjectPointer();
@@ -97,11 +98,12 @@ namespace MyosotisFW::System::GameDirector {
 		}
 
 		//// パフォーマンステスト用
-		//for (uint32_t x = 0; x < 10; x++)
+		//const uint32_t objectCount = 10;
+		//for (uint32_t x = 0; x < objectCount; x++)
 		//{
-		//	for (uint32_t z = 0; z < 10; z++)
+		//	for (uint32_t z = 0; z < objectCount; z++)
 		//	{
-		//		for (uint32_t y = 0; y < 10; y++)
+		//		for (uint32_t y = 0; y < objectCount; y++)
 		//		{
 		//			{
 		//				StageObject_ptr newObject = CreateStageObjectPointer();
@@ -110,7 +112,7 @@ namespace MyosotisFW::System::GameDirector {
 		//				CustomMeshInfo customMeshInfo{};
 		//				customMeshInfo.meshName = "Cube/Cube.gltf";
 		//				component->SetCustomMeshInfo(customMeshInfo);
-		//				component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 2.0f * z));
+		//				component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
 		//				component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 		//				component->SetScale(glm::vec3(0.1f));
 		//				newObject->AddComponent(component);
