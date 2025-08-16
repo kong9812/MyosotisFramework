@@ -63,7 +63,7 @@ namespace MyosotisFW::System::GameDirector {
 		//}
 
 		// パフォーマンステスト用
-		const uint32_t objectCount = 30;
+		const uint32_t objectCount = 10;
 		for (uint32_t x = 0; x < objectCount; x++)
 		{
 			for (uint32_t z = 0; z < objectCount; z++)
@@ -157,7 +157,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	CustomMeshInfo customMeshInfo{};
 		//	customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	component->SetPos(glm::vec3(-2.5f, 0.0f, 5.0f));
+		//	component->SetPos(glm::vec3(-2.5f, 0.0f, 16.0f));
 		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 		//	component->SetScale(glm::vec3(2.0f));
 		//	newObject->AddComponent(component);
@@ -170,7 +170,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	CustomMeshInfo customMeshInfo{};
 		//	customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
 		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	component->SetPos(glm::vec3(2.5f, 0.0f, 5.0f));
+		//	component->SetPos(glm::vec3(2.5f, 0.0f, 15.0f));
 		//	component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 		//	component->SetScale(glm::vec3(10.0f));
 		//	newObject->AddComponent(component);

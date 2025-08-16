@@ -6,21 +6,18 @@
 #include "../Loader/Sampler2DLoader.glsl"
 #include "../Loader/MainCameraDataLoader.glsl"
 
-layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
-
 // 共有バッファ
 // memo: 計算はそれぞれやってから共有バッファに値を入れる
 shared vec2 sMinUV;
 shared vec2 sMaxUV;
 shared float sMinDepth;
+shared uint sPrevDepthMax_u;
 shared float sPrevDepthMax;
 shared bool sVisible;
 
 // 8頂点の一時置き場（共有配列）
 shared vec2  sLocalUV[8];
 shared float sLocalDepth[8];
-// local_size_x = 16, local_size_y = 8, local_size_z = 1
-shared float sLocalPrevDepthMax[gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z];
 
 // マルチスレッド
 bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO standardSSBO, uint hiZSamplerID, int mipLevel)
@@ -37,7 +34,8 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
         sMinUV = vec2( 1.0);    // [スクリーンスペース] 矩形の範囲 min
         sMaxUV = vec2(-1.0);    // [スクリーンスペース] 矩形の範囲 max
         sMinDepth = 1.0;        // 矩形の最小深度
-        sPrevDepthMax = 0.0;    // depthBufferの最大深度
+        sPrevDepthMax_u = 0;    // depthBufferの最大深度
+        sVisible = false;
     }
     barrier();
 
@@ -70,7 +68,6 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
         sMinUV = sLocalUV[0];
         sMaxUV = sLocalUV[0];
         sMinDepth = sLocalDepth[0];
-
         for (uint i = 1; i < 8; i++)
         {
             sMinUV.x = min(sMinUV.x, sLocalUV[i].x);
@@ -79,15 +76,6 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
             sMaxUV.y = max(sMaxUV.y, sLocalUV[i].y);
             sMinDepth = min(sMinDepth, sLocalDepth[i]);
         }
-    }
-    barrier();
-
-    // debugPrintfEXT("sMinUV x: %f y: %f sMaxUV x: %f y: %f\nsMinDepth: %f",
-    //  sMinUV.x, sMinUV.y, sMaxUV.x, sMaxUV.y, sMinDepth);
-
-    // 制限を超えないように
-    if (gl_LocalInvocationIndex == 0)
-    {
         sMinUV = clamp(sMinUV, vec2(0.0), vec2(1.0));
         sMaxUV = clamp(sMaxUV, vec2(0.0), vec2(1.0));
     }
@@ -109,8 +97,13 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
     // AABB矩形が0なら見える
     if (maxTexel.x <= minTexel.x || maxTexel.y <= minTexel.y) 
     {
-        return true;
+        if (gl_LocalInvocationIndex == 0) {
+            sVisible = true;
+        }
+        barrier();
+        return sVisible;
     }
+    barrier();
 
     // テクセル数
     uint width  = uint(maxTexel.x - minTexel.x + 1);
@@ -118,7 +111,7 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
     uint totalSize = width * height;
 
     // ローカルスレッドの最大
-    float localMax = 0.0;
+    float localMax = -1.0;
 
     // いよいよfor
     for (uint i = gl_LocalInvocationIndex; i < totalSize; i += stride)
@@ -129,25 +122,16 @@ bool TwoPhaseOcclusionCulling_IsVisible(vec3 aabbMin, vec3 aabbMax, StandardSSBO
         float d = texelFetch(Sampler2D[hiZSamplerID], tc, mipLevel).r;
         localMax = max(localMax, d);
     }
-    sLocalPrevDepthMax[gl_LocalInvocationIndex] = localMax;
-    barrier();
 
-    // todo. もっといい方法がないかなぁ…
-    if (gl_LocalInvocationIndex == 0)
-    {
-        uint loopCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
-        for(uint i = 0; i < loopCount; i++)
-        {
-            sPrevDepthMax = max(sPrevDepthMax, sLocalPrevDepthMax[i]);
-        }
-    }
+    uint localU = (localMax < 0.0) ? 0 : floatBitsToUint(localMax);
+    atomicMax(sPrevDepthMax_u, localU);
     barrier();
 
     // 判定
     if (gl_LocalInvocationIndex == 0)
     {
-        sVisible = (sMinDepth <= sPrevDepthMax);
-        debugPrintfEXT("sMinDepth: %f sPrevDepthMax: %f", sMinDepth, sPrevDepthMax);
+        sPrevDepthMax = uintBitsToFloat(sPrevDepthMax_u);
+        sVisible = (sMinDepth <= sPrevDepthMax);        
     }
     barrier();
 
