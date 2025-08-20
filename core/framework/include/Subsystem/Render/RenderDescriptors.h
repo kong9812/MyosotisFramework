@@ -59,8 +59,8 @@ namespace MyosotisFW::System::Render
 			return index;
 		}
 
-		void AddPrimitiveGeometry(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshData);
-		uint32_t AddCustomMesh(const std::string meshName, std::vector<Mesh> meshData);
+		void AddPrimitiveGeometry(const std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>>& meshData);
+		uint32_t AddCustomMesh(const std::string& meshName, const std::vector<Mesh>& meshData);
 
 		uint32_t AddCombinedImageSamplerInfo(const VkDescriptorImageInfo& imageInfo);
 		uint32_t AddStorageImageInfo(const VkDescriptorImageInfo& imageInfo);

@@ -62,7 +62,7 @@ namespace MyosotisFW
 		return false;
 	}
 
-	ComponentBase_ptr StageObject::FindComponent(const ComponentType& type, bool findChildComponent)
+	ComponentBase_ptr StageObject::FindComponent(const ComponentType& type, const bool findChildComponent)
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
@@ -83,7 +83,7 @@ namespace MyosotisFW
 		return nullptr;
 	}
 
-	std::vector<ComponentBase_ptr> StageObject::FindAllComponents(const ComponentType& type, bool findChildComponent)
+	std::vector<ComponentBase_ptr> StageObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
 	{
 		std::vector<ComponentBase_ptr> foundComponents{};
 		for (ComponentBase_ptr& component : m_components)

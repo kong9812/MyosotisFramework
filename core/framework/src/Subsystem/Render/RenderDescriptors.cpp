@@ -457,7 +457,7 @@ namespace MyosotisFW::System::Render
 		destroyMainDescriptorSetBuffer();
 	}
 
-	void RenderDescriptors::AddPrimitiveGeometry(std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> meshDatas)
+	void RenderDescriptors::AddPrimitiveGeometry(const  std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>>& meshDatas)
 	{
 		for (const auto& [shape, meshes] : meshDatas)
 		{
@@ -500,7 +500,7 @@ namespace MyosotisFW::System::Render
 		updateVertexDescriptorSet();
 	}
 
-	uint32_t RenderDescriptors::AddCustomMesh(const std::string meshName, std::vector<Mesh> meshDatas)
+	uint32_t RenderDescriptors::AddCustomMesh(const std::string& meshName, const std::vector<Mesh>& meshDatas)
 	{
 		uint32_t meshID = static_cast<uint32_t>(m_meshDatas.size());
 

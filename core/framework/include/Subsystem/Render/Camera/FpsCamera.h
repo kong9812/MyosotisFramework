@@ -19,7 +19,7 @@ namespace MyosotisFW::System::Render::Camera
 		virtual const ComponentType GetType() const override { return ComponentType::FPSCamera; }
 
 		// 一時停止などマウス座標のリセットが必要な時用
-		void ResetMousePos(glm::vec2 mousePos) { m_lastMousePos = mousePos; }
+		void ResetMousePos(const glm::vec2& mousePos) { m_lastMousePos = mousePos; }
 
 		void Update(const UpdateData& updateData) override;
 
