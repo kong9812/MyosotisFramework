@@ -62,65 +62,65 @@ namespace MyosotisFW::System::GameDirector {
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
-		// パフォーマンステスト用
-		const uint32_t objectCount = 10;
-		for (uint32_t x = 0; x < objectCount; x++)
-		{
-			for (uint32_t z = 0; z < objectCount; z++)
-			{
-				{
-					StageObject_ptr newObject = CreateStageObjectPointer();
-					Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-						System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
-					CustomMeshInfo customMeshInfo{};
-					customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(-20.0f + (5.0f * x), 0.0f, 50.0f + (5.0f * z)));
-					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-					component->SetScale(glm::vec3(2.0f));
-					newObject->AddComponent(component);
-					m_renderSubsystem->RegisterObject(newObject);
-				}
-				{
-					StageObject_ptr newObject = CreateStageObjectPointer();
-					Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-						System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
-					CustomMeshInfo customMeshInfo{};
-					customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-					component->SetCustomMeshInfo(customMeshInfo);
-					component->SetPos(glm::vec3(-20.0f + (5.0f * x), 5.0f, 50.0f + (5.0f * z)));
-					component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-					component->SetScale(glm::vec3(10.0f));
-					newObject->AddComponent(component);
-					m_renderSubsystem->RegisterObject(newObject);
-				}
-			}
-		}
-
 		//// パフォーマンステスト用
 		//const uint32_t objectCount = 10;
 		//for (uint32_t x = 0; x < objectCount; x++)
 		//{
 		//	for (uint32_t z = 0; z < objectCount; z++)
 		//	{
-		//		for (uint32_t y = 0; y < objectCount; y++)
 		//		{
-		//			{
-		//				StageObject_ptr newObject = CreateStageObjectPointer();
-		//				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//					System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
-		//				CustomMeshInfo customMeshInfo{};
-		//				customMeshInfo.meshName = "Cube/Cube.gltf";
-		//				component->SetCustomMeshInfo(customMeshInfo);
-		//				component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
-		//				component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		//				component->SetScale(glm::vec3(0.1f));
-		//				newObject->AddComponent(component);
-		//				m_renderSubsystem->RegisterObject(newObject);
-		//			}
+		//			StageObject_ptr newObject = CreateStageObjectPointer();
+		//			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+		//				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+		//			CustomMeshInfo customMeshInfo{};
+		//			customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
+		//			component->SetCustomMeshInfo(customMeshInfo);
+		//			component->SetPos(glm::vec3(-20.0f + (5.0f * x), 0.0f, 50.0f + (5.0f * z)));
+		//			component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		//			component->SetScale(glm::vec3(2.0f));
+		//			newObject->AddComponent(component);
+		//			m_renderSubsystem->RegisterObject(newObject);
+		//		}
+		//		{
+		//			StageObject_ptr newObject = CreateStageObjectPointer();
+		//			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+		//				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+		//			CustomMeshInfo customMeshInfo{};
+		//			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
+		//			component->SetCustomMeshInfo(customMeshInfo);
+		//			component->SetPos(glm::vec3(-20.0f + (5.0f * x), 5.0f, 50.0f + (5.0f * z)));
+		//			component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+		//			component->SetScale(glm::vec3(10.0f));
+		//			newObject->AddComponent(component);
+		//			m_renderSubsystem->RegisterObject(newObject);
 		//		}
 		//	}
 		//}
+
+		// パフォーマンステスト用
+		const uint32_t objectCount = 10;
+		for (uint32_t x = 0; x < objectCount; x++)
+		{
+			for (uint32_t z = 0; z < objectCount; z++)
+			{
+				for (uint32_t y = 0; y < objectCount; y++)
+				{
+					{
+						StageObject_ptr newObject = CreateStageObjectPointer();
+						Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+							System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
+						CustomMeshInfo customMeshInfo{};
+						customMeshInfo.meshName = "Cube/Cube.gltf";
+						component->SetCustomMeshInfo(customMeshInfo);
+						component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
+						component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+						component->SetScale(glm::vec3(0.1f));
+						newObject->AddComponent(component);
+						m_renderSubsystem->RegisterObject(newObject);
+					}
+				}
+			}
+		}
 
 		{
 			StageObject_ptr newObject = CreateStageObjectPointer();

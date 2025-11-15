@@ -8,7 +8,7 @@
 #include "Loader/Sampler2DLoader.glsl"
 #include "Culling/FrustumCulling.glsl"
 
-layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 layout(push_constant) uniform PushConstant {
     uint hiZSamplerID;
@@ -37,7 +37,7 @@ shared bool sOccVisible;
 shared vec2 sMinUV;
 shared vec2 sMaxUV;
 shared float sMinDepth;
-shared uint sPrevDepthMax_u;
+shared int sPrevDepthMax_u;
 shared float sPrevDepthMax;
 shared bool sVisible;
 
@@ -53,36 +53,29 @@ void main()
     // CPPから指定スレッドIDを使ってメッシュオブジェクト処理の分割を行う
     uint standardSSBOIndex = gl_WorkGroupID.x;
 
+    if (checkFalseNegativeMesh == 0 && gl_GlobalInvocationID.x == 0)
+    {
+        // 前のフレームを使ってた値をリセット (todo. フェーズ1しかいらないけど、少しパフォーマンスによくない)
+        VertexDataLoader_ResetFalseNegativeSize();
+    }
+
     // 初期(フェーズ1)のmipマップ指定
     int mipLevel = 4;
-
-    // フェーズ判定
     if (checkFalseNegativeMesh == 1)
     {
+        if (gl_GlobalInvocationID.x == 0)
+        {
+            debugPrintfEXT("FalseNegativeSize: %d", VertexDataLoader_GetFalseNegativeSize());
+        }
+        
         // このスレッドIDオブジェクトはフェーズ1で処理できた
         if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
 
         // オブジェクトIndexを取り出す
         standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
 
-        // 詳細チェックを行うためのmipmap (primary depthは mip0 しかない)
         mipLevel = 0;
     }
-
-    // 初期化
-    if (gl_LocalInvocationIndex == 0) 
-    {
-        sFrustumVisible = false;
-        sOccVisible = false;
-    }
-    memoryBarrierShared();
-    barrier();
-    
-    // 前フレームで使ってた値のリセット (フェーズ1しかいらないけど、まぁいいか？)
-    VertexDataLoader_ResetFalseNegativeSize();
-
-    // データの整合性を保つためにバリアを張っておく
-    barrier();
 
     // オブジェクトデータ取得
     StandardSSBO standardSSBO = RawDataLoader_LoadStandardSSBO(standardSSBOIndex);
@@ -99,6 +92,7 @@ void main()
     barrier();
     if (!sFrustumVisible) return;
 
+    //=============================================================================================================================================================================
     // 2. 2PhaseOccCulling    
     // カメラデータ取得
     MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
@@ -110,33 +104,34 @@ void main()
         sMaxUV = vec2(-1.0);    // [スクリーンスペース] 矩形の範囲 max
         sMinDepth = 1.0;        // 矩形の最小深度
         sPrevDepthMax_u = 0;    // depthBufferの最大深度
+        sPrevDepthMax = 0.0;
         sVisible = false;
     }
     barrier();
-
-    vec3 aabbMin = meshData.AABBMin.xyz;
-    vec3 aabbMax = meshData.AABBMax.xyz;
 
     // AABBの8頂点をスクリーン座標に投影し、矩形を作る (最初の8スレッドのみ計算)
     // ローカルバッファ
     if (gl_LocalInvocationIndex < 8)
     {    
+
+        vec3 aabbMin = meshData.AABBMin.xyz;
+        vec3 aabbMax = meshData.AABBMax.xyz;
+
         vec3 corners[8] = vec3[](
             vec3(aabbMin.x, aabbMin.y, aabbMin.z),   // - - -
             vec3(aabbMax.x, aabbMax.y, aabbMax.z),   // + + +
             vec3(aabbMax.x, aabbMin.y, aabbMin.z),   // + - -
             vec3(aabbMin.x, aabbMax.y, aabbMin.z),   // - + -
             vec3(aabbMin.x, aabbMin.y, aabbMax.z),   // - - +
-            vec3(aabbMax.x, aabbMax.y, aabbMin.z),   // + + -
             vec3(aabbMin.x, aabbMax.y, aabbMax.z),   // - + +
-            vec3(aabbMax.x, aabbMin.y, aabbMax.z)    // + - +
+            vec3(aabbMax.x, aabbMin.y, aabbMax.z),   // + - +
+            vec3(aabbMax.x, aabbMax.y, aabbMin.z)    // + + -
         );
         vec4 clip = cameraData.projection * cameraData.view * (standardSSBO.model * vec4(corners[gl_LocalInvocationIndex], 1.0));
         vec3 ndc = clip.xyz / clip.w;   // クリップ座標 -> NDC [-1~1]
         vec2 uv = ndc.xy * 0.5 + 0.5;   // NDC座標 -> UV [0~1]
         sLocalUV[gl_LocalInvocationIndex] = uv;        
         sLocalDepth[gl_LocalInvocationIndex] = ndc.z;
-        // debugPrintfEXT("sLocalDepth[%d]: %f", gl_LocalInvocationIndex, sLocalDepth[gl_LocalInvocationIndex]);
     }
     barrier();
 
@@ -170,15 +165,13 @@ void main()
     // 制限
     minTexel = max(minTexel, ivec2(0));
     maxTexel = min(maxTexel, mipTexSize - ivec2(1));
-    barrier();
 
-    // AABB矩形が0なら見える
+    // AABB矩形が0なら見える (Todo.↓は意味ない!!!!)
     if (maxTexel.x <= minTexel.x || maxTexel.y <= minTexel.y) 
     {
         if (gl_LocalInvocationIndex == 0) {
             sVisible = true;
         }
-        barrier();
     }
     barrier();
 
@@ -200,14 +193,14 @@ void main()
         localMax = max(localMax, d);
     }
 
-    uint localU = (localMax < 0.0) ? 0 : floatBitsToUint(localMax);
+    int localU = (localMax < 0.0) ? 0 : floatBitsToInt(localMax);
     atomicMax(sPrevDepthMax_u, localU);
     barrier();
 
     // 判定
     if (gl_LocalInvocationIndex == 0)
     {
-        sPrevDepthMax = uintBitsToFloat(sPrevDepthMax_u);
+        sPrevDepthMax = intBitsToFloat(sPrevDepthMax_u);
         sVisible = (sMinDepth <= sPrevDepthMax);        
     }
     barrier();
@@ -219,12 +212,13 @@ void main()
         {
             uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
             falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
+            debugPrintfEXT("add falseNegativeStandardSSBOIndex[%d]: %d", falseNegativeIndex, falseNegativeStandardSSBOIndex[falseNegativeIndex]);
         }
         return;
     }
 
     {// 3. それぞれのMeshlet判定
-        // 初期化 (0番目のみ実行する)
+        // 初期化 (0番目のみ実行する)x
         if (gl_LocalInvocationIndex == 0)
         {
             localMeshletCount = 0;
@@ -252,7 +246,6 @@ void main()
             }
         }
     }
-
     // データ整合性を保つ
     barrier();
 

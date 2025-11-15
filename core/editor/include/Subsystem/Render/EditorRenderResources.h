@@ -13,8 +13,8 @@ namespace MyosotisFW::System::Render
 		}
 		~EditorRenderResources();
 
-		void Initialize(const uint32_t width, const uint32_t height) override;
-		void Resize(const uint32_t width, const uint32_t height) override;
+		void Initialize(const uint32_t& width, const uint32_t& height) override;
+		void Resize(const uint32_t& width, const uint32_t& height) override;
 
 		VMAImage& GetEditorRenderTarget() { return m_editorRenderTarget; }
 
