@@ -31,9 +31,9 @@ install:
       git config --global advice.detachedHead false
 
 before_build:
-  - cmd: echo Creating qt folder and linking to Qt 6.8.1...
+  - cmd: echo Creating qt folder and linking to Qt 6.9...
   - cmd: if not exist qt mkdir qt
-  - cmd: if not exist qt\qtbase mklink /J qt\qtbase "C:\Qt\6.8.1\msvc2022_64"
+  - cmd: if not exist qt\qtbase mklink /J qt\qtbase "C:\Qt\6.9\msvc2022_64"
   - cmd: echo Done setting up qt/qtbase link.
   - cmd: echo Running buildVS22Project.bat...
   - cmd: .\buildVS22Project.bat
