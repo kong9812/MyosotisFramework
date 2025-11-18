@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "AppInfo.h"
 #include "iimgui.h"
+#include "CameraData.h"
 
 namespace MyosotisFW::System::Render::Camera
 {

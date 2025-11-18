@@ -1,0 +1,39 @@
+// Copyright (c) 2025 kong9812
+#pragma once
+#include <vulkan/vulkan.h>
+#include <vector>
+#include "ClassPointer.h"
+#include "Descriptor.h"
+
+namespace MyosotisFW::System::Render
+{
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+
+	class DescriptorSetBase
+	{
+	public:
+		DescriptorSetBase(const RenderDevice_ptr& device, const VkDescriptorPool& descriptorPool) :
+			m_device(device),
+			m_descriptorPool(descriptorPool),
+			m_descriptorSetLayout(VK_NULL_HANDLE),
+			m_descriptorSet(VK_NULL_HANDLE),
+			m_descriptors() {
+		}
+		~DescriptorSetBase();
+
+		virtual void Update() = 0;
+
+	protected:
+		void createDescriptorSet();
+		void buildDescriptor(const uint32_t& index, const uint32_t& dataSize);
+
+		RenderDevice_ptr m_device;
+		VkDescriptorPool m_descriptorPool;
+		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkDescriptorSet m_descriptorSet;
+		std::vector<Descriptor> m_descriptors;
+	};
+
+	TYPEDEF_SHARED_PTR_ARGS(DescriptorSetBase);
+}

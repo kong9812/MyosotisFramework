@@ -2,6 +2,7 @@
 #pragma once
 #include "ClassPointer.h"
 #include "Structs.h"
+#include "Transform.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
 #include "ComponentType.h"

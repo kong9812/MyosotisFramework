@@ -6,6 +6,7 @@
 #include "iglm.h"
 #include "ComponentBase.h"
 #include "ClassPointer.h"
+#include "CameraData.h"
 #include "Structs.h"
 
 namespace MyosotisFW::System::Render::Camera
@@ -30,12 +31,16 @@ namespace MyosotisFW::System::Render::Camera
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
+		bool IsMainCamera() { return m_isMainCamera; }
+
 		virtual void Update(const UpdateData& updateData) {}
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;
 	protected:
 		virtual void initialize();
+
+		bool m_isMainCamera;
 
 		// カメラ位置
 		glm::vec3 m_cameraPos;

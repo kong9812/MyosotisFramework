@@ -243,6 +243,10 @@ void main()
                 {
                     payload.MeshletIndex[payloadIndex] = i;    // payloadに見えるMeshletのIDを保管
                 }
+                else
+                {
+                    debugPrintfEXT("[MeshShader.task] ERROR!!! over size!!!");
+                }
             }
         }
     }

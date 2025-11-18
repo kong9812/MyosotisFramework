@@ -4,18 +4,12 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include "Buffer.h"
 #include "ivma.h"
 #include "iglm.h"
 
 namespace MyosotisFW
 {
-	struct Transform
-	{
-		glm::vec3 pos;
-		glm::vec3 rot;
-		glm::vec3 scale;
-	};
-
 	struct RenderPass
 	{
 		VkRenderPass renderPass;
@@ -65,30 +59,6 @@ namespace MyosotisFW
 		VmaAllocationInfo allocationInfo;
 	};
 
-	struct Buffer
-	{
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
-		VkDescriptorBufferInfo descriptor;
-	};
-
-	struct Meshlet
-	{
-		std::vector<uint32_t> uniqueIndex;
-		std::vector<uint32_t> primitives;
-		glm::vec3 min;
-		glm::vec3 max;
-	};
-
-	struct Mesh
-	{
-		std::vector<float> vertex;
-		std::vector<Meshlet> meshlet;
-		glm::vec3 min;
-		glm::vec3 max;
-	};
-
 	struct ShaderBase
 	{
 		VkDescriptorSet descriptorSet;
@@ -101,14 +71,6 @@ namespace MyosotisFW
 		glm::mat4 viewProjection;
 		glm::vec4 position;
 		int32_t pcfCount;
-	};
-
-	struct CameraData
-	{
-		glm::vec4 frustumPlanes[6];
-		glm::mat4 view;
-		glm::mat4 projection;
-		glm::vec4 position;
 	};
 
 	struct AABBData

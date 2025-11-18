@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "AppInfo.h"
 #include "Structs.h"
+#include "Mesh.h"
 #include "VK_CreateInfo.h"
 #include "VK_Validation.h"
 #include "RenderQueue.h"

@@ -4,6 +4,8 @@
 #include "VK_CreateInfo.h"
 #include "VK_Validation.h"
 #include "Appinfo.h"
+#include "CameraData.h"
+#include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {

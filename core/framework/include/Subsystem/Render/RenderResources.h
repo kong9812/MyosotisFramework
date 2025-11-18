@@ -4,6 +4,7 @@
 #include <string>
 #include <vulkan/vulkan.h>
 #include "Structs.h"
+#include "Mesh.h"
 #include "ClassPointer.h"
 
 namespace MyosotisFW::System::Render

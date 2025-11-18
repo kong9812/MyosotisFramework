@@ -2,6 +2,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+#include "CameraData.h"
 #include "Structs.h"
 #include "ClassPointer.h"
 #include "PrimitiveGeometryShape.h"

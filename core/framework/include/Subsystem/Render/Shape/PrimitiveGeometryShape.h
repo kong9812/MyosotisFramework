@@ -5,7 +5,9 @@
 
 #include "AppInfo.h"
 #include "iglm.h"
-#include "Structs.h"
+#include "Logger.h"
+#include "Meshlet.h"
+#include "Mesh.h"
 
 // 順番
 // [Vec3]Position
