@@ -116,10 +116,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData);
 		void BeginCompute();
 		void BeginRender();
-		void ShadowRender();
-		void MainRender();
 		void MeshShaderRender();
-		void FinalCompositionRender();
 		void EndRender();
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);

@@ -10,8 +10,6 @@
 
 // TEST
 #include "PrimitiveGeometry.h"
-#include "InteriorObject.h"
-#include "Skybox.h"
 #include "FPSCamera.h"
 // TEST
 
@@ -24,17 +22,6 @@ namespace MyosotisFW::System::GameDirector {
 			StageObject_ptr newObject = CreateStageObjectPointer();
 			Render::Camera::FPSCamera_ptr component = Object_Cast<Render::Camera::FPSCamera>(
 				System::ComponentFactory::CreateComponent(ComponentType::FPSCamera));
-			newObject->AddComponent(component);
-			m_renderSubsystem->RegisterObject(newObject);
-		}
-
-		{
-			StageObject_ptr newObject = CreateStageObjectPointer();
-			Render::Skybox_ptr component = Object_Cast<Render::Skybox>(
-				System::ComponentFactory::CreateComponent(ComponentType::Skybox));
-			component->SetPos(glm::vec3(0.0f));
-			component->SetRot(glm::vec3(0.0f));
-			component->SetScale(glm::vec3(1.0f));
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}

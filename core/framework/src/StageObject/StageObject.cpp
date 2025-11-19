@@ -7,8 +7,6 @@
 #include "FpsCamera.h"
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
-#include "Skybox.h"
-#include "InteriorObject.h"
 #include "Camera.h"
 
 namespace MyosotisFW
@@ -22,16 +20,6 @@ namespace MyosotisFW
 			if (IsStaticMesh(component->GetType()))
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-				staticMesh->Update(updateData, mainCamera);
-			}
-			else if (component->GetType() == ComponentType::Skybox)
-			{
-				Skybox_ptr staticMesh = Object_CastToSkybox(component);
-				staticMesh->Update(updateData, mainCamera);
-			}
-			else if (component->GetType() == ComponentType::InteriorObjectMesh)
-			{
-				InteriorObject_ptr staticMesh = Object_CastToInteriorObject(component);
 				staticMesh->Update(updateData, mainCamera);
 			}
 		}

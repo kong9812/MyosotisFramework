@@ -3,8 +3,6 @@
 #include "FpsCamera.h"
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
-#include "Skybox.h"
-#include "InteriorObject.h"
 
 namespace MyosotisFW::System::ComponentFactory
 {
@@ -28,15 +26,6 @@ namespace MyosotisFW::System::ComponentFactory
 			object = Render::CreateCustomMeshPointer();
 		}
 		break;
-		case ComponentType::Skybox:
-		{
-			object = Render::CreateSkyboxPointer();
-		}
-		break;
-		case ComponentType::InteriorObjectMesh:
-		{
-			object = Render::CreateInteriorObjectPointer();
-		}
 		default:
 			break;
 		}

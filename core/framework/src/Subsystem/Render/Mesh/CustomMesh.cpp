@@ -50,7 +50,7 @@ namespace MyosotisFW::System::Render
 	void CustomMesh::loadAssets()
 	{
 		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.meshName);
-		m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = m_resources->GetMeshID(m_customMeshInfo.meshName);
+		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = m_resources->GetMeshID(m_customMeshInfo.meshName);
 
 		// 一時対応
 		std::vector<uint32_t> index{};

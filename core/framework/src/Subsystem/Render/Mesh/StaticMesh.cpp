@@ -19,22 +19,14 @@ namespace MyosotisFW::System::Render
 		m_vertexBuffer({}),
 		m_indexBuffer({}),
 		m_currentLOD(LOD::Hide),
-		m_lodDistances({}),
-		m_shadowMapShaderObject({}),
-		m_staticMeshShaderObject({})
+		m_lodDistances({})
 	{
 		m_name = "StaticMesh";
 		m_transform.scale = glm::vec3(1.0f);
-		m_staticMeshShaderObject.normalMap.sampler = VK_NULL_HANDLE;
 	}
 
 	StaticMesh::~StaticMesh()
 	{
-		if (m_staticMeshShaderObject.normalMap.sampler)
-		{
-			vkDestroySampler(*m_device, m_staticMeshShaderObject.normalMap.sampler, m_device->GetAllocationCallbacks());
-		}
-
 		for (uint32_t logType = 0; logType < LOD::Max; logType++)
 		{
 			for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[logType].size(); meshIdx++)
@@ -75,21 +67,11 @@ namespace MyosotisFW::System::Render
 				//m_currentLOD = LOD::Hide;
 			}
 		}
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::translate(glm::mat4(1.0f), glm::vec3(m_transform.pos));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::rotate(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::radians(m_transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_staticMeshShaderObject.SSBO.standardSSBO.model = glm::scale(m_staticMeshShaderObject.SSBO.standardSSBO.model, glm::vec3(m_transform.scale));
-		m_staticMeshShaderObject.SSBO.standardSSBO.renderID = m_renderID;
-		m_staticMeshShaderObject.SSBO.standardSSBO.position = glm::vec4(m_transform.pos, 0.0f);
-		m_staticMeshShaderObject.SSBO.standardSSBO.rotation = glm::vec4(m_transform.rot, 0.0f);
-		m_staticMeshShaderObject.SSBO.standardSSBO.scale = glm::vec4(m_transform.scale, 0.0f);
-		m_shadowMapShaderObject.SSBO.standardSSBO = m_staticMeshShaderObject.SSBO.standardSSBO;
 	}
 
-	void StaticMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType)
+	void StaticMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
+		/*if ((m_currentLOD == LOD::Hide) || (!m_isReady)) return;
 
 		switch (pipelineType)
 		{
@@ -123,6 +105,6 @@ namespace MyosotisFW::System::Render
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer[m_currentLOD][meshIdx].buffer, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
 			vkCmdDrawIndexed(commandBuffer, m_indexBuffer[m_currentLOD][meshIdx].allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
-		}
+		}*/
 	}
 }

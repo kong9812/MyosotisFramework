@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
 		__super::Update(updateData, camera);
-		m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
+		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
 
 		if (!m_isReady) return;
 	}
@@ -116,8 +116,8 @@ namespace MyosotisFW::System::Render
 		//m_staticMeshShaderObject.useNormalMap = true;
 		//m_staticMeshShaderObject.normalMap = m_resources->GetImage("NormalMap.png");
 
-		// sampler
-		VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_staticMeshShaderObject.normalMap.sampler));
+		//// sampler
+		//VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+		//VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_staticMeshShaderObject.normalMap.sampler));
 	}
 }

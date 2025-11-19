@@ -243,11 +243,8 @@ namespace MyosotisFW::System::Editor
 
 			m_renderSubsystem->BeginRender();
 			m_renderSubsystem->BeginCompute();
-			m_renderSubsystem->ShadowRender();
-			m_renderSubsystem->MainRender();
 			m_renderSubsystem->MeshShaderRender();
 			m_renderSubsystem->EditorRender();
-			m_renderSubsystem->FinalCompositionRender();
 			m_renderSubsystem->EndRender();
 		}
 		requestUpdate();

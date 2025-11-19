@@ -161,10 +161,7 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->BeginCompute();
-		m_renderSubsystem->ShadowRender();
-		m_renderSubsystem->MainRender();
 		m_renderSubsystem->MeshShaderRender();
-		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
 	}
 
