@@ -39,11 +39,10 @@
 　・[OK] glTFLoadの追加
 ・[OK] 描画ができたら、Meshlet分割
 ・[OK] FBXのMeshlet対応
-・Meshletの単体カリング
+・[OK] Meshletの単体カリング
 
-・InteriorObejctをStaticMesh化
-・buffer_referenceで頂点情報を保管
-・FrustumCullingPipelineを作成
+・TextureDescriptors
+・大掃除 - 最低限のものだけ残す
 
 StageObjectの親子関係
 Visibility Buffer

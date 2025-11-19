@@ -1,0 +1,78 @@
+// Copyright (c) 2025 kong9812
+#include "TextureDescriptorSet.h"
+#include "RenderDevice.h"
+#include "Camera.h"
+
+namespace MyosotisFW::System::Render
+{
+	TextureDescriptorSet::TextureDescriptorSet(const RenderDevice_ptr& device, const VkDescriptorPool& descriptorPool) :
+		DescriptorSetBase(device, descriptorPool),
+		m_combinedImageSamplerImageInfo(),
+		m_storageImageInfo()
+	{
+		for (uint32_t i = 0; static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
+		{
+			Descriptor descriptor{};
+			descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
+			descriptor.descriptorBindingFlags = VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+			descriptor.rebuild = true;
+			descriptor.update = true;
+			m_descriptors.push_back(descriptor);
+		}
+	}
+
+	void TextureDescriptorSet::AddImage(const DescriptorBindingIndex& type, const VkDescriptorImageInfo& imageInfo)
+	{
+		switch (type)
+		{
+		case DescriptorBindingIndex::CombinedImageSampler:
+			m_combinedImageSamplerImageInfo.push_back(imageInfo);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = true;
+			break;
+		case DescriptorBindingIndex::StorageImage:
+			m_storageImageInfo.push_back(imageInfo);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	void TextureDescriptorSet::Update()
+	{
+		// SSBO/UBO更新
+		updateCombinedImageSampler();
+		updateStorageImage();
+	}
+
+	void TextureDescriptorSet::updateCombinedImageSampler()
+	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update)
+		{
+			VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
+				static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler),
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, m_combinedImageSamplerImageInfo.data(),
+				static_cast<uint32_t>(m_combinedImageSamplerImageInfo.size()));
+
+			vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = false;
+		}
+	}
+
+	void TextureDescriptorSet::updateStorageImage()
+	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update)
+		{
+			VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(m_descriptorSet,
+				static_cast<uint32_t>(DescriptorBindingIndex::StorageImage),
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, m_storageImageInfo.data(),
+				static_cast<uint32_t>(m_storageImageInfo.size()));
+
+			vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = false;
+		}
+	}
+}
