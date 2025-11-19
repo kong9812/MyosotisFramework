@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Render
 			vkDestroySampler(*m_device, m_hiZDepthMap.sampler, m_device->GetAllocationCallbacks());
 			vkDestroySampler(*m_device, m_primaryDepthStencil.sampler, m_device->GetAllocationCallbacks());
 
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthStencil.image, m_depthStencil.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
@@ -24,6 +25,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap.image, m_hiZDepthMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_primaryDepthStencil.image, m_primaryDepthStencil.allocation);
 
+			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
@@ -35,9 +37,6 @@ namespace MyosotisFW::System::Render
 			for (VkImageView& view : m_hiZDepthMap.mipView)
 				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_primaryDepthStencil.view, m_device->GetAllocationCallbacks());
-			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
-			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 		}
 
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
@@ -48,13 +47,13 @@ namespace MyosotisFW::System::Render
 
 		m_meshVertexData.clear();
 
-		for (std::pair<std::string, VMAImage> image : m_images)
+		for (std::pair<std::string, Image> image : m_images)
 		{
 			vmaDestroyImage(m_device->GetVmaAllocator(), image.second.image, image.second.allocation);
 			vkDestroyImageView(*m_device, image.second.view, m_device->GetAllocationCallbacks());
 		}
 
-		for (std::pair<std::string, VMAImage> image : m_cubeImages)
+		for (std::pair<std::string, Image> image : m_cubeImages)
 		{
 			vmaDestroyImage(m_device->GetVmaAllocator(), image.second.image, image.second.allocation);
 			vkDestroyImageView(*m_device, image.second.view, m_device->GetAllocationCallbacks());
@@ -65,8 +64,8 @@ namespace MyosotisFW::System::Render
 	{
 		{// depth/stencil
 			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, width, height);
-			VK_VALIDATION(vkCreateImage(*m_device, &imageCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.image));
-			m_device->ImageMemoryAllocate(m_depthStencil);
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfoForDepthStencil, &allocationCreateInfo, &m_depthStencil.image, &m_depthStencil.allocation, &m_depthStencil.allocationInfo));
 			VkImageViewCreateInfo imageViewCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepthStencil(m_depthStencil.image, AppInfo::g_depthFormat);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfoForDepthStencil, m_device->GetAllocationCallbacks(), &m_depthStencil.view));
 		}
@@ -249,6 +248,7 @@ namespace MyosotisFW::System::Render
 	void RenderResources::Resize(const uint32_t& width, const uint32_t& height)
 	{
 		{// attachment
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthStencil.image, m_depthStencil.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_position.image, m_position.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_normal.image, m_normal.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_baseColor.image, m_baseColor.allocation);
@@ -257,6 +257,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
 
+			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_normal.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_baseColor.view, m_device->GetAllocationCallbacks());
@@ -264,10 +265,6 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
-
-			vkDestroyImage(*m_device, m_depthStencil.image, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
-			vkFreeMemory(*m_device, m_depthStencil.memory, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
 	}

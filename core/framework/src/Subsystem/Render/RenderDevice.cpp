@@ -221,15 +221,6 @@ namespace MyosotisFW::System::Render
 		vkDestroyDevice(m_device, GetAllocationCallbacks());
 	}
 
-	void RenderDevice::ImageMemoryAllocate(DeviceImage& deviceImage)
-	{
-		VkMemoryRequirements memReqs{};
-		vkGetImageMemoryRequirements(m_device, deviceImage.image, &memReqs);
-		VkMemoryAllocateInfo memoryAllocateInfo = Utility::Vulkan::CreateInfo::memoryAllocateInfo(memReqs.size, getMemoryTypeIndex(memReqs.memoryTypeBits, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
-		VK_VALIDATION(vkAllocateMemory(m_device, &memoryAllocateInfo, GetAllocationCallbacks(), &deviceImage.memory));
-		VK_VALIDATION(vkBindImageMemory(m_device, deviceImage.image, deviceImage.memory, 0));
-	}
-
 	uint32_t RenderDevice::getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const
 	{
 		for (uint32_t i = 0; i < m_physicalDeviceMemoryProperties.memoryTypeCount; i++) {

@@ -4,6 +4,7 @@
 #include "ClassPointer.h"
 #include "VK_Validation.h"
 #include "Structs.h"
+#include "Image.h"
 
 namespace MyosotisFW::System::Render
 {

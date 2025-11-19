@@ -26,39 +26,6 @@ namespace MyosotisFW
 		glm::vec2 screenSize;
 	};
 
-	struct Image
-	{
-		VkImage image;
-		VkImageView view;
-		VkSampler sampler;
-	};
-
-	struct DeviceImage
-	{
-		VkImage image;
-		VkDeviceMemory memory;
-		VkImageView view;
-	};
-
-	struct VMAImage
-	{
-		VkImage image;
-		VkImageView view;
-		VkSampler sampler;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
-	};
-
-	struct VMAMipImage
-	{
-		VkImage image;
-		VkImageView view;
-		std::vector<VkImageView> mipView;
-		VkSampler sampler;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
-	};
-
 	struct ShaderBase
 	{
 		VkDescriptorSet descriptorSet;

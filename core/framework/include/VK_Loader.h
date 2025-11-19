@@ -13,7 +13,7 @@
 #include "AppInfo.h"
 
 #include "Logger.h"
-#include "AppInfo.h"
+#include "Image.h"
 #include "Structs.h"
 #include "Mesh.h"
 #include "VK_CreateInfo.h"
@@ -648,9 +648,9 @@ namespace Utility::Loader {
 		return meshes;
 	}
 
-	inline MyosotisFW::VMAImage loadImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::Image loadImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
-		MyosotisFW::VMAImage image{};
+		MyosotisFW::Image image{};
 
 		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_textureFolder + fileName);
 
@@ -745,9 +745,9 @@ namespace Utility::Loader {
 		return image;
 	}
 
-	inline MyosotisFW::VMAImage loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::Image loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
-		MyosotisFW::VMAImage image{};
+		MyosotisFW::Image image{};
 
 		// loadCubeImage fence
 		VkFence fence = VK_NULL_HANDLE;

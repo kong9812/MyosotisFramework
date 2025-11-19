@@ -4,6 +4,7 @@
 #include <string>
 #include <vulkan/vulkan.h>
 #include "Structs.h"
+#include "Image.h"
 #include "Mesh.h"
 #include "ClassPointer.h"
 
@@ -52,38 +53,38 @@ namespace MyosotisFW::System::Render
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexData;
-		std::unordered_map<std::string, VMAImage> m_images;
-		std::unordered_map<std::string, VMAImage> m_cubeImages;
+		std::unordered_map<std::string, Image> m_images;
+		std::unordered_map<std::string, Image> m_cubeImages;
 		std::unordered_map<std::string, uint32_t> m_meshID;
 
 	public:
-		DeviceImage& GetDepthStencil() { return m_depthStencil; }
-		VMAImage& GetPosition() { return m_position; }
-		VMAImage& GetNormal() { return m_normal; }
-		VMAImage& GetBaseColor() { return m_baseColor; }
-		VMAImage& GetShadowMap() { return m_shadowMap; }
-		VMAImage& GetLightingResult() { return m_lightingResult; }
-		VMAImage& GetMainRenderTarget() { return m_mainRenderTarget; }
-		VMAImage& GetIdMap() { return m_idMap; }
+		Image& GetDepthStencil() { return m_depthStencil; }
+		Image& GetPosition() { return m_position; }
+		Image& GetNormal() { return m_normal; }
+		Image& GetBaseColor() { return m_baseColor; }
+		Image& GetShadowMap() { return m_shadowMap; }
+		Image& GetLightingResult() { return m_lightingResult; }
+		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
+		Image& GetIdMap() { return m_idMap; }
 		uint32_t& GetMeshID(const std::string& fileName);
 
-		VMAMipImage& GetHiZDepthMap() { return m_hiZDepthMap; }
-		VMAImage& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
+		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
+		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
 
 	protected:
 		// attachments
-		DeviceImage m_depthStencil;
+		Image m_depthStencil;
 
-		VMAImage m_position;
-		VMAImage m_normal;
-		VMAImage m_baseColor;
-		VMAImage m_shadowMap;
-		VMAImage m_lightingResult;
-		VMAImage m_mainRenderTarget;
-		VMAImage m_idMap;
+		Image m_position;
+		Image m_normal;
+		Image m_baseColor;
+		Image m_shadowMap;
+		Image m_lightingResult;
+		Image m_mainRenderTarget;
+		Image m_idMap;
 
-		VMAMipImage m_hiZDepthMap;
-		VMAImage m_primaryDepthStencil;
+		Image m_hiZDepthMap;
+		Image m_primaryDepthStencil;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

@@ -16,10 +16,10 @@ namespace MyosotisFW::System::Render
 		void Initialize(const uint32_t& width, const uint32_t& height) override;
 		void Resize(const uint32_t& width, const uint32_t& height) override;
 
-		VMAImage& GetEditorRenderTarget() { return m_editorRenderTarget; }
+		Image& GetEditorRenderTarget() { return m_editorRenderTarget; }
 
 	private:
-		VMAImage m_editorRenderTarget;
+		Image m_editorRenderTarget;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderResources);
 }

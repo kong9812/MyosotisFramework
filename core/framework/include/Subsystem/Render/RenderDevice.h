@@ -38,8 +38,6 @@ namespace MyosotisFW::System::Render
 		uint32_t GetMaxDescriptorSetStorageImages() const { return m_maxDescriptorSetStorageImages; }
 		uint32_t GetMaxDescriptorSetInputAttachments() const { return m_maxDescriptorSetInputAttachments; }
 
-		void ImageMemoryAllocate(DeviceImage& deviceImage);
-
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkDevice m_device;
