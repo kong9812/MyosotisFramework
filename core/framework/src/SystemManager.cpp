@@ -71,12 +71,12 @@ namespace MyosotisFW::System
 		vkDestroyInstance(m_instance, nullptr);
 	}
 
-	void SystemManager::KeyAction(const int& key, const int& action)
+	void SystemManager::KeyAction(const int key, const int action)
 	{
 		m_keyActions.insert_or_assign(key, action);
 	}
 
-	void SystemManager::MouseButtonAction(const int& key, const int& action)
+	void SystemManager::MouseButtonAction(const int key, const int action)
 	{
 		m_mouseButtonActions.insert_or_assign(key, action);
 	}

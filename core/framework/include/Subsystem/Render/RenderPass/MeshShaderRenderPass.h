@@ -30,11 +30,13 @@ namespace MyosotisFW::System::Render
 		~MeshShaderRenderPass();
 
 		void Initialize() override;
-		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) override;
+		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) override;
 		void EndRender(const VkCommandBuffer& commandBuffer) override;
 
 	private:
 		void createFrameBuffers() override;
+
+		RenderSwapchain_ptr m_swapchain;
 
 	};
 	TYPEDEF_SHARED_PTR_ARGS(MeshShaderRenderPass);

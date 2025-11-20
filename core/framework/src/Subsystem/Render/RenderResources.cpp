@@ -60,7 +60,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderResources::Initialize(const uint32_t& width, const uint32_t& height)
+	void RenderResources::Initialize(const uint32_t width, const uint32_t height)
 	{
 		{// depth/stencil
 			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, width, height);
@@ -245,7 +245,7 @@ namespace MyosotisFW::System::Render
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
 
-	void RenderResources::Resize(const uint32_t& width, const uint32_t& height)
+	void RenderResources::Resize(const uint32_t width, const uint32_t height)
 	{
 		{// attachment
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthStencil.image, m_depthStencil.allocation);
@@ -269,7 +269,7 @@ namespace MyosotisFW::System::Render
 		Initialize(width, height);
 	}
 
-	uint32_t& RenderResources::GetMeshID(const std::string& fileName)
+	uint32_t RenderResources::GetMeshID(const std::string& fileName)
 	{
 		return m_meshID[fileName];
 	}

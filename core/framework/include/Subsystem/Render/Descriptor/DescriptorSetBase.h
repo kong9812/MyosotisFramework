@@ -26,7 +26,7 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		void createDescriptorSet();
-		void buildDescriptor(const uint32_t& index, const uint32_t& dataSize);
+		void buildDescriptor(const uint32_t index, const uint32_t dataSize);
 
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;

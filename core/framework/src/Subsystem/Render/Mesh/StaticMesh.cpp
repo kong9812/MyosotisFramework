@@ -19,10 +19,11 @@ namespace MyosotisFW::System::Render
 		m_vertexBuffer({}),
 		m_indexBuffer({}),
 		m_currentLOD(LOD::Hide),
-		m_lodDistances({})
+		m_lodDistances({}),
+		m_aabbMin(FLT_MAX),
+		m_aabbMax(FLT_MIN)
 	{
 		m_name = "StaticMesh";
-		m_transform.scale = glm::vec3(1.0f);
 	}
 
 	StaticMesh::~StaticMesh()
@@ -47,26 +48,26 @@ namespace MyosotisFW::System::Render
 
 	void StaticMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
-		if (camera)
-		{
-			float distance = camera->GetDistance(m_transform.pos);
-			if (distance <= m_lodDistances[LOD::LOD1])
-			{
-				m_currentLOD = LOD::LOD1;
-			}
-			else if (distance <= m_lodDistances[LOD::LOD2])
-			{
-				m_currentLOD = LOD::LOD2;
-			}
-			else if (distance <= m_lodDistances[LOD::LOD3])
-			{
-				m_currentLOD = LOD::LOD3;
-			}
-			else
-			{
-				//m_currentLOD = LOD::Hide;
-			}
-		}
+		//if (camera)
+		//{
+		//	float distance = camera->GetDistance(m_transform.pos);
+		//	if (distance <= m_lodDistances[LOD::LOD1])
+		//	{
+		//		m_currentLOD = LOD::LOD1;
+		//	}
+		//	else if (distance <= m_lodDistances[LOD::LOD2])
+		//	{
+		//		m_currentLOD = LOD::LOD2;
+		//	}
+		//	else if (distance <= m_lodDistances[LOD::LOD3])
+		//	{
+		//		m_currentLOD = LOD::LOD3;
+		//	}
+		//	else
+		//	{
+		//		//m_currentLOD = LOD::Hide;
+		//	}
+		//}
 	}
 
 	void StaticMesh::BindCommandBuffer(const VkCommandBuffer& commandBuffer)

@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 		test = resources->GetPrimaryDepthStencil().image;
 	}
 
-	void MeshShaderRenderPhase2Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t& meshCount)
+	void MeshShaderRenderPhase2Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t meshCount)
 	{
 		{// Phase2Render
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);

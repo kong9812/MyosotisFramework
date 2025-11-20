@@ -52,7 +52,7 @@ namespace MyosotisFW
 		void SetRenderID(uint32_t id) { m_renderID = id; }
 
 		void Update(const UpdateData& updateData, const RenderNS::Camera::CameraBase_ptr& mainCamera);
-		const bool HasCamera(bool findChildComponent = false) const;
+		const bool IsCamera(bool findChildComponent = false) const;
 
 		ComponentBase_ptr FindComponent(const ComponentType& type, const bool findChildComponent = false);
 		std::vector<ComponentBase_ptr> FindAllComponents(const ComponentType& type, const bool findChildComponent = false);

@@ -40,7 +40,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
 	}
 
-	void DescriptorSetBase::buildDescriptor(const uint32_t& index, const uint32_t& dataSize)
+	void DescriptorSetBase::buildDescriptor(const uint32_t index, const uint32_t dataSize)
 	{
 		Descriptor& descriptor = m_descriptors[index];
 		// SSBOの作成

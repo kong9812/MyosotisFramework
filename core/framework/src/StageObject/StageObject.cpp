@@ -17,7 +17,7 @@ namespace MyosotisFW
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
-			if (IsStaticMesh(component->GetType()))
+			if (component->IsStaticMesh())
 			{
 				StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
 				staticMesh->Update(updateData, mainCamera);
@@ -31,18 +31,18 @@ namespace MyosotisFW
 	}
 
 	// カメラ持つ？
-	const bool StageObject::HasCamera(bool findChildComponent) const
+	const bool StageObject::IsCamera(bool findChildComponent) const
 	{
 		for (const auto& component : m_components)
 		{
-			if (component->HasCamera())
+			if (component->IsCamera())
 				return true;
 		}
 		if (findChildComponent)
 		{
 			for (const auto& child : m_children)
 			{
-				if (child->HasCamera())
+				if (child->IsCamera())
 					return true;
 			}
 
@@ -108,6 +108,14 @@ namespace MyosotisFW
 
 	void StageObject::AddComponent(const ComponentBase_ptr& component)
 	{
+		// 複数StaticMeshを許可しない
+		auto it = std::find_if(m_components.begin(), m_components.end(),
+			[&](const ComponentBase_ptr& existingComponent)
+			{
+				return existingComponent->IsStaticMesh();
+			});
+		ASSERT(it == m_components.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
+
 		m_components.push_back(component);
 	}
 

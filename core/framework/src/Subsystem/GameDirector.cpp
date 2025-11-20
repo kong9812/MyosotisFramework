@@ -94,14 +94,14 @@ namespace MyosotisFW::System::GameDirector {
 				{
 					{
 						StageObject_ptr newObject = CreateStageObjectPointer();
+						newObject->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
+						newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+						newObject->SetScale(glm::vec3(0.1f));
 						Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 							System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 						CustomMeshInfo customMeshInfo{};
 						customMeshInfo.meshName = "Cube/Cube.gltf";
 						component->SetCustomMeshInfo(customMeshInfo);
-						component->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
-						component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-						component->SetScale(glm::vec3(0.1f));
 						newObject->AddComponent(component);
 						m_renderSubsystem->RegisterObject(newObject);
 					}
@@ -111,14 +111,14 @@ namespace MyosotisFW::System::GameDirector {
 
 		{
 			StageObject_ptr newObject = CreateStageObjectPointer();
+			newObject->SetPos(glm::vec3(0.0f, 0.0f, 10.0f));
+			newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
+			newObject->SetScale(glm::vec3(3.0f, 3.0f, 0.1f));
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 			CustomMeshInfo customMeshInfo{};
 			customMeshInfo.meshName = "Cube/Cube.gltf";
 			component->SetCustomMeshInfo(customMeshInfo);
-			component->SetPos(glm::vec3(0.0f, 0.0f, 10.0f));
-			component->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-			component->SetScale(glm::vec3(3.0f, 3.0f, 0.1f));
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}

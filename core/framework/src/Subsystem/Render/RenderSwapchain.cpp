@@ -34,7 +34,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAcquireNextImageKHR(*m_device, m_swapchain, UINT64_MAX, semaphore, nullptr, &imageIndex));
 	}
 
-	void RenderSwapchain::QueuePresent(const VkQueue& queue, const uint32_t& imageIndex, const VkSemaphore& pWaitSemaphores)
+	void RenderSwapchain::QueuePresent(const VkQueue& queue, const uint32_t imageIndex, const VkSemaphore& pWaitSemaphores)
 	{
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

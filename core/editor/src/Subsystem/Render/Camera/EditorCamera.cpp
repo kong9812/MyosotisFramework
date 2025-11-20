@@ -23,7 +23,7 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
 	}
 
-	glm::vec3 EditorCamera::GetWorldPos(const glm::vec2& pos, const float& distance) const
+	glm::vec3 EditorCamera::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
 		return __super::GetWorldPos(pos, distance);
 	}

@@ -144,7 +144,7 @@ namespace MyosotisFW::System::Render
 		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
-	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	void EditorRenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
 	{
 		//m_editorRenderPass->Resize(width, height);
 	}

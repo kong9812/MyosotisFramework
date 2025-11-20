@@ -65,7 +65,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::RegisterObject(const StageObject_ptr& object)
 	{
-		if (!m_mainCamera && object->HasCamera(true))
+		if (!m_mainCamera && object->IsCamera(true))
 		{
 			m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
 			m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
@@ -77,7 +77,7 @@ namespace MyosotisFW::System::Render
 			components.insert(components.end(), subComponents.begin(), subComponents.end());
 			for (ComponentBase_ptr& component : components)
 			{
-				if (IsStaticMesh(component->GetType()))
+				if (component->IsStaticMesh())
 				{
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
 					customMesh->PrepareForRender(m_device, m_resources);
@@ -229,7 +229,7 @@ namespace MyosotisFW::System::Render
 		m_objects.clear();
 	}
 
-	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
+	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height)
 	{
 		// デバイスの処理を待つ
 		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
@@ -373,7 +373,7 @@ namespace MyosotisFW::System::Render
 		m_hiZDepthComputePipeline->Initialize();
 	}
 
-	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	void RenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
 	{
 		//m_shadowMapRenderPass->Resize(width, height);
 		//m_mainRenderPass->Resize(width, height);

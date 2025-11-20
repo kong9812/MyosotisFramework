@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void EditorRenderResources::Initialize(const uint32_t& width, const uint32_t& height)
+	void EditorRenderResources::Initialize(const uint32_t width, const uint32_t height)
 	{
 		__super::Initialize(width, height);
 
@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void EditorRenderResources::Resize(const uint32_t& width, const uint32_t& height)
+	void EditorRenderResources::Resize(const uint32_t width, const uint32_t height)
 	{
 		{// attachment
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_editorRenderTarget.image, m_editorRenderTarget.allocation);

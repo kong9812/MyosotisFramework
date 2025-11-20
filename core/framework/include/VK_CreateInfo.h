@@ -21,8 +21,8 @@ namespace Utility::Vulkan::CreateInfo
 	inline VkApplicationInfo applicationInfo(
 		const char* applicationName,
 		const char* engineName,
-		const uint32_t& apiVersion,
-		const uint32_t& engineVersion)
+		const uint32_t apiVersion,
+		const uint32_t engineVersion)
 	{
 		VkApplicationInfo ai{};
 		ai.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -45,7 +45,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkDeviceQueueCreateInfo deviceQueueCreateInfo(const uint32_t& queueFamilyIndex, const float& defaultQueuePriority)
+	inline VkDeviceQueueCreateInfo deviceQueueCreateInfo(const uint32_t queueFamilyIndex, const float& defaultQueuePriority)
 	{
 		VkDeviceQueueCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -70,7 +70,7 @@ namespace Utility::Vulkan::CreateInfo
 	inline VkSwapchainCreateInfoKHR swapchainCreateInfo(
 		const VkSurfaceKHR& surface,
 		const VkSurfaceCapabilitiesKHR& surfCaps,
-		const uint32_t& minImageCount,
+		const uint32_t minImageCount,
 		const VkSurfaceFormatKHR& surfaceFormat,
 		const VkPresentModeKHR& presentMode)
 	{
@@ -134,7 +134,7 @@ namespace Utility::Vulkan::CreateInfo
 		return sr;
 	}
 
-	inline VkImageCreateInfo imageCreateInfo(const VkFormat& format, const uint32_t& width, const uint32_t& height)
+	inline VkImageCreateInfo imageCreateInfo(const VkFormat& format, const uint32_t width, const uint32_t height)
 	{
 		VkImageCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -151,7 +151,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkImageCreateInfo imageCreateInfoForDepthStencil(const VkFormat& format, const uint32_t& width, const uint32_t& height)
+	inline VkImageCreateInfo imageCreateInfoForDepthStencil(const VkFormat& format, const uint32_t width, const uint32_t height)
 	{
 		VkImageCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -168,7 +168,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkImageCreateInfo imageCreateInfoForHiZDepthStencil(const VkFormat& format, const uint32_t& width, const uint32_t& height, const uint32_t& mipLevels)
+	inline VkImageCreateInfo imageCreateInfoForHiZDepthStencil(const VkFormat& format, const uint32_t width, const uint32_t height, const uint32_t mipLevels)
 	{
 		VkImageCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -185,7 +185,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkImageCreateInfo imageCreateInfoForAttachment(const VkFormat& format, const uint32_t& width, const uint32_t& height)
+	inline VkImageCreateInfo imageCreateInfoForAttachment(const VkFormat& format, const uint32_t width, const uint32_t height)
 	{
 		VkImageCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -286,7 +286,7 @@ namespace Utility::Vulkan::CreateInfo
 		ci.subresourceRange = defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		return ci;
 	}
-	inline VkMemoryAllocateInfo memoryAllocateInfo(const VkDeviceSize& allocationSize, const uint32_t& memoryTypeIndex)
+	inline VkMemoryAllocateInfo memoryAllocateInfo(const VkDeviceSize& allocationSize, const uint32_t memoryTypeIndex)
 	{
 		VkMemoryAllocateInfo ai{};
 		ai.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -372,7 +372,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ad;
 	}
 
-	inline VkAttachmentReference attachmentReference(const uint32_t& attachment, const VkImageLayout& layout)
+	inline VkAttachmentReference attachmentReference(const uint32_t attachment, const VkImageLayout& layout)
 	{
 		VkAttachmentReference ar{};
 		ar.attachment = attachment;
@@ -465,8 +465,8 @@ namespace Utility::Vulkan::CreateInfo
 	}
 
 	inline VkSubpassDependency subpassDependency(
-		const uint32_t& srcSubpass,
-		const uint32_t& dstSubpass,
+		const uint32_t srcSubpass,
+		const uint32_t dstSubpass,
 		const VkPipelineStageFlags& srcStageMask,
 		const VkPipelineStageFlags& dstStageMask,
 		const VkAccessFlags& srcAccessMask,
@@ -517,7 +517,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkCommandPoolCreateInfo commandPoolCreateInfo(const uint32_t& queueFamilyIndex)
+	inline VkCommandPoolCreateInfo commandPoolCreateInfo(const uint32_t queueFamilyIndex)
 	{
 		VkCommandPoolCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -526,7 +526,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkCommandBufferAllocateInfo commandBufferAllocateInfo(const VkCommandPool& commandPool, const VkCommandBufferLevel& level, const uint32_t& commandBufferCount)
+	inline VkCommandBufferAllocateInfo commandBufferAllocateInfo(const VkCommandPool& commandPool, const VkCommandBufferLevel& level, const uint32_t commandBufferCount)
 	{
 		VkCommandBufferAllocateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -565,7 +565,7 @@ namespace Utility::Vulkan::CreateInfo
 		return bi;
 	}
 
-	inline VkRenderPassBeginInfo renderPassBeginInfo(const VkRenderPass& renderPass, const uint32_t& width, const uint32_t& height, const std::vector<VkClearValue>& clearValues)
+	inline VkRenderPassBeginInfo renderPassBeginInfo(const VkRenderPass& renderPass, const uint32_t width, const uint32_t height, const std::vector<VkClearValue>& clearValues)
 	{
 		VkRenderPassBeginInfo bi{};
 		bi.sType = VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -579,7 +579,7 @@ namespace Utility::Vulkan::CreateInfo
 		return bi;
 	}
 
-	inline VkViewport viewport(const float& width, const float& height, const float& minDepth = 0.0f, const float& maxDepth = 1.0f)
+	inline VkViewport viewport(const float width, const float height, const float minDepth = 0.0f, const float maxDepth = 1.0f)
 	{
 		VkViewport v{};
 		v.width = width;
@@ -599,7 +599,7 @@ namespace Utility::Vulkan::CreateInfo
 		return r2d;
 	}
 
-	inline VkDescriptorPoolSize descriptorPoolSize(const VkDescriptorType& descriptorType, const uint32_t& descriptorCount = 1)
+	inline VkDescriptorPoolSize descriptorPoolSize(const VkDescriptorType& descriptorType, const uint32_t descriptorCount = 1)
 	{
 		VkDescriptorPoolSize ps{};
 		ps.type = descriptorType;
@@ -607,7 +607,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ps;
 	}
 
-	inline VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(const std::vector<VkDescriptorPoolSize>& descriptorPoolSizes, const uint32_t& maxSets = 1, const VkDescriptorPoolCreateFlags& flags = 0)
+	inline VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(const std::vector<VkDescriptorPoolSize>& descriptorPoolSizes, const uint32_t maxSets = 1, const VkDescriptorPoolCreateFlags& flags = 0)
 	{
 		VkDescriptorPoolCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -618,7 +618,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(const uint32_t& binding, const VkDescriptorType& descriptorType, const VkShaderStageFlags& shaderStageFlags, const uint32_t& descriptorCount = 1)
+	inline VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(const uint32_t binding, const VkDescriptorType& descriptorType, const VkShaderStageFlags& shaderStageFlags, const uint32_t descriptorCount = 1)
 	{
 		VkDescriptorSetLayoutBinding lb{};
 		lb.binding = binding;
@@ -637,7 +637,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkDescriptorSetAllocateInfo descriptorSetAllocateInfo(const VkDescriptorPool& descriptorPool, const VkDescriptorSetLayout* descriptorSetLayout, const uint32_t& descriptorSetCount = 1)
+	inline VkDescriptorSetAllocateInfo descriptorSetAllocateInfo(const VkDescriptorPool& descriptorPool, const VkDescriptorSetLayout* descriptorSetLayout, const uint32_t descriptorSetCount = 1)
 	{
 		VkDescriptorSetAllocateInfo ai{};
 		ai.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -649,10 +649,10 @@ namespace Utility::Vulkan::CreateInfo
 
 	inline VkWriteDescriptorSet writeDescriptorSet(
 		const VkDescriptorSet& descriptorSet,
-		const uint32_t& dstBinding,
+		const uint32_t dstBinding,
 		const VkDescriptorType& descriptorType,
 		const VkDescriptorBufferInfo* pBufferInfo,
-		const uint32_t& descriptorCount = 1)
+		const uint32_t descriptorCount = 1)
 	{
 		VkWriteDescriptorSet wds{};
 		wds.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -666,11 +666,11 @@ namespace Utility::Vulkan::CreateInfo
 
 	inline VkWriteDescriptorSet writeDescriptorSet(
 		const VkDescriptorSet& descriptorSet,
-		const uint32_t& dstBinding,
+		const uint32_t dstBinding,
 		const VkDescriptorType& descriptorType,
 		const VkDescriptorImageInfo* pImageInfo,
-		const uint32_t& descriptorCount = 1,
-		const uint32_t& resourceID = 0)
+		const uint32_t descriptorCount = 1,
+		const uint32_t resourceID = 0)
 	{
 		VkWriteDescriptorSet wds{};
 		wds.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -772,7 +772,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(const uint32_t& viewportCount = 1, const uint32_t& scissorCount = 1)
+	inline VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(const uint32_t viewportCount = 1, const uint32_t scissorCount = 1)
 	{
 		VkPipelineViewportStateCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -801,9 +801,9 @@ namespace Utility::Vulkan::CreateInfo
 		const VkStencilOp& failOp = VkStencilOp::VK_STENCIL_OP_KEEP,
 		const VkStencilOp& passOp = VkStencilOp::VK_STENCIL_OP_KEEP,
 		const VkStencilOp& depthFailOp = VkStencilOp::VK_STENCIL_OP_KEEP,
-		const uint32_t& compareMask = 0,
-		const uint32_t& writeMask = 0,
-		const uint32_t& reference = 0)
+		const uint32_t compareMask = 0,
+		const uint32_t writeMask = 0,
+		const uint32_t reference = 0)
 	{
 		VkStencilOpState state{};
 		state.failOp = failOp;				// ステンシルテスト失敗時の操作
@@ -824,8 +824,8 @@ namespace Utility::Vulkan::CreateInfo
 		const VkBool32& stencilTestEnable = VK_FALSE,
 		const VkStencilOpState& front = stencilOpState(),
 		const VkStencilOpState& back = stencilOpState(VkCompareOp::VK_COMPARE_OP_ALWAYS),
-		const float& minDepthBounds = 0.0f,
-		const float& maxDepthBounds = 0.0f
+		const float minDepthBounds = 0.0f,
+		const float maxDepthBounds = 0.0f
 	)
 	{
 		VkPipelineDepthStencilStateCreateInfo ci{};
@@ -861,7 +861,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkVertexInputAttributeDescription vertexInputAttributeDescription(const uint32_t& binding, const uint32_t& location, const VkFormat& format, const uint32_t& offset)
+	inline VkVertexInputAttributeDescription vertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat& format, const uint32_t offset)
 	{
 		VkVertexInputAttributeDescription desc{};
 		desc.location = location;
@@ -871,7 +871,7 @@ namespace Utility::Vulkan::CreateInfo
 		return desc;
 	}
 
-	inline std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones(const uint32_t& binding, const VertexAttributeBits& vertexAttributes)
+	inline std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones(const uint32_t binding, const VertexAttributeBits& vertexAttributes)
 	{
 		std::vector<VkVertexInputAttributeDescription> descs{};
 		uint32_t location = 0;
@@ -929,7 +929,7 @@ namespace Utility::Vulkan::CreateInfo
 		return descs;
 	}
 
-	inline VkVertexInputBindingDescription vertexInputBindingDescription(const uint32_t& binding, const VertexAttributeBits& vertexAttributes)
+	inline VkVertexInputBindingDescription vertexInputBindingDescription(const uint32_t binding, const VertexAttributeBits& vertexAttributes)
 	{
 		VkVertexInputBindingDescription desc{};
 		desc.binding = binding;
@@ -1036,7 +1036,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkBufferCreateInfo bufferCreateInfo(const uint32_t& size, const VkBufferUsageFlagBits& usage, const VkSharingMode& sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE)
+	inline VkBufferCreateInfo bufferCreateInfo(const uint32_t size, const VkBufferUsageFlagBits& usage, const VkSharingMode& sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE)
 	{
 		VkBufferCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1067,8 +1067,8 @@ namespace Utility::Vulkan::CreateInfo
 		return label;
 	}
 
-	inline VkBufferImageCopy bufferImageCopy(const uint32_t&
-		width, const uint32_t& height)
+	inline VkBufferImageCopy bufferImageCopy(const uint32_t
+		width, const uint32_t height)
 	{
 		VkBufferImageCopy imageCopy{};
 		imageCopy.bufferOffset = 0;
@@ -1089,7 +1089,7 @@ namespace Utility::Vulkan::CreateInfo
 		const bool& compareEnable = VK_TRUE,
 		const VkFilter& magFilter = VkFilter::VK_FILTER_LINEAR,
 		const VkFilter& minFilter = VkFilter::VK_FILTER_LINEAR,
-		const float& maxLod = 1.0f,
+		const float maxLod = 1.0f,
 		const VkSamplerMipmapMode& mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR)
 	{
 		VkSamplerCreateInfo ci{};
@@ -1109,7 +1109,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkPushConstantRange pushConstantRange(const VkShaderStageFlags& shaderStageFlags, const uint32_t& offset, const uint32_t& size)
+	inline VkPushConstantRange pushConstantRange(const VkShaderStageFlags& shaderStageFlags, const uint32_t offset, const uint32_t size)
 	{
 		VkPushConstantRange pc{};
 		pc.stageFlags = shaderStageFlags;

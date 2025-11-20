@@ -38,7 +38,7 @@ namespace MyosotisFW::System::Render::Shape
 		Max
 	};
 
-	inline Mesh createQuad(const float& size = 1.0f, const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f }, const glm::vec3& center = { 0.0f, 0.0f, 0.0f })
+	inline Mesh createQuad(const float size = 1.0f, const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f }, const glm::vec3& center = { 0.0f, 0.0f, 0.0f })
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
@@ -91,7 +91,7 @@ namespace MyosotisFW::System::Render::Shape
 			16, 17,	18,	18,	17,	19,	// 右面
 			20, 21,	22,	22,	21,	23	// 左面
 		};
-		for (uint32_t& index : meshlet.primitives)
+		for (uint32_t index : meshlet.primitives)
 		{
 			if (uniqueVertexIndices.insert(index).second)
 			{
@@ -112,7 +112,7 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
-	inline Mesh createPlane(const float& size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f })
+	inline Mesh createPlane(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f })
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
@@ -150,7 +150,7 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
-	inline Mesh createCircle(const float& size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t& side = 12)
+	inline Mesh createCircle(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 12)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
@@ -207,7 +207,7 @@ namespace MyosotisFW::System::Render::Shape
 	}
 
 	// todo.今は一つのMeshletにまとめているので、壊れてる…
-	inline Mesh createSphere(const float& size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t& side = 4)
+	inline Mesh createSphere(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 4)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
@@ -272,7 +272,7 @@ namespace MyosotisFW::System::Render::Shape
 	}
 
 	inline Mesh createShape(const PrimitiveGeometryShape& shape,
-		const float& size = 1.0f,
+		const float size = 1.0f,
 		const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f },
 		const glm::vec3& center = { 0.0f, 0.0f, 0.0f })
 	{

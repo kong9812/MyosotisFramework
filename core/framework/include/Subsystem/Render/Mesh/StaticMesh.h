@@ -47,6 +47,12 @@ namespace MyosotisFW::System::Render
 		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+
+		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
+		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
+
+		virtual bool IsStaticMesh() const override { return true; }
+
 	protected:
 		virtual void loadAssets() {}
 		virtual void prepareShaderStorageBuffers() {}
@@ -66,6 +72,9 @@ namespace MyosotisFW::System::Render
 		LOD m_currentLOD;
 		std::array<float, LOD::Max> m_lodDistances;
 
+		// AABB
+		glm::vec3 m_aabbMin;
+		glm::vec3 m_aabbMax;
 	};
 	TYPEDEF_SHARED_PTR(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);

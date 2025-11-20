@@ -20,14 +20,14 @@ namespace MyosotisFW::System::Render::Camera
 		void ResetCamera();
 		virtual glm::mat4 GetViewMatrix() const;
 		virtual glm::mat4 GetProjectionMatrix() const;
-		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const;
+		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float distance) const;
 		CameraData GetCameraData() const;
 		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
 
 		void UpdateScreenSize(const glm::vec2& size);
 
 		float GetDistance(const glm::vec3& pos) const;
-		glm::vec3 GetFrontPos(const float& distance) const;
+		glm::vec3 GetFrontPos(const float distance) const;
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 

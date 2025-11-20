@@ -20,12 +20,6 @@ namespace MyosotisFW
 		Max
 	}ComponentType;
 
-	// todo. bitfrag対応するまでの一時対応 (対応したい消す)
-	inline bool IsStaticMesh(const ComponentType& type)
-	{
-		return (type == ComponentType::PrimitiveGeometryMesh) || (type == ComponentType::CustomMesh);
-	}
-
 	const std::unordered_map<ComponentType, std::optional<uuids::uuid>> g_objectTypeUUID = {
 		{ ComponentType::Undefined,				uuids::uuid::from_string("") },
 		{ ComponentType::FPSCamera,				uuids::uuid::from_string("ecbbd200-e5ee-4587-8ef8-39bfcc343984") },

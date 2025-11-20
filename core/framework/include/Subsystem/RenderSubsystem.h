@@ -119,7 +119,7 @@ namespace MyosotisFW::System::Render
 		void MeshShaderRender();
 		void EndRender();
 		void ResetGameStage();
-		void Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height);
+		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);
 
 		std::vector<StageObject_ptr> GetObjects() { return m_objects; }
 
@@ -136,7 +136,7 @@ namespace MyosotisFW::System::Render
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
 		virtual void initializeComputePipeline();
-		virtual void resizeRenderPass(const uint32_t& width, const uint32_t& height);
+		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
 
 	protected:
 		struct {
