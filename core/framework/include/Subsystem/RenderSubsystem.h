@@ -8,8 +8,8 @@
 // 前方宣言
 namespace MyosotisFW
 {
-	class StageObject;
-	TYPEDEF_SHARED_PTR_FWD(StageObject);
+	class MObject;
+	TYPEDEF_SHARED_PTR_FWD(MObject);
 
 	namespace System::Render
 	{
@@ -108,7 +108,7 @@ namespace MyosotisFW::System::Render
 
 		void ResetMousePos(const glm::vec2& mousePos);
 
-		void RegisterObject(const StageObject_ptr& object);
+		void RegisterObject(const MObject_ptr& object);
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 
@@ -121,7 +121,7 @@ namespace MyosotisFW::System::Render
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);
 
-		std::vector<StageObject_ptr> GetObjects() { return m_objects; }
+		std::vector<MObject_ptr> GetObjects() { return m_objects; }
 
 	protected:
 		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);
@@ -165,7 +165,7 @@ namespace MyosotisFW::System::Render
 
 		uint32_t m_currentBufferIndex;
 
-		std::vector<StageObject_ptr> m_objects;
+		std::vector<MObject_ptr> m_objects;
 
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;

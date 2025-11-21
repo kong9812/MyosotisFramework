@@ -63,7 +63,7 @@ namespace MyosotisFW::System::Render
 		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
-	void RenderSubsystem::RegisterObject(const StageObject_ptr& object)
+	void RenderSubsystem::RegisterObject(const MObject_ptr& object)
 	{
 		if (!m_mainCamera && object->IsCamera(true))
 		{
@@ -134,7 +134,7 @@ namespace MyosotisFW::System::Render
 			m_mainCamera->Update(updateData);
 		}
 
-		for (StageObject_ptr& object : m_objects)
+		for (MObject_ptr& object : m_objects)
 		{
 			object->Update(updateData, m_mainCamera);
 		}

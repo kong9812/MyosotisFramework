@@ -13,7 +13,7 @@ namespace MyosotisFW
 {
 	using namespace System::Render;
 
-	void StageObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
+	void MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
@@ -24,14 +24,14 @@ namespace MyosotisFW
 			}
 		}
 
-		for (StageObject_ptr& child : m_children)
+		for (MObject_ptr& child : m_children)
 		{
 			child->Update(updateData, mainCamera);
 		}
 	}
 
 	// カメラ持つ？
-	const bool StageObject::IsCamera(bool findChildComponent) const
+	const bool MObject::IsCamera(bool findChildComponent) const
 	{
 		for (const auto& component : m_components)
 		{
@@ -50,7 +50,7 @@ namespace MyosotisFW
 		return false;
 	}
 
-	ComponentBase_ptr StageObject::FindComponent(const ComponentType& type, const bool findChildComponent)
+	ComponentBase_ptr MObject::FindComponent(const ComponentType& type, const bool findChildComponent)
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
@@ -61,7 +61,7 @@ namespace MyosotisFW
 		}
 		if (findChildComponent)
 		{
-			for (StageObject_ptr& child : m_children)
+			for (MObject_ptr& child : m_children)
 			{
 				ComponentBase_ptr foundComponent = child->FindComponent(type, findChildComponent);
 				if (foundComponent)
@@ -71,7 +71,7 @@ namespace MyosotisFW
 		return nullptr;
 	}
 
-	std::vector<ComponentBase_ptr> StageObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
+	std::vector<ComponentBase_ptr> MObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
 	{
 		std::vector<ComponentBase_ptr> foundComponents{};
 		for (ComponentBase_ptr& component : m_components)
@@ -83,7 +83,7 @@ namespace MyosotisFW
 		}
 		if (findChildComponent)
 		{
-			for (StageObject_ptr& child : m_children)
+			for (MObject_ptr& child : m_children)
 			{
 				auto childComponents = child->FindAllComponents(type, findChildComponent);
 				foundComponents.insert(foundComponents.end(), childComponents.begin(), childComponents.end());
@@ -92,12 +92,12 @@ namespace MyosotisFW
 		return foundComponents;
 	}
 
-	std::vector<ComponentBase_ptr> StageObject::GetAllComponents(bool findChildComponent)
+	std::vector<ComponentBase_ptr> MObject::GetAllComponents(bool findChildComponent)
 	{
 		std::vector<ComponentBase_ptr> allComponents = m_components;
 		if (findChildComponent)
 		{
-			for (const StageObject_ptr& child : m_children)
+			for (const MObject_ptr& child : m_children)
 			{
 				auto childComponents = child->GetAllComponents(findChildComponent);
 				allComponents.insert(allComponents.end(), childComponents.begin(), childComponents.end());
@@ -106,7 +106,7 @@ namespace MyosotisFW
 		return allComponents;
 	}
 
-	void StageObject::AddComponent(const ComponentBase_ptr& component)
+	void MObject::AddComponent(const ComponentBase_ptr& component)
 	{
 		// 複数StaticMeshを許可しない
 		auto it = std::find_if(m_components.begin(), m_components.end(),
@@ -120,7 +120,7 @@ namespace MyosotisFW
 	}
 
 	// シリアルライズ
-	rapidjson::Value StageObject::Serialize(rapidjson::Document::AllocatorType& allocator) const
+	rapidjson::Value MObject::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value json(rapidjson::Type::kObjectType);
 		json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
@@ -142,7 +142,7 @@ namespace MyosotisFW
 	}
 
 	// デシリアルライズ
-	StageObject* StageObject::Deserialize(const rapidjson::Value& doc)
+	MObject* MObject::Deserialize(const rapidjson::Value& doc)
 	{
 		m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 		m_name = doc["name"].GetString();
@@ -156,7 +156,7 @@ namespace MyosotisFW
 		{
 			for (const auto& child : doc["children"].GetArray())
 			{
-				StageObject_ptr childObject = CreateStageObjectPointer();
+				MObject_ptr childObject = CreateMObjectPointer();
 				childObject->Deserialize(child);
 				m_children.push_back(childObject);
 			}

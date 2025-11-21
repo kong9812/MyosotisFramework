@@ -19,7 +19,7 @@ namespace MyosotisFW::System::GameDirector {
 	{
 		// TEST
 		{
-			StageObject_ptr newObject = CreateStageObjectPointer();
+			MObject_ptr newObject = CreateMObjectPointer();
 			Render::Camera::FPSCamera_ptr component = Object_Cast<Render::Camera::FPSCamera>(
 				System::ComponentFactory::CreateComponent(ComponentType::FPSCamera));
 			newObject->AddComponent(component);
@@ -27,7 +27,7 @@ namespace MyosotisFW::System::GameDirector {
 		}
 
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
@@ -38,7 +38,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
@@ -56,7 +56,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	for (uint32_t z = 0; z < objectCount; z++)
 		//	{
 		//		{
-		//			StageObject_ptr newObject = CreateStageObjectPointer();
+		//			MObject_ptr newObject = CreateMObjectPointer();
 		//			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//			CustomMeshInfo customMeshInfo{};
@@ -69,7 +69,7 @@ namespace MyosotisFW::System::GameDirector {
 		//			m_renderSubsystem->RegisterObject(newObject);
 		//		}
 		//		{
-		//			StageObject_ptr newObject = CreateStageObjectPointer();
+		//			MObject_ptr newObject = CreateMObjectPointer();
 		//			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//				System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//			CustomMeshInfo customMeshInfo{};
@@ -93,7 +93,7 @@ namespace MyosotisFW::System::GameDirector {
 				for (uint32_t y = 0; y < objectCount; y++)
 				{
 					{
-						StageObject_ptr newObject = CreateStageObjectPointer();
+						MObject_ptr newObject = CreateMObjectPointer();
 						newObject->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
 						newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 						newObject->SetScale(glm::vec3(0.1f));
@@ -110,7 +110,7 @@ namespace MyosotisFW::System::GameDirector {
 		}
 
 		{
-			StageObject_ptr newObject = CreateStageObjectPointer();
+			MObject_ptr newObject = CreateMObjectPointer();
 			newObject->SetPos(glm::vec3(0.0f, 0.0f, 10.0f));
 			newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
 			newObject->SetScale(glm::vec3(3.0f, 3.0f, 0.1f));
@@ -124,7 +124,7 @@ namespace MyosotisFW::System::GameDirector {
 		}
 
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//	CustomMeshInfo customMeshInfo{};
@@ -138,7 +138,7 @@ namespace MyosotisFW::System::GameDirector {
 		//}
 
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//	CustomMeshInfo customMeshInfo{};
@@ -151,7 +151,7 @@ namespace MyosotisFW::System::GameDirector {
 		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::CustomMesh));
 		//	CustomMeshInfo customMeshInfo{};
@@ -165,7 +165,7 @@ namespace MyosotisFW::System::GameDirector {
 		//}
 
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
@@ -177,7 +177,7 @@ namespace MyosotisFW::System::GameDirector {
 		//}
 
 		//{
-		//	StageObject_ptr newObject = CreateStageObjectPointer();
+		//	MObject_ptr newObject = CreateMObjectPointer();
 		//	Render::InteriorObject_ptr component = Object_Cast<Render::InteriorObject>(
 		//		System::ComponentFactory::CreateComponent(ComponentType::InteriorObjectMesh));
 		//	component->SetPos(glm::vec3(5.0f));
@@ -202,7 +202,7 @@ namespace MyosotisFW::System::GameDirector {
 			{
 				if (obj.IsObject())
 				{
-					StageObject_ptr newObject = CreateStageObjectPointer();
+					MObject_ptr newObject = CreateMObjectPointer();
 					newObject->Deserialize(obj);
 					m_renderSubsystem->RegisterObject(newObject);
 				}

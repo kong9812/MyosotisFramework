@@ -21,15 +21,15 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(CameraBase);
 	}
 
-	class StageObject;
-	TYPEDEF_SHARED_PTR(StageObject);
+	class MObject;
+	TYPEDEF_SHARED_PTR(MObject);
 
-	class StageObject
+	class MObject
 	{
 	public:
-		StageObject() :
+		MObject() :
 			m_isReady(false),
-			m_name("StageObject"),
+			m_name("MObject"),
 			m_objectID(),
 			m_renderID(0),
 			m_transform({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
@@ -38,7 +38,7 @@ namespace MyosotisFW
 		{
 			m_objectID = hashMaker();
 		}
-		virtual ~StageObject() = default;
+		virtual ~MObject() = default;
 
 		const std::string GetName() const { return m_name; }
 		const uuids::uuid GetObjectID() const { return m_objectID; }
@@ -62,7 +62,7 @@ namespace MyosotisFW
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const;
 		// デシリアルライズ
-		virtual StageObject* Deserialize(const rapidjson::Value& doc);
+		virtual MObject* Deserialize(const rapidjson::Value& doc);
 
 	protected:
 		bool m_isReady;
@@ -71,7 +71,7 @@ namespace MyosotisFW
 		uint32_t m_renderID;
 
 		Transform m_transform;
-		std::vector<StageObject_ptr> m_children;
+		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;
 	};
 };
