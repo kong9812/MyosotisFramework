@@ -2,6 +2,7 @@
 #pragma once
 #include "ClassPointer.h"
 #include "Structs.h"
+#include "ObjectInfo.h"
 #include "Transform.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
@@ -50,6 +51,7 @@ namespace MyosotisFW
 		const void SetRot(const glm::vec3& rot) { m_transform.rot = rot; }
 		const void SetScale(const glm::vec3& scale) { m_transform.scale = scale; }
 		void SetRenderID(uint32_t id) { m_renderID = id; }
+		void SetObjectInfo(ObjectInfo_ptr objectInfo) { m_objectInfo = objectInfo; }
 
 		void Update(const UpdateData& updateData, const RenderNS::Camera::CameraBase_ptr& mainCamera);
 		const bool IsCamera(bool findChildComponent = false) const;
@@ -70,6 +72,7 @@ namespace MyosotisFW
 		uuids::uuid m_objectID;
 		uint32_t m_renderID;
 
+		ObjectInfo_ptr m_objectInfo;
 		Transform m_transform;
 		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;
