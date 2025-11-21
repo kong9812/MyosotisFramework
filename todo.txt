@@ -41,8 +41,20 @@
 ・[OK] FBXのMeshlet対応
 ・[OK] Meshletの単体カリング
 
-・TextureDescriptors
-・大掃除 - 最低限のものだけ残す
+・[OK] TextureDescriptors
+・[OK] 大掃除 - 最低限のものだけ残す
+
+[OK] StageObject -> MObject
+[OK] ・オブジェクトの登録機能
+[OK] ・オブジェクトのデータ保管
+[OK] ・オブジェクトのデータ(ObjectInfo)を渡す
+[OK] Shaderの整理
+[OK] Structsフォルダ
+[OK] ・ObjectInfo.glsl
+[OK] ・Transform.glsl
+WorkListの準備
+・InstanceID(ObjectID)
+・Meshlet
 
 StageObjectの親子関係
 Visibility Buffer
