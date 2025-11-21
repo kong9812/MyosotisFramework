@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
-#include "StageObject.h"
+#include "MObject.h"
 #include "ComponentBase.h"
 #include "ComponentType.h"
 #include "ComponentFactory.h"

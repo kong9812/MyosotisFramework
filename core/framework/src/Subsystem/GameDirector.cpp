@@ -6,7 +6,7 @@
 #include "istduuid.h"
 #include "CustomMesh.h"
 #include "VK_Loader.h"
-#include "StageObject.h"
+#include "MObject.h"
 
 // TEST
 #include "PrimitiveGeometry.h"

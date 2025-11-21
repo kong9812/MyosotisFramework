@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "EditorRenderSubsystem.h"
 
-#include "StageObject.h"
+#include "MObject.h"
 
 #include "EditorRenderResources.h"
 #include "RenderSwapchain.h"
