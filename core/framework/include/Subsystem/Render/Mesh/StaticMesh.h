@@ -51,6 +51,7 @@ namespace MyosotisFW::System::Render
 		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		std::vector<VBDispatchInfo>& GetVBDispatchInfo() { return m_vbDispatchInfo; }
 
 		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
 		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }

@@ -30,9 +30,9 @@ namespace MyosotisFW::System::GameDirector {
 
 		{
 			MObject_ptr newObject = m_objectRegistry->CreateNewObject();
-			newObject->SetPos(glm::vec3(0.0f));
-			newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-			newObject->SetScale(glm::vec3(5.0f));
+			newObject->SetPos(glm::vec4(0.0f));
+			newObject->SetRot(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+			newObject->SetScale(glm::vec4(5.0f));
 
 			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh));

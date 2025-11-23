@@ -143,6 +143,8 @@ namespace MyosotisFW::System::Render
 		for (MObject_ptr& object : m_objects)
 		{
 			object->Update(updateData, m_mainCamera);
+			m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo());
+			m_objectInfoDescriptorSet->AddVBDispatchInfo(object->GetVBDispatchInfo());
 		}
 
 		m_sceneInfoDescriptorSet->Update();
@@ -189,7 +191,7 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::MeshShaderRender()
 	{
 		// TEST !! TEST !!
-		uint32_t meshletCount = 0;
+		uint32_t meshletCount = 1;
 
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;

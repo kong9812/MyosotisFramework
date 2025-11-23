@@ -5,6 +5,7 @@ struct VBDispatchInfo {
   uint objectID;
   uint meshID;
   uint meshletID;
+  uint _padding;
 };
 
 layout (std430, set = 1, binding = 1) readonly buffer VBDispatchInfoDescriptor {

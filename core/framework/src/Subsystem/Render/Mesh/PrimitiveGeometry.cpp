@@ -63,7 +63,7 @@ namespace MyosotisFW::System::Render
 			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID);
 			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 			{
-				VBDispatchInfo vbDispatchInfo;
+				VBDispatchInfo vbDispatchInfo{};
 				vbDispatchInfo.objectID = m_objectID;	// MObjectRegistryでセットされたobjectIDを使う
 				vbDispatchInfo.meshID = meshID;			// meshIDそのままを使って、iではない！
 				vbDispatchInfo.meshletID = j;			// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る

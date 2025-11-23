@@ -13,6 +13,22 @@ namespace MyosotisFW
 {
 	using namespace System::Render;
 
+	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
+	{
+		auto it = std::find_if(m_components.begin(), m_components.end(),
+			[&](const ComponentBase_ptr& existingComponent)
+			{
+				return existingComponent->IsStaticMesh();
+			});
+		if (it != m_components.end())
+		{
+			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
+			return staticMesh->GetVBDispatchInfo();
+		}
+
+		return {};
+	}
+
 	void MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
 		for (ComponentBase_ptr& component : m_components)
@@ -126,9 +142,9 @@ namespace MyosotisFW
 		json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
 		json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
 
-		SerializeVec3ToJson<glm::vec3>("pos", m_transform.pos, json, allocator);
-		SerializeVec3ToJson<glm::vec3>("rot", m_transform.rot, json, allocator);
-		SerializeVec3ToJson<glm::vec3>("scale", m_transform.scale, json, allocator);
+		SerializeVec3ToJson<glm::vec4>("pos", m_objectInfo->transform.pos, json, allocator);
+		SerializeVec3ToJson<glm::vec4>("rot", m_objectInfo->transform.rot, json, allocator);
+		SerializeVec3ToJson<glm::vec4>("scale", m_objectInfo->transform.scale, json, allocator);
 
 		// もし子要素があれば
 		rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
@@ -147,9 +163,9 @@ namespace MyosotisFW
 		m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
 		m_name = doc["name"].GetString();
 
-		DeserializeVec3FromJson<glm::vec3>("pos", m_transform.pos, doc);
-		DeserializeVec3FromJson<glm::vec3>("rot", m_transform.rot, doc);
-		DeserializeVec3FromJson<glm::vec3>("scale", m_transform.scale, doc);
+		DeserializeVec3FromJson<glm::vec4>("pos", m_objectInfo->transform.pos, doc);
+		DeserializeVec3FromJson<glm::vec4>("rot", m_objectInfo->transform.rot, doc);
+		DeserializeVec3FromJson<glm::vec4>("scale", m_objectInfo->transform.scale, doc);
 
 		// 子要素のデシリアル化
 		if (doc.HasMember("children") && doc["children"].IsArray())

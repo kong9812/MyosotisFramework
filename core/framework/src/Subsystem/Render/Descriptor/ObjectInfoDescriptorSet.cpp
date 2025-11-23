@@ -30,9 +30,9 @@ namespace MyosotisFW::System::Render
 		m_objectInfo.push_back(objectInfo);
 	}
 
-	void ObjectInfoDescriptorSet::AddVBDispatchInfo(const VBDispatchInfo& vbDispatchInfo)
+	void ObjectInfoDescriptorSet::AddVBDispatchInfo(std::vector<VBDispatchInfo> vbDispatchInfo)
 	{
-		m_vbDispatchInfo.push_back(vbDispatchInfo);
+		m_vbDispatchInfo.insert(m_vbDispatchInfo.end(), vbDispatchInfo.begin(), vbDispatchInfo.end());
 	}
 
 	// オブジェクト追加/削除の時に呼ぶ!

@@ -3,6 +3,7 @@
 #include "ClassPointer.h"
 #include "Structs.h"
 #include "ObjectInfo.h"
+#include "VBDispatchInfo.h"
 #include "Transform.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
@@ -33,7 +34,6 @@ namespace MyosotisFW
 			m_name("MObject"),
 			m_objectID(),
 			m_renderID(0),
-			m_transform({ glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f) }),
 			m_children(),
 			m_components()
 		{
@@ -46,14 +46,16 @@ namespace MyosotisFW
 		const uuids::uuid GetHashObjectID() const { return m_objectID; }
 		const uint32_t GetObjectID() const { return m_objectInfo->objectID; }
 
-		const glm::vec3 GetPos() const { return m_transform.pos; }
-		const glm::vec3 GetRot() const { return m_transform.rot; }
-		const glm::vec3 GetScale() const { return m_transform.scale; }
-		const void SetPos(const glm::vec3& pos) { m_transform.pos = pos; }
-		const void SetRot(const glm::vec3& rot) { m_transform.rot = rot; }
-		const void SetScale(const glm::vec3& scale) { m_transform.scale = scale; }
+		const glm::vec4 GetPos() const { return m_objectInfo->transform.pos; }
+		const glm::vec4 GetRot() const { return m_objectInfo->transform.rot; }
+		const glm::vec4 GetScale() const { return m_objectInfo->transform.scale; }
+		const void SetPos(const glm::vec4& pos) { m_objectInfo->transform.pos = pos; }
+		const void SetRot(const glm::vec4& rot) { m_objectInfo->transform.rot = rot; }
+		const void SetScale(const glm::vec4& scale) { m_objectInfo->transform.scale = scale; }
 		void SetRenderID(uint32_t id) { m_renderID = id; }
 		void SetObjectInfo(ObjectInfo_ptr objectInfo) { m_objectInfo = objectInfo; }
+		const ObjectInfo& GetObjectInfo() const { return *m_objectInfo; }
+		const std::vector<VBDispatchInfo> GetVBDispatchInfo() const;
 
 		void Update(const UpdateData& updateData, const RenderNS::Camera::CameraBase_ptr& mainCamera);
 		const bool IsCamera(bool findChildComponent = false) const;
@@ -75,7 +77,6 @@ namespace MyosotisFW
 		uint32_t m_renderID;
 
 		ObjectInfo_ptr m_objectInfo;
-		Transform m_transform;
 		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;
 	};
