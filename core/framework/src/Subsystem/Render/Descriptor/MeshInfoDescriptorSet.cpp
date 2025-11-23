@@ -11,9 +11,11 @@ namespace MyosotisFW::System::Render
 		m_meshletInfo(),
 		m_vertexData(),
 		m_uniqueIndexData(),
-		m_primitivesData()
+		m_primitivesData(),
+		m_primitiveMeshIDTable(),
+		m_customMeshIDTable()
 	{
-		for (uint32_t i = 0; static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
+		for (uint32_t i = 0; i < static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
 		{
 			Descriptor descriptor{};
 			descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -90,47 +92,49 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void MeshInfoDescriptorSet::AddPrimitiveGeometry(const std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>>& meshDatas)
+	uint32_t MeshInfoDescriptorSet::AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh)
 	{
-		for (const auto& [shape, meshes] : meshDatas)
+		// データの再利用
+		auto it = m_primitiveMeshIDTable.find(shape);
+		if (it != m_primitiveMeshIDTable.end())
 		{
-			for (const Mesh& mesh : meshes)
-			{
-				// MeshInfo
-				MeshInfo meshInfo{};
-				meshInfo.meshID = static_cast<uint32_t>(m_meshInfo.size()); // 最後に追加されたMeshのID
-				meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
-				meshInfo.AABBMin = glm::vec4(mesh.min, 0.0f);
-				meshInfo.AABBMax = glm::vec4(mesh.max, 0.0f);
-				for (const Meshlet& meshlet : mesh.meshlet)
-				{
-					// MeshletMetaData
-					MeshletInfo meshletInfo{};
-					meshletInfo.meshID = meshInfo.meshID;
-					meshletInfo.AABBMin = glm::vec4(meshlet.min, 0.0f);
-					meshletInfo.AABBMax = glm::vec4(meshlet.max, 0.0f);
-					meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
-					meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
-					meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-					meshletInfo.unitSize = 13;
-					meshletInfo.vertexDataOffset = m_vertexData.size();
-					meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
-					meshletInfo.primitivesOffset = m_primitivesData.size();
-					m_meshletInfo.push_back(meshletInfo);
-
-					// uniqueIndex
-					m_uniqueIndexData.insert(m_uniqueIndexData.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
-
-					// primitive
-					m_primitivesData.insert(m_primitivesData.end(), meshlet.primitives.begin(), meshlet.primitives.end());
-				}
-
-				// VertexData
-				m_vertexData.insert(m_vertexData.end(), mesh.vertex.begin(), mesh.vertex.end());
-				meshInfo.meshletCount = static_cast<uint32_t>(m_meshletInfo.size()) - meshInfo.meshletInfoOffset; // MeshMetaDataの個数
-				m_meshInfo.push_back(meshInfo);
-			}
+			return it->second;
 		}
+
+		// MeshInfo
+		MeshInfo meshInfo{};
+		meshInfo.meshID = static_cast<uint32_t>(m_meshInfo.size()); // 最後に追加されたMeshのID
+		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
+		meshInfo.AABBMin = glm::vec4(mesh.meshInfo.AABBMin, 0.0f);
+		meshInfo.AABBMax = glm::vec4(mesh.meshInfo.AABBMax, 0.0f);
+		for (const Meshlet& meshlet : mesh.meshlet)
+		{
+			// MeshletMetaData
+			MeshletInfo meshletInfo{};
+			meshletInfo.meshID = meshInfo.meshID;
+			meshletInfo.AABBMin = glm::vec4(meshlet.meshletInfo.AABBMin, 0.0f);
+			meshletInfo.AABBMax = glm::vec4(meshlet.meshletInfo.AABBMax, 0.0f);
+			meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
+			meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
+			meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+			meshletInfo.unitSize = 13;
+			meshletInfo.vertexDataOffset = m_vertexData.size();
+			meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
+			meshletInfo.primitivesOffset = m_primitivesData.size();
+			m_meshletInfo.push_back(meshletInfo);
+
+			// uniqueIndex
+			m_uniqueIndexData.insert(m_uniqueIndexData.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
+
+			// primitive
+			m_primitivesData.insert(m_primitivesData.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+		}
+
+		// VertexData
+		m_vertexData.insert(m_vertexData.end(), mesh.vertex.begin(), mesh.vertex.end());
+		meshInfo.meshletCount = static_cast<uint32_t>(m_meshletInfo.size()) - meshInfo.meshletInfoOffset; // MeshMetaDataの個数
+		m_meshInfo.push_back(meshInfo);
+
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].rebuild = true;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].rebuild = true;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild = true;
@@ -142,6 +146,9 @@ namespace MyosotisFW::System::Render
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].update = true;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].update = true;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].update = true;
+
+		m_primitiveMeshIDTable.emplace(shape, meshInfo.meshID);
+		return meshInfo.meshID;
 	}
 
 	void MeshInfoDescriptorSet::updateMeshInfo()

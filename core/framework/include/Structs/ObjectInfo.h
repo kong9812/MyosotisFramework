@@ -8,6 +8,7 @@ namespace MyosotisFW
 	struct ObjectInfo
 	{
 		Transform transform;
+		uint32_t objectID;
 		uint32_t meshID;
 		uint32_t materialID;
 	};

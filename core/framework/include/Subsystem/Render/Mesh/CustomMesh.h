@@ -7,12 +7,12 @@ namespace MyosotisFW::System::Render
 	class CustomMesh : public StaticMesh
 	{
 	public:
-		CustomMesh();
+		CustomMesh(const uint32_t objectID);
 		~CustomMesh() {};
 
 		const ComponentType GetType() const override { return ComponentType::CustomMesh; }
 
-		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
+		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 
 		void SetCustomMeshInfo(const CustomMeshInfo& customMeshInfo) { m_customMeshInfo = customMeshInfo; }
@@ -25,6 +25,6 @@ namespace MyosotisFW::System::Render
 
 		CustomMeshInfo m_customMeshInfo;
 	};
-	TYPEDEF_SHARED_PTR(CustomMesh);
+	TYPEDEF_SHARED_PTR_ARGS(CustomMesh);
 	OBJECT_CAST_FUNCTION(CustomMesh);
 }

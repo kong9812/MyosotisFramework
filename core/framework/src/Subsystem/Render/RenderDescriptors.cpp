@@ -469,14 +469,14 @@ namespace MyosotisFW::System::Render
 				MeshDataSSBO meshData{};
 				meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
 				meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
-				meshData.AABBMin = glm::vec4(mesh.min, 0.0f);
-				meshData.AABBMax = glm::vec4(mesh.max, 0.0f);
+				meshData.AABBMin = glm::vec4(mesh.meshInfo.AABBMin, 0.0f);
+				meshData.AABBMax = glm::vec4(mesh.meshInfo.AABBMax, 0.0f);
 				for (const Meshlet& meshlet : mesh.meshlet)
 				{
 					// MeshletMetaData
 					MeshletMetaDataSSBO meshletMetaData{};
-					meshletMetaData.AABBMin = glm::vec4(meshlet.min, 0.0f);
-					meshletMetaData.AABBMax = glm::vec4(meshlet.max, 0.0f);
+					meshletMetaData.AABBMin = glm::vec4(meshlet.meshletInfo.AABBMin, 0.0f);
+					meshletMetaData.AABBMax = glm::vec4(meshlet.meshletInfo.AABBMax, 0.0f);
 					meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 					meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 					meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
@@ -512,15 +512,15 @@ namespace MyosotisFW::System::Render
 			MeshDataSSBO meshData{};
 			meshData.meshID = static_cast<uint32_t>(m_meshDatas.size()); // 最後に追加されたMeshのID
 			meshData.meshletMetaDataOffset = static_cast<uint32_t>(m_meshletMetaDatas.size()); // MeshMetaDataの開始位置
-			meshData.AABBMin = glm::vec4(mesh.min, 0.0f);
-			meshData.AABBMax = glm::vec4(mesh.max, 0.0f);
+			meshData.AABBMin = glm::vec4(mesh.meshInfo.AABBMin, 0.0f);
+			meshData.AABBMax = glm::vec4(mesh.meshInfo.AABBMax, 0.0f);
 
 			for (const Meshlet& meshlet : mesh.meshlet)
 			{
 				// MeshletMetaData
 				MeshletMetaDataSSBO meshletMetaData{};
-				meshletMetaData.AABBMin = glm::vec4(meshlet.min, 0.0f);
-				meshletMetaData.AABBMax = glm::vec4(meshlet.max, 0.0f);
+				meshletMetaData.AABBMin = glm::vec4(meshlet.meshletInfo.AABBMin, 0.0f);
+				meshletMetaData.AABBMax = glm::vec4(meshlet.meshletInfo.AABBMax, 0.0f);
 				meshletMetaData.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 				meshletMetaData.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 				meshletMetaData.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;

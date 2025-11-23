@@ -170,7 +170,7 @@ namespace MyosotisFW
 				auto typeID = comp["typeID"].GetString();
 				auto optType = uuids::uuid::from_string(typeID);
 				ComponentType type = findComponentTypeFromTypeID(optType.value());
-				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(type);
+				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type);
 				component->Deserialize(comp);
 				m_components.push_back(component);
 			}

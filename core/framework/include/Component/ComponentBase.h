@@ -11,18 +11,16 @@
 namespace MyosotisFW
 {
 	class ComponentBase;
-	TYPEDEF_SHARED_PTR(ComponentBase);
+	TYPEDEF_SHARED_PTR_ARGS(ComponentBase);
 
 	class ComponentBase
 	{
 	public:
-		ComponentBase() :
-			m_objectID(),
+		ComponentBase(const uint32_t objectID) :
+			m_objectID(objectID),
 			m_isReady(false),
-			m_name(),
-			m_renderID(0)
+			m_name()
 		{
-			m_objectID = hashMaker();
 			m_name = "ComponentBase";
 		};
 
@@ -31,8 +29,7 @@ namespace MyosotisFW
 		virtual const ComponentType GetType() const { return ComponentType::Undefined; }
 		const std::string GetName() const { return m_name; }
 		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
-		const uuids::uuid GetObjectID() const { return m_objectID; }
-		void SetRenderID(uint32_t id) { m_renderID = id; }
+		const uint32_t GetHashObjectID() const { return m_objectID; }
 
 		// todo. Objectに移動する
 		//OBBData GetWorldOBBData()
@@ -62,7 +59,7 @@ namespace MyosotisFW
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
 		{
 			rapidjson::Value json(rapidjson::Type::kObjectType);
-			json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
+			json.AddMember("id", rapidjson::Value(m_objectID), allocator);
 			json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
 			json.AddMember("typeID", rapidjson::Value(uuids::to_string(GetTypeID()).c_str(), allocator), allocator);
 
@@ -72,7 +69,7 @@ namespace MyosotisFW
 		// デシリアルライズ
 		virtual void Deserialize(const rapidjson::Value& doc)
 		{
-			m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
+			m_objectID = doc["id"].GetUint();
 			m_name = doc["name"].GetString();
 		}
 
@@ -90,7 +87,6 @@ namespace MyosotisFW
 	protected:
 		bool m_isReady;
 		std::string m_name;
-		uuids::uuid m_objectID;
-		uint32_t m_renderID;
+		uint32_t m_objectID;
 	};
 };

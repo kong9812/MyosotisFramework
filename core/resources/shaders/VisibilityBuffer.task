@@ -4,8 +4,20 @@
 #extension GL_EXT_debug_printf : enable
 
 #include "Structs/ObjectInfo.glsl"
+#include "Structs/VBDispatchInfo.glsl"
+
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(0);
+    VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(gl_GlobalInvocationID.x);
+    
+    uint objectID = dispactchInfo.objectID;
+    uint meshID = dispactchInfo.meshID;
+    uint meshletID = dispactchInfo.meshletID;
+    
+    debugPrintfEXT("GlobalID: %d\nobjectID: %d meshID: %d meshletID: %d",
+    gl_GlobalInvocationID.x, objectID, meshID, meshletID);
+
+    // ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(0);
 }

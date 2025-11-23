@@ -10,7 +10,7 @@ namespace MyosotisFW::System::Render
 		m_cameras(),
 		m_cameraInfo()
 	{
-		for (uint32_t i = 0; static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
+		for (uint32_t i = 0; i < static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
 		{
 			Descriptor descriptor{};
 			descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

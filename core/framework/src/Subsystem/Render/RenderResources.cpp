@@ -4,6 +4,7 @@
 #include "VK_Loader.h"
 #include "RenderQueue.h"
 #include "RenderDescriptors.h"
+#include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -169,7 +170,7 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	std::vector<Mesh> RenderResources::GetMeshVertex(const std::string& fileName)
+	std::vector<Mesh> RenderResources::GetMesh(const std::string& fileName)
 	{
 		auto vertexData = m_meshVertexData.find(fileName);
 		if (vertexData == m_meshVertexData.end())
@@ -188,7 +189,6 @@ namespace MyosotisFW::System::Render
 			{
 				ASSERT(false, "Unsupported mesh file format: " + fileName);
 			}
-			m_meshID.try_emplace(fileName, m_descriptors->AddCustomMesh(fileName, m_meshVertexData[fileName]));
 		}
 		return m_meshVertexData[fileName];
 	}
@@ -267,10 +267,5 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
-	}
-
-	uint32_t RenderResources::GetMeshID(const std::string& fileName)
-	{
-		return m_meshID[fileName];
 	}
 }

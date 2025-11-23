@@ -8,6 +8,7 @@
 #include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "Structs.h"
+#include "VBDispatchInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -16,6 +17,9 @@ namespace MyosotisFW::System::Render
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
 	class RenderResources;
 	TYPEDEF_SHARED_PTR_FWD(RenderResources);
+	class MeshInfoDescriptorSet;
+	TYPEDEF_SHARED_PTR_FWD(MeshInfoDescriptorSet);
+
 	namespace Camera
 	{
 		class CameraBase;
@@ -31,7 +35,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh();
+		StaticMesh(const uint32_t objectID);
 		~StaticMesh();
 
 		typedef enum {
@@ -44,7 +48,7 @@ namespace MyosotisFW::System::Render
 
 		const ComponentType GetType() const override { return ComponentType::Undefined; }
 
-		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
+		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 
@@ -63,19 +67,15 @@ namespace MyosotisFW::System::Render
 		// render resources
 		RenderResources_ptr m_resources;
 
-		// vertex buffer
-		std::array<std::vector<Buffer>, LOD::Max> m_vertexBuffer;
-		// index buffer
-		std::array<std::vector<Buffer>, LOD::Max> m_indexBuffer;
+		// 
+		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 
-		// lod
-		LOD m_currentLOD;
-		std::array<float, LOD::Max> m_lodDistances;
+		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 
 		// AABB
 		glm::vec3 m_aabbMin;
 		glm::vec3 m_aabbMax;
 	};
-	TYPEDEF_SHARED_PTR(StaticMesh);
+	TYPEDEF_SHARED_PTR_ARGS(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);
 }

@@ -6,24 +6,24 @@
 
 namespace MyosotisFW::System::ComponentFactory
 {
-	ComponentBase_ptr CreateComponent(const ComponentType& objectType)
+	ComponentBase_ptr CreateComponent(const uint32_t objectID, const ComponentType& objectType)
 	{
 		ComponentBase_ptr object{};
 		switch (objectType)
 		{
 		case ComponentType::FPSCamera:
 		{
-			object = Render::Camera::CreateFPSCameraPointer();
+			object = Render::Camera::CreateFPSCameraPointer(objectID);
 		}
 		break;
 		case ComponentType::PrimitiveGeometryMesh:
 		{
-			object = Render::CreatePrimitiveGeometryPointer();
+			object = Render::CreatePrimitiveGeometryPointer(objectID);
 		}
 		break;
 		case ComponentType::CustomMesh:
 		{
-			object = Render::CreateCustomMeshPointer();
+			object = Render::CreateCustomMeshPointer(objectID);
 		}
 		break;
 		default:

@@ -22,6 +22,18 @@ namespace MyosotisFW
 		class RenderDescriptors;
 		TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
+		class DescriptorPool;
+		TYPEDEF_SHARED_PTR_FWD(DescriptorPool);
+
+		class SceneInfoDescriptorSet;
+		TYPEDEF_SHARED_PTR_FWD(SceneInfoDescriptorSet);
+		class ObjectInfoDescriptorSet;
+		TYPEDEF_SHARED_PTR_FWD(ObjectInfoDescriptorSet);
+		class MeshInfoDescriptorSet;
+		TYPEDEF_SHARED_PTR_FWD(MeshInfoDescriptorSet);
+		class TextureDescriptorSet;
+		TYPEDEF_SHARED_PTR_FWD(TextureDescriptorSet);
+
 		class StaticMesh;
 		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
 		class DebugGUI;
@@ -152,6 +164,12 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr m_resources;
 		RenderDescriptors_ptr m_descriptors;
 
+		DescriptorPool_ptr m_descriptorPool;
+		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
+		ObjectInfoDescriptorSet_ptr m_objectInfoDescriptorSet;
+		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
+		TextureDescriptorSet_ptr m_textureDescriptorSet;
+
 		Camera::CameraBase_ptr m_mainCamera;
 
 		VkSubmitInfo m_submitInfo;
@@ -186,6 +204,7 @@ namespace MyosotisFW::System::Render
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
 		MeshShaderRenderPhase1Pipeline_ptr m_meshShaderRenderPhase1Pipeline;
 		MeshShaderRenderPhase2Pipeline_ptr m_meshShaderRenderPhase2Pipeline;
+
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
 	};

@@ -1,23 +1,24 @@
 // Copyright (c) 2025 kong9812
 #include "PrimitiveGeometry.h"
 
+#include "VK_CreateInfo.h"
+
 #include "Camera.h"
 #include "RenderDevice.h"
 #include "RenderResources.h"
-
-#include "VK_CreateInfo.h"
+#include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
-	PrimitiveGeometry::PrimitiveGeometry() : StaticMesh(),
+	PrimitiveGeometry::PrimitiveGeometry(const uint32_t objectID) : StaticMesh(objectID),
 		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::Quad)
 	{
 		m_name = "PrimitiveGeometry";
 	}
 
-	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
+	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
 	{
-		__super::PrepareForRender(device, resources);
+		__super::PrepareForRender(device, resources, meshInfoDescriptorSet);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -50,66 +51,53 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::loadAssets()
 	{
-		Mesh vertex = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
+		// ここで何とかしてVBDispatchInfoを作らないといけない!!
+		Mesh mesh = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
+		uint32_t meshID = m_meshInfoDescriptorSet->AddPrimitiveGeometry(m_primitiveGeometryShape, mesh);
+
+		uint32_t meshCount = 1;
+
+		// VBDispatchInfoの作成
+		for (uint32_t i = 0; i < meshCount; i++)
+		{
+			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID);
+			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
+			{
+				VBDispatchInfo vbDispatchInfo;
+				vbDispatchInfo.objectID = m_objectID;	// MObjectRegistryでセットされたobjectIDを使う
+				vbDispatchInfo.meshID = meshID;			// meshIDそのままを使って、iではない！
+				vbDispatchInfo.meshletID = j;			// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+				m_vbDispatchInfo.push_back(vbDispatchInfo);
+			}
+		}
+
 		bool firstDataForAABB = true;
 
 		// 一時対応
 		std::vector<uint32_t> index{};
-		for (const Meshlet& meshlet : vertex.meshlet)
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
 			index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
-		}
-
-		for (int i = 0; i < LOD::Max; i++)
-		{
-			m_vertexBuffer[i].resize(1);
-			m_indexBuffer[i].resize(1);
-
-			{// vertex
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(float) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-				VmaAllocationCreateInfo allocationCreateInfo{};
-				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer[i][0].buffer, &m_vertexBuffer[i][0].allocation, &m_vertexBuffer[i][0].allocationInfo));
-				m_vertexBuffer[i][0].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer[i][0].buffer);
-				// mapping
-				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][0].allocation, &data));
-				memcpy(data, vertex.vertex.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][0].allocation);
-			}
-			{// index
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-				VmaAllocationCreateInfo allocationCreateInfo{};
-				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i][0].buffer, &m_indexBuffer[i][0].allocation, &m_indexBuffer[i][0].allocationInfo));
-				m_indexBuffer[i][0].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer[i][0].buffer);
-
-				// mapping
-				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation, &data));
-				memcpy(data, index.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][0].allocation);
-			}
 		}
 
 		{// aabb
 			if (firstDataForAABB)
 			{
-				m_aabbMin.x = vertex.min.x;
-				m_aabbMin.y = vertex.min.y;
-				m_aabbMin.z = vertex.min.z;
-				m_aabbMax.x = vertex.max.x;
-				m_aabbMax.y = vertex.max.y;
-				m_aabbMax.z = vertex.max.z;
+				m_aabbMin.x = mesh.meshInfo.AABBMin.x;
+				m_aabbMin.y = mesh.meshInfo.AABBMin.y;
+				m_aabbMin.z = mesh.meshInfo.AABBMin.z;
+				m_aabbMax.x = mesh.meshInfo.AABBMax.x;
+				m_aabbMax.y = mesh.meshInfo.AABBMax.y;
+				m_aabbMax.z = mesh.meshInfo.AABBMax.z;
 			}
 			else
 			{
-				m_aabbMin.x = m_aabbMin.x < vertex.min.x ? m_aabbMin.x : vertex.min.x;
-				m_aabbMin.y = m_aabbMin.y < vertex.min.y ? m_aabbMin.y : vertex.min.y;
-				m_aabbMin.z = m_aabbMin.z < vertex.min.z ? m_aabbMin.z : vertex.min.z;
-				m_aabbMax.x = m_aabbMax.x > vertex.max.x ? m_aabbMax.x : vertex.max.x;
-				m_aabbMax.y = m_aabbMax.y > vertex.max.y ? m_aabbMax.y : vertex.max.y;
-				m_aabbMax.z = m_aabbMax.z > vertex.max.z ? m_aabbMax.z : vertex.max.z;
+				m_aabbMin.x = m_aabbMin.x < mesh.meshInfo.AABBMin.x ? m_aabbMin.x : mesh.meshInfo.AABBMin.x;
+				m_aabbMin.y = m_aabbMin.y < mesh.meshInfo.AABBMin.y ? m_aabbMin.y : mesh.meshInfo.AABBMin.y;
+				m_aabbMin.z = m_aabbMin.z < mesh.meshInfo.AABBMin.z ? m_aabbMin.z : mesh.meshInfo.AABBMin.z;
+				m_aabbMax.x = m_aabbMax.x > mesh.meshInfo.AABBMax.x ? m_aabbMax.x : mesh.meshInfo.AABBMax.x;
+				m_aabbMax.y = m_aabbMax.y > mesh.meshInfo.AABBMax.y ? m_aabbMax.y : mesh.meshInfo.AABBMax.y;
+				m_aabbMax.z = m_aabbMax.z > mesh.meshInfo.AABBMax.z ? m_aabbMax.z : mesh.meshInfo.AABBMax.z;
 			}
 		}
 		//// 実験

@@ -7,8 +7,10 @@ namespace MyosotisFW
 {
 	MObject_ptr MObjectRegistry::CreateNewObject()
 	{
+		uint32_t objectIndex = static_cast<uint32_t>(m_object.size());
 		MObject_ptr newObject = m_object.emplace_back(CreateMObjectPointer());
 		ObjectInfo_ptr objectInfo = std::make_shared<ObjectInfo>(m_objectInfo.emplace_back());
+		objectInfo->objectID = objectIndex;
 		newObject->SetObjectInfo(objectInfo);
 		return newObject;
 	}

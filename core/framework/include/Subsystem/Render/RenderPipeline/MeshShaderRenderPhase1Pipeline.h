@@ -28,8 +28,6 @@ namespace MyosotisFW::System::Render
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;
-
-		VkImage test;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(MeshShaderRenderPhase1Pipeline);
 }

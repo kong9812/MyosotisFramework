@@ -9,7 +9,7 @@ namespace MyosotisFW::System::Render::Camera
 	class FPSCamera : public CameraBase
 	{
 	public:
-		FPSCamera();
+		FPSCamera(const uint32_t objectID);
 		~FPSCamera() {};
 
 		glm::mat4 GetViewMatrix() const override;
@@ -28,6 +28,6 @@ namespace MyosotisFW::System::Render::Camera
 		glm::vec2 m_lastMousePos;
 
 	};
-	TYPEDEF_SHARED_PTR(FPSCamera);
+	TYPEDEF_SHARED_PTR_ARGS(FPSCamera);
 	OBJECT_CAST_FUNCTION(FPSCamera);
 }

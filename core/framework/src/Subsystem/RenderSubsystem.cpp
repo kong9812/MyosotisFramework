@@ -12,6 +12,12 @@
 #include "RenderResources.h"
 #include "RenderDescriptors.h"
 
+#include "DescriptorPool.h"
+#include "SceneInfoDescriptorSet.h"
+#include "MeshInfoDescriptorSet.h"
+#include "ObjectInfoDescriptorSet.h"
+#include "TextureDescriptorSet.h"
+
 #include "DebugGUI.h"
 #include "StaticMesh.h"
 #include "FpsCamera.h"
@@ -80,7 +86,7 @@ namespace MyosotisFW::System::Render
 				if (component->IsStaticMesh())
 				{
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
-					customMesh->PrepareForRender(m_device, m_resources);
+					customMesh->PrepareForRender(m_device, m_resources, m_meshInfoDescriptorSet);
 				}
 			}
 		}
@@ -293,6 +299,12 @@ namespace MyosotisFW::System::Render
 			data.push_back(std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>(shape, mesh));
 		}
 		m_descriptors->AddPrimitiveGeometry(data);
+
+		m_descriptorPool = CreateDescriptorPoolPointer(m_device);
+		m_sceneInfoDescriptorSet = CreateSceneInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 	}
 
 	void RenderSubsystem::initializeRenderResources()

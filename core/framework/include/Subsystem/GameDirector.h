@@ -9,6 +9,9 @@ namespace MyosotisFW
 {
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+	class MObjectRegistry;
+	TYPEDEF_SHARED_PTR_FWD(MObjectRegistry);
+
 	namespace System::Render
 	{
 		class RenderSubsystem;
@@ -28,6 +31,7 @@ namespace MyosotisFW::System::GameDirector {
 
 	private:
 		Render::RenderSubsystem_ptr m_renderSubsystem;
+		MObjectRegistry_ptr m_objectRegistry;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(GameDirector);
 }

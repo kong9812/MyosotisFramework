@@ -104,11 +104,11 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.min = center - glm::vec3(halfSize);
-		meshlet.max = center + glm::vec3(halfSize);
+		meshlet.meshletInfo.AABBMin = center - glm::vec3(halfSize);
+		meshlet.meshletInfo.AABBMax = center + glm::vec3(halfSize);
 		mesh.meshlet.push_back(meshlet);
-		mesh.min = meshlet.min;
-		mesh.max = meshlet.max;
+		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		return mesh;
 	}
 
@@ -142,11 +142,11 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.min = center - glm::vec3(halfSize, halfSize, 0.0f);
-		meshlet.max = center + glm::vec3(halfSize, halfSize, 0.0f);
+		meshlet.meshletInfo.AABBMin = center - glm::vec3(halfSize, halfSize, 0.0f);
+		meshlet.meshletInfo.AABBMax = center + glm::vec3(halfSize, halfSize, 0.0f);
 		mesh.meshlet.push_back(meshlet);
-		mesh.min = meshlet.min;
-		mesh.max = meshlet.max;
+		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		return mesh;
 	}
 
@@ -196,11 +196,11 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.min = center - glm::vec3(radius, radius, 0.0f);
-		meshlet.max = center + glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMin = center - glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMax = center + glm::vec3(radius, radius, 0.0f);
 		mesh.meshlet.push_back(meshlet);
-		mesh.min = meshlet.min;
-		mesh.max = meshlet.max;
+		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
 		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;
@@ -261,11 +261,11 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.min = center - glm::vec3(radius, radius, 0.0f);
-		meshlet.max = center + glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMin = center - glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMax = center + glm::vec3(radius, radius, 0.0f);
 		mesh.meshlet.push_back(meshlet);
-		mesh.min = meshlet.min;
-		mesh.max = meshlet.max;
+		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
 		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;

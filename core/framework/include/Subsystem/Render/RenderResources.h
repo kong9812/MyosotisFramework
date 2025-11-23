@@ -42,7 +42,7 @@ namespace MyosotisFW::System::Render
 		virtual void Initialize(const uint32_t width, const uint32_t height);
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
-		std::vector<Mesh> GetMeshVertex(const std::string& fileName);
+		std::vector<Mesh> GetMesh(const std::string& fileName);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
 		virtual void Resize(const uint32_t width, const uint32_t height);
@@ -55,7 +55,6 @@ namespace MyosotisFW::System::Render
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexData;
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
-		std::unordered_map<std::string, uint32_t> m_meshID;
 
 	public:
 		Image& GetDepthStencil() { return m_depthStencil; }
@@ -66,7 +65,6 @@ namespace MyosotisFW::System::Render
 		Image& GetLightingResult() { return m_lightingResult; }
 		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
 		Image& GetIdMap() { return m_idMap; }
-		uint32_t GetMeshID(const std::string& fileName);
 
 		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
 		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }

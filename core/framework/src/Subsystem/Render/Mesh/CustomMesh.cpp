@@ -7,15 +7,15 @@
 
 namespace MyosotisFW::System::Render
 {
-	CustomMesh::CustomMesh() : StaticMesh(),
+	CustomMesh::CustomMesh(const uint32_t objectID) : StaticMesh(objectID),
 		m_customMeshInfo({})
 	{
 		m_name = "CustomMesh";
 	}
 
-	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
+	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
 	{
-		__super::PrepareForRender(device, resources);
+		__super::PrepareForRender(device, resources, meshInfoDescriptorSet);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -49,8 +49,7 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::loadAssets()
 	{
-		std::vector<Mesh> meshes = m_resources->GetMeshVertex(m_customMeshInfo.meshName);
-		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = m_resources->GetMeshID(m_customMeshInfo.meshName);
+		std::vector<Mesh> meshes = m_resources->GetMesh(m_customMeshInfo.meshName);
 
 		// 一時対応
 		std::vector<uint32_t> index{};
@@ -75,53 +74,24 @@ namespace MyosotisFW::System::Render
 					index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
 				}
 
-				m_vertexBuffer[i].resize(meshes.size());
-				m_indexBuffer[i].resize(meshes.size());
-
-				{// vertex
-					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(float) * meshes[meshIdx].vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-					VmaAllocationCreateInfo allocationCreateInfo{};
-					allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-					VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer[i][meshIdx].buffer, &m_vertexBuffer[i][meshIdx].allocation, &m_vertexBuffer[i][meshIdx].allocationInfo));
-					m_vertexBuffer[i][meshIdx].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer[i][meshIdx].buffer);
-					// mapping
-					void* data{};
-					VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][meshIdx].allocation, &data));
-					memcpy(data, meshes[meshIdx].vertex.data(), bufferCreateInfo.size);
-					vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer[i][meshIdx].allocation);
-				}
-				{// index
-					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-					VmaAllocationCreateInfo allocationCreateInfo{};
-					allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-					VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer[i][meshIdx].buffer, &m_indexBuffer[i][meshIdx].allocation, &m_indexBuffer[i][meshIdx].allocationInfo));
-					m_indexBuffer[i][meshIdx].descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer[i][meshIdx].buffer);
-
-					// mapping
-					void* data{};
-					VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][meshIdx].allocation, &data));
-					memcpy(data, index.data(), bufferCreateInfo.size);
-					vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer[i][meshIdx].allocation);
-				}
-
 				{// aabb
 					if (firstDataForAABB)
 					{
-						m_aabbMin.x = meshes[meshIdx].min.x;
-						m_aabbMin.y = meshes[meshIdx].min.y;
-						m_aabbMin.z = meshes[meshIdx].min.z;
-						m_aabbMax.x = meshes[meshIdx].max.x;
-						m_aabbMax.y = meshes[meshIdx].max.y;
-						m_aabbMax.z = meshes[meshIdx].max.z;
+						m_aabbMin.x = meshes[meshIdx].meshInfo.AABBMin.x;
+						m_aabbMin.y = meshes[meshIdx].meshInfo.AABBMin.y;
+						m_aabbMin.z = meshes[meshIdx].meshInfo.AABBMin.z;
+						m_aabbMax.x = meshes[meshIdx].meshInfo.AABBMax.x;
+						m_aabbMax.y = meshes[meshIdx].meshInfo.AABBMax.y;
+						m_aabbMax.z = meshes[meshIdx].meshInfo.AABBMax.z;
 					}
 					else
 					{
-						m_aabbMin.x = m_aabbMin.x < meshes[meshIdx].min.x ? m_aabbMin.x : meshes[meshIdx].min.x;
-						m_aabbMin.y = m_aabbMin.y < meshes[meshIdx].min.y ? m_aabbMin.y : meshes[meshIdx].min.y;
-						m_aabbMin.z = m_aabbMin.z < meshes[meshIdx].min.z ? m_aabbMin.z : meshes[meshIdx].min.z;
-						m_aabbMax.x = m_aabbMax.x > meshes[meshIdx].max.x ? m_aabbMax.x : meshes[meshIdx].max.x;
-						m_aabbMax.y = m_aabbMax.y > meshes[meshIdx].max.y ? m_aabbMax.y : meshes[meshIdx].max.y;
-						m_aabbMax.z = m_aabbMax.z > meshes[meshIdx].max.z ? m_aabbMax.z : meshes[meshIdx].max.z;
+						m_aabbMin.x = m_aabbMin.x < meshes[meshIdx].meshInfo.AABBMin.x ? m_aabbMin.x : meshes[meshIdx].meshInfo.AABBMin.x;
+						m_aabbMin.y = m_aabbMin.y < meshes[meshIdx].meshInfo.AABBMin.y ? m_aabbMin.y : meshes[meshIdx].meshInfo.AABBMin.y;
+						m_aabbMin.z = m_aabbMin.z < meshes[meshIdx].meshInfo.AABBMin.z ? m_aabbMin.z : meshes[meshIdx].meshInfo.AABBMin.z;
+						m_aabbMax.x = m_aabbMax.x > meshes[meshIdx].meshInfo.AABBMax.x ? m_aabbMax.x : meshes[meshIdx].meshInfo.AABBMax.x;
+						m_aabbMax.y = m_aabbMax.y > meshes[meshIdx].meshInfo.AABBMax.y ? m_aabbMax.y : meshes[meshIdx].meshInfo.AABBMax.y;
+						m_aabbMax.z = m_aabbMax.z > meshes[meshIdx].meshInfo.AABBMax.z ? m_aabbMax.z : meshes[meshIdx].meshInfo.AABBMax.z;
 					}
 				}
 			}

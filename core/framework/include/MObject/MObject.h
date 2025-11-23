@@ -42,7 +42,9 @@ namespace MyosotisFW
 		virtual ~MObject() = default;
 
 		const std::string GetName() const { return m_name; }
-		const uuids::uuid GetObjectID() const { return m_objectID; }
+
+		const uuids::uuid GetHashObjectID() const { return m_objectID; }
+		const uint32_t GetObjectID() const { return m_objectInfo->objectID; }
 
 		const glm::vec3 GetPos() const { return m_transform.pos; }
 		const glm::vec3 GetRot() const { return m_transform.rot; }

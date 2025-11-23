@@ -5,6 +5,7 @@
 #include "ClassPointer.h"
 #include "DescriptorSetBase.h"
 #include "ObjectInfo.h"
+#include "VBDispatchInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -17,17 +18,21 @@ namespace MyosotisFW::System::Render
 		enum class DescriptorBindingIndex : uint32_t
 		{
 			ObjectInfo = 0,
+			VBDispatchInfo,
 			Count
 		};
 
 		void AddObjectInfo(const ObjectInfo& objectInfo);
+		void AddVBDispatchInfo(const VBDispatchInfo& vbDispatchInfo);
 		void DescriptorSetRebuildRequest();
 		void Update() override;
 
 	private:
 		void updateObjectInfo();
+		void updateVBDispatchInfo();
 
 		std::vector<ObjectInfo> m_objectInfo;
+		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 	};
 
 	TYPEDEF_SHARED_PTR_ARGS(ObjectInfoDescriptorSet);

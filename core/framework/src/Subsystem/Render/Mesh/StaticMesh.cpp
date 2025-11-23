@@ -13,13 +13,10 @@
 
 namespace MyosotisFW::System::Render
 {
-	StaticMesh::StaticMesh() : ComponentBase(),
+	StaticMesh::StaticMesh(const uint32_t objectID) : ComponentBase(objectID),
 		m_device(nullptr),
 		m_resources(nullptr),
-		m_vertexBuffer({}),
-		m_indexBuffer({}),
-		m_currentLOD(LOD::Hide),
-		m_lodDistances({}),
+		m_vbDispatchInfo(),
 		m_aabbMin(FLT_MAX),
 		m_aabbMax(FLT_MIN)
 	{
@@ -28,22 +25,13 @@ namespace MyosotisFW::System::Render
 
 	StaticMesh::~StaticMesh()
 	{
-		for (uint32_t logType = 0; logType < LOD::Max; logType++)
-		{
-			for (uint32_t meshIdx = 0; meshIdx < m_vertexBuffer[logType].size(); meshIdx++)
-			{
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer[logType][meshIdx].buffer, m_vertexBuffer[logType][meshIdx].allocation);
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer[logType][meshIdx].buffer, m_indexBuffer[logType][meshIdx].allocation);
-			}
-		}
 	}
 
-	void StaticMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
+	void StaticMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
 	{
 		m_device = device;
 		m_resources = resources;
-		m_currentLOD = LOD::Hide;
-		m_lodDistances = { AppInfo::g_defaultLODVeryClose, AppInfo::g_defaultLODClose, AppInfo::g_defaultLODFar };
+		m_meshInfoDescriptorSet = meshInfoDescriptorSet;
 	}
 
 	void StaticMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)

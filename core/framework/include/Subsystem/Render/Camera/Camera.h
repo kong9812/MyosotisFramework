@@ -14,7 +14,7 @@ namespace MyosotisFW::System::Render::Camera
 	class CameraBase : public ComponentBase
 	{
 	public:
-		CameraBase();
+		CameraBase(const uint32_t objectID);
 		virtual ~CameraBase() = default;
 
 		void ResetCamera();
@@ -63,6 +63,6 @@ namespace MyosotisFW::System::Render::Camera
 		// 画面サイズ
 		glm::vec2 m_screenSize;
 	};
-	TYPEDEF_SHARED_PTR(CameraBase);
+	TYPEDEF_SHARED_PTR_ARGS(CameraBase);
 	OBJECT_CAST_FUNCTION(CameraBase);
 }
