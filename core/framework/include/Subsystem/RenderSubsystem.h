@@ -203,6 +203,9 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
+
+	protected:
+		uint32_t m_meshletCount;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

@@ -135,6 +135,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Update(const UpdateData& updateData)
 	{
+		m_meshletCount = 0;
+
 		if (m_mainCamera)
 		{
 			m_mainCamera->Update(updateData);
@@ -144,7 +146,15 @@ namespace MyosotisFW::System::Render
 		{
 			object->Update(updateData, m_mainCamera);
 			m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo());
-			m_objectInfoDescriptorSet->AddVBDispatchInfo(object->GetVBDispatchInfo());
+
+			std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
+			m_objectInfoDescriptorSet->AddVBDispatchInfo(vbDispatchInfo);
+
+			for (const VBDispatchInfo& info : vbDispatchInfo)
+			{
+				MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(info.meshID);
+				m_meshletCount += meshInfo.meshletCount;
+			}
 		}
 
 		m_sceneInfoDescriptorSet->Update();
@@ -190,9 +200,6 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::MeshShaderRender()
 	{
-		// TEST !! TEST !!
-		uint32_t meshletCount = 1;
-
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
@@ -204,12 +211,12 @@ namespace MyosotisFW::System::Render
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
 		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer,
-			meshletCount);
+			m_meshletCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
 		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer,
-			meshletCount);
+			m_meshletCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 
