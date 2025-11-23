@@ -31,6 +31,7 @@ namespace MyosotisFW::System::Render::Camera
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
+		void SetMainCamera(bool isMainCamera) { m_isMainCamera = isMainCamera; }
 		bool IsMainCamera() { return m_isMainCamera; }
 
 		virtual void Update(const UpdateData& updateData) {}

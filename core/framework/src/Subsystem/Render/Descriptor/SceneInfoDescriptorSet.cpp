@@ -28,7 +28,7 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild)
 		{
-			uint32_t size = static_cast<uint32_t>(sizeof(uint32_t)) + (static_cast<uint32_t>(sizeof(CameraData)) * static_cast<uint32_t>(m_cameraInfo.cameraData.size()));
+			uint32_t size = (static_cast<uint32_t>(sizeof(uint32_t)) * 4) + (static_cast<uint32_t>(sizeof(CameraData)) * static_cast<uint32_t>(m_cameraInfo.cameraData.size()));
 			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = false;
 		}
@@ -49,7 +49,7 @@ namespace MyosotisFW::System::Render
 
 	void SceneInfoDescriptorSet::updateCameraInfo()
 	{
-		for (uint32_t i = 0; static_cast<uint32_t>(m_cameras.size()); i++)
+		for (uint32_t i = 0; i < static_cast<uint32_t>(m_cameras.size()); i++)
 		{
 			const Camera::CameraBase_ptr& camera = m_cameras[i];
 			if (camera->IsMainCamera())
@@ -60,9 +60,18 @@ namespace MyosotisFW::System::Render
 		}
 
 		// 固定部分
+		m_cameraInfo._p1 = 0;
+		m_cameraInfo._p2 = 0;
+		m_cameraInfo._p3 = 0;
 		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, &m_cameraInfo.mainCameraIndex, sizeof(m_cameraInfo.mainCameraIndex));
-		dst += static_cast<uint32_t>(sizeof(m_cameraInfo.mainCameraIndex));
+		memcpy(dst, &m_cameraInfo.mainCameraIndex, (static_cast<uint32_t>(sizeof(uint32_t))));
+		dst += static_cast<uint32_t>(sizeof(uint32_t));
+		memcpy(dst, &m_cameraInfo._p1, (static_cast<uint32_t>(sizeof(uint32_t))));
+		dst += static_cast<uint32_t>(sizeof(uint32_t));
+		memcpy(dst, &m_cameraInfo._p2, (static_cast<uint32_t>(sizeof(uint32_t))));
+		dst += static_cast<uint32_t>(sizeof(uint32_t));
+		memcpy(dst, &m_cameraInfo._p3, (static_cast<uint32_t>(sizeof(uint32_t))));
+		dst += static_cast<uint32_t>(sizeof(uint32_t));
 		// 可変部分
 		memcpy(dst, m_cameraInfo.cameraData.data(), sizeof(CameraData) * m_cameraInfo.cameraData.size());
 	}

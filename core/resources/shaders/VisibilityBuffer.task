@@ -5,12 +5,14 @@
 
 #include "Structs/ObjectInfo.glsl"
 #include "Structs/VBDispatchInfo.glsl"
+#include "Structs/CameraInfo.glsl"
 
 layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
     VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(gl_GlobalInvocationID.x);
+    CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
     
     uint objectID = dispactchInfo.objectID;
     uint meshID = dispactchInfo.meshID;

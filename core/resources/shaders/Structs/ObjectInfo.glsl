@@ -11,12 +11,12 @@ struct ObjectInfo {
 };
 
 layout (std430, set = 1, binding = 0) readonly buffer ObjectInfoDescriptor {
-  ObjectInfo objectInfoRaw[];
+  ObjectInfo objectInfo[];
 };
 
 ObjectInfo ObjectInfo_GetObjectInfo(uint index)
 {
-  return objectInfoRaw[index];
+  return objectInfo[index];
 }
 
 #endif

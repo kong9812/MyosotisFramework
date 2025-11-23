@@ -71,10 +71,15 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::RegisterObject(const MObject_ptr& object)
 	{
-		if (!m_mainCamera && object->IsCamera(true))
+		if (object->IsCamera(true))
 		{
-			m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
-			m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+			if (!m_mainCamera)
+			{
+				m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
+				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+				m_mainCamera->SetMainCamera(true);
+			}
+			m_sceneInfoDescriptorSet->AddCamera(m_mainCamera);
 		}
 
 		{// StaticMesh
@@ -210,13 +215,11 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer,
-			m_meshletCount);
+		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshletCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer,
-			m_meshletCount);
+		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshletCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 
