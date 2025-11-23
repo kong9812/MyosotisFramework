@@ -3,7 +3,10 @@
 #include <vulkan/vulkan.h>
 #include "RenderDevice.h"
 #include "RenderResources.h"
-#include "RenderDescriptors.h"
+#include "SceneInfoDescriptorSet.h"
+#include "ObjectInfoDescriptorSet.h"
+#include "MeshInfoDescriptorSet.h"
+#include "TextureDescriptorSet.h"
 #include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
@@ -11,11 +14,20 @@ namespace MyosotisFW::System::Render
 	class RenderPipelineBase
 	{
 	public:
-		RenderPipelineBase(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
+		RenderPipelineBase(const RenderDevice_ptr& device,
+			const SceneInfoDescriptorSet_ptr& sceneInfoDescriptorSet,
+			const ObjectInfoDescriptorSet_ptr& objectInfoDescriptorSet,
+			const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet,
+			const TextureDescriptorSet_ptr& textureDescriptorSet
+		) :
 			m_device(device),
 			m_pipelineLayout(VK_NULL_HANDLE),
 			m_pipeline(VK_NULL_HANDLE),
-			m_descriptors(descriptors) {
+			m_sceneInfoDescriptorSet(sceneInfoDescriptorSet),
+			m_objectInfoDescriptorSet(objectInfoDescriptorSet),
+			m_meshInfoDescriptorSet(meshInfoDescriptorSet),
+			m_textureDescriptorSet(textureDescriptorSet)
+		{
 		}
 		virtual ~RenderPipelineBase() = default;
 
@@ -29,6 +41,9 @@ namespace MyosotisFW::System::Render
 		VkPipelineLayout m_pipelineLayout;
 		VkPipeline m_pipeline;
 
-		RenderDescriptors_ptr m_descriptors;
+		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
+		ObjectInfoDescriptorSet_ptr m_objectInfoDescriptorSet;
+		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
+		TextureDescriptorSet_ptr m_textureDescriptorSet;
 	};
 }

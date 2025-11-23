@@ -23,6 +23,8 @@ namespace MyosotisFW::System::Render
 		~DescriptorSetBase();
 
 		virtual void Update() = 0;
+		VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
+		VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout; }
 
 	protected:
 		void createDescriptorSet();

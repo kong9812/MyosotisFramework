@@ -24,8 +24,8 @@
 
 #include "MeshShaderRenderPass.h"
 
-#include "MeshShaderRenderPhase1Pipeline.h"
-#include "MeshShaderRenderPhase2Pipeline.h"
+#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferRenderPhase2Pipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -144,6 +144,11 @@ namespace MyosotisFW::System::Render
 		{
 			object->Update(updateData, m_mainCamera);
 		}
+
+		m_sceneInfoDescriptorSet->Update();
+		m_objectInfoDescriptorSet->Update();
+		m_meshInfoDescriptorSet->Update();
+		m_textureDescriptorSet->Update();
 	}
 
 	void RenderSubsystem::BeginCompute()
@@ -163,15 +168,11 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkEndCommandBuffer(m_computeCommandBuffers[0]));
 		}
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];		// Frustum Culling
-
-		m_descriptors->UpdateMainDescriptorSet();
+		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];
 
 		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
 		computeQueue->Submit(submitInfo);
 		computeQueue->WaitIdle();
-
-		m_descriptors->ResetMainDescriptorSet();
 	}
 
 	void RenderSubsystem::BeginRender()
@@ -187,6 +188,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::MeshShaderRender()
 	{
+		// TEST !! TEST !!
+		uint32_t meshletCount = 0;
+
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
@@ -197,11 +201,13 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_meshShaderRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer,
+			meshletCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_meshShaderRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer,
+			meshletCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 
@@ -213,8 +219,6 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
-		m_descriptors->UpdateMainDescriptorSet();
-
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
@@ -224,8 +228,6 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
-
-		m_descriptors->ResetMainDescriptorSet();
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -290,16 +292,6 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderDescriptors()
 	{
-		m_descriptors = CreateRenderDescriptorsPointer(m_device);
-		std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> data{};
-		for (uint8_t i = 0; i < static_cast<uint8_t>(Shape::PrimitiveGeometryShape::Max); i++)
-		{
-			Shape::PrimitiveGeometryShape shape = static_cast<Shape::PrimitiveGeometryShape>(i);
-			std::vector<Mesh> mesh{ Shape::createShape(shape) };
-			data.push_back(std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>(shape, mesh));
-		}
-		m_descriptors->AddPrimitiveGeometry(data);
-
 		m_descriptorPool = CreateDescriptorPoolPointer(m_device);
 		m_sceneInfoDescriptorSet = CreateSceneInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
@@ -309,7 +301,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateRenderResourcesPointer(m_device, m_descriptors);
+		m_resources = CreateRenderResourcesPointer(m_device);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
@@ -373,15 +365,22 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderPipeline()
 	{
-		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
-		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()
 	{
-		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(m_device, m_descriptors, m_resources);
+		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(
+			m_device, m_resources,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
 		m_hiZDepthComputePipeline->Initialize();
 	}
 

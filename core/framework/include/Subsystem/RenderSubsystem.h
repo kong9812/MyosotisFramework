@@ -19,8 +19,6 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
 		class RenderResources;
 		TYPEDEF_SHARED_PTR_FWD(RenderResources);
-		class RenderDescriptors;
-		TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 		class DescriptorPool;
 		TYPEDEF_SHARED_PTR_FWD(DescriptorPool);
@@ -67,10 +65,10 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(FinalCompositionRenderPipeline);
 		class InteriorObjectDeferredRenderPipeline;
 		TYPEDEF_SHARED_PTR_FWD(InteriorObjectDeferredRenderPipeline);
-		class MeshShaderRenderPhase1Pipeline;
-		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPhase1Pipeline);
-		class MeshShaderRenderPhase2Pipeline;
-		TYPEDEF_SHARED_PTR_FWD(MeshShaderRenderPhase2Pipeline);
+		class VisibilityBufferRenderPhase1Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
+		class VisibilityBufferRenderPhase2Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase2Pipeline);
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
@@ -86,7 +84,6 @@ namespace MyosotisFW::System::Render
 			m_device(nullptr),
 			m_swapchain(nullptr),
 			m_resources(nullptr),
-			m_descriptors(nullptr),
 			m_mainCamera(nullptr),
 			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
 			m_renderCommandPool(VK_NULL_HANDLE),
@@ -106,8 +103,8 @@ namespace MyosotisFW::System::Render
 			m_compositionRenderPipeline(nullptr),
 			m_finalCompositionRenderPipeline(nullptr),
 			m_interiorObjectDeferredRenderPipeline(nullptr),
-			m_meshShaderRenderPhase1Pipeline(nullptr),
-			m_meshShaderRenderPhase2Pipeline(nullptr),
+			m_visibilityBufferRenderPhase1Pipeline(nullptr),
+			m_visibilityBufferRenderPhase2Pipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE) {
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
@@ -162,7 +159,6 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
-		RenderDescriptors_ptr m_descriptors;
 
 		DescriptorPool_ptr m_descriptorPool;
 		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
@@ -202,8 +198,8 @@ namespace MyosotisFW::System::Render
 		CompositionRenderPipeline_ptr m_compositionRenderPipeline;
 		FinalCompositionRenderPipeline_ptr m_finalCompositionRenderPipeline;
 		InteriorObjectDeferredRenderPipeline_ptr m_interiorObjectDeferredRenderPipeline;
-		MeshShaderRenderPhase1Pipeline_ptr m_meshShaderRenderPhase1Pipeline;
-		MeshShaderRenderPhase2Pipeline_ptr m_meshShaderRenderPhase2Pipeline;
+		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
+		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
 
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;

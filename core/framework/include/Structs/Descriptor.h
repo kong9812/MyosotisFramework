@@ -10,6 +10,7 @@ namespace MyosotisFW
 		VkDescriptorType descriptorType;
 		VkShaderStageFlagBits shaderStageFlagBits;
 		VkDescriptorBindingFlags descriptorBindingFlags;
+		int32_t descriptorCount;
 
 		Buffer buffer;
 

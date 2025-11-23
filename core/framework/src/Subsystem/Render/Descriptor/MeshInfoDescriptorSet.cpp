@@ -21,10 +21,12 @@ namespace MyosotisFW::System::Render
 			descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
 			descriptor.descriptorBindingFlags = VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+			descriptor.descriptorCount = 1;
 			descriptor.rebuild = true;
 			descriptor.update = true;
 			m_descriptors.push_back(descriptor);
 		}
+		createDescriptorSet();
 	}
 
 	void MeshInfoDescriptorSet::Update()

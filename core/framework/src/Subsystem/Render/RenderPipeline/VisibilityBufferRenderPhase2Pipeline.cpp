@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "MeshShaderRenderPhase1Pipeline.h"
+#include "VisibilityBufferRenderPhase2Pipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -7,13 +7,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	MeshShaderRenderPhase1Pipeline::~MeshShaderRenderPhase1Pipeline()
+	VisibilityBufferRenderPhase2Pipeline::~VisibilityBufferRenderPhase2Pipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void MeshShaderRenderPhase1Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferRenderPhase2Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
@@ -22,32 +22,37 @@ namespace MyosotisFW::System::Render
 		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
 			resources->GetHiZDepthMap().sampler, resources->GetHiZDepthMap().view,
 			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_hiZSamplerID = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
+		m_hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 
 		descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
 			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
 			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_primaryDepthSamplerID = m_descriptors->AddCombinedImageSamplerInfo(descriptorImageInfo);
+		m_primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 	}
 
-	void MeshShaderRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t meshCount)
+	void VisibilityBufferRenderPhase2Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t meshletCount)
 	{
-		{// Phase1Render
+		{// Phase2Render
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-			std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet(), m_descriptors->GetBindlessVertexDescriptorSet() };
+			std::vector<VkDescriptorSet> descriptorSets = {
+				m_sceneInfoDescriptorSet->GetDescriptorSet(),
+				m_objectInfoDescriptorSet->GetDescriptorSet(),
+				m_meshInfoDescriptorSet->GetDescriptorSet(),
+				m_textureDescriptorSet->GetDescriptorSet()
+			};
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-			pushConstant.hiZSamplerID = m_hiZSamplerID;
-			pushConstant.checkFalseNegativeMesh = 0; // Disable false negative mesh check
+			pushConstant.hiZSamplerID = m_primaryDepthSamplerID;
+			pushConstant.checkFalseNegativeMesh = 1; // Enable false negative mesh check
 			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
 				0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
-			uint32_t meshletGroupCount = meshCount;
+			uint32_t meshletGroupCount = meshletCount;
 			m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
 		}
 	}
 
-	void MeshShaderRenderPhase1Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferRenderPhase2Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
@@ -58,7 +63,12 @@ namespace MyosotisFW::System::Render
 		};
 
 		// [pipeline]layout
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout(), m_descriptors->GetBindlessVertexDescriptorSetLayout() };
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
+			m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
+			m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
+			m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
+			m_textureDescriptorSet->GetDescriptorSetLayout()
+		};
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
@@ -66,9 +76,9 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT, resources->GetShaderModules("MeshShader.task.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MESH_BIT_EXT, resources->GetShaderModules("MeshShader.mesh.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("MeshShader.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT, resources->GetShaderModules("VisibilityBuffer.task.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MESH_BIT_EXT, resources->GetShaderModules("VisibilityBuffer.mesh.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("VisibilityBuffer.frag.spv")),
 		};
 
 		// pipelineVertexInputStateCreateInfo
@@ -97,7 +107,7 @@ namespace MyosotisFW::System::Render
 			&dynamicStateCreateInfo,								// 動的状態
 			m_pipelineLayout,										// パイプラインレイアウト
 			renderPass);											// レンダーパス
-		graphicsPipelineCreateInfo.subpass = 0;
+		graphicsPipelineCreateInfo.subpass = 1;
 		VK_VALIDATION(vkCreateGraphicsPipelines(*m_device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_pipeline));
 	}
 }

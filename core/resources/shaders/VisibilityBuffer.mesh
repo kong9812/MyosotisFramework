@@ -1,0 +1,17 @@
+#version 450
+#extension GL_EXT_mesh_shader : require
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+
+layout(local_size_x = 64) in;
+layout(triangles, max_vertices = 64, max_primitives = 124) out;
+
+layout(location = 0) out VertexOutput {
+	vec4 color;
+} vertexOutput[];
+
+void main()
+{
+    // 出力する頂点数・プリミティブ数を指定
+    SetMeshOutputsEXT(1, 1);
+}
