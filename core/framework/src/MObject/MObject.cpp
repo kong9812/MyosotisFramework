@@ -44,6 +44,12 @@ namespace MyosotisFW
 		{
 			child->Update(updateData, mainCamera);
 		}
+
+		m_objectInfo->model = glm::translate(glm::mat4(1.0f), glm::vec3(m_objectInfo->transform.pos));
+		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_objectInfo->model = glm::scale(m_objectInfo->model, glm::vec3(m_objectInfo->transform.scale));
 	}
 
 	// カメラ持つ？

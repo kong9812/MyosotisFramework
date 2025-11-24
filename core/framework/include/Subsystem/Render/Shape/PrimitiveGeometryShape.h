@@ -104,8 +104,8 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.meshletInfo.AABBMin = center - glm::vec3(halfSize);
-		meshlet.meshletInfo.AABBMax = center + glm::vec3(halfSize);
+		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize), 0.0f);
+		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize), 0.0f);
 		mesh.meshlet.push_back(meshlet);
 		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
 		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
@@ -142,8 +142,8 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.meshletInfo.AABBMin = center - glm::vec3(halfSize, halfSize, 0.0f);
-		meshlet.meshletInfo.AABBMax = center + glm::vec3(halfSize, halfSize, 0.0f);
+		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
+		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
 		mesh.meshlet.push_back(meshlet);
 		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
 		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
@@ -196,8 +196,8 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.meshletInfo.AABBMin = center - glm::vec3(radius, radius, 0.0f);
-		meshlet.meshletInfo.AABBMax = center + glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(radius, radius, 0.0f), 0.0f);
+		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(radius, radius, 0.0f), 0.0f);
 		mesh.meshlet.push_back(meshlet);
 		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
 		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
@@ -261,8 +261,8 @@ namespace MyosotisFW::System::Render::Shape
 				index = indexInUnique;
 			}
 		}
-		meshlet.meshletInfo.AABBMin = center - glm::vec3(radius, radius, 0.0f);
-		meshlet.meshletInfo.AABBMax = center + glm::vec3(radius, radius, 0.0f);
+		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(radius, radius, 0.0f), 0.0f);
+		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(radius, radius, 0.0f), 0.0f);
 		mesh.meshlet.push_back(meshlet);
 		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
 		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;

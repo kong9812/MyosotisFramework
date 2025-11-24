@@ -4,6 +4,7 @@
 
 struct ObjectInfo {
   Transform transform;
+  mat4 model;
   uint objectID;
   uint meshID;
   uint materialID;

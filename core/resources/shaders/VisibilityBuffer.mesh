@@ -3,6 +3,19 @@
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_debug_printf : enable
 
+#include "Descriptors/ObjectInfo.glsl"
+#include "Descriptors/VBDispatchInfo.glsl"
+#include "Descriptors/CameraInfo.glsl"
+#include "Descriptors/MeshInfo.glsl"
+#include "Descriptors/MeshletInfo.glsl"
+
+#include "Descriptors/VertexData.glsl"
+#include "Descriptors/UniqueIndexData.glsl"
+#include "Descriptors/PrimitivesData.glsl"
+
+#include "Culling/BackfaceCulling.glsl"
+
+// 1つのメッシュレット(VBDispatchInfo)を64スレッドで処理する
 layout(local_size_x = 64) in;
 layout(triangles, max_vertices = 64, max_primitives = 124) out;
 
@@ -10,8 +23,102 @@ layout(location = 0) out VertexOutput {
 	vec4 color;
 } vertexOutput[];
 
+struct Payload {
+    uint vbDispatchInfoIndex;
+};
+taskPayloadSharedEXT Payload payload;
+
+shared uint primitiveCount;
+
 void main()
 {
-    // 出力する頂点数・プリミティブ数を指定
-    SetMeshOutputsEXT(1, 1);
+    // VBDispatchInfo
+    VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(payload.vbDispatchInfoIndex);
+
+    // ObjectInfo
+    uint objectID = dispactchInfo.objectID;
+    ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(dispactchInfo.objectID);
+
+    // MeshInfo
+    uint meshID = dispactchInfo.meshID;
+    MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
+
+    // MeshletInfo
+    uint meshletID = meshInfo.meshletInfoOffset + dispactchInfo.meshletID;
+    MeshletInfo meshletInfo = MeshletInfo_GetMeshletInfo(meshletID);
+
+    // MeshletData
+    uint meshletVertexDataOffset = meshletInfo.vertexDataOffset;    // データの開始位置
+    uint meshletVertexCount = meshletInfo.vertexCount;              // 頂点数
+    uint meshletPrimitiveCount = meshletInfo.primitiveCount;        // ポリゴン数
+
+    // CameraInfo (MainCameraData)
+    CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
+
+    // 0番目のスレッドのみ実行する内容
+    if (gl_LocalInvocationIndex == 0) 
+    {
+        // プリミティブサイズ
+        primitiveCount = 0;
+    }
+    barrier();
+
+    // debugPrintfEXT("WorkGroupID: %d GlobalID: %d LocalID: %d\nobjectID: %d meshID: %d meshletID: %d\nmeshletVertexDataOffset: %d meshletVertexCount: %d",
+    //  gl_WorkGroupID.x, gl_GlobalInvocationID.x, gl_LocalInvocationIndex, 
+    //  objectID, meshID, meshletID,
+    //  meshletVertexDataOffset, meshletVertexCount);
+
+    // スレッド分割forの準備
+    uint stride = gl_WorkGroupSize.x;
+    uint idx = gl_LocalInvocationIndex;
+
+    // 頂点処理：スレッドで分割し、forループで複数頂点を担当
+    for (uint i = idx; i < meshletVertexCount; i += stride) 
+    {
+        uint index = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, i);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, index);
+        vec4 worldPos = objectInfo.model * v.position;
+        gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
+
+        vertexOutput[i].color = vec4(1.0, 0.0, 0.0, 1.0);
+
+        debugPrintfEXT("meshID: %d meshletID: %d\ni: %d, UniqueIndex: %d\nx: %f y: %f z: %f\n[world] x: %f y: %f z: %f",
+         meshID, meshletID,
+         i, index,
+         v.position.x, v.position.y, v.position.z,
+         worldPos.x, worldPos.y, worldPos.z);
+    }
+
+    // プリミティブ処理：同様に分割＋ループで処理
+    for (uint i = idx; i < meshletPrimitiveCount; i += stride) 
+    {
+        // プリミティブインデックス
+        uvec3 index = PrimitivesData_GetPrimitivesData(meshletInfo.primitivesOffset, i);
+
+        // 頂点インデックス -> VertexData -> VertexPosition -> バックフェース判定
+        vec4 pos[3];
+        uint uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.x);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        pos[0] = objectInfo.model * v.position;
+        uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.y);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        pos[1] = objectInfo.model * v.position;
+        uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.z);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        pos[2] = objectInfo.model * v.position;
+
+        // バックフェースカリング
+        if (BackfaceCulling_IsVisible(cameraData.pos.xyz, pos[0].xyz, pos[1].xyz, pos[2].xyz))
+        {
+            uint outIndex = atomicAdd(primitiveCount, 1);
+            gl_PrimitiveTriangleIndicesEXT[outIndex] = index;
+        }
+    }
+
+    // 0番目のスレッドのみ実行する内容
+    if (gl_LocalInvocationIndex == 0) 
+    {
+        // 出力する頂点数・プリミティブ数を指定
+        SetMeshOutputsEXT(meshletInfo.vertexCount, primitiveCount);
+    }
 }

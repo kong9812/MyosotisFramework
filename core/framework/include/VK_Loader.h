@@ -181,14 +181,14 @@ namespace Utility::Loader {
 						// aabb
 						if (firstDataForAABB)
 						{
-							meshData.meshInfo.AABBMin = v;
-							meshData.meshInfo.AABBMax = v;
+							meshData.meshInfo.AABBMin = glm::vec4(v, 0.0f);
+							meshData.meshInfo.AABBMax = glm::vec4(v, 0.0f);
 							firstDataForAABB = false;
 						}
 						else
 						{
-							meshData.meshInfo.AABBMin = glm::min(meshData.meshInfo.AABBMin, v);
-							meshData.meshInfo.AABBMax = glm::max(meshData.meshInfo.AABBMax, v);
+							meshData.meshInfo.AABBMin = glm::min(meshData.meshInfo.AABBMin, glm::vec4(v, 0.0f));
+							meshData.meshInfo.AABBMax = glm::max(meshData.meshInfo.AABBMax, glm::vec4(v, 0.0f));
 						}
 					}
 					else
@@ -298,14 +298,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(v0, glm::min(v1, v2));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(v0, glm::max(v1, v2));
+								currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
+								currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(v0, glm::min(v1, v2)));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(v0, glm::max(v1, v2)));
+								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
 							}
 
 							// 三角形追加
@@ -369,14 +369,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(v0, glm::min(v1, v2));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(v0, glm::max(v1, v2));
+								currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
+								currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(v0, glm::min(v1, v2)));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(v0, glm::max(v1, v2)));
+								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
 							}
 
 							// 三角形追加
@@ -440,14 +440,14 @@ namespace Utility::Loader {
 							// AABB更新
 							if (firstDataForMeshletAABB)
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(v0, glm::min(v1, v2));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(v0, glm::max(v1, v2));
+								currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
+								currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
 								firstDataForMeshletAABB = false;
 							}
 							else
 							{
-								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(v0, glm::min(v1, v2)));
-								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(v0, glm::max(v1, v2)));
+								currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+								currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
 							}
 
 							// 三角形追加
@@ -611,14 +611,14 @@ namespace Utility::Loader {
 					// AABB更新
 					if (firstDataForMeshletAABB)
 					{
-						currentMeshletData.meshletInfo.AABBMin = glm::min(v0, glm::min(v1, v2));
-						currentMeshletData.meshletInfo.AABBMax = glm::max(v0, glm::max(v1, v2));
+						currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
+						currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
 						firstDataForMeshletAABB = false;
 					}
 					else
 					{
-						currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(v0, glm::min(v1, v2)));
-						currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(v0, glm::max(v1, v2)));
+						currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+						currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
 					}
 
 					// 三角形追加

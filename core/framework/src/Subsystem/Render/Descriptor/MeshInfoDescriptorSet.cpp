@@ -107,15 +107,15 @@ namespace MyosotisFW::System::Render
 		MeshInfo meshInfo{};
 		meshInfo.meshID = static_cast<uint32_t>(m_meshInfo.size()); // 最後に追加されたMeshのID
 		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
-		meshInfo.AABBMin = glm::vec4(mesh.meshInfo.AABBMin, 0.0f);
-		meshInfo.AABBMax = glm::vec4(mesh.meshInfo.AABBMax, 0.0f);
+		meshInfo.AABBMin = mesh.meshInfo.AABBMin;
+		meshInfo.AABBMax = mesh.meshInfo.AABBMax;
 		for (const Meshlet& meshlet : mesh.meshlet)
 		{
 			// MeshletMetaData
 			MeshletInfo meshletInfo{};
 			meshletInfo.meshID = meshInfo.meshID;
-			meshletInfo.AABBMin = glm::vec4(meshlet.meshletInfo.AABBMin, 0.0f);
-			meshletInfo.AABBMax = glm::vec4(meshlet.meshletInfo.AABBMax, 0.0f);
+			meshletInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+			meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 			meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 			meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
 			meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
