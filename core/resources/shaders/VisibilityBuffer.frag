@@ -1,14 +1,77 @@
 #version 450
-// #extension GL_EXT_debug_printf : enable
+#extension GL_EXT_debug_printf : enable
 
 layout (location = 0) in VertexInput {
   vec4 color;
+  flat uint vbInfoIndex;
 } vertexInput;
 
 layout(location = 0) out vec4 outFragColor;
 
+// ハッシュ関数（uint版）
+uint hash(uint x) {
+    // 32-bit integer hash based on PCG
+    x = x * 747796405u + 2891336453u;
+    x = ((x >> ((x >> 28u) + 4u)) ^ x) * 277803737u;
+    return (x >> 22u) ^ x;
+}
+
+// uintのシード値を受け取り vec4 カラーを返す関数
+vec4 randomColor_uint(uint seed)
+{
+    // 1. シードをハッシュ化してランダム性を高める
+    uint hash_r = hash(seed);
+    uint hash_g = hash(seed + 1u); // +1u でシードを変えて独立した色成分を生成
+    uint hash_b = hash(seed + 2u);
+
+    // 2. 32-bit uint を 0.0 ~ 1.0 の float に変換する
+    //    uint の最大値 (0xFFFFFFFFu) で割ることで正規化
+    //    (注: `uintBitsToFloat` の方が高速ですが、色に変換するには正規化が必要です)
+    const float max_uint = float(0xFFFFFFFFu);
+    
+    float r = float(hash_r) / max_uint;
+    float g = float(hash_g) / max_uint;
+    float b = float(hash_b) / max_uint;
+
+    return vec4(r, g, b, 1.0);
+}
+
 void main()
 {
-  // debugPrintfEXT("Hello from frag shader!\n");
-	outFragColor = vertexInput.color;
+  // 16bitを超えないように
+  if ((vertexInput.vbInfoIndex > 65535) || (gl_PrimitiveID > 65535))
+  {
+    return;
+  }
+  uint vbDispatchInfoIndex16 = vertexInput.vbInfoIndex & 0xFFFFu;
+  uint prim16 = gl_PrimitiveID & 0xFFFFu;
+  uint outVisibilityBuffer = (vbDispatchInfoIndex16 << 16) | prim16;
+
+  // float ranFloat = uintBitsToFloat(outVisibilityBuffer);
+  if (vertexInput.vbInfoIndex > 0)
+  {
+    debugPrintfEXT("vertexInput.vbInfoIndex: %d gl_PrimitiveID: %d\nvbDispatchInfoIndex16: %d prim16: %d\noutVisibilityBuffer: %d", 
+    vertexInput.vbInfoIndex, gl_PrimitiveID, vbDispatchInfoIndex16, prim16, outVisibilityBuffer);
+  }
+
+	outFragColor = randomColor_uint(outVisibilityBuffer);
 }
+
+// #version 450
+// #extension GL_EXT_debug_printf : enable
+
+// layout (location = 0) in VertexInput {
+//   vec4 color;
+//   flat uint vbInfoIndex;
+// } vertexInput;
+
+// layout(location = 0) out vec4 outFragColor;
+
+// void main()
+// {
+//   if (vertexInput.vbInfoIndex > 0)
+//   {
+//     debugPrintfEXT("vbInfoIndex: %d", vertexInput.vbInfoIndex);
+//   }
+// 	outFragColor = vertexInput.color;
+// }

@@ -19,8 +19,10 @@
 layout(local_size_x = 64) in;
 layout(triangles, max_vertices = 64, max_primitives = 124) out;
 
+// layout(location = 0) flat out uint outVBDispatchInfoIndex[];
 layout(location = 0) out VertexOutput {
 	vec4 color;
+    flat uint vbInfoIndex;
 } vertexOutput[];
 
 struct Payload {
@@ -29,6 +31,15 @@ struct Payload {
 taskPayloadSharedEXT Payload payload;
 
 shared uint primitiveCount;
+
+vec4 randomColor(float seed)
+{
+    // ハッシュ関数的に疑似乱数を生成
+    float r = fract(sin(seed * 12.9898) * 43758.5453);
+    float g = fract(sin((seed + 1.0) * 78.233) * 43758.5453);
+    float b = fract(sin((seed + 2.0) * 39.425) * 43758.5453);
+    return vec4(r, g, b, 1.0);
+}
 
 void main()
 {
@@ -69,8 +80,10 @@ void main()
     //  meshletVertexDataOffset, meshletVertexCount);
 
     // スレッド分割forの準備
-    uint stride = gl_WorkGroupSize.x * gl_NumWorkGroups.x;
-    uint idx = gl_LocalInvocationIndex + gl_WorkGroupSize.x * gl_WorkGroupID.x;
+    // uint stride = gl_WorkGroupSize.x * gl_NumWorkGroups.x;
+    // uint idx = gl_LocalInvocationIndex + gl_WorkGroupSize.x * gl_WorkGroupID.x;
+    uint stride = gl_WorkGroupSize.x; 
+    uint idx = gl_LocalInvocationIndex;
 
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletVertexCount; i += stride) 
@@ -80,14 +93,17 @@ void main()
         vec4 worldPos = objectInfo.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = cameraData.projection * cameraData.view * worldPos;
 
-        vertexOutput[i].color = vec4(1.0, 0.0, 0.0, 1.0);
+        // outVBDispatchInfoIndex[i] = payload.vbDispatchInfoIndex;
+        vertexOutput[i].color = randomColor(payload.vbDispatchInfoIndex);
+        vertexOutput[i].vbInfoIndex = payload.vbDispatchInfoIndex;
+        // debugPrintfEXT("vertexOutput[%d].vbInfoIndex: %d", i, vertexOutput[i].vbInfoIndex);
 
-        debugPrintfEXT("stride: %d idx: %d meshletVertexCount: %d\nmeshID: %d meshletID: %d\ni: %d, UniqueIndex: %d\nx: %f y: %f z: %f\n[world] x: %f y: %f z: %f",
-         stride, idx, meshletVertexCount,
-         meshID, meshletID,
-         i, index,
-         v.position.x, v.position.y, v.position.z,
-         worldPos.x, worldPos.y, worldPos.z);
+        // debugPrintfEXT("stride: %d idx: %d meshletVertexCount: %d\nmeshID: %d meshletID: %d\ni: %d, UniqueIndex: %d\nx: %f y: %f z: %f\n[world] x: %f y: %f z: %f",
+        //  stride, idx, meshletVertexCount,
+        //  meshID, meshletID,
+        //  i, index,
+        //  v.position.x, v.position.y, v.position.z,
+        //  worldPos.x, worldPos.y, worldPos.z);
     }
 
     // プリミティブ処理：同様に分割＋ループで処理
@@ -115,6 +131,7 @@ void main()
             gl_PrimitiveTriangleIndicesEXT[outIndex] = index;
         }
     }
+    barrier();
 
     // 0番目のスレッドのみ実行する内容
     if (gl_LocalInvocationIndex == 0) 

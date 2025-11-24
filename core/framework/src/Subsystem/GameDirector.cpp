@@ -40,18 +40,18 @@ namespace MyosotisFW::System::GameDirector {
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
-		//{
-		//	MObject_ptr newObject = m_objectRegistry->CreateNewObject();
-		//	newObject->SetPos(glm::vec4(0.0f));
-		//	newObject->SetRot(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-		//	newObject->SetScale(glm::vec4(5.0f));
+		{
+			MObject_ptr newObject = m_objectRegistry->CreateNewObject();
+			newObject->SetPos(glm::vec4(-5.0f));
+			newObject->SetRot(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+			newObject->SetScale(glm::vec4(5.0f));
 
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh));
-		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Plane);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
+			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
+				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh));
+			component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Plane);
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
 
 		//{
 		//	MObject_ptr newObject = CreateMObjectPointer();

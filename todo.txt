@@ -52,9 +52,13 @@
 [OK] Structsフォルダ
 [OK] ・ObjectInfo.glsl
 [OK] ・Transform.glsl
-WorkListの準備
-・InstanceID(ObjectID)
-・Meshlet
+[OK] VBDispatchInfoの準備
+[OK] ・ObjectID
+[OK] ・Meshlet
+・VisibilityBufferの出力画像を用意
+・VisibilityBufferの出力
+
+描画する時は各Objectのm_vbDispatchInfoを取り出して、objectIDをセットして使う!!
 
 StageObjectの親子関係
 Visibility Buffer
