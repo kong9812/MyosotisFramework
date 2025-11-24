@@ -69,8 +69,8 @@ void main()
     //  meshletVertexDataOffset, meshletVertexCount);
 
     // スレッド分割forの準備
-    uint stride = gl_WorkGroupSize.x;
-    uint idx = gl_LocalInvocationIndex;
+    uint stride = gl_WorkGroupSize.x * gl_NumWorkGroups.x;
+    uint idx = gl_LocalInvocationIndex + gl_WorkGroupSize.x * gl_WorkGroupID.x;
 
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletVertexCount; i += stride) 
@@ -82,7 +82,8 @@ void main()
 
         vertexOutput[i].color = vec4(1.0, 0.0, 0.0, 1.0);
 
-        debugPrintfEXT("meshID: %d meshletID: %d\ni: %d, UniqueIndex: %d\nx: %f y: %f z: %f\n[world] x: %f y: %f z: %f",
+        debugPrintfEXT("stride: %d idx: %d meshletVertexCount: %d\nmeshID: %d meshletID: %d\ni: %d, UniqueIndex: %d\nx: %f y: %f z: %f\n[world] x: %f y: %f z: %f",
+         stride, idx, meshletVertexCount,
          meshID, meshletID,
          i, index,
          v.position.x, v.position.y, v.position.z,

@@ -9,12 +9,39 @@
 #include "Descriptors/MeshInfo.glsl"
 #include "Descriptors/MeshletInfo.glsl"
 
+#include "Loader/Sampler2DLoader.glsl"
+
+#include "Culling/FrustumCulling.glsl"
+
 layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushConstant {
+    uint hiZSamplerID;
+    uint checkFalseNegativeMesh;
+};
 
 struct Payload {
     uint vbDispatchInfoIndex;
 };
 taskPayloadSharedEXT Payload payload;
+
+// memo
+// 複雑になってきたので、いったんわかりやすさを優先にするため、
+// 処理を再分割し無駄のifも多く含むが、いったん良しとする。
+// memo
+shared vec2 sMinUV;
+shared vec2 sMaxUV;
+shared float sMinDepth;
+shared int sPrevDepthMax_u;
+shared float sPrevDepthMax;
+
+// 8頂点の一時置き場（共有配列）
+shared vec2  sLocalUV[8];
+shared float sLocalDepth[8];
+
+// 判定結果
+shared bool sOccCullingVisible;
+shared bool sFrustumVisible;
 
 void main()
 {
@@ -33,12 +60,169 @@ void main()
     uint meshletID = meshInfo.meshletInfoOffset + dispactchInfo.meshletID;
     MeshletInfo meshletInfo = MeshletInfo_GetMeshletInfo(meshletID);
 
+    // OBBData
+    OBBData meshletOBBData = FrustumCulling_CreateOBBData(meshletInfo.AABBMin.xyz, meshletInfo.AABBMax.xyz, objectInfo.transform.pos.xyz, objectInfo.transform.rot.xyz, objectInfo.transform.scale.xyz);
+
+    // CameraInfo (MainCameraData)
+    CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
+
+    //=============================================================================================================================================================================
+    // 1. フラスタムカリング
+    //=============================================================================================================================================================================
+    if (gl_LocalInvocationIndex == 0) 
+    {
+        sFrustumVisible = FrustumCulling_IsVisible(cameraData.frustumPlanes, meshletOBBData);
+    }
+    barrier();
+    if (!sFrustumVisible) return;
+
+    //=============================================================================================================================================================================
+    // 2. 2PhaseOccCulling    
+    //=============================================================================================================================================================================
+    // forループの際にスレッドそれぞれのインクリメント値
+    const uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+    // 初期(フェーズ1)のmipマップ指定
+    int mipLevel = 4;
+    // if (checkFalseNegativeMesh == 1)
+    // {
+    //     if (gl_GlobalInvocationID.x == 0)
+    //     {
+    //         debugPrintfEXT("FalseNegativeSize: %d", VertexDataLoader_GetFalseNegativeSize());
+    //     }
+        
+    //     // このスレッドIDオブジェクトはフェーズ1で処理できた
+    //     if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
+
+    //     // オブジェクトIndexを取り出す
+    //     standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
+
+    //     mipLevel = 0;
+    // }
+
+    // 初期化 (0番目のみ実行する)
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sMinUV = vec2( 1.0);    // [スクリーンスペース] 矩形の範囲 min
+        sMaxUV = vec2(-1.0);    // [スクリーンスペース] 矩形の範囲 max
+        sMinDepth = 1.0;        // 矩形の最小深度
+        sPrevDepthMax_u = 0;    // depthBufferの最大深度
+        sPrevDepthMax = 0.0;
+        sOccCullingVisible = false;
+    }
+    barrier();
+
+    // AABBの8頂点をスクリーン座標に投影し、矩形を作る (最初の8スレッドのみ計算)
+    // ローカルバッファ
+    if (gl_LocalInvocationIndex < 8)
+    {    
+        vec3 aabbMin = meshletInfo.AABBMin.xyz;
+        vec3 aabbMax = meshletInfo.AABBMax.xyz;
+
+        vec3 corners[8] = vec3[](
+            vec3(aabbMin.x, aabbMin.y, aabbMin.z),   // - - -
+            vec3(aabbMax.x, aabbMax.y, aabbMax.z),   // + + +
+            vec3(aabbMax.x, aabbMin.y, aabbMin.z),   // + - -
+            vec3(aabbMin.x, aabbMax.y, aabbMin.z),   // - + -
+            vec3(aabbMin.x, aabbMin.y, aabbMax.z),   // - - +
+            vec3(aabbMin.x, aabbMax.y, aabbMax.z),   // - + +
+            vec3(aabbMax.x, aabbMin.y, aabbMax.z),   // + - +
+            vec3(aabbMax.x, aabbMax.y, aabbMin.z)    // + + -
+        );
+        vec4 clip = cameraData.projection * cameraData.view * (objectInfo.model * vec4(corners[gl_LocalInvocationIndex], 1.0));
+        vec3 ndc = clip.xyz / clip.w;   // クリップ座標 -> NDC [-1~1]
+        vec2 uv = ndc.xy * 0.5 + 0.5;   // NDC座標 -> UV [0~1]
+        sLocalUV[gl_LocalInvocationIndex] = uv;        
+        sLocalDepth[gl_LocalInvocationIndex] = ndc.z;
+    }
+    barrier();
+
+    // atomicMinとatomicMaxを使わずthread==0で処理してもらう
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sMinUV = sLocalUV[0];
+        sMaxUV = sLocalUV[0];
+        sMinDepth = sLocalDepth[0];
+        for (uint i = 1; i < 8; i++)
+        {
+            sMinUV.x = min(sMinUV.x, sLocalUV[i].x);
+            sMinUV.y = min(sMinUV.y, sLocalUV[i].y);
+            sMaxUV.x = max(sMaxUV.x, sLocalUV[i].x);
+            sMaxUV.y = max(sMaxUV.y, sLocalUV[i].y);
+            sMinDepth = min(sMinDepth, sLocalDepth[i]);
+        }
+        sMinUV = clamp(sMinUV, vec2(0.0), vec2(1.0));
+        sMaxUV = clamp(sMaxUV, vec2(0.0), vec2(1.0));
+    }
+    barrier();
+
+    // ここからは一番重く、スレッド分割が期待できるところ
+    // デップステクスチャのサイズ (mip指定)
+    ivec2 mipTexSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, mipLevel);
+
+    // depth画像のテクセル位置に変換
+    ivec2 minTexel = ivec2(sMinUV * vec2(mipTexSize));
+    ivec2 maxTexel = ivec2(sMaxUV * vec2(mipTexSize));
+
+    // 制限
+    minTexel = max(minTexel, ivec2(0));
+    maxTexel = min(maxTexel, mipTexSize - ivec2(1));
+
+    // AABB矩形が0なら見える (Todo.↓は意味ない!!!!)
+    if (maxTexel.x <= minTexel.x || maxTexel.y <= minTexel.y) 
+    {
+        if (gl_LocalInvocationIndex == 0) {
+            sOccCullingVisible = true;
+        }
+    }
+    barrier();
+
+    // テクセル数
+    uint width  = uint(maxTexel.x - minTexel.x + 1);
+    uint height = uint(maxTexel.y - minTexel.y + 1);
+    uint totalSize = width * height;
+
+    // ローカルスレッドの最大
+    float localMax = -1.0;
+
+    // いよいよfor
+    for (uint i = gl_LocalInvocationIndex; i < totalSize; i += stride)
+    {
+        uint ix = i % width;  // x (eg: 10*20の画像なら 10~19の時 0~9が出てくる、x軸の位置)
+        uint iy = i / width;  // y (eg: 10*20の画像なら 12の時 1出てくる、y軸の位置)
+        ivec2 tc = ivec2(int(ix) + minTexel.x, int(iy) + minTexel.y);   // depthにあるAABBの位置の左上位置から計算
+        float d = texelFetch(Sampler2D[hiZSamplerID], tc, mipLevel).r;
+        localMax = max(localMax, d);
+    }
+
+    int localU = (localMax < 0.0) ? 0 : floatBitsToInt(localMax);
+    atomicMax(sPrevDepthMax_u, localU);
+    barrier();
+
+    // 判定
+    if (gl_LocalInvocationIndex == 0)
+    {
+        sPrevDepthMax = intBitsToFloat(sPrevDepthMax_u);
+        sOccCullingVisible = (sMinDepth <= sPrevDepthMax);        
+    }
+    barrier();
+
+    // フェーズ2のチャンスを与える
+    if (!sOccCullingVisible)
+    {
+        // if (gl_LocalInvocationIndex == 0 && checkFalseNegativeMesh == 0)
+        // {
+        //     uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
+        //     falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
+        //     debugPrintfEXT("add falseNegativeStandardSSBOIndex[%d]: %d", falseNegativeIndex, falseNegativeStandardSSBOIndex[falseNegativeIndex]);
+        // }
+        return;
+    }
+    // データ整合性を保つ
+    barrier();
+
     // debugPrintfEXT("WorkGroupID: %d GlobalID: %d LocalID: %d\nobjectID: %d meshID: %d meshletID: %d",
     //  gl_WorkGroupID.x, gl_GlobalInvocationID.x, gl_LocalInvocationIndex, 
     //  objectID, meshID, meshletID);
-
-    // // CameraInfo (MainCameraData)
-    // CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
 
     // payload.vbDispatchInfoIndex = gl_GlobalInvocationID.x;
     // EmitMeshTasksEXT(localMeshletCount, 1, 1);

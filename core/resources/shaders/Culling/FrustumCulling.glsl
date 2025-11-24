@@ -1,9 +1,5 @@
 #ifndef FRUSTUMCULLING
 #define FRUSTUMCULLING
-#extension GL_EXT_nonuniform_qualifier : require
-#extension GL_EXT_debug_printf : enable
-
-#include "../Loader/MainCameraDataLoader.glsl"
 
 struct OBBData {
     vec4 center;
@@ -47,32 +43,6 @@ mat3 FrustumCulling_RotateZ(float angle) {
     ));
 }
 
-SphereData FrustumCulling_CreateBoundingSphere(vec3 aabbMin, vec3 aabbMax, vec3 position, vec3 scale) 
-{
-    // ローカル空間のAABBをワールド空間にスケール＆移動
-    vec3 worldAABBMin = aabbMin * scale + position;
-    vec3 worldAABBMax = aabbMax * scale + position;
-
-    // ローカル空間での中心と半径
-    vec3 center = (worldAABBMin + worldAABBMax) * 0.5;
-    float radius = length(worldAABBMax - center); // 半径 = AABBの中心からの距離
-
-    SphereData result;
-    result.center = center;
-    result.radius = radius;
-
-    // debugPrintfEXT(
-    //     "aabbMin: %f %f %f aabbMax: %f %f %f position: %f %f %f scale: %f %f %f\ncenter: %f %f %f radius: %f",
-    //     aabbMin.x, aabbMin.y, aabbMin.z,
-    //     aabbMax.x, aabbMax.y, aabbMax.z,
-    //     position.x, position.y, position.z,
-    //     scale.x, scale.y, scale.z,
-    //     center.x, center.y, center.z, radius
-    // );
-
-    return result;
-}
-
 OBBData FrustumCulling_CreateOBBData(vec3 aabbMin, vec3 aabbMax, vec3 position, vec3 rotation, vec3 scale)
 {
     OBBData obbData;
@@ -97,18 +67,16 @@ OBBData FrustumCulling_CreateOBBData(vec3 aabbMin, vec3 aabbMax, vec3 position, 
     obbData.axisZ = vec4(rotMat * vec3(0.0, 0.0, 1.0), scaleExtent.z);
 
     // 中心点：ローカル空間での中心 → スケール → 回転 → 平行移動
-    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     obbData.center = vec4(position + rotMat * (centerLocal * scale), 0.0);
 
     return obbData;
 }
 
-bool FrustumCulling_IsVisible(OBBData obbData)
+bool FrustumCulling_IsVisible(vec4 frustumPlanes[6], OBBData obbData)
 {
-    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
     for (int i = 0; i < 6; i++) 
     {
-        vec4 plane = cameraData.frustumPlanes[i];
+        vec4 plane = frustumPlanes[i];
         // OBB中心から平面までの距離
         float d = dot(plane.xyz, obbData.center.xyz) + plane.w;
         // OBB各軸を平面法線に投影した長さの合計が半径
@@ -117,21 +85,6 @@ bool FrustumCulling_IsVisible(OBBData obbData)
             abs(dot(plane.xyz, obbData.axisY.xyz)) * obbData.axisY.w +
             abs(dot(plane.xyz, obbData.axisZ.xyz)) * obbData.axisZ.w;
         if ((d + r < 0.0)) 
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool FrustumCulling_IsVisible_Sphere(SphereData sphereData)
-{
-    MainCameraData cameraData = MainCameraDataLoader_GetMainCameraData();
-    for (int i = 0; i < 6; i++) 
-    {
-        vec4 plane = cameraData.frustumPlanes[i];
-        float d = dot(plane.xyz, sphereData.center.xyz) + plane.w;
-        if ((d + sphereData.radius) < 0.0) 
         {
             return false;
         }
