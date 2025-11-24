@@ -2,7 +2,6 @@
 #pragma once
 #include "HiZDepthComputePipeline.h"
 #include "RenderDevice.h"
-#include "RenderDescriptors.h"
 #include "RenderResources.h"
 #include "AppInfo.h"
 

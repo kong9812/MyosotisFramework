@@ -12,8 +12,8 @@
 
 #include "MeshShaderRenderPass.h"
 
-#include "MeshShaderRenderPhase1Pipeline.h"
-#include "MeshShaderRenderPhase2Pipeline.h"
+#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferRenderPhase2Pipeline.h"
 
 #include "AppInfo.h"
 
@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 		//m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_editorRenderPass->GetRenderPass(), m_swapchain);
 
 		// EditorCameraの初期化
-		m_mainCamera = Camera::CreateEditorCameraPointer();
+		m_mainCamera = Camera::CreateEditorCameraPointer(0);
 		m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
 	}
 
@@ -126,7 +126,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateEditorRenderResourcesPointer(m_device, m_descriptors);
+		m_resources = CreateEditorRenderResourcesPointer(m_device);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
@@ -138,10 +138,14 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
-		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)

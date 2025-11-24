@@ -3,7 +3,6 @@
 #include "RenderDevice.h"
 #include "VK_Loader.h"
 #include "RenderQueue.h"
-#include "RenderDescriptors.h"
 #include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render

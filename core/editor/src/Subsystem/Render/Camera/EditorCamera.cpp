@@ -7,7 +7,7 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	EditorCamera::EditorCamera() : CameraBase()
+	EditorCamera::EditorCamera(const uint32_t objectID) : CameraBase(objectID)
 	{
 		m_lastMousePos = glm::vec3(0.0f);
 		m_name = "EditorCamera";

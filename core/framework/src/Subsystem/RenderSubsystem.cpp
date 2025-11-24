@@ -10,7 +10,6 @@
 #include "RenderDevice.h"
 #include "RenderSwapchain.h"
 #include "RenderResources.h"
-#include "RenderDescriptors.h"
 
 #include "DescriptorPool.h"
 #include "SceneInfoDescriptorSet.h"
