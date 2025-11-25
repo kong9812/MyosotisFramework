@@ -6,7 +6,7 @@
 
 namespace MyosotisFW::System::ComponentFactory
 {
-	ComponentBase_ptr CreateComponent(const uint32_t objectID, const ComponentType& objectType)
+	ComponentBase_ptr CreateComponent(const uint32_t objectID, const ComponentType& objectType, const std::function<void(void)>& meshChangedCallback)
 	{
 		ComponentBase_ptr object{};
 		switch (objectType)
@@ -18,12 +18,12 @@ namespace MyosotisFW::System::ComponentFactory
 		break;
 		case ComponentType::PrimitiveGeometryMesh:
 		{
-			object = Render::CreatePrimitiveGeometryPointer(objectID);
+			object = Render::CreatePrimitiveGeometryPointer(objectID, meshChangedCallback);
 		}
 		break;
 		case ComponentType::CustomMesh:
 		{
-			object = Render::CreateCustomMeshPointer(objectID);
+			object = Render::CreateCustomMeshPointer(objectID, meshChangedCallback);
 		}
 		break;
 		default:

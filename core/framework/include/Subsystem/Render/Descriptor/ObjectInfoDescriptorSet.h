@@ -22,9 +22,7 @@ namespace MyosotisFW::System::Render
 			Count
 		};
 
-		void AddObjectInfo(const ObjectInfo& objectInfo);
-		void AddVBDispatchInfo(std::vector<VBDispatchInfo> vbDispatchInfo);
-		void DescriptorSetRebuildRequest();
+		void AddObjectInfo(const ObjectInfo& objectInfo, std::vector<VBDispatchInfo> vbDispatchInfo);
 		void Update() override;
 
 	private:

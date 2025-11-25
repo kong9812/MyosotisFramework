@@ -13,6 +13,21 @@ namespace MyosotisFW
 {
 	using namespace System::Render;
 
+	const uint32_t MObject::GetMeshCount() const
+	{
+		auto it = std::find_if(m_components.begin(), m_components.end(),
+			[&](const ComponentBase_ptr& existingComponent)
+			{
+				return existingComponent->IsStaticMesh();
+			});
+		if (it != m_components.end())
+		{
+			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
+			return staticMesh->GetMeshCount();
+		}
+		return 0;
+	}
+
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
 	{
 		auto it = std::find_if(m_components.begin(), m_components.end(),
@@ -29,7 +44,7 @@ namespace MyosotisFW
 		return {};
 	}
 
-	void MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
+	bool MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
 		for (ComponentBase_ptr& component : m_components)
 		{
@@ -45,11 +60,17 @@ namespace MyosotisFW
 			child->Update(updateData, mainCamera);
 		}
 
-		m_objectInfo->model = glm::translate(glm::mat4(1.0f), glm::vec3(m_objectInfo->transform.pos));
-		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_objectInfo->model = glm::scale(m_objectInfo->model, glm::vec3(m_objectInfo->transform.scale));
+		if (m_dirty)
+		{
+			m_objectInfo->model = glm::translate(glm::mat4(1.0f), glm::vec3(m_objectInfo->transform.pos));
+			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			m_objectInfo->model = glm::scale(m_objectInfo->model, glm::vec3(m_objectInfo->transform.scale));
+			m_dirty = false;
+			return true;
+		}
+		return false;
 	}
 
 	// カメラ持つ？
@@ -192,7 +213,7 @@ namespace MyosotisFW
 				auto typeID = comp["typeID"].GetString();
 				auto optType = uuids::uuid::from_string(typeID);
 				ComponentType type = findComponentTypeFromTypeID(optType.value());
-				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type);
+				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type, m_meshChangedCallback);
 				component->Deserialize(comp);
 				m_components.push_back(component);
 			}

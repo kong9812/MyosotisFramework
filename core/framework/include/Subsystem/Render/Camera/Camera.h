@@ -36,6 +36,8 @@ namespace MyosotisFW::System::Render::Camera
 
 		virtual void Update(const UpdateData& updateData) {}
 
+		bool IsMoved() { return m_isMoved; }
+
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;
 	protected:
@@ -63,6 +65,8 @@ namespace MyosotisFW::System::Render::Camera
 		float m_aspectRadio;
 		// 画面サイズ
 		glm::vec2 m_screenSize;
+
+		bool m_isMoved;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(CameraBase);
 	OBJECT_CAST_FUNCTION(CameraBase);

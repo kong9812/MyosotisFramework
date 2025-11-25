@@ -9,7 +9,7 @@ namespace MyosotisFW::System::Render
 	class PrimitiveGeometry : public StaticMesh
 	{
 	public:
-		PrimitiveGeometry(const uint32_t objectID);
+		PrimitiveGeometry(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~PrimitiveGeometry() {}
 
 		const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }

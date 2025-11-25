@@ -10,6 +10,8 @@ namespace MyosotisFW
 {
 	class MObject;
 	TYPEDEF_SHARED_PTR_FWD(MObject);
+	class MObjectRegistry;
+	TYPEDEF_SHARED_PTR_FWD(MObjectRegistry);
 
 	namespace System::Render
 	{
@@ -120,6 +122,7 @@ namespace MyosotisFW::System::Render
 		void RegisterObject(const MObject_ptr& object);
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
+		MObjectRegistry_ptr GetMObjectRegistry() { return m_objectRegistry; }
 
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
@@ -159,6 +162,7 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
+		MObjectRegistry_ptr m_objectRegistry;
 
 		DescriptorPool_ptr m_descriptorPool;
 		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
@@ -205,7 +209,7 @@ namespace MyosotisFW::System::Render
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
 
 	protected:
-		uint32_t m_meshletCount;
+		uint32_t m_meshCount;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

@@ -25,21 +25,12 @@ namespace MyosotisFW::System::Render
 	}
 
 	// 毎フレーム更新!
-	void ObjectInfoDescriptorSet::AddObjectInfo(const ObjectInfo& objectInfo)
+	void ObjectInfoDescriptorSet::AddObjectInfo(const ObjectInfo& objectInfo, std::vector<VBDispatchInfo> vbDispatchInfo)
 	{
 		m_objectInfo.push_back(objectInfo);
-	}
-
-	void ObjectInfoDescriptorSet::AddVBDispatchInfo(std::vector<VBDispatchInfo> vbDispatchInfo)
-	{
 		m_vbDispatchInfo.insert(m_vbDispatchInfo.end(), vbDispatchInfo.begin(), vbDispatchInfo.end());
-	}
-
-	// オブジェクト追加/削除の時に呼ぶ!
-	void ObjectInfoDescriptorSet::DescriptorSetRebuildRequest()
-	{
-		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].rebuild = true;
-		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].rebuild = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].update = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update = true;
 	}
 
 	void ObjectInfoDescriptorSet::Update()
@@ -64,21 +55,31 @@ namespace MyosotisFW::System::Render
 
 	void ObjectInfoDescriptorSet::updateObjectInfo()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_objectInfo.data(), sizeof(ObjectInfo) * m_objectInfo.size());
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].update)
+		{
+			// 可変部分
+			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].buffer.allocationInfo.pMappedData);
+			memcpy(dst, m_objectInfo.data(), sizeof(ObjectInfo) * m_objectInfo.size());
 
-		// 一時データクリア
-		m_objectInfo.clear();
+			// 一時データクリア
+			m_objectInfo.clear();
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].update = false;
+		}
 	}
 
 	void ObjectInfoDescriptorSet::updateVBDispatchInfo()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_vbDispatchInfo.data(), sizeof(VBDispatchInfo) * m_vbDispatchInfo.size());
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update)
+		{
+			// 可変部分
+			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].buffer.allocationInfo.pMappedData);
+			memcpy(dst, m_vbDispatchInfo.data(), sizeof(VBDispatchInfo) * m_vbDispatchInfo.size());
 
-		// 一時データクリア
-		m_vbDispatchInfo.clear();
+			// 一時データクリア
+			m_vbDispatchInfo.clear();
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update = false;
+		}
 	}
 }

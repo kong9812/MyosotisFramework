@@ -10,6 +10,7 @@
 #include "RenderDevice.h"
 #include "RenderSwapchain.h"
 #include "RenderResources.h"
+#include "MObjectRegistry.h"
 
 #include "DescriptorPool.h"
 #include "SceneInfoDescriptorSet.h"
@@ -100,6 +101,9 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
+		// MObject Registry
+		m_objectRegistry = CreateMObjectRegistryPointer();
+
 		// Vulkan Instance
 		initializeRenderDevice(instance, surface);
 
@@ -139,31 +143,50 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Update(const UpdateData& updateData)
 	{
-		m_meshletCount = 0;
-
 		if (m_mainCamera)
 		{
 			m_mainCamera->Update(updateData);
 		}
 
-		for (MObject_ptr& object : m_objects)
+		const bool meshChanged = m_objectRegistry->IsMeshChanged();
+		const bool transformChanged = m_objectRegistry->IsTransformChanged();
+
+		if (meshChanged || transformChanged)
 		{
-			object->Update(updateData, m_mainCamera);
-			m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo());
-
-			std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
-			m_objectInfoDescriptorSet->AddVBDispatchInfo(vbDispatchInfo);
-
-			for (const VBDispatchInfo& info : vbDispatchInfo)
+			if (meshChanged)
 			{
-				MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(info.meshID);
-				m_meshletCount += meshInfo.meshletCount;
+				// Reset mesh count
+				m_meshCount = 0;
 			}
-		}
 
+			for (MObject_ptr& object : m_objects)
+			{
+				if (!object->Update(updateData, m_mainCamera))
+				{
+					continue;
+				}
+
+				if (!meshChanged)
+				{
+					continue;
+				}
+
+				std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
+				m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);
+				for (const VBDispatchInfo& info : vbDispatchInfo)
+				{
+					MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(info.meshID);
+				}
+				m_meshCount += object->GetMeshCount();
+			}
+			m_objectInfoDescriptorSet->Update();
+			if (meshChanged)
+			{
+				m_meshInfoDescriptorSet->Update();
+			}
+			m_objectRegistry->ResetChangeFlags();
+		}
 		m_sceneInfoDescriptorSet->Update();
-		m_objectInfoDescriptorSet->Update();
-		m_meshInfoDescriptorSet->Update();
 		m_textureDescriptorSet->Update();
 	}
 
@@ -214,11 +237,11 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshletCount);
+		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshletCount);
+		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 

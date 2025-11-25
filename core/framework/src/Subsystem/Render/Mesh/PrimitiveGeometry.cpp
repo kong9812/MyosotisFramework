@@ -10,7 +10,7 @@
 
 namespace MyosotisFW::System::Render
 {
-	PrimitiveGeometry::PrimitiveGeometry(const uint32_t objectID) : StaticMesh(objectID),
+	PrimitiveGeometry::PrimitiveGeometry(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
 		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::Quad)
 	{
 		m_name = "PrimitiveGeometry";
@@ -54,11 +54,10 @@ namespace MyosotisFW::System::Render
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
 		Mesh mesh = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
 		uint32_t meshID = m_meshInfoDescriptorSet->AddPrimitiveGeometry(m_primitiveGeometryShape, mesh);
-
-		uint32_t meshCount = 1;
+		m_meshCount = 1;
 
 		// VBDispatchInfoの作成
-		for (uint32_t i = 0; i < meshCount; i++)
+		for (uint32_t i = 0; i < m_meshCount; i++)
 		{
 			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID);
 			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
@@ -70,42 +69,5 @@ namespace MyosotisFW::System::Render
 				m_vbDispatchInfo.push_back(vbDispatchInfo);
 			}
 		}
-
-		bool firstDataForAABB = true;
-
-		// 一時対応
-		std::vector<uint32_t> index{};
-		for (const Meshlet& meshlet : mesh.meshlet)
-		{
-			index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
-		}
-
-		{// aabb
-			if (firstDataForAABB)
-			{
-				m_aabbMin.x = mesh.meshInfo.AABBMin.x;
-				m_aabbMin.y = mesh.meshInfo.AABBMin.y;
-				m_aabbMin.z = mesh.meshInfo.AABBMin.z;
-				m_aabbMax.x = mesh.meshInfo.AABBMax.x;
-				m_aabbMax.y = mesh.meshInfo.AABBMax.y;
-				m_aabbMax.z = mesh.meshInfo.AABBMax.z;
-			}
-			else
-			{
-				m_aabbMin.x = m_aabbMin.x < mesh.meshInfo.AABBMin.x ? m_aabbMin.x : mesh.meshInfo.AABBMin.x;
-				m_aabbMin.y = m_aabbMin.y < mesh.meshInfo.AABBMin.y ? m_aabbMin.y : mesh.meshInfo.AABBMin.y;
-				m_aabbMin.z = m_aabbMin.z < mesh.meshInfo.AABBMin.z ? m_aabbMin.z : mesh.meshInfo.AABBMin.z;
-				m_aabbMax.x = m_aabbMax.x > mesh.meshInfo.AABBMax.x ? m_aabbMax.x : mesh.meshInfo.AABBMax.x;
-				m_aabbMax.y = m_aabbMax.y > mesh.meshInfo.AABBMax.y ? m_aabbMax.y : mesh.meshInfo.AABBMax.y;
-				m_aabbMax.z = m_aabbMax.z > mesh.meshInfo.AABBMax.z ? m_aabbMax.z : mesh.meshInfo.AABBMax.z;
-			}
-		}
-		//// 実験
-		//m_staticMeshShaderObject.useNormalMap = true;
-		//m_staticMeshShaderObject.normalMap = m_resources->GetImage("NormalMap.png");
-
-		//// sampler
-		//VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-		//VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_staticMeshShaderObject.normalMap.sampler));
 	}
 }

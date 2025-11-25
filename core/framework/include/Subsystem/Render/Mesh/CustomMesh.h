@@ -7,7 +7,7 @@ namespace MyosotisFW::System::Render
 	class CustomMesh : public StaticMesh
 	{
 	public:
-		CustomMesh(const uint32_t objectID);
+		CustomMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~CustomMesh() {};
 
 		const ComponentType GetType() const override { return ComponentType::CustomMesh; }

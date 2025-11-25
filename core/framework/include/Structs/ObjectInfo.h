@@ -12,7 +12,7 @@ namespace MyosotisFW
 		uint32_t objectID;
 		uint32_t meshID;
 		uint32_t materialID;
-		uint32_t _p1;
+		uint32_t vbDispatchInfoStartIndex;
 	};
 	TYPEDEF_SHARED_PTR(ObjectInfo);
 }

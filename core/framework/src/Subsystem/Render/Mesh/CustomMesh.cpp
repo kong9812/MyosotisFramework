@@ -4,10 +4,11 @@
 #include "RenderResources.h"
 #include "VK_CreateInfo.h"
 #include "Camera.h"
+#include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
-	CustomMesh::CustomMesh(const uint32_t objectID) : StaticMesh(objectID),
+	CustomMesh::CustomMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
 		m_customMeshInfo({})
 	{
 		m_name = "CustomMesh";
@@ -50,50 +51,20 @@ namespace MyosotisFW::System::Render
 	void CustomMesh::loadAssets()
 	{
 		std::vector<Mesh> meshes = m_resources->GetMesh(m_customMeshInfo.meshName);
+		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry(m_customMeshInfo.meshName, meshes);
+		m_meshCount = static_cast<uint32_t>(meshes.size());
 
-		// 一時対応
-		std::vector<uint32_t> index{};
-		for (const Mesh& mesh : meshes)
+		// VBDispatchInfoの作成
+		for (uint32_t i = 0; i < m_meshCount; i++)
 		{
-			for (const Meshlet& meshlet : mesh.meshlet)
+			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID[i]);
+			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 			{
-				index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
-			}
-		}
-
-		bool firstDataForAABB = true;
-
-		for (int i = 0; i < LOD::Max; i++)
-		{
-			for (uint32_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
-			{
-				std::vector<uint32_t> index{};
-				const Mesh& mesh = meshes[meshIdx];
-				for (const Meshlet& meshlet : mesh.meshlet)
-				{
-					index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
-				}
-
-				{// aabb
-					if (firstDataForAABB)
-					{
-						m_aabbMin.x = meshes[meshIdx].meshInfo.AABBMin.x;
-						m_aabbMin.y = meshes[meshIdx].meshInfo.AABBMin.y;
-						m_aabbMin.z = meshes[meshIdx].meshInfo.AABBMin.z;
-						m_aabbMax.x = meshes[meshIdx].meshInfo.AABBMax.x;
-						m_aabbMax.y = meshes[meshIdx].meshInfo.AABBMax.y;
-						m_aabbMax.z = meshes[meshIdx].meshInfo.AABBMax.z;
-					}
-					else
-					{
-						m_aabbMin.x = m_aabbMin.x < meshes[meshIdx].meshInfo.AABBMin.x ? m_aabbMin.x : meshes[meshIdx].meshInfo.AABBMin.x;
-						m_aabbMin.y = m_aabbMin.y < meshes[meshIdx].meshInfo.AABBMin.y ? m_aabbMin.y : meshes[meshIdx].meshInfo.AABBMin.y;
-						m_aabbMin.z = m_aabbMin.z < meshes[meshIdx].meshInfo.AABBMin.z ? m_aabbMin.z : meshes[meshIdx].meshInfo.AABBMin.z;
-						m_aabbMax.x = m_aabbMax.x > meshes[meshIdx].meshInfo.AABBMax.x ? m_aabbMax.x : meshes[meshIdx].meshInfo.AABBMax.x;
-						m_aabbMax.y = m_aabbMax.y > meshes[meshIdx].meshInfo.AABBMax.y ? m_aabbMax.y : meshes[meshIdx].meshInfo.AABBMax.y;
-						m_aabbMax.z = m_aabbMax.z > meshes[meshIdx].meshInfo.AABBMax.z ? m_aabbMax.z : meshes[meshIdx].meshInfo.AABBMax.z;
-					}
-				}
+				VBDispatchInfo vbDispatchInfo{};
+				vbDispatchInfo.objectID = m_objectID;	// MObjectRegistryでセットされたobjectIDを使う
+				vbDispatchInfo.meshID = meshID[i];			// meshIDそのままを使って、iではない！
+				vbDispatchInfo.meshletID = j;			// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+				m_vbDispatchInfo.push_back(vbDispatchInfo);
 			}
 		}
 	}

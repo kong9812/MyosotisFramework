@@ -153,6 +153,70 @@ namespace MyosotisFW::System::Render
 		return meshInfo.meshID;
 	}
 
+	std::vector<uint32_t> MeshInfoDescriptorSet::AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes)
+	{
+		// データの再利用
+		auto it = m_customMeshIDTable.find(name);
+		if (it != m_customMeshIDTable.end())
+		{
+			return it->second;
+		}
+
+		std::vector<uint32_t> meshIDs{};
+		for (const Mesh& mesh : meshes)
+		{
+			// MeshInfo
+			MeshInfo meshInfo{};
+			meshInfo.meshID = static_cast<uint32_t>(m_meshInfo.size()); // 最後に追加されたMeshのID
+			meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
+			meshInfo.AABBMin = mesh.meshInfo.AABBMin;
+			meshInfo.AABBMax = mesh.meshInfo.AABBMax;
+			for (const Meshlet& meshlet : mesh.meshlet)
+			{
+				// MeshletMetaData
+				MeshletInfo meshletInfo{};
+				meshletInfo.meshID = meshInfo.meshID;
+				meshletInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+				meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
+				meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
+				meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
+				meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+				meshletInfo.unitSize = 13;
+				meshletInfo.vertexDataOffset = m_vertexData.size();
+				meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
+				meshletInfo.primitivesOffset = m_primitivesData.size();
+				m_meshletInfo.push_back(meshletInfo);
+
+				// uniqueIndex
+				m_uniqueIndexData.insert(m_uniqueIndexData.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
+
+				// primitive
+				m_primitivesData.insert(m_primitivesData.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+			}
+
+			// VertexData
+			m_vertexData.insert(m_vertexData.end(), mesh.vertex.begin(), mesh.vertex.end());
+			meshInfo.meshletCount = static_cast<uint32_t>(m_meshletInfo.size()) - meshInfo.meshletInfoOffset; // MeshMetaDataの個数
+			m_meshInfo.push_back(meshInfo);
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].rebuild = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].rebuild = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].rebuild = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].rebuild = true;
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].update = true;
+
+			meshIDs.push_back(meshInfo.meshID);
+		}
+		m_customMeshIDTable.emplace(name, meshIDs);
+		return meshIDs;
+	}
+
 	void MeshInfoDescriptorSet::updateMeshInfo()
 	{
 		// 可変部分

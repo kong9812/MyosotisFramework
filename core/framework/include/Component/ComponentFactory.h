@@ -10,5 +10,5 @@ namespace MyosotisFW {
 
 namespace MyosotisFW::System::ComponentFactory
 {
-	ComponentBase_ptr CreateComponent(const uint32_t objectID, const ComponentType& objectType);
+	ComponentBase_ptr CreateComponent(const uint32_t objectID, const ComponentType& objectType, const std::function<void(void)>& meshChangedCallback);
 }

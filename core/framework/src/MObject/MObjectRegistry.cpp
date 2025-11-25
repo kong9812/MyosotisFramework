@@ -12,6 +12,10 @@ namespace MyosotisFW
 		ObjectInfo_ptr objectInfo = std::make_shared<ObjectInfo>(m_objectInfo.emplace_back());
 		objectInfo->objectID = objectIndex;
 		newObject->SetObjectInfo(objectInfo);
+
+		newObject->SetMeshChangedCallback([this]() { this->MeshChanged(); });
+		newObject->SetTransformChangedCallback([this]() { this->TransformChanged(); });
+
 		return newObject;
 	}
 

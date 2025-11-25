@@ -1,11 +1,7 @@
 #version 450
 #extension GL_EXT_debug_printf : enable
 
-layout (location = 0) in VertexInput {
-  vec4 color;
-  flat uint vbInfoIndex;
-} vertexInput;
-
+layout(location = 0) flat in uint inVBInfoIndex;
 layout(location = 0) out vec4 outFragColor;
 
 // ハッシュ関数（uint版）
@@ -39,39 +35,14 @@ vec4 randomColor_uint(uint seed)
 void main()
 {
   // 16bitを超えないように
-  if ((vertexInput.vbInfoIndex > 65535) || (gl_PrimitiveID > 65535))
+  if ((inVBInfoIndex > 0xFFFFu) || (gl_PrimitiveID > 0xFFFFu))
   {
+    outFragColor = vec4(0.0);
     return;
   }
-  uint vbDispatchInfoIndex16 = vertexInput.vbInfoIndex & 0xFFFFu;
+  uint vbDispatchInfoIndex16 = inVBInfoIndex & 0xFFFFu;
   uint prim16 = gl_PrimitiveID & 0xFFFFu;
   uint outVisibilityBuffer = (vbDispatchInfoIndex16 << 16) | prim16;
 
-  // float ranFloat = uintBitsToFloat(outVisibilityBuffer);
-  if (vertexInput.vbInfoIndex > 0)
-  {
-    debugPrintfEXT("vertexInput.vbInfoIndex: %d gl_PrimitiveID: %d\nvbDispatchInfoIndex16: %d prim16: %d\noutVisibilityBuffer: %d", 
-    vertexInput.vbInfoIndex, gl_PrimitiveID, vbDispatchInfoIndex16, prim16, outVisibilityBuffer);
-  }
-
 	outFragColor = randomColor_uint(outVisibilityBuffer);
 }
-
-// #version 450
-// #extension GL_EXT_debug_printf : enable
-
-// layout (location = 0) in VertexInput {
-//   vec4 color;
-//   flat uint vbInfoIndex;
-// } vertexInput;
-
-// layout(location = 0) out vec4 outFragColor;
-
-// void main()
-// {
-//   if (vertexInput.vbInfoIndex > 0)
-//   {
-//     debugPrintfEXT("vbInfoIndex: %d", vertexInput.vbInfoIndex);
-//   }
-// 	outFragColor = vertexInput.color;
-// }

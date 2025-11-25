@@ -83,21 +83,6 @@ void main()
     const uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
     // 初期(フェーズ1)のmipマップ指定
     int mipLevel = 4;
-    // if (checkFalseNegativeMesh == 1)
-    // {
-    //     if (gl_GlobalInvocationID.x == 0)
-    //     {
-    //         debugPrintfEXT("FalseNegativeSize: %d", VertexDataLoader_GetFalseNegativeSize());
-    //     }
-        
-    //     // このスレッドIDオブジェクトはフェーズ1で処理できた
-    //     if (standardSSBOIndex >= VertexDataLoader_GetFalseNegativeSize()) return;
-
-    //     // オブジェクトIndexを取り出す
-    //     standardSSBOIndex = VertexDataLoader_GetFalseNegativeStandardSSBOIndex(gl_WorkGroupID.x);
-
-    //     mipLevel = 0;
-    // }
 
     // 初期化 (0番目のみ実行する)
     if (gl_LocalInvocationIndex == 0)
@@ -209,31 +194,10 @@ void main()
     // フェーズ2のチャンスを与える
     if (!sOccCullingVisible)
     {
-        // if (gl_LocalInvocationIndex == 0 && checkFalseNegativeMesh == 0)
-        // {
-        //     uint falseNegativeIndex = VertexDataLoader_IncrementFalseNegativeStandardSSBOIndex();
-        //     falseNegativeStandardSSBOIndex[falseNegativeIndex] = standardSSBOIndex;
-        //     debugPrintfEXT("add falseNegativeStandardSSBOIndex[%d]: %d", falseNegativeIndex, falseNegativeStandardSSBOIndex[falseNegativeIndex]);
-        // }
         return;
     }
     // データ整合性を保つ
     barrier();
-
-    // debugPrintfEXT("WorkGroupID: %d GlobalID: %d LocalID: %d\nobjectID: %d meshID: %d meshletID: %d",
-    //  gl_WorkGroupID.x, gl_GlobalInvocationID.x, gl_LocalInvocationIndex, 
-    //  objectID, meshID, meshletID);
-
-    // payload.vbDispatchInfoIndex = gl_GlobalInvocationID.x;
-    // EmitMeshTasksEXT(localMeshletCount, 1, 1);
-
-    // // 3.で見える判定出たMeshletが1枚でもあったらMeshへGO (0番目のみ実行する)
-    // if (localMeshletCount > 0 && gl_LocalInvocationIndex == 0)
-    // {
-    //     payload.vbDispatchInfoIndex = gl_GlobalInvocationID.x;
-    //     EmitMeshTasksEXT(localMeshletCount, 1, 1);
-    // }
-
 
     if (gl_LocalInvocationIndex == 0)
     {

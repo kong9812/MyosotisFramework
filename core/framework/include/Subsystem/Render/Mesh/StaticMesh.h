@@ -35,7 +35,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh(const uint32_t objectID);
+		StaticMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~StaticMesh();
 
 		typedef enum {
@@ -52,14 +52,12 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		std::vector<VBDispatchInfo>& GetVBDispatchInfo() { return m_vbDispatchInfo; }
-
-		glm::vec3 GetLocalAABBMin() { return m_aabbMin; }
-		glm::vec3 GetLocalAABBMax() { return m_aabbMax; }
+		uint32_t GetMeshCount() const { return m_meshCount; }
 
 		virtual bool IsStaticMesh() const override { return true; }
 
 	protected:
-		virtual void loadAssets() {}
+		virtual void loadAssets() { m_meshChangedCallback(); }
 		virtual void prepareShaderStorageBuffers() {}
 
 		// render device
@@ -68,14 +66,12 @@ namespace MyosotisFW::System::Render
 		// render resources
 		RenderResources_ptr m_resources;
 
-		// 
+		uint32_t m_meshCount;
 		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 
 		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 
-		// AABB
-		glm::vec3 m_aabbMin;
-		glm::vec3 m_aabbMax;
+		std::function<void(void)> m_meshChangedCallback;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);

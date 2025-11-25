@@ -30,7 +30,8 @@ namespace MyosotisFW::System::Render
 		};
 
 		void Update() override;
-		uint32_t AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& meshData);
+		uint32_t AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh);
+		std::vector<uint32_t> AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes);
 		MeshInfo GetMeshInfo(const uint32_t index) const { return m_meshInfo[index]; }
 
 	private:
@@ -49,7 +50,7 @@ namespace MyosotisFW::System::Render
 		std::vector<uint32_t> m_primitivesData;
 
 		std::unordered_map<Shape::PrimitiveGeometryShape, uint32_t> m_primitiveMeshIDTable;
-		std::unordered_map<std::string, uint32_t> m_customMeshIDTable;
+		std::unordered_map<std::string, std::vector<uint32_t>> m_customMeshIDTable;
 	};
 
 	TYPEDEF_SHARED_PTR_ARGS(MeshInfoDescriptorSet);
