@@ -50,9 +50,9 @@ namespace MyosotisFW
 		const glm::vec4 GetPos() const { return m_objectInfo->transform.pos; }
 		const glm::vec4 GetRot() const { return m_objectInfo->transform.rot; }
 		const glm::vec4 GetScale() const { return m_objectInfo->transform.scale; }
-		const void SetPos(const glm::vec4& pos) { m_objectInfo->transform.pos = pos; m_transformChangedCallback(); m_dirty = true; }
-		const void SetRot(const glm::vec4& rot) { m_objectInfo->transform.rot = rot; m_transformChangedCallback(); m_dirty = true; }
-		const void SetScale(const glm::vec4& scale) { m_objectInfo->transform.scale = scale; m_transformChangedCallback(); m_dirty = true; }
+		const void SetPos(const glm::vec3& pos) { m_objectInfo->transform.pos = glm::vec4(pos, 0.0f); m_transformChangedCallback(); m_dirty = true; }
+		const void SetRot(const glm::vec3& rot) { m_objectInfo->transform.rot = glm::vec4(rot, 0.0f); m_transformChangedCallback(); m_dirty = true; }
+		const void SetScale(const glm::vec3& scale) { m_objectInfo->transform.scale = glm::vec4(scale, 0.0f); m_transformChangedCallback(); m_dirty = true; }
 		void SetRenderID(uint32_t id) { m_renderID = id; }
 		void SetObjectInfo(ObjectInfo_ptr objectInfo) { m_objectInfo = objectInfo; }
 		void SetMeshChangedCallback(const std::function<void(void)>& callback) { m_meshChangedCallback = callback; }

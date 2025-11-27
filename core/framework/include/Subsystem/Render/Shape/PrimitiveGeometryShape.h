@@ -35,6 +35,7 @@ namespace MyosotisFW::System::Render::Shape
 		Plane,
 		Circle,
 		Sphere,
+		PlaneWithHole,
 		Max
 	};
 
@@ -271,6 +272,69 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
+	inline Mesh createPlaneWithHole(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const float holeSize = 0.1f)
+	{
+		ASSERT(size > holeSize, "hole size should be larger than size.");
+
+		float holeHalfSize = holeSize * 0.5f;
+		float halfSize = size * 0.5f;
+		Mesh mesh = {};
+		Meshlet meshlet = {};
+		std::unordered_set<uint32_t> uniqueVertexIndices{};
+		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
+		mesh.vertex = {
+			// 上 (0, 0, -1)
+			-halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,				// 0
+			 halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,				// 1
+			-halfSize + center.x, holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,			// 2
+			 halfSize + center.x, holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,			// 3
+
+			 // 左(0, 0, -1)
+			 -halfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 4
+			 -holeHalfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 5
+			 -halfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 6
+			 -holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 7
+
+			 // 右(0, 0, -1)
+			 holeHalfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 8
+			 halfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,			// 9
+			 holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 10
+			 halfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,			// 11
+
+			 // 下(0, 0, -1)
+			-halfSize + center.x,  -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 12
+			 halfSize + center.x,  -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 13
+			-halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,				// 14
+			 halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,				// 15
+
+		};
+		meshlet.primitives = {
+			0,	1,	2,	2,	1,	3,	// 上
+			4,	5,	6,	6,	5,	7,	// 左
+			8,	9,	10,	10,	9,	11,	// 右
+			12,	13,	14,	14,	13,	15,	// 下
+		};
+		for (uint32_t index : meshlet.primitives)
+		{
+			if (uniqueVertexIndices.insert(index).second)
+			{
+				meshlet.uniqueIndex.push_back(index);
+			}
+			else
+			{
+				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
+				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
+				index = indexInUnique;
+			}
+		}
+		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
+		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
+		mesh.meshlet.push_back(meshlet);
+		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
+		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
+		return mesh;
+	}
+
 	inline Mesh createShape(const PrimitiveGeometryShape& shape,
 		const float size = 1.0f,
 		const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f },
@@ -286,6 +350,8 @@ namespace MyosotisFW::System::Render::Shape
 			return createCircle(size, color, center);
 		case PrimitiveGeometryShape::Sphere:
 			return createSphere(size, color, center);
+		case PrimitiveGeometryShape::PlaneWithHole:
+			return createPlaneWithHole(size, color, center);
 		default:
 			ASSERT(false, "Invalid shape");
 			return {};

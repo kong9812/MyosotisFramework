@@ -79,11 +79,6 @@ void main()
     //=============================================================================================================================================================================
     // 2. 2PhaseOccCulling    
     //=============================================================================================================================================================================
-    // forループの際にスレッドそれぞれのインクリメント値
-    const uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
-    // 初期(フェーズ1)のmipマップ指定
-    int mipLevel = 4;
-
     // 初期化 (0番目のみ実行する)
     if (gl_LocalInvocationIndex == 0)
     {
@@ -140,54 +135,39 @@ void main()
     }
     barrier();
 
-    // ここからは一番重く、スレッド分割が期待できるところ
-    // デップステクスチャのサイズ (mip指定)
-    ivec2 mipTexSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, mipLevel);
-
-    // depth画像のテクセル位置に変換
-    ivec2 minTexel = ivec2(sMinUV * vec2(mipTexSize));
-    ivec2 maxTexel = ivec2(sMaxUV * vec2(mipTexSize));
-
-    // 制限
-    minTexel = max(minTexel, ivec2(0));
-    maxTexel = min(maxTexel, mipTexSize - ivec2(1));
-
-    // AABB矩形が0なら見える (Todo.↓は意味ない!!!!)
-    if (maxTexel.x <= minTexel.x || maxTexel.y <= minTexel.y) 
-    {
-        if (gl_LocalInvocationIndex == 0) {
-            sOccCullingVisible = true;
-        }
-    }
-    barrier();
-
-    // テクセル数
-    uint width  = uint(maxTexel.x - minTexel.x + 1);
-    uint height = uint(maxTexel.y - minTexel.y + 1);
-    uint totalSize = width * height;
-
-    // ローカルスレッドの最大
     float localMax = -1.0;
 
-    // いよいよfor
-    for (uint i = gl_LocalInvocationIndex; i < totalSize; i += stride)
+    if (gl_LocalInvocationIndex == 0) 
     {
-        uint ix = i % width;  // x (eg: 10*20の画像なら 10~19の時 0~9が出てくる、x軸の位置)
-        uint iy = i / width;  // y (eg: 10*20の画像なら 12の時 1出てくる、y軸の位置)
-        ivec2 tc = ivec2(int(ix) + minTexel.x, int(iy) + minTexel.y);   // depthにあるAABBの位置の左上位置から計算
-        float d = texelFetch(Sampler2D[hiZSamplerID], tc, mipLevel).r;
-        localMax = max(localMax, d);
-    }
+        float bias = 0.0005;
+        ivec2 mip0TextureSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, 0);
 
-    int localU = (localMax < 0.0) ? 0 : floatBitsToInt(localMax);
-    atomicMax(sPrevDepthMax_u, localU);
-    barrier();
+        // AABB Size
+        float aabbWidth = (sMaxUV.x - sMinUV.x) * float(mip0TextureSize.x);
+        float aabbHeight = (sMaxUV.y - sMinUV.y) * float(mip0TextureSize.y);
+        float maxDim = max(aabbWidth, aabbHeight);
 
-    // 判定
-    if (gl_LocalInvocationIndex == 0)
-    {
-        sPrevDepthMax = intBitsToFloat(sPrevDepthMax_u);
-        sOccCullingVisible = (sMinDepth <= sPrevDepthMax);        
+        float mipLevel = 0.0;
+        if (maxDim > 1.0)
+        {
+            mipLevel = floor(log2(maxDim));
+        }
+        ivec2 targetMipTextureSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, int(mipLevel));
+
+        ivec2 minTexel = ivec2(sMinUV * targetMipTextureSize);
+        ivec2 maxTexel = ivec2(sMaxUV * targetMipTextureSize);
+        for (int x = minTexel.x; x <= maxTexel.x; x++)
+        {
+            for (int y = minTexel.y; y <= maxTexel.y; y++)
+            {
+                float occluderDepth = Sampler2DLoader_TexelFetch(hiZSamplerID, ivec2(x, y), int(mipLevel)).r;
+                if ((occluderDepth + bias) >= sMinDepth)
+                {
+                    sOccCullingVisible = true;
+                    break;
+                }
+            }
+        }
     }
     barrier();
 

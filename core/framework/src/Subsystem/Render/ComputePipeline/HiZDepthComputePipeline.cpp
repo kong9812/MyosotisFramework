@@ -72,7 +72,9 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthDownsampleShaderBase.pipeline));
 		}
 
-		for (uint8_t i = 0; i < AppInfo::g_hiZMipLevels; i++)
+		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap().mipView.size());
+		m_hiZDepthMipMapImageIndex.resize(hiZMipLevels);
+		for (uint8_t i = 0; i < hiZMipLevels; i++)
 		{
 			// [storage image] Set image layout for HiZ depth map
 			VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, m_resources->GetHiZDepthMap().mipView[i], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
@@ -87,6 +89,7 @@ namespace MyosotisFW::System::Render
 
 	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const glm::vec2& screenSize)
 	{
+		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap().mipView.size());
 
 		{// HiZ Depth Copy
 			// Bind the compute pipeline
@@ -130,7 +133,7 @@ namespace MyosotisFW::System::Render
 				barrier.image = m_resources->GetHiZDepthMap().image;
 				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 				barrier.subresourceRange.baseMipLevel = 1;
-				barrier.subresourceRange.levelCount = AppInfo::g_hiZMipLevels - 1;
+				barrier.subresourceRange.levelCount = hiZMipLevels - 1;
 				barrier.subresourceRange.baseArrayLayer = 0;
 				barrier.subresourceRange.layerCount = 1;
 				barrier.srcAccessMask = 0;
@@ -145,7 +148,7 @@ namespace MyosotisFW::System::Render
 					1, &barrier);
 			}
 
-			for (uint32_t i = 1; i < AppInfo::g_hiZMipLevels; i++, srcMip++, dstMip++)
+			for (uint32_t i = 1; i < hiZMipLevels; i++, srcMip++, dstMip++)
 			{
 				// Bind the compute pipeline
 				vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthDownsampleShaderBase.pipeline);

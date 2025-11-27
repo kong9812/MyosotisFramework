@@ -241,7 +241,7 @@ namespace MyosotisFW::System::Render
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
+		// m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
 

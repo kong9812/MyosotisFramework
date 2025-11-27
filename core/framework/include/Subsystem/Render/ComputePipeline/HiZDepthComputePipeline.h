@@ -69,7 +69,7 @@ namespace MyosotisFW::System::Render
 		ShaderBase m_hiZDepthCopyShaderBase;
 		ShaderBase m_hiZDepthDownsampleShaderBase;
 
-		uint32_t m_hiZDepthMipMapImageIndex[AppInfo::g_hiZMipLevels];
+		std::vector<uint32_t> m_hiZDepthMipMapImageIndex;
 		uint32_t m_hiZDepthMapMipSamplerIndex;
 
 		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
