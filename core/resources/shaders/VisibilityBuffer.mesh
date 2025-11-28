@@ -22,25 +22,17 @@ layout(triangles, max_vertices = 64, max_primitives = 124) out;
 layout(location = 0) flat out uint outVBInfoIndex[];
 
 struct Payload {
-    uint vbDispatchInfoIndex;
+    uint vbDispatchInfoIndex[128];
+    uint renderCount;
 };
 taskPayloadSharedEXT Payload payload;
 
-shared uint primitiveCount;
-
-vec4 randomColor(float seed)
-{
-    // ハッシュ関数的に疑似乱数を生成
-    float r = fract(sin(seed * 12.9898) * 43758.5453);
-    float g = fract(sin((seed + 1.0) * 78.233) * 43758.5453);
-    float b = fract(sin((seed + 2.0) * 39.425) * 43758.5453);
-    return vec4(r, g, b, 1.0);
-}
-
 void main()
 {
+    uint vbDispatchInfoIndex = payload.vbDispatchInfoIndex[gl_WorkGroupID.x];
+
     // VBDispatchInfo
-    VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(payload.vbDispatchInfoIndex);
+    VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(vbDispatchInfoIndex);
 
     // ObjectInfo
     uint objectID = dispactchInfo.objectID;
@@ -61,18 +53,15 @@ void main()
 
     // CameraInfo (MainCameraData)
     CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
+    mat4 projView = cameraData.projection * cameraData.view;
 
-    // 0番目のスレッドのみ実行する内容
-    if (gl_LocalInvocationIndex == 0) 
-    {
-        // プリミティブサイズ
-        primitiveCount = 0;
-    }
+    uint vCount = min(meshletVertexCount, 64u);
+    uint pCount = min(meshletPrimitiveCount, 124u);
+    SetMeshOutputsEXT(vCount, pCount);
     barrier();
 
     uint stride = gl_WorkGroupSize.x; 
     uint idx = gl_LocalInvocationIndex;
-    mat4 projView = cameraData.projection * cameraData.view;
 
     // 頂点処理：スレッドで分割し、forループで複数頂点を担当
     for (uint i = idx; i < meshletVertexCount; i += stride) 
@@ -81,8 +70,7 @@ void main()
         VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, index);
         vec4 worldPos = objectInfo.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = projView * worldPos;
-
-        outVBInfoIndex[i] = payload.vbDispatchInfoIndex;
+        outVBInfoIndex[i] = vbDispatchInfoIndex;
     }
 
     // プリミティブ処理：同様に分割＋ループで処理
@@ -104,19 +92,10 @@ void main()
         pos[2] = objectInfo.model * v.position;
 
         // バックフェースカリング
-        if (BackfaceCulling_IsVisible(cameraData.pos.xyz, pos[0].xyz, pos[1].xyz, pos[2].xyz))
-        {
-            uint outIndex = atomicAdd(primitiveCount, 1);
-            gl_PrimitiveTriangleIndicesEXT[outIndex] = index;
-            gl_MeshPrimitivesEXT[outIndex].gl_PrimitiveID = int(outIndex);
-        }
-    }
-    barrier();
+        bool isVisible = BackfaceCulling_IsVisible(cameraData.pos.xyz, pos[0].xyz, pos[1].xyz, pos[2].xyz);
 
-    // 0番目のスレッドのみ実行する内容
-    if (gl_LocalInvocationIndex == 0) 
-    {
-        // 出力する頂点数・プリミティブ数を指定
-        SetMeshOutputsEXT(meshletInfo.vertexCount, primitiveCount);
+        gl_PrimitiveTriangleIndicesEXT[i] = index;
+        gl_MeshPrimitivesEXT[i].gl_PrimitiveID = int(i);
+        gl_MeshPrimitivesEXT[i].gl_CullPrimitiveEXT = !isVisible;        
     }
 }

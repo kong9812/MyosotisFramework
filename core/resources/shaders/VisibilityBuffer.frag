@@ -4,6 +4,11 @@
 layout(location = 0) flat in uint inVBInfoIndex;
 layout(location = 0) out vec4 outFragColor;
 
+const uint PRIM_BITS = 7u;                      // 2^7 = 128 > 124
+const uint PRIM_MASK = (1u << PRIM_BITS) - 1u;  // 0x7F = 127
+const uint VB_BITS = 32u - PRIM_BITS;           // 25bit;
+const uint VB_MAX = (1u << VB_BITS) - 1u;       // 0x1FFFFFFF ≒ 3,300万
+
 // ハッシュ関数（uint版）
 uint hash(uint x) {
     // 32-bit integer hash based on PCG
@@ -32,17 +37,27 @@ vec4 randomColor_uint(uint seed)
     return vec4(r, g, b, 1.0);
 }
 
+uint EncodeVisibility(uint vbIndex, uint primIndex)
+{
+    return (vbIndex << PRIM_BITS) | (primIndex & PRIM_MASK);
+}
+
 void main()
 {
-  // 16bitを超えないように
-  if ((inVBInfoIndex > 0xFFFFu) || (gl_PrimitiveID > 0xFFFFu))
+  uint primIndex = uint(gl_PrimitiveID);
+
+  // マイナスチェック
+  if (gl_PrimitiveID < 0)
   {
-    outFragColor = vec4(0.0);
+    outFragColor = vec4(1.0, 0.0, 1.0, 1.0);
     return;
   }
-  uint vbDispatchInfoIndex16 = inVBInfoIndex & 0xFFFFu;
-  uint prim16 = gl_PrimitiveID & 0xFFFFu;
-  uint outVisibilityBuffer = (vbDispatchInfoIndex16 << 16) | prim16;
-
-	outFragColor = randomColor_uint(outVisibilityBuffer);
+  else if ((primIndex > PRIM_MASK) || (inVBInfoIndex > VB_MAX))
+  {
+    outFragColor = vec4(0.5, 0.5, 0.5, 1.0);
+    return;
+  }
+  
+  uint packedVisibility = EncodeVisibility(inVBInfoIndex, primIndex);
+	outFragColor = randomColor_uint(packedVisibility);
 }

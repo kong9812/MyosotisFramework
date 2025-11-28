@@ -19,12 +19,13 @@ namespace MyosotisFW::System::Render
 		~VisibilityBufferRenderPhase1Pipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t meshletCount);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount);
 
 	private:
 		struct {
 			uint32_t hiZSamplerID;
-			uint32_t checkFalseNegativeMesh;
+			uint32_t vbDispatchInfoCount;
+			//uint32_t checkFalseNegativeMesh;
 		}pushConstant;
 
 		uint32_t m_hiZSamplerID;

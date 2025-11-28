@@ -24,7 +24,8 @@ namespace MyosotisFW::System::Render
 	private:
 		struct {
 			uint32_t hiZSamplerID;
-			uint32_t checkFalseNegativeMesh;
+			uint32_t vbDispatchInfoCount;
+			//uint32_t checkFalseNegativeMesh;
 		}pushConstant;
 
 		uint32_t m_hiZSamplerID;

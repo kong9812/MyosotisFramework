@@ -209,7 +209,7 @@ namespace MyosotisFW::System::Render
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
 
 	protected:
-		uint32_t m_meshCount;
+		uint32_t m_vbDispatchInfoCount;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 		m_primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t meshletCount)
+	void VisibilityBufferRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount)
 	{
 		{// Phase1Render
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
@@ -43,12 +43,12 @@ namespace MyosotisFW::System::Render
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 			pushConstant.hiZSamplerID = m_hiZSamplerID;
-			pushConstant.checkFalseNegativeMesh = 0; // Disable false negative mesh check
+			pushConstant.vbDispatchInfoCount = vbDispatchInfoCount;
 			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
 				0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
-			uint32_t meshletGroupCount = meshletCount;
-			m_vkCmdDrawMeshTasksEXT(commandBuffer, meshletGroupCount, 1, 1);
+			uint32_t taskGroupSize = static_cast<uint32_t>(ceil(static_cast<float>(vbDispatchInfoCount) / 128.0f));
+			m_vkCmdDrawMeshTasksEXT(commandBuffer, taskGroupSize, 1, 1);
 		}
 	}
 

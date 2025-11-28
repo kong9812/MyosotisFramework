@@ -156,7 +156,7 @@ namespace MyosotisFW::System::Render
 			if (meshChanged)
 			{
 				// Reset mesh count
-				m_meshCount = 0;
+				m_vbDispatchInfoCount = 0;
 			}
 
 			for (MObject_ptr& object : m_objects)
@@ -173,11 +173,7 @@ namespace MyosotisFW::System::Render
 
 				std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
 				m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);
-				for (const VBDispatchInfo& info : vbDispatchInfo)
-				{
-					MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(info.meshID);
-				}
-				m_meshCount += object->GetMeshCount();
+				m_vbDispatchInfoCount += static_cast<uint32_t>(vbDispatchInfo.size());
 			}
 			m_objectInfoDescriptorSet->Update();
 			if (meshChanged)
@@ -237,7 +233,7 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
+		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_vbDispatchInfoCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
