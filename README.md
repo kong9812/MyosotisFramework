@@ -96,8 +96,13 @@ Once the environment setup is complete, you can use the following batch file to 
 ![Meshlet](https://github.com/user-attachments/assets/cc8e7f85-6e56-48fe-b2fc-5f83b88fe741)
 
 - **2-phase Occlusion Culling**
-  
 
+- **Visibility Buffer**  
+  A basic Visibility Buffer is implemented.  
+  The mesh shader writes a small ID for each visible triangle/primitive.  
+  The pixel shader uses this ID to fetch material and mesh data.  
+  This reduces overdraw and improves performance in complex scenes.  
+![VisibilityBuffer](https://github.com/user-attachments/assets/fe568a51-df90-4e84-a243-0e8d9a8eaa6e)
 ---
 
 ## License
