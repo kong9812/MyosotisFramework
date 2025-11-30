@@ -33,7 +33,7 @@ namespace vmaTools
 	inline void ShaderBufferObjectAllocate(
 		const VkDevice& device,
 		const VmaAllocator& allocator,
-		const uint32_t& size,
+		const uint32_t size,
 		const VkBufferUsageFlagBits& usage,
 		VkBuffer& pBuffer,
 		VmaAllocation& pAllocation,

@@ -95,12 +95,12 @@ void main()
         v = VertexDataLoader_GetVertexData(meshDataIndex, meshletIndex, uniqueIndexIndex);
         pos[2] = standardSSBO.model * v.position;
 
-        // バックフェースカリング
-        if (BackfaceCulling_IsVisible(pos[0].xyz, pos[1].xyz, pos[2].xyz))
-        {
-            uint outIndex = atomicAdd(primitiveCount, 1);
-            gl_PrimitiveTriangleIndicesEXT[outIndex] = index;
-        }
+        // // バックフェースカリング
+        // if (BackfaceCulling_IsVisible(pos[0].xyz, pos[1].xyz, pos[2].xyz))
+        // {
+        //     uint outIndex = atomicAdd(primitiveCount, 1);
+        //     gl_PrimitiveTriangleIndicesEXT[outIndex] = index;
+        // }
     }
 
     // 0番目のスレッドのみ実行する内容

@@ -72,8 +72,6 @@ namespace MyosotisFW::AppInfo
 	constexpr VkFormat g_idMapFormat = VkFormat::VK_FORMAT_R32_UINT;
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
-	// 指定Hi-Z Mipmapレベル数
-	constexpr uint32_t g_hiZMipLevels = 5;
 
 	// シャドウマップサイズ
 	constexpr uint32_t g_shadowMapSize = 2048;

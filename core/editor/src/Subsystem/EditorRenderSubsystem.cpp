@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "EditorRenderSubsystem.h"
 
-#include "StageObject.h"
+#include "MObject.h"
 
 #include "EditorRenderResources.h"
 #include "RenderSwapchain.h"
@@ -10,21 +10,10 @@
 #include "EditorCamera.h"
 #include "StaticMesh.h"
 
-#include "EditorRenderPass.h"
-#include "ShadowMapRenderPass.h"
-#include "MainRenderPass.h"
-#include "EditorFinalCompositionRenderPass.h"
 #include "MeshShaderRenderPass.h"
 
-#include "SkyboxRenderPipeline.h"
-#include "ShadowMapRenderPipeline.h"
-#include "DeferredRenderPipeline.h"
-#include "CompositionRenderPipeline.h"
-#include "LightingRenderPipeline.h"
-#include "EditorFinalCompositionRenderPipeline.h"
-#include "InteriorObjectDeferredRenderPipeline.h"
-#include "MeshShaderRenderPhase1Pipeline.h"
-#include "MeshShaderRenderPhase2Pipeline.h"
+#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferRenderPhase2Pipeline.h"
 
 #include "AppInfo.h"
 
@@ -35,10 +24,10 @@ namespace MyosotisFW::System::Render
 		__super::Initialize(instance, surface);
 
 		// EditorGUIの初期化
-		m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_editorRenderPass->GetRenderPass(), m_swapchain);
+		//m_editorGUI = CreateEditorGUIPointer(instance, m_device, m_editorRenderPass->GetRenderPass(), m_swapchain);
 
 		// EditorCameraの初期化
-		m_mainCamera = Camera::CreateEditorCameraPointer();
+		m_mainCamera = Camera::CreateEditorCameraPointer(0);
 		m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
 	}
 
@@ -71,10 +60,10 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::EditorRender()
 	{
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
-		m_editorRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), currentCommandBuffer);
-		m_editorRenderPass->EndRender(currentCommandBuffer);
+		//m_editorRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		//ImGui::Render();
+		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), currentCommandBuffer);
+		//m_editorRenderPass->EndRender(currentCommandBuffer);
 	}
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
@@ -137,67 +126,30 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateEditorRenderResourcesPointer(m_device, m_descriptors);
+		m_resources = CreateEditorRenderResourcesPointer(m_device);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
 	void EditorRenderSubsystem::initializeRenderPass()
 	{
-		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
-		m_shadowMapRenderPass->Initialize();
-
-		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		m_mainRenderPass->Initialize();
-
-		m_finalCompositionRenderPass = CreateEditorFinalCompositionRenderPassPointer(m_device, std::dynamic_pointer_cast<EditorRenderResources>(m_resources), m_swapchain);
-		m_finalCompositionRenderPass->Initialize();
-
-		m_editorRenderPass = CreateEditorRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		m_editorRenderPass->Initialize();
-
 		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_meshShaderRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_descriptors);
-		m_shadowMapRenderPipeline->Initialize(m_resources, m_shadowMapRenderPass->GetRenderPass());
-
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_descriptors);
-		m_skyboxRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_descriptors);
-		m_deferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_descriptors);
-		m_lightingRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_descriptors);
-		m_compositionRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_descriptors);
-		m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_finalCompositionRenderPipeline = CreateEditorFinalCompositionRenderPipelinePointer(m_device, m_descriptors);
-		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
-
-		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
-		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		m_compositionRenderPipeline->CreateShaderObject();
-		m_finalCompositionRenderPipeline->CreateShaderObject();
-
-		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
-		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
-	void EditorRenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	void EditorRenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
 	{
-		m_shadowMapRenderPass->Resize(width, height);
-		m_mainRenderPass->Resize(width, height);
-		m_finalCompositionRenderPass->Resize(width, height);
-		m_editorRenderPass->Resize(width, height);
+		//m_editorRenderPass->Resize(width, height);
 	}
 }

@@ -2,14 +2,16 @@
 #pragma once
 #include <vector>
 #include "iglm.h"
+#include "MeshletInfo.h"
 
 namespace MyosotisFW
 {
 	struct Meshlet
 	{
+		// Info
+		MeshletInfo meshletInfo;
+
 		std::vector<uint32_t> uniqueIndex;
 		std::vector<uint32_t> primitives;
-		glm::vec3 min;
-		glm::vec3 max;
 	};
 }

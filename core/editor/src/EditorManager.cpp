@@ -21,11 +21,8 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->BeginCompute();
-		m_renderSubsystem->ShadowRender();
-		m_renderSubsystem->MainRender();
 		m_renderSubsystem->MeshShaderRender();
 		std::dynamic_pointer_cast<Render::EditorRenderSubsystem>(m_renderSubsystem)->EditorRender();
-		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
 	}
 

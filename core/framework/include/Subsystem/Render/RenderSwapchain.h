@@ -28,7 +28,7 @@ namespace MyosotisFW::System::Render
 		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }
 
 		void AcquireNextImage(VkSemaphore& presentCompleteSemaphore, uint32_t& imageIndex);
-		void QueuePresent(const VkQueue& queue, const uint32_t& imageIndex, const VkSemaphore& pWaitSemaphores);
+		void QueuePresent(const VkQueue& queue, const uint32_t imageIndex, const VkSemaphore& pWaitSemaphores);
 
 		void Resize(const VkSurfaceKHR& vkSurface);
 

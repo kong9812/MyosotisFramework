@@ -6,7 +6,7 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	CameraBase::CameraBase() : ComponentBase(),
+	CameraBase::CameraBase(const uint32_t objectID) : ComponentBase(objectID),
 		m_cameraPos(glm::vec3(0.0f)),
 		m_cameraLookAt(glm::vec3(0.0f)),
 		m_cameraFront(glm::vec3(0.0f)),
@@ -37,7 +37,7 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
 	}
 
-	glm::vec3 CameraBase::GetWorldPos(const glm::vec2& pos, const float& distance) const
+	glm::vec3 CameraBase::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
 		// 画面座標を正規化デバイス座標（NDC）に変換
 		glm::vec2 ndcPos;
@@ -91,7 +91,7 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::distance(m_cameraPos, pos);
 	}
 
-	glm::vec3 CameraBase::GetFrontPos(const float& distance) const
+	glm::vec3 CameraBase::GetFrontPos(const float distance) const
 	{
 		return m_cameraPos + (m_cameraFront * distance);
 	}

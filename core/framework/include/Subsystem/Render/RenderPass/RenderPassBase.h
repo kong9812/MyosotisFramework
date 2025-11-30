@@ -10,7 +10,7 @@ namespace MyosotisFW::System::Render
 	class RenderPassBase
 	{
 	public:
-		RenderPassBase(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const uint32_t& width, const uint32_t& height) :
+		RenderPassBase(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const uint32_t width, const uint32_t height) :
 			m_device(device),
 			m_resources(resources),
 			m_width(width),
@@ -24,9 +24,9 @@ namespace MyosotisFW::System::Render
 
 		VkRenderPass GetRenderPass() { return m_renderPass; }
 
-		virtual void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex) = 0;
+		virtual void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) = 0;
 		virtual void EndRender(const VkCommandBuffer& commandBuffer) = 0;
-		virtual void Resize(const uint32_t& width, const uint32_t& height)
+		virtual void Resize(const uint32_t width, const uint32_t height)
 		{
 			m_width = width;
 			m_height = height;

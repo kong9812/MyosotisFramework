@@ -2,9 +2,13 @@
 #pragma once
 #include "HiZDepthComputePipeline.h"
 #include "RenderDevice.h"
-#include "RenderDescriptors.h"
 #include "RenderResources.h"
 #include "AppInfo.h"
+
+#include "SceneInfoDescriptorSet.h"
+#include "ObjectInfoDescriptorSet.h"
+#include "MeshInfoDescriptorSet.h"
+#include "TextureDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -27,7 +31,12 @@ namespace MyosotisFW::System::Render
 					0, static_cast<uint32_t>(sizeof(depthCopyPushConstant))),
 			};
 			// [pipeline]layout
-			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout() };
+			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
+				m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_textureDescriptorSet->GetDescriptorSetLayout()
+			};
 			VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 			pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 			pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
@@ -46,7 +55,12 @@ namespace MyosotisFW::System::Render
 					0, static_cast<uint32_t>(sizeof(depthDownsamplePushConstant))),
 			};
 			// [pipeline]layout
-			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { m_descriptors->GetBindlessMainDescriptorSetLayout() };
+			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
+				m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
+				m_textureDescriptorSet->GetDescriptorSetLayout()
+			};
 			VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 			pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 			pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
@@ -57,34 +71,40 @@ namespace MyosotisFW::System::Render
 			VkComputePipelineCreateInfo computePipelineCreateInfo = Utility::Vulkan::CreateInfo::computePipelineCreateInfo(m_hiZDepthDownsampleShaderBase.pipelineLayout, shaderStageCreateInfo);
 			VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthDownsampleShaderBase.pipeline));
 		}
+
+		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap().mipView.size());
+		m_hiZDepthMipMapImageIndex.resize(hiZMipLevels);
+		for (uint8_t i = 0; i < hiZMipLevels; i++)
+		{
+			// [storage image] Set image layout for HiZ depth map
+			VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, m_resources->GetHiZDepthMap().mipView[i], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+			m_hiZDepthMipMapImageIndex[i] = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
+		}
+		VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetHiZDepthMap().sampler, m_resources->GetHiZDepthMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_hiZDepthMapMipSamplerIndex = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
+		// [sampler] Set image layout for primary depth/stencil map
+		VkDescriptorImageInfo GetPrimaryDepthStencilDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetPrimaryDepthStencil().sampler, m_resources->GetPrimaryDepthStencil().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		depthCopyPushConstant.primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, GetPrimaryDepthStencilDescriptorImageInfo);
 	}
 
 	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const glm::vec2& screenSize)
 	{
-		uint32_t hiZDepthMipMapImageIndex[AppInfo::g_hiZMipLevels]{};
-		for (uint8_t i = 0; i < AppInfo::g_hiZMipLevels; i++)
-		{
-			// [storage image] Set image layout for HiZ depth map
-			VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, m_resources->GetHiZDepthMap().mipView[i], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-			hiZDepthMipMapImageIndex[i] = m_descriptors->AddStorageImageInfo(hiZDepthMapDescriptorImageInfo);
-		}
-		// [sampler] Set image layout for HiZ depth map
-		VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetHiZDepthMap().sampler, m_resources->GetHiZDepthMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		uint32_t hiZDepthMapMipSamplerIndex = m_descriptors->AddCombinedImageSamplerInfo(hiZDepthMapSamplerDescriptorImageInfo);
-
-		// [sampler] Set image layout for primary depth/stencil map
-		VkDescriptorImageInfo GetPrimaryDepthStencilDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetPrimaryDepthStencil().sampler, m_resources->GetPrimaryDepthStencil().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		depthCopyPushConstant.primaryDepthSamplerID = m_descriptors->AddCombinedImageSamplerInfo(GetPrimaryDepthStencilDescriptorImageInfo);
+		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap().mipView.size());
 
 		{// HiZ Depth Copy
 			// Bind the compute pipeline
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthCopyShaderBase.pipeline);
 			// Bind the descriptor sets
-			std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet() };
+			std::vector<VkDescriptorSet> descriptorSets = {
+				m_sceneInfoDescriptorSet->GetDescriptorSet(),
+				m_objectInfoDescriptorSet->GetDescriptorSet(),
+				m_meshInfoDescriptorSet->GetDescriptorSet(),
+				m_textureDescriptorSet->GetDescriptorSet()
+			};
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthCopyShaderBase.pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 			// Bind the push constants
-			depthCopyPushConstant.hiZImageID = hiZDepthMipMapImageIndex[0];
+			depthCopyPushConstant.hiZImageID = m_hiZDepthMipMapImageIndex[0];
 			depthCopyPushConstant.desSize = static_cast<glm::ivec2>(screenSize);
 			vkCmdPushConstants(commandBuffer, m_hiZDepthCopyShaderBase.pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
@@ -113,7 +133,7 @@ namespace MyosotisFW::System::Render
 				barrier.image = m_resources->GetHiZDepthMap().image;
 				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 				barrier.subresourceRange.baseMipLevel = 1;
-				barrier.subresourceRange.levelCount = AppInfo::g_hiZMipLevels - 1;
+				barrier.subresourceRange.levelCount = hiZMipLevels - 1;
 				barrier.subresourceRange.baseArrayLayer = 0;
 				barrier.subresourceRange.layerCount = 1;
 				barrier.srcAccessMask = 0;
@@ -128,12 +148,17 @@ namespace MyosotisFW::System::Render
 					1, &barrier);
 			}
 
-			for (uint32_t i = 1; i < AppInfo::g_hiZMipLevels; i++, srcMip++, dstMip++)
+			for (uint32_t i = 1; i < hiZMipLevels; i++, srcMip++, dstMip++)
 			{
 				// Bind the compute pipeline
 				vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthDownsampleShaderBase.pipeline);
 				// Bind the descriptor sets
-				std::vector<VkDescriptorSet> descriptorSets = { m_descriptors->GetBindlessMainDescriptorSet() };
+				std::vector<VkDescriptorSet> descriptorSets = {
+					m_sceneInfoDescriptorSet->GetDescriptorSet(),
+					m_objectInfoDescriptorSet->GetDescriptorSet(),
+					m_meshInfoDescriptorSet->GetDescriptorSet(),
+					m_textureDescriptorSet->GetDescriptorSet()
+				};
 				vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthDownsampleShaderBase.pipelineLayout, 0,
 					static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 
@@ -144,8 +169,8 @@ namespace MyosotisFW::System::Render
 				uint32_t groupY = (mipSize.y + threadNumY - 1) / threadNumY;
 
 				// Push constant 設定
-				depthDownsamplePushConstant.hiZSamplerID = hiZDepthMapMipSamplerIndex;
-				depthDownsamplePushConstant.hiZImageID = hiZDepthMipMapImageIndex[dstMip];
+				depthDownsamplePushConstant.hiZSamplerID = m_hiZDepthMapMipSamplerIndex;
+				depthDownsamplePushConstant.hiZImageID = m_hiZDepthMipMapImageIndex[dstMip];
 				depthDownsamplePushConstant.desSize = mipSize;
 				depthDownsamplePushConstant.srcMip = srcMip;
 				vkCmdPushConstants(commandBuffer, m_hiZDepthDownsampleShaderBase.pipelineLayout,

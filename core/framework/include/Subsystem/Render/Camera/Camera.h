@@ -14,26 +14,29 @@ namespace MyosotisFW::System::Render::Camera
 	class CameraBase : public ComponentBase
 	{
 	public:
-		CameraBase();
+		CameraBase(const uint32_t objectID);
 		virtual ~CameraBase() = default;
 
 		void ResetCamera();
 		virtual glm::mat4 GetViewMatrix() const;
 		virtual glm::mat4 GetProjectionMatrix() const;
-		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const;
+		virtual glm::vec3 GetWorldPos(const glm::vec2& pos, const float distance) const;
 		CameraData GetCameraData() const;
 		virtual const ComponentType GetType() const override { return ComponentType::Undefined; }
 
 		void UpdateScreenSize(const glm::vec2& size);
 
 		float GetDistance(const glm::vec3& pos) const;
-		glm::vec3 GetFrontPos(const float& distance) const;
+		glm::vec3 GetFrontPos(const float distance) const;
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
+		void SetMainCamera(bool isMainCamera) { m_isMainCamera = isMainCamera; }
 		bool IsMainCamera() { return m_isMainCamera; }
 
 		virtual void Update(const UpdateData& updateData) {}
+
+		bool IsMoved() { return m_isMoved; }
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;
@@ -62,7 +65,9 @@ namespace MyosotisFW::System::Render::Camera
 		float m_aspectRadio;
 		// 画面サイズ
 		glm::vec2 m_screenSize;
+
+		bool m_isMoved;
 	};
-	TYPEDEF_SHARED_PTR(CameraBase);
+	TYPEDEF_SHARED_PTR_ARGS(CameraBase);
 	OBJECT_CAST_FUNCTION(CameraBase);
 }

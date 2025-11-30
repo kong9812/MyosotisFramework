@@ -23,10 +23,12 @@ namespace MyosotisFW::System::Render
 		~DescriptorSetBase();
 
 		virtual void Update() = 0;
+		VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
+		VkDescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout; }
 
 	protected:
 		void createDescriptorSet();
-		void buildDescriptor(const uint32_t& index, const uint32_t& dataSize);
+		void buildDescriptor(const uint32_t index, const uint32_t dataSize);
 
 		RenderDevice_ptr m_device;
 		VkDescriptorPool m_descriptorPool;

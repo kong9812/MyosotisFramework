@@ -96,7 +96,7 @@ namespace {
 	/// <param name="message">メッセージ</param>
 	/// <param name="file">ファイル名</param>
 	/// <param name="line">行数</param>
-	inline void CustomAssert(const bool& condition, const std::string& message, const char* file, const int& line)
+	inline void CustomAssert(const bool& condition, const std::string& message, const char* file, const int line)
 	{
 		if (!condition)
 		{

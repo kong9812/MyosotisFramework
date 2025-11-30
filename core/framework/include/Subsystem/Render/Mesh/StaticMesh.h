@@ -8,9 +8,7 @@
 #include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "Structs.h"
-#include "RenderPieplineList.h"
-#include "DeferredRenderPipeline.h"
-#include "ShadowMapRenderPipeline.h"
+#include "VBDispatchInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -19,6 +17,9 @@ namespace MyosotisFW::System::Render
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
 	class RenderResources;
 	TYPEDEF_SHARED_PTR_FWD(RenderResources);
+	class MeshInfoDescriptorSet;
+	TYPEDEF_SHARED_PTR_FWD(MeshInfoDescriptorSet);
+
 	namespace Camera
 	{
 		class CameraBase;
@@ -34,7 +35,7 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
-		StaticMesh();
+		StaticMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~StaticMesh();
 
 		typedef enum {
@@ -47,15 +48,16 @@ namespace MyosotisFW::System::Render
 
 		const ComponentType GetType() const override { return ComponentType::Undefined; }
 
-		DeferredRenderPipeline::ShaderObject& GetStaticMeshShaderObject() { return m_staticMeshShaderObject; }
-		ShadowMapRenderPipeline::ShaderObject& GetShadowMapShaderObject() { return m_shadowMapShaderObject; }
-
-		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
+		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
-		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const RenderPipelineType& pipelineType);
-		uint32_t GetStandardSSBOIndex() const { return m_staticMeshShaderObject.pushConstant.StandardSSBOIndex; }
+		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		std::vector<VBDispatchInfo>& GetVBDispatchInfo() { return m_vbDispatchInfo; }
+		uint32_t GetMeshCount() const { return m_meshCount; }
+
+		virtual bool IsStaticMesh() const override { return true; }
+
 	protected:
-		virtual void loadAssets() {}
+		virtual void loadAssets() { m_meshChangedCallback(); }
 		virtual void prepareShaderStorageBuffers() {}
 
 		// render device
@@ -64,19 +66,13 @@ namespace MyosotisFW::System::Render
 		// render resources
 		RenderResources_ptr m_resources;
 
-		// vertex buffer
-		std::array<std::vector<Buffer>, LOD::Max> m_vertexBuffer;
-		// index buffer
-		std::array<std::vector<Buffer>, LOD::Max> m_indexBuffer;
+		uint32_t m_meshCount;
+		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 
-		// lod
-		LOD m_currentLOD;
-		std::array<float, LOD::Max> m_lodDistances;
+		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 
-		// shader object
-		ShadowMapRenderPipeline::ShaderObject m_shadowMapShaderObject;
-		DeferredRenderPipeline::ShaderObject m_staticMeshShaderObject;
+		std::function<void(void)> m_meshChangedCallback;
 	};
-	TYPEDEF_SHARED_PTR(StaticMesh);
+	TYPEDEF_SHARED_PTR_ARGS(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);
 }

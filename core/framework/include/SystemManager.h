@@ -43,8 +43,8 @@ namespace MyosotisFW::System
 
 		VkSurfaceKHR& GetSurface() { return m_surface; }
 
-		void KeyAction(const int& key, const int& action);
-		void MouseButtonAction(const int& key, const int& action);
+		void KeyAction(const int key, const int action);
+		void MouseButtonAction(const int key, const int action);
 		void CursorMotion(glm::vec2 pos);
 		void Pause(GLFWwindow* window);
 

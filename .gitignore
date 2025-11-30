@@ -405,3 +405,7 @@ build
 # qt
 .qt
 qt
+
+# shader
+*.spv
+core/resources/shaders/spv

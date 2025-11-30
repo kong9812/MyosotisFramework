@@ -71,12 +71,12 @@ namespace MyosotisFW::System
 		vkDestroyInstance(m_instance, nullptr);
 	}
 
-	void SystemManager::KeyAction(const int& key, const int& action)
+	void SystemManager::KeyAction(const int key, const int action)
 	{
 		m_keyActions.insert_or_assign(key, action);
 	}
 
-	void SystemManager::MouseButtonAction(const int& key, const int& action)
+	void SystemManager::MouseButtonAction(const int key, const int action)
 	{
 		m_mouseButtonActions.insert_or_assign(key, action);
 	}
@@ -161,10 +161,7 @@ namespace MyosotisFW::System
 	{
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->BeginCompute();
-		m_renderSubsystem->ShadowRender();
-		m_renderSubsystem->MainRender();
 		m_renderSubsystem->MeshShaderRender();
-		m_renderSubsystem->FinalCompositionRender();
 		m_renderSubsystem->EndRender();
 	}
 

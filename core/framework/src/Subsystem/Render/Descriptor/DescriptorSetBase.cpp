@@ -25,7 +25,8 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::descriptorSetLayoutBinding(
 					i,
 					descriptor.descriptorType,
-					descriptor.shaderStageFlagBits));
+					descriptor.shaderStageFlagBits,
+					descriptor.descriptorCount));
 			// 未使用許可 & バインド後更新 を有効化
 			descriptorBindingFlags.push_back(descriptor.descriptorBindingFlags);
 		}
@@ -38,29 +39,35 @@ namespace MyosotisFW::System::Render
 		descriptorSetLayoutCreateInfo.flags = VkDescriptorSetLayoutCreateFlagBits::VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
 		descriptorSetLayoutCreateInfo.pNext = &descriptorSetLayoutBindingFlagsCreateInfo;
 		VK_VALIDATION(vkCreateDescriptorSetLayout(*m_device, &descriptorSetLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_descriptorSetLayout));
+
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = Utility::Vulkan::CreateInfo::descriptorSetAllocateInfo(m_descriptorPool, &m_descriptorSetLayout);
+		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 	}
 
-	void DescriptorSetBase::buildDescriptor(const uint32_t& index, const uint32_t& dataSize)
+	void DescriptorSetBase::buildDescriptor(const uint32_t index, const uint32_t dataSize)
 	{
-		Descriptor& descriptor = m_descriptors[index];
-		// SSBOの作成
-		vmaTools::ShaderBufferObjectAllocate(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			dataSize,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			descriptor.buffer.buffer,
-			descriptor.buffer.allocation,
-			descriptor.buffer.allocationInfo,
-			descriptor.buffer.descriptor);
+		if (dataSize > 0)
+		{
+			Descriptor& descriptor = m_descriptors[index];
+			// SSBOの作成
+			vmaTools::ShaderBufferObjectAllocate(
+				*m_device,
+				m_device->GetVmaAllocator(),
+				dataSize,
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+				descriptor.buffer.buffer,
+				descriptor.buffer.allocation,
+				descriptor.buffer.allocationInfo,
+				descriptor.buffer.descriptor);
 
-		VkDescriptorBufferInfo vertexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(descriptor.buffer.buffer);
-		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(
-			m_descriptorSet,
-			index,
-			VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			&vertexMetaDataDescriptorBufferInfo);
+			VkDescriptorBufferInfo vertexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(descriptor.buffer.buffer);
+			VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(
+				m_descriptorSet,
+				index,
+				VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				&vertexMetaDataDescriptorBufferInfo);
 
-		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
+			vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
+		}
 	}
 }

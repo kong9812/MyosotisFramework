@@ -2,7 +2,7 @@
 #define SAMPLER2DLOADER
 #extension GL_EXT_nonuniform_qualifier : require
 
-layout (set = 0, binding = 4) uniform sampler2D Sampler2D[];
+layout (set = 3, binding = 0) uniform sampler2D Sampler2D[];
 
 ivec2 Sampler2DLoader_GetTextureSize(uint textureId, int lod) {
     return textureSize(Sampler2D[textureId], lod);

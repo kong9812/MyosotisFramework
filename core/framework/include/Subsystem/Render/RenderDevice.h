@@ -51,7 +51,7 @@ namespace MyosotisFW::System::Render
 		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
 
 	private:
-		uint32_t getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const;
+		uint32_t getMemoryTypeIndex(const uint32_t typeBits, const VkMemoryPropertyFlags& properties) const;
 		void prepareAllocationCallbacks();
 		void prepareVMA(const VkInstance& vkInstance);
 

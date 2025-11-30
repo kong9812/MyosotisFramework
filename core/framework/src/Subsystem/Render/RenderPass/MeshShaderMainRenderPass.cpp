@@ -11,7 +11,8 @@
 namespace MyosotisFW::System::Render
 {
 	MeshShaderRenderPass::MeshShaderRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
-		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()) {
+		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()),
+		m_swapchain(swapchain) {
 	}
 
 	MeshShaderRenderPass::~MeshShaderRenderPass()
@@ -27,12 +28,7 @@ namespace MyosotisFW::System::Render
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			// [0] main render target
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
-				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format),// [0] main render target
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat),	// [1] Primary Depth
 		};
 
@@ -110,14 +106,14 @@ namespace MyosotisFW::System::Render
 		createFrameBuffers();
 	}
 
-	void MeshShaderRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t& currentBufferIndex)
+	void MeshShaderRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
-		renderPassBeginInfo.framebuffer = m_framebuffers[0];
+		renderPassBeginInfo.framebuffer = m_framebuffers[currentBufferIndex];
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
@@ -136,20 +132,24 @@ namespace MyosotisFW::System::Render
 	void MeshShaderRenderPass::createFrameBuffers()
 	{
 		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-		m_framebuffers.resize(1);
+		m_framebuffers.resize(m_swapchain->GetImageCount());
 
-		attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
 		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
 
-		VkFramebufferCreateInfo frameBufferCreateInfo = {};
-		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		frameBufferCreateInfo.pNext = NULL;
-		frameBufferCreateInfo.renderPass = m_renderPass;
-		frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
-		frameBufferCreateInfo.pAttachments = attachments.data();
-		frameBufferCreateInfo.width = m_width;
-		frameBufferCreateInfo.height = m_height;
-		frameBufferCreateInfo.layers = 1;
-		VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[0]));
+		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
+		{
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_swapchain->GetSwapchainImage()[i].view;
+
+			VkFramebufferCreateInfo frameBufferCreateInfo = {};
+			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			frameBufferCreateInfo.pNext = NULL;
+			frameBufferCreateInfo.renderPass = m_renderPass;
+			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
+			frameBufferCreateInfo.pAttachments = attachments.data();
+			frameBufferCreateInfo.width = m_width;
+			frameBufferCreateInfo.height = m_height;
+			frameBufferCreateInfo.layers = 1;
+			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
+		}
 	}
 }

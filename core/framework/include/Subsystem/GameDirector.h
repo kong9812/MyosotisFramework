@@ -9,6 +9,7 @@ namespace MyosotisFW
 {
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+
 	namespace System::Render
 	{
 		class RenderSubsystem;

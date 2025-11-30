@@ -7,14 +7,14 @@ namespace MyosotisFW::System::Render
 	class EditorRenderResources : public RenderResources
 	{
 	public:
-		EditorRenderResources(const RenderDevice_ptr& device, const RenderDescriptors_ptr& descriptors) :
-			RenderResources(device, descriptors),
+		EditorRenderResources(const RenderDevice_ptr& device) :
+			RenderResources(device),
 			m_editorRenderTarget{} {
 		}
 		~EditorRenderResources();
 
-		void Initialize(const uint32_t& width, const uint32_t& height) override;
-		void Resize(const uint32_t& width, const uint32_t& height) override;
+		void Initialize(const uint32_t width, const uint32_t height) override;
+		void Resize(const uint32_t width, const uint32_t height) override;
 
 		Image& GetEditorRenderTarget() { return m_editorRenderTarget; }
 

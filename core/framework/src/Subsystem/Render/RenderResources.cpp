@@ -3,7 +3,7 @@
 #include "RenderDevice.h"
 #include "VK_Loader.h"
 #include "RenderQueue.h"
-#include "RenderDescriptors.h"
+#include "MeshInfoDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -60,7 +60,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderResources::Initialize(const uint32_t& width, const uint32_t& height)
+	void RenderResources::Initialize(const uint32_t width, const uint32_t height)
 	{
 		{// depth/stencil
 			VkImageCreateInfo imageCreateInfoForDepthStencil = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthFormat, width, height);
@@ -124,21 +124,22 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_idMap.view));
 		}
 
-		{// Hi-Z DepthMap (MipLevels: 3)
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, AppInfo::g_hiZMipLevels);
+		{// Hi-Z DepthMap
+			uint32_t hiZMipLevels = floor(log2(std::max(width, height)));
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, hiZMipLevels);
 			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT |
 				VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_hiZDepthMap.image, &m_hiZDepthMap.allocation, &m_hiZDepthMap.allocationInfo));
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
-			imageViewCreateInfo.subresourceRange.levelCount = AppInfo::g_hiZMipLevels;
+			imageViewCreateInfo.subresourceRange.levelCount = hiZMipLevels;
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.view));
 			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
 			samplerCreateInfo.compareEnable = VK_FALSE;
 			samplerCreateInfo.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
 			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.sampler));
-			m_hiZDepthMap.mipView.resize(AppInfo::g_hiZMipLevels);
-			for (uint8_t i = 0; i < AppInfo::g_hiZMipLevels; i++)
+			m_hiZDepthMap.mipView.resize(hiZMipLevels);
+			for (uint8_t i = 0; i < hiZMipLevels; i++)
 			{
 				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
 				imageViewCreateInfo.subresourceRange.baseMipLevel = i;
@@ -169,7 +170,7 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	std::vector<Mesh> RenderResources::GetMeshVertex(const std::string& fileName)
+	std::vector<Mesh> RenderResources::GetMesh(const std::string& fileName)
 	{
 		auto vertexData = m_meshVertexData.find(fileName);
 		if (vertexData == m_meshVertexData.end())
@@ -188,7 +189,6 @@ namespace MyosotisFW::System::Render
 			{
 				ASSERT(false, "Unsupported mesh file format: " + fileName);
 			}
-			m_meshID.try_emplace(fileName, m_descriptors->AddCustomMesh(fileName, m_meshVertexData[fileName]));
 		}
 		return m_meshVertexData[fileName];
 	}
@@ -245,7 +245,7 @@ namespace MyosotisFW::System::Render
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
 
-	void RenderResources::Resize(const uint32_t& width, const uint32_t& height)
+	void RenderResources::Resize(const uint32_t width, const uint32_t height)
 	{
 		{// attachment
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthStencil.image, m_depthStencil.allocation);
@@ -267,10 +267,5 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
-	}
-
-	uint32_t& RenderResources::GetMeshID(const std::string& fileName)
-	{
-		return m_meshID[fileName];
 	}
 }

@@ -9,12 +9,12 @@ namespace MyosotisFW::System::Render
 	class PrimitiveGeometry : public StaticMesh
 	{
 	public:
-		PrimitiveGeometry();
+		PrimitiveGeometry(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~PrimitiveGeometry() {}
 
 		const ComponentType GetType() const override { return ComponentType::PrimitiveGeometryMesh; }
 
-		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
+		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 		void SetPrimitiveGeometryShape(const Shape::PrimitiveGeometryShape& shape) { m_primitiveGeometryShape = shape; }
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
@@ -25,6 +25,6 @@ namespace MyosotisFW::System::Render
 
 		Shape::PrimitiveGeometryShape m_primitiveGeometryShape;
 	};
-	TYPEDEF_SHARED_PTR(PrimitiveGeometry);
+	TYPEDEF_SHARED_PTR_ARGS(PrimitiveGeometry);
 	OBJECT_CAST_FUNCTION(PrimitiveGeometry);
 }

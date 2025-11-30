@@ -9,12 +9,12 @@ namespace MyosotisFW::System::Render::Camera
 	class FPSCamera : public CameraBase
 	{
 	public:
-		FPSCamera();
+		FPSCamera(const uint32_t objectID);
 		~FPSCamera() {};
 
 		glm::mat4 GetViewMatrix() const override;
 		glm::mat4 GetProjectionMatrix() const override;
-		glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const override;
+		glm::vec3 GetWorldPos(const glm::vec2& pos, const float distance) const override;
 
 		virtual const ComponentType GetType() const override { return ComponentType::FPSCamera; }
 
@@ -28,6 +28,6 @@ namespace MyosotisFW::System::Render::Camera
 		glm::vec2 m_lastMousePos;
 
 	};
-	TYPEDEF_SHARED_PTR(FPSCamera);
+	TYPEDEF_SHARED_PTR_ARGS(FPSCamera);
 	OBJECT_CAST_FUNCTION(FPSCamera);
 }

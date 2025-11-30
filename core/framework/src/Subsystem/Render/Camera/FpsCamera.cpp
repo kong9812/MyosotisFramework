@@ -5,7 +5,7 @@
 
 namespace MyosotisFW::System::Render::Camera
 {
-	FPSCamera::FPSCamera() : CameraBase(),
+	FPSCamera::FPSCamera(const uint32_t objectID) : CameraBase(objectID),
 		m_lastMousePos(glm::vec2(0.0f))
 	{
 		m_lastMousePos = glm::vec3(0.0f);
@@ -22,13 +22,15 @@ namespace MyosotisFW::System::Render::Camera
 		return glm::perspective(glm::radians(m_cameraFov), m_aspectRadio, m_cameraNear, m_cameraFar);
 	}
 
-	glm::vec3 FPSCamera::GetWorldPos(const glm::vec2& pos, const float& distance) const
+	glm::vec3 FPSCamera::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
 		return __super::GetWorldPos(pos, distance);
 	}
 
 	void FPSCamera::Update(const UpdateData& updateData)
 	{
+		m_isMoved = false;
+
 		if (updateData.pause) return;
 
 		if (!m_isReady)
@@ -52,6 +54,10 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraFront = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(mouseMovement.x), m_cameraUp) * glm::vec4(m_cameraFront, 0.0f));
 		m_cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
 		m_lastMousePos = updateData.mousePos;
+		if (mouseMovement != glm::vec2(0.0f))
+		{
+			m_isMoved = true;
+		}
 
 		// 移動
 		float speed = AppInfo::g_moveSpeed;
@@ -132,6 +138,10 @@ namespace MyosotisFW::System::Render::Camera
 					move.y += speed * m_cameraUp.y;
 				}
 			}
+		}
+		if (move != glm::vec3(0.0f))
+		{
+			m_isMoved = true;
 		}
 		m_cameraPos += move;
 	}

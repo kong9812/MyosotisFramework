@@ -7,12 +7,12 @@ namespace MyosotisFW::System::Render::Camera
 	class EditorCamera : public CameraBase
 	{
 	public:
-		EditorCamera();
+		EditorCamera(const uint32_t objectID);
 		~EditorCamera() {};
 
 		glm::mat4 GetViewMatrix() const override;
 		glm::mat4 GetProjectionMatrix() const override;
-		glm::vec3 GetWorldPos(const glm::vec2& pos, const float& distance) const override;
+		glm::vec3 GetWorldPos(const glm::vec2& pos, const float distance) const override;
 
 		virtual const ComponentType GetType() const override { return ComponentType::FPSCamera; }
 
@@ -27,6 +27,6 @@ namespace MyosotisFW::System::Render::Camera
 
 		void editorGUI();
 	};
-	TYPEDEF_SHARED_PTR(EditorCamera);
+	TYPEDEF_SHARED_PTR_ARGS(EditorCamera);
 	OBJECT_CAST_FUNCTION(EditorCamera);
 }

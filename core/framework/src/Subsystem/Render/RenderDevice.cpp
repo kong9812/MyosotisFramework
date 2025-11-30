@@ -221,7 +221,7 @@ namespace MyosotisFW::System::Render
 		vkDestroyDevice(m_device, GetAllocationCallbacks());
 	}
 
-	uint32_t RenderDevice::getMemoryTypeIndex(const uint32_t& typeBits, const VkMemoryPropertyFlags& properties) const
+	uint32_t RenderDevice::getMemoryTypeIndex(const uint32_t typeBits, const VkMemoryPropertyFlags& properties) const
 	{
 		for (uint32_t i = 0; i < m_physicalDeviceMemoryProperties.memoryTypeCount; i++) {
 			// タイプフィルタが一致し、プロパティ要件を満たしているか確認

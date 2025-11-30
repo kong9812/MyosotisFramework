@@ -5,31 +5,27 @@
 #include <array>
 #include <backends/imgui_impl_vulkan.h>
 
-#include "StageObject.h"
+#include "MObject.h"
 
 #include "RenderDevice.h"
 #include "RenderSwapchain.h"
 #include "RenderResources.h"
-#include "RenderDescriptors.h"
+#include "MObjectRegistry.h"
+
+#include "DescriptorPool.h"
+#include "SceneInfoDescriptorSet.h"
+#include "MeshInfoDescriptorSet.h"
+#include "ObjectInfoDescriptorSet.h"
+#include "TextureDescriptorSet.h"
 
 #include "DebugGUI.h"
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
-#include "ShadowMapRenderPass.h"
-#include "MainRenderPass.h"
-#include "FinalCompositionRenderPass.h"
 #include "MeshShaderRenderPass.h"
 
-#include "SkyboxRenderPipeline.h"
-#include "ShadowMapRenderPipeline.h"
-#include "DeferredRenderPipeline.h"
-#include "CompositionRenderPipeline.h"
-#include "LightingRenderPipeline.h"
-#include "FinalCompositionRenderPipeline.h"
-#include "InteriorObjectDeferredRenderPipeline.h"
-#include "MeshShaderRenderPhase1Pipeline.h"
-#include "MeshShaderRenderPhase2Pipeline.h"
+#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferRenderPhase2Pipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -39,9 +35,6 @@
 #include "AppInfo.h"
 
 #include "PrimitiveGeometry.h"
-#include "Skybox.h"
-#include "InteriorObject.h"
-#include "RenderPieplineList.h"
 
 namespace {
 	typedef struct
@@ -76,12 +69,17 @@ namespace MyosotisFW::System::Render
 		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
-	void RenderSubsystem::RegisterObject(const StageObject_ptr& object)
+	void RenderSubsystem::RegisterObject(const MObject_ptr& object)
 	{
-		if (!m_mainCamera && object->HasCamera(true))
+		if (object->IsCamera(true))
 		{
-			m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
-			m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+			if (!m_mainCamera)
+			{
+				m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
+				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+				m_mainCamera->SetMainCamera(true);
+			}
+			m_sceneInfoDescriptorSet->AddCamera(m_mainCamera);
 		}
 
 		{// StaticMesh
@@ -90,54 +88,22 @@ namespace MyosotisFW::System::Render
 			components.insert(components.end(), subComponents.begin(), subComponents.end());
 			for (ComponentBase_ptr& component : components)
 			{
-				if (IsStaticMesh(component->GetType()))
+				if (component->IsStaticMesh())
 				{
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
-					customMesh->PrepareForRender(m_device, m_resources);
-					{// ShadowMap
-						ShadowMapRenderPipeline::ShaderObject& shaderObject = customMesh->GetShadowMapShaderObject();
-						m_shadowMapRenderPipeline->CreateShaderObject(shaderObject);
-					}
-					{// Deferred Render
-						DeferredRenderPipeline::ShaderObject& shaderObject = customMesh->GetStaticMeshShaderObject();
-						m_deferredRenderPipeline->CreateShaderObject(shaderObject);
-					}
+					customMesh->PrepareForRender(m_device, m_resources, m_meshInfoDescriptorSet);
 				}
 			}
 		}
 
-		{// Skybox
-			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::Skybox, true);
-			for (ComponentBase_ptr& component : components)
-			{
-				if (component->GetType() == ComponentType::Skybox)
-				{
-					Skybox_ptr skybox = Object_CastToSkybox(component);
-					skybox->PrepareForRender(m_device, m_resources);
-					SkyboxRenderPipeline::ShaderObject& shaderObject = skybox->GetSkyboxShaderObject();
-					m_skyboxRenderPipeline->CreateShaderObject(shaderObject);
-				}
-			}
-		}
-
-		{// InteriorObjectMesh
-			std::vector<ComponentBase_ptr> components = object->FindAllComponents(ComponentType::InteriorObjectMesh, true);
-			for (ComponentBase_ptr& component : components)
-			{
-				if (component->GetType() == ComponentType::InteriorObjectMesh)
-				{
-					InteriorObject_ptr interiorObject = Object_CastToInteriorObject(component);
-					interiorObject->PrepareForRender(m_device, m_resources);
-					InteriorObjectDeferredRenderPipeline::ShaderObject& shaderObject = interiorObject->GetInteriorObjectShaderObject();
-					m_interiorObjectDeferredRenderPipeline->CreateShaderObject(shaderObject);
-				}
-			}
-		}
 		m_objects.push_back(object);
 	}
 
 	void RenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
+		// MObject Registry
+		m_objectRegistry = CreateMObjectRegistryPointer();
+
 		// Vulkan Instance
 		initializeRenderDevice(instance, surface);
 
@@ -182,10 +148,42 @@ namespace MyosotisFW::System::Render
 			m_mainCamera->Update(updateData);
 		}
 
-		for (StageObject_ptr& object : m_objects)
+		const bool meshChanged = m_objectRegistry->IsMeshChanged();
+		const bool transformChanged = m_objectRegistry->IsTransformChanged();
+
+		if (meshChanged || transformChanged)
 		{
-			object->Update(updateData, m_mainCamera);
+			if (meshChanged)
+			{
+				// Reset mesh count
+				m_vbDispatchInfoCount = 0;
+			}
+
+			for (MObject_ptr& object : m_objects)
+			{
+				if (!object->Update(updateData, m_mainCamera))
+				{
+					continue;
+				}
+
+				if (!meshChanged)
+				{
+					continue;
+				}
+
+				std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
+				m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);
+				m_vbDispatchInfoCount += static_cast<uint32_t>(vbDispatchInfo.size());
+			}
+			m_objectInfoDescriptorSet->Update();
+			if (meshChanged)
+			{
+				m_meshInfoDescriptorSet->Update();
+			}
+			m_objectRegistry->ResetChangeFlags();
 		}
+		m_sceneInfoDescriptorSet->Update();
+		m_textureDescriptorSet->Update();
 	}
 
 	void RenderSubsystem::BeginCompute()
@@ -205,15 +203,11 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkEndCommandBuffer(m_computeCommandBuffers[0]));
 		}
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];		// Frustum Culling
-
-		m_descriptors->UpdateMainDescriptorSet();
+		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];
 
 		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
 		computeQueue->Submit(submitInfo);
 		computeQueue->WaitIdle();
-
-		m_descriptors->ResetMainDescriptorSet();
 	}
 
 	void RenderSubsystem::BeginRender()
@@ -225,66 +219,6 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
-	}
-
-	void RenderSubsystem::ShadowRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
-
-		// ShadowMap Prender Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.4f, 0.0f, 0.6f), "Shadow Render"));
-
-		m_shadowMapRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-
-		m_shadowMapRenderPass->EndRender(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::MainRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-
-		m_descriptors->UpdateMainCameraData(m_mainCamera->GetCameraData());
-		for (StageObject_ptr& object : m_objects)
-		{
-			std::vector<ComponentBase_ptr> components = object->GetAllComponents(true);
-			for (ComponentBase_ptr& component : components)
-			{
-				if (IsStaticMesh(component->GetType()))
-				{
-					StaticMesh_ptr staticMesh = Object_CastToStaticMesh(component);
-					staticMesh->GetStaticMeshShaderObject().pushConstant.StandardSSBOIndex = m_descriptors->AddStandardSSBO(staticMesh->GetStaticMeshShaderObject().SSBO.standardSSBO);
-				}
-			}
-		}
-
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
-
-		// main render pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.8f, 0.8f, 1.0f), "Main Render"));
-
-		m_mainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-
-		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
-
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.6f, 0.0f), "Lighting Render"));
-		//m_lightingRenderPipeline->UpdateDescriptors(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		//m_lightingRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-
-		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
-
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Composition Render"));
-		//m_compositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-
-		m_mainRenderPass->EndRender(currentCommandBuffer);
-
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
 	void RenderSubsystem::MeshShaderRender()
@@ -299,32 +233,13 @@ namespace MyosotisFW::System::Render
 
 		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
-		m_meshShaderRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_vbDispatchInfoCount);
 
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
-		m_meshShaderRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_descriptors->GetStandardSSBOCount());
+		// m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
 
 		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
-
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::FinalCompositionRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
-
-		// final composition Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 1.0f), "FinalComposition Render"));
-
-		m_finalCompositionRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-
-		m_finalCompositionRenderPipeline->BindCommandBuffer(currentCommandBuffer);
-
-		m_finalCompositionRenderPass->EndRender(currentCommandBuffer);
 
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
@@ -333,8 +248,6 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
-
-		m_descriptors->UpdateMainDescriptorSet();
 
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
@@ -345,8 +258,6 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
-
-		m_descriptors->ResetMainDescriptorSet();
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -356,7 +267,7 @@ namespace MyosotisFW::System::Render
 		m_objects.clear();
 	}
 
-	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t& width, const uint32_t& height)
+	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height)
 	{
 		// デバイスの処理を待つ
 		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
@@ -411,20 +322,16 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderDescriptors()
 	{
-		m_descriptors = CreateRenderDescriptorsPointer(m_device);
-		std::vector<std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>> data{};
-		for (uint8_t i = 0; i < static_cast<uint8_t>(Shape::PrimitiveGeometryShape::Max); i++)
-		{
-			Shape::PrimitiveGeometryShape shape = static_cast<Shape::PrimitiveGeometryShape>(i);
-			std::vector<Mesh> mesh{ Shape::createShape(shape) };
-			data.push_back(std::pair<Shape::PrimitiveGeometryShape, std::vector<Mesh>>(shape, mesh));
-		}
-		m_descriptors->AddPrimitiveGeometry(data);
+		m_descriptorPool = CreateDescriptorPoolPointer(m_device);
+		m_sceneInfoDescriptorSet = CreateSceneInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 	}
 
 	void RenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateRenderResourcesPointer(m_device, m_descriptors);
+		m_resources = CreateRenderResourcesPointer(m_device);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
@@ -482,63 +389,35 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderPass()
 	{
-		m_shadowMapRenderPass = CreateShadowMapRenderPassPointer(m_device, m_resources, AppInfo::g_shadowMapSize, AppInfo::g_shadowMapSize);
-		m_shadowMapRenderPass->Initialize();
-
-		m_mainRenderPass = CreateMainRenderPassPointer(m_device, m_resources, m_swapchain->GetWidth(), m_swapchain->GetHeight());
-		m_mainRenderPass->Initialize();
-
-		m_finalCompositionRenderPass = CreateFinalCompositionRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_finalCompositionRenderPass->Initialize();
-
 		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_meshShaderRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
 	{
-		m_shadowMapRenderPipeline = CreateShadowMapRenderPipelinePointer(m_device, m_descriptors);
-		m_shadowMapRenderPipeline->Initialize(m_resources, m_shadowMapRenderPass->GetRenderPass());
-
-		m_skyboxRenderPipeline = CreateSkyboxRenderPipelinePointer(m_device, m_descriptors);
-		m_skyboxRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_deferredRenderPipeline = CreateDeferredRenderPipelinePointer(m_device, m_descriptors);
-		m_deferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_lightingRenderPipeline = CreateLightingRenderPipelinePointer(m_device, m_descriptors);
-		m_lightingRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_compositionRenderPipeline = CreateCompositionRenderPipelinePointer(m_device, m_descriptors);
-		m_compositionRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_interiorObjectDeferredRenderPipeline = CreateInteriorObjectDeferredRenderPipelinePointer(m_device, m_descriptors);
-		m_interiorObjectDeferredRenderPipeline->Initialize(m_resources, m_mainRenderPass->GetRenderPass());
-
-		m_finalCompositionRenderPipeline = CreateFinalCompositionRenderPipelinePointer(m_device, m_descriptors);
-		m_finalCompositionRenderPipeline->Initialize(m_resources, m_finalCompositionRenderPass->GetRenderPass());
-
-		m_lightingRenderPipeline->CreateShaderObject(m_shadowMapRenderPipeline->GetShadowMapDescriptorImageInfo());
-		m_lightingRenderPipeline->UpdateDirectionalLightInfo(m_shadowMapRenderPipeline->GetDirectionalLightInfo());
-		m_compositionRenderPipeline->CreateShaderObject();
-		m_finalCompositionRenderPipeline->CreateShaderObject();
-
-		m_meshShaderRenderPhase1Pipeline = CreateMeshShaderRenderPhase1PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
-		m_meshShaderRenderPhase2Pipeline = CreateMeshShaderRenderPhase2PipelinePointer(m_device, m_descriptors);
-		m_meshShaderRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()
 	{
-		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(m_device, m_descriptors, m_resources);
+		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(
+			m_device, m_resources,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
 		m_hiZDepthComputePipeline->Initialize();
 	}
 
-	void RenderSubsystem::resizeRenderPass(const uint32_t& width, const uint32_t& height)
+	void RenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
 	{
-		m_shadowMapRenderPass->Resize(width, height);
-		m_mainRenderPass->Resize(width, height);
-		m_finalCompositionRenderPass->Resize(width, height);
+		//m_shadowMapRenderPass->Resize(width, height);
+		//m_mainRenderPass->Resize(width, height);
+		//m_finalCompositionRenderPass->Resize(width, height);
 	}
 }
