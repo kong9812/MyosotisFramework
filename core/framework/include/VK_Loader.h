@@ -504,7 +504,6 @@ namespace Utility::Loader {
 
 		std::vector<MyosotisFW::Mesh> meshes{};
 
-		uint32_t indicesOffset = 0;
 		uint32_t meshCount = scene->getMeshCount();
 		std::vector<int> testList{};
 		for (uint32_t meshIdx = 0; meshIdx < meshCount; meshIdx++)
@@ -636,7 +635,6 @@ namespace Utility::Loader {
 				{
 					meshData.meshlet.push_back(currentMeshletData);
 				}
-				indicesOffset += positions.count;
 			}
 			meshes.push_back(meshData);
 		}

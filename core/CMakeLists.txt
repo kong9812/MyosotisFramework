@@ -263,3 +263,6 @@ add_subdirectory(myosotis)
 
 # editor project
 add_subdirectory(editor)
+
+# tools
+add_subdirectory(tools)
