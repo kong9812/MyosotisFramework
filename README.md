@@ -92,7 +92,8 @@ Once the environment setup is complete, you can use the following batch file to 
 - **Meshlet**  
   Meshlets are currently split in a super basic way (just by index).  
   Hoping to switch to something like Greedy Clustering later for better results.  
-![Meshlet](https://github.com/user-attachments/assets/d521eb41-fe99-4d7d-8b83-4a35eabcfbad)
+  **On my PC (RTX 4070 Ti), I can render about 830 million polygons at around 120 FPS. (Without LOD)**  
+![Meshlet](https://github.com/user-attachments/assets/cc8e7f85-6e56-48fe-b2fc-5f83b88fe741)
 
 - **2-phase Occlusion Culling**
   
