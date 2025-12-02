@@ -67,7 +67,7 @@ void main()
     for (uint i = idx; i < meshletVertexCount; i += stride) 
     {
         uint index = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, i);
-        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, index);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, index);
         vec4 worldPos = objectInfo.model * v.position;
         gl_MeshVerticesEXT[i].gl_Position = projView * worldPos;
         outVBInfoIndex[i] = vbDispatchInfoIndex;
@@ -82,13 +82,13 @@ void main()
         // 頂点インデックス -> VertexData -> VertexPosition -> バックフェース判定
         vec4 pos[3];
         uint uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.x);
-        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
         pos[0] = objectInfo.model * v.position;
         uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.y);
-        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
         pos[1] = objectInfo.model * v.position;
         uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.z);
-        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshletInfo.vertexAttributeBit, meshletInfo.unitSize, uniqueIndexIndex);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
         pos[2] = objectInfo.model * v.position;
 
         // バックフェースカリング

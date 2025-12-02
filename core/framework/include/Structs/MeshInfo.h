@@ -11,6 +11,10 @@ namespace MyosotisFW
 		uint32_t meshID;				// MeshID
 		uint32_t meshletInfoOffset;		// MeshletMetaDataの開始位置
 		uint32_t meshletCount;			// MeshletMetaDataの数
+		uint32_t vertexAttributeBit;	// 頂点属性のビットフラグ
+		uint32_t unitSize;				// 一枚当たりのサイズ
 		uint32_t _p1;					// 
+		uint32_t _p2;					// 
+		uint32_t _p3;					// 
 	};
 }

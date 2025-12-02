@@ -55,6 +55,11 @@
 [OK] VBDispatchInfoの準備
 [OK] ・ObjectID
 [OK] ・Meshlet
+[OK] ・VK_Loader.hの分割
+[OK] ・MeshInfo/MeshletInfoの整理
+[OK] ・meshoptimizerの導入
+[OK] ・GLTFLoader
+
 ・VisibilityBufferの出力画像を用意
 ・VisibilityBufferの出力
 

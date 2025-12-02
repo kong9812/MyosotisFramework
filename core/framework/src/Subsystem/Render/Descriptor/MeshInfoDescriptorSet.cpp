@@ -109,6 +109,8 @@ namespace MyosotisFW::System::Render
 		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 		meshInfo.AABBMin = mesh.meshInfo.AABBMin;
 		meshInfo.AABBMax = mesh.meshInfo.AABBMax;
+		meshInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+		meshInfo.unitSize = 13;
 		for (const Meshlet& meshlet : mesh.meshlet)
 		{
 			// MeshletMetaData
@@ -118,8 +120,6 @@ namespace MyosotisFW::System::Render
 			meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 			meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 			meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
-			meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-			meshletInfo.unitSize = 13;
 			meshletInfo.vertexDataOffset = m_vertexData.size();
 			meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
 			meshletInfo.primitivesOffset = m_primitivesData.size();
@@ -171,6 +171,8 @@ namespace MyosotisFW::System::Render
 			meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 			meshInfo.AABBMin = mesh.meshInfo.AABBMin;
 			meshInfo.AABBMax = mesh.meshInfo.AABBMax;
+			meshInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+			meshInfo.unitSize = 13;
 			for (const Meshlet& meshlet : mesh.meshlet)
 			{
 				// MeshletMetaData
@@ -180,8 +182,6 @@ namespace MyosotisFW::System::Render
 				meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 				meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 				meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
-				meshletInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-				meshletInfo.unitSize = 13;
 				meshletInfo.vertexDataOffset = m_vertexData.size();
 				meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
 				meshletInfo.primitivesOffset = m_primitivesData.size();
