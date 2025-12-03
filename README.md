@@ -90,10 +90,15 @@ Once the environment setup is complete, you can use the following batch file to 
 ![interiorMapping](https://github.com/kong9812/MyosotisFramework/blob/main/demo/interiorMapping.gif)
 
 - **Meshlet**  
-  Meshlets are currently split in a super basic way (just by index).  
-  Hoping to switch to something like Greedy Clustering later for better results.  
-  **On my PC (RTX 4070 Ti), I can render about 830 million polygons at around 120 FPS. (Without LOD)**  
-![Meshlet](https://github.com/user-attachments/assets/cc8e7f85-6e56-48fe-b2fc-5f83b88fe741)
+  Meshlets were first split in a very simple way (by index).  
+  **First Test:**  
+  On an RTX 4070 Ti, about **830 million polygons** can be rendered at around **120 FPS** (without LOD).
+  ![Meshlet](https://github.com/user-attachments/assets/cc8e7f85-6e56-48fe-b2fc-5f83b88fe741)
+  **Second Test (using meshoptimizer for Meshlet generation):**  
+  Meshlets are now generated using **meshoptimizer**, which creates better clusters and improves efficiency.  
+  This extreme test scene contains **approximately 3.8 billion polygons**.  
+  The frame rate drops to **19 FPS**, showing the current upper performance limit.
+  ![Meshlet](https://github.com/user-attachments/assets/cf109330-3f34-4299-9838-1805af9ac5ac)
 
 - **2-phase Occlusion Culling**
 
