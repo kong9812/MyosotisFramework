@@ -5,7 +5,7 @@ FILE(GLOB_RECURSE MFModelConverter_SOURCES
   "${PROJECT_SOURCE_DIR}/tools/MFModelConverter/include/*.h"
   "${PROJECT_SOURCE_DIR}/tools/MFModelConverter/src/*.cpp"
 )
-GroupSourcesByFolder(${MFModelConverter_SOURCES})
+GroupSourcesByFolder(SOURCES ${MFModelConverter_SOURCES} ROOT "${PROJECT_SOURCE_DIR}/tools/MFModelConverter/")
 
 add_executable(${MFModelConverter_PROJECT_NAME} ${MFModelConverter_SOURCES} ${APP_INFO_RC})
 target_link_libraries(${MFModelConverter_PROJECT_NAME} PRIVATE ${FRAMEWORK_PROJECT_NAME})
@@ -44,6 +44,9 @@ target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${tinygltf_S
 find_package(Vulkan REQUIRED)
 target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
+# meshoptimizer
+target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
+target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 
 # work directory
 set_target_properties(${MFModelConverter_PROJECT_NAME} PROPERTIES

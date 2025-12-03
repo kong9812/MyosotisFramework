@@ -1,14 +1,21 @@
 // Copyright (c) 2025 kong9812
+#define NOMINMAX
 #include <iostream>
 #include <filesystem>
 #include <set>
 #include <chrono>
 #include <unordered_set>
-
-#include "iglm.h"
-#include "iofbx.h"
-#include "Logger.h"
 #include <unordered_map>
+
+#include "itiny_gltf.h"
+#include "iofbx.h"
+
+#include "imeshoptimizer.h"
+#include "iglm.h"
+
+#include "AppInfo.h"
+#include "Logger.h"
+#include "Mesh.h"
 
 namespace {
 	// resources/models/フォルダを見て
@@ -85,7 +92,71 @@ static uint64_t FileTimestamp_ms(const std::filesystem::path& p)
 
 static void CreateMFModel(const RawMeshData& rawMeshData)
 {
-	// 貪欲法でメッシュレット分割
+	// メッシュレット数の上限
+	size_t maxMeshlets = meshopt_buildMeshletsBound(
+		rawMeshData.index.size(),
+		MyosotisFW::AppInfo::g_maxMeshletVertices,
+		MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+	// meshoptimizer用データ作成
+	std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
+	std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
+	std::vector<uint8_t> meshletTriangleFlags(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
+
+	// メッシュレット生成
+	size_t meshletCount = meshopt_buildMeshlets(
+		meshlets.data(),
+		meshletVertices.data(),
+		meshletTriangleFlags.data(),
+		rawMeshData.index.data(),
+		rawMeshData.index.size(),
+		&rawMeshData.position[0].x,
+		rawMeshData.position.size(),
+		sizeof(glm::vec3),
+		MyosotisFW::AppInfo::g_maxMeshletVertices,
+		MyosotisFW::AppInfo::g_maxMeshletPrimitives,
+		0.0f);
+
+	MyosotisFW::Mesh meshData{};
+	meshData.meshlet.reserve(meshletCount);
+	for (size_t i = 0; i < meshletCount; i++)
+	{
+		const meshopt_Meshlet& src = meshlets[i];
+		MyosotisFW::Meshlet dst{};
+
+		// UniqueIndex (GlobalIndex)
+		dst.uniqueIndex.reserve(src.vertex_count);
+		for (size_t v = 0; v < src.vertex_count; v++)
+		{
+			uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
+			dst.uniqueIndex.push_back(vertexIndex);
+		}
+
+		// Primitives (LocalIndex)
+		dst.primitives.reserve(src.triangle_count * 3);
+		for (size_t t = 0; t < src.triangle_count * 3; t++)
+		{
+			uint32_t triangleIndex = static_cast<uint32_t>(meshletVertices[src.triangle_offset + t]);
+			dst.primitives.push_back(triangleIndex);
+		}
+
+		// AABB
+		glm::vec3 p0 = rawMeshData.position[meshletVertices[src.vertex_offset + 0]];
+		dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
+		dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
+		for (size_t v = 1; v < src.vertex_count; v++)
+		{
+			uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
+			const glm::vec3& pos = rawMeshData.position[vertexIndex];
+			dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 1.0f));
+			dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 1.0f));
+		}
+
+		dst.meshletInfo.vertexCount = src.vertex_count;
+		dst.meshletInfo.primitiveCount = src.triangle_count;
+
+		meshData.meshlet.push_back(dst);
+	}
 }
 
 static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std::filesystem::path& mfModelPath)

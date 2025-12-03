@@ -11,6 +11,7 @@
 
 #include "Logger.h"
 #include "Mesh.h"
+#include "imeshoptimizer.h"
 
 namespace Utility::Loader {
 	inline ofbx::u32 triangulate(const ofbx::GeometryData& geom, const ofbx::GeometryPartition::Polygon& polygon, std::vector<uint32_t>& tri_indices) {
@@ -68,6 +69,7 @@ namespace Utility::Loader {
 			static_cast<ofbx::u16>(ofbx::LoadFlags::NONE));
 
 		std::vector<MyosotisFW::Mesh> meshes{};
+		std::vector<glm::vec3> tmpPositions{};
 
 		uint32_t meshCount = scene->getMeshCount();
 		std::vector<int> testList{};
@@ -92,6 +94,7 @@ namespace Utility::Loader {
 						meshData.vertex.push_back(v.y);
 						meshData.vertex.push_back(v.z);
 						meshData.vertex.push_back(1.0f);
+						tmpPositions.push_back(glm::vec4(v.x, v.y, v.z, 0.0f));
 
 						// 仮normal
 						meshData.vertex.push_back(0.0f);
@@ -131,83 +134,161 @@ namespace Utility::Loader {
 					}
 				}
 
-				MyosotisFW::Meshlet currentMeshletData{};
-				std::unordered_set<uint32_t> currentUniqueIndex;
-				bool firstDataForMeshletAABB = true;
+				//MyosotisFW::Meshlet currentMeshletData{};
+				//std::unordered_set<uint32_t> currentUniqueIndex;
+				//bool firstDataForMeshletAABB = true;
+				//for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
+				//{
+				//	const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
+				//	std::vector<uint32_t> triangle{};
+				//	triangulate(geomData, polygon, triangle);
+				//	glm::vec3 v0 = glm::vec3(positions.get(triangle[0]).x, positions.get(triangle[0]).y, positions.get(triangle[0]).z);
+				//	glm::vec3 v1 = glm::vec3(positions.get(triangle[1]).x, positions.get(triangle[1]).y, positions.get(triangle[1]).z);
+				//	glm::vec3 v2 = glm::vec3(positions.get(triangle[2]).x, positions.get(triangle[2]).y, positions.get(triangle[2]).z);
+
+				//	// 頂点追加後のサイズ
+				//	size_t newUnique = currentMeshletData.uniqueIndex.size();
+				//	for (uint32_t i = 0; i < 3; i++)
+				//	{
+				//		if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
+				//		{
+				//			newUnique++;
+				//		}
+				//	}
+
+				//	// 制限チェック
+				//	if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
+				//		((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
+				//	{
+				//		meshData.meshlet.push_back(currentMeshletData);
+				//		currentMeshletData = MyosotisFW::Meshlet();
+				//		currentUniqueIndex.clear();
+				//		firstDataForMeshletAABB = true;
+				//	}
+
+				//	// 頂点追加
+				//	for (uint32_t i = 0; i < 3; i++)
+				//	{
+				//		if (currentUniqueIndex.insert(triangle[i]).second)
+				//		{
+				//			currentMeshletData.uniqueIndex.push_back(triangle[i]);
+				//		}
+				//	}
+
+				//	// AABB更新
+				//	if (firstDataForMeshletAABB)
+				//	{
+				//		currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
+				//		currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
+				//		firstDataForMeshletAABB = false;
+				//	}
+				//	else
+				//	{
+				//		currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+				//		currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
+				//	}
+
+				//	// 三角形追加
+				//	auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
+				//	size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
+				//	auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
+				//	size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
+				//	auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
+				//	size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
+				//	currentMeshletData.primitives.push_back(index1);
+				//	currentMeshletData.primitives.push_back(index2);
+				//	currentMeshletData.primitives.push_back(index3);
+				//}
+				//if (!currentMeshletData.primitives.empty())
+				//{
+				//	meshData.meshlet.push_back(currentMeshletData);
+				//}
+
+				// 本来のIndex
+				std::vector<uint32_t> index{};
 				for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
 				{
 					const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
-					std::vector<uint32_t> triangle{};
+					int triangle[3]{};
 					triangulate(geomData, polygon, triangle);
-					glm::vec3 v0 = glm::vec3(positions.get(triangle[0]).x, positions.get(triangle[0]).y, positions.get(triangle[0]).z);
-					glm::vec3 v1 = glm::vec3(positions.get(triangle[1]).x, positions.get(triangle[1]).y, positions.get(triangle[1]).z);
-					glm::vec3 v2 = glm::vec3(positions.get(triangle[2]).x, positions.get(triangle[2]).y, positions.get(triangle[2]).z);
-
-					// 頂点追加後のサイズ
-					size_t newUnique = currentMeshletData.uniqueIndex.size();
 					for (uint32_t i = 0; i < 3; i++)
 					{
-						if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
-						{
-							newUnique++;
-						}
+						index.push_back(static_cast<uint32_t>(triangle[i]));
 					}
-
-					// 制限チェック
-					if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-						((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
-					{
-						meshData.meshlet.push_back(currentMeshletData);
-						currentMeshletData = MyosotisFW::Meshlet();
-						currentUniqueIndex.clear();
-						firstDataForMeshletAABB = true;
-					}
-
-					// 頂点追加
-					for (uint32_t i = 0; i < 3; i++)
-					{
-						if (currentUniqueIndex.insert(triangle[i]).second)
-						{
-							currentMeshletData.uniqueIndex.push_back(triangle[i]);
-						}
-					}
-
-					// AABB更新
-					if (firstDataForMeshletAABB)
-					{
-						currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
-						currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
-						firstDataForMeshletAABB = false;
-					}
-					else
-					{
-						currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
-						currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
-					}
-
-					// 三角形追加
-					auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
-					size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
-					auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
-					size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
-					auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
-					size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
-					currentMeshletData.primitives.push_back(index1);
-					currentMeshletData.primitives.push_back(index2);
-					currentMeshletData.primitives.push_back(index3);
 				}
-				if (!currentMeshletData.primitives.empty())
+
+				// メッシュレット数の上限
+				size_t maxMeshlets = meshopt_buildMeshletsBound(
+					index.size(),
+					MyosotisFW::AppInfo::g_maxMeshletVertices,
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+				// meshoptimizer用データ作成
+				std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
+				std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
+				std::vector<uint8_t> meshletTriangles(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
+
+				// メッシュレット生成
+				size_t meshletCount = meshopt_buildMeshlets(
+					meshlets.data(),
+					meshletVertices.data(),
+					meshletTriangles.data(),
+					index.data(),
+					index.size(),
+					&tmpPositions[0].x,
+					tmpPositions.size(),
+					sizeof(glm::vec3),
+					MyosotisFW::AppInfo::g_maxMeshletVertices,
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives,
+					0.0f);
+
+				meshData.meshlet.reserve(meshletCount);
+				for (size_t i = 0; i < meshletCount; i++)
 				{
-					meshData.meshlet.push_back(currentMeshletData);
+					const meshopt_Meshlet& src = meshlets[i];
+					MyosotisFW::Meshlet dst{};
+
+					// UniqueIndex (GlobalIndex)
+					dst.uniqueIndex.reserve(src.vertex_count);
+					for (size_t v = 0; v < src.vertex_count; v++)
+					{
+						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
+						dst.uniqueIndex.push_back(vertexIndex);
+					}
+
+					// Primitives (LocalIndex)
+					dst.primitives.reserve(src.triangle_count * 3);
+					for (size_t t = 0; t < src.triangle_count * 3; t++)
+					{
+						uint32_t triangleIndex = static_cast<uint32_t>(meshletTriangles[src.triangle_offset + t]);
+						dst.primitives.push_back(triangleIndex);
+					}
+
+					// AABB
+					glm::vec3 p0 = tmpPositions[meshletVertices[src.vertex_offset + 0]];
+					dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
+					dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
+					for (size_t v = 1; v < src.vertex_count; v++)
+					{
+						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
+						const glm::vec3& pos = tmpPositions[vertexIndex];
+						dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
+						dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
+					}
+
+					dst.meshletInfo.vertexCount = src.vertex_count;
+					dst.meshletInfo.primitiveCount = src.triangle_count;
+
+					meshData.meshlet.push_back(dst);
 				}
+				meshes.push_back(meshData);
 			}
-			meshes.push_back(meshData);
-		}
-		scene->destroy();
+			scene->destroy();
 #ifdef DEBUG
-		Logger::Debug("[VK_Loader] End load: " + fileName +
-			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
+			Logger::Debug("[VK_Loader] End load: " + fileName +
+				"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
 #endif
-		return meshes;
+			return meshes;
+		}
 	}
 }

@@ -24,13 +24,31 @@ set(CMAKE_SHARED_LINKER_FLAGS_FWDLL "${CMAKE_SHARED_LINKER_FLAGS_DEBUG}" CACHE S
 
 # ソースファイルをフォルダごとに整理する関数
 function(GroupSourcesByFolder)
+  set(options "")
+  set(oneValueArgs ROOT)
+  set(multVaileArgs SOURCES)
+  cmake_parse_arguments(GS "${options}" "${oneValueArgs}" "${multVaileArgs}" "${ARGN}")
+
+  # ルートディレクトリ
+  if(GS_ROOT)
+    set(root "${GS_ROOT}")
+  else()
+    set(root "${PROJECT_SOURCE_DIR}")
+  endif()
+
+  # ソースリスト
+  if(GS_SOURCES)
+    set(sources "${GS_SOURCES}")
+  else()
+    set(sources "${GS_UNPARSED_ARGUMENTS}")
+  endif()
+
   set(SOURCE_GROUP_DELIMITER "/")
   set(last_dir "")
   set(files "")
-  set(sources ${ARGN})
   
   foreach(file ${sources})
-    file(RELATIVE_PATH relative_file "${PROJECT_SOURCE_DIR}" ${file})
+    file(RELATIVE_PATH relative_file ${root} ${file})
     get_filename_component(dir "${relative_file}" PATH)
     if(NOT "${dir}" STREQUAL "${last_dir}")
       if(files)
@@ -204,6 +222,17 @@ set(TINYGLTF_INSTALL OFF CACHE BOOL "" FORCE)
 set(TINYGLTF_INSTALL_VENDOR OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(tinygltf)
 
+# meshoptimizer
+FetchContent_Declare(
+    meshoptimizer
+    GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+    GIT_TAG        v0.25
+)
+set(MESHOPT_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(meshoptimizer)
+set_target_properties(meshoptimizer PROPERTIES FOLDER "external")
+FILE(GLOB meshoptimizer_SOURCES "${meshoptimizer_SOURCE_DIR}/src/*cpp") 
+
 # framework project
 set(FRAMEWORK_PROJECT_NAME "MyosotisFW")
 
@@ -254,6 +283,9 @@ target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${tinygltf_SOURCE_D
 find_package(Vulkan REQUIRED)
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
+# meshoptimizer
+target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
+target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 
 # dll project
 add_subdirectory(frameworkDLL)
