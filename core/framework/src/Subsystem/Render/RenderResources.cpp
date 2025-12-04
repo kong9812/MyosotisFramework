@@ -9,6 +9,7 @@
 #include "ImageIo.h"
 #include "FBXIo.h"
 #include "GLTFIo.h"
+#include "MFModelIo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -189,6 +190,10 @@ namespace MyosotisFW::System::Render
 			else if ((extension == ".gltf") || (extension == ".GLTF"))
 			{
 				m_meshVertexData.emplace(fileName, Utility::Loader::loadGltf(fileName));
+			}
+			else if ((extension == ".mfmodel") || (extension == ".MFMODEL"))
+			{
+				m_meshVertexData.emplace(fileName, Utility::Loader::loadMFModel(fileName));
 			}
 			else
 			{

@@ -13,7 +13,7 @@
 #include "Mesh.h"
 
 namespace Utility::Loader {
-	inline const float* GetFloatData(const tinygltf::Model& glTFModel, const tinygltf::Primitive& primitive, const char* attributeName, size_t* count = nullptr)
+	inline const float* GetGLTFFloatData(const tinygltf::Model& glTFModel, const tinygltf::Primitive& primitive, const char* attributeName, size_t* count = nullptr)
 	{
 		if (primitive.attributes.find(attributeName) == primitive.attributes.end()) return nullptr;
 
@@ -111,10 +111,10 @@ namespace Utility::Loader {
 				MyosotisFW::Mesh meshData{};
 				bool firstDataForAABB = true;
 				size_t vertexCount = 0;
-				const float* positionBuffer = GetFloatData(glTFModel, primitive, "POSITION", &vertexCount);
-				const float* normalBuffer = GetFloatData(glTFModel, primitive, "NORMAL");
-				const float* uvBuffer = GetFloatData(glTFModel, primitive, "TEXCOORD_0");
-				const float* colorBuffer = GetFloatData(glTFModel, primitive, "COLOR_0");
+				const float* positionBuffer = GetGLTFFloatData(glTFModel, primitive, "POSITION", &vertexCount);
+				const float* normalBuffer = GetGLTFFloatData(glTFModel, primitive, "NORMAL");
+				const float* uvBuffer = GetGLTFFloatData(glTFModel, primitive, "TEXCOORD_0");
+				const float* colorBuffer = GetGLTFFloatData(glTFModel, primitive, "COLOR_0");
 
 				// add vertex data
 				for (size_t vertex = 0; vertex < vertexCount; vertex++)

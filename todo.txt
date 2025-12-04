@@ -59,9 +59,26 @@
 [OK] ・MeshInfo/MeshletInfoの整理
 [OK] ・meshoptimizerの導入
 [OK] ・GLTFLoader
-
+[OK] ・MFModel対応
+[OK] ・Cullingチェックフラグの追加
 ・VisibilityBufferの出力画像を用意
 ・VisibilityBufferの出力
+・Skybox
+
+・WeekendHomework
+　・Terrain
+　　・HightMap 4096*4096
+　　・チャンク分け
+　　　・1Chunk: 64*64
+　　・LOD
+　　　・事前にAABBデータ作成
+　　　・Runtime
+　　　　・CPU側でFrustumCulling
+　　　　・距離でLOD決め
+　　　・GPU側
+　　　　・GeomShaderで頂点作成、地形描画！！
+　・Lighting
+　　・時間がかかる…
 
 描画する時は各Objectのm_vbDispatchInfoを取り出して、objectIDをセットして使う!!
 

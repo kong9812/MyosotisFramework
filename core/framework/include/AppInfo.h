@@ -110,6 +110,8 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_fontFolder = ".\\resources\\font\\";
 	// [フォルダ]モデル
 	constexpr const char* g_modelFolder = ".\\resources\\models\\";
+	// [フォルダ]モデル (MFModel)
+	constexpr const char* g_mfModelFolder = ".\\resources\\models\\MFModels\\";
 	// [フォルダ]ゲームステージ
 	constexpr const char* g_gameStageFolder = ".\\resources\\gamestage\\";
 

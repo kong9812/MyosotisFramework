@@ -94,7 +94,7 @@ namespace Utility::Loader {
 						meshData.vertex.push_back(v.y);
 						meshData.vertex.push_back(v.z);
 						meshData.vertex.push_back(1.0f);
-						tmpPositions.push_back(glm::vec4(v.x, v.y, v.z, 0.0f));
+						tmpPositions.push_back(glm::vec3(v.x, v.y, v.z));
 
 						// 仮normal
 						meshData.vertex.push_back(0.0f);

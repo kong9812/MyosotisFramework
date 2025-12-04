@@ -7,6 +7,9 @@ namespace MyosotisFW
 	// VB: VisibilityBuffer
 	struct VBDispatchInfo
 	{
+		// BitFlags
+		uint32_t bitFlags;	// 0: IsCullingObject
+
 		// 描画直前にセット
 		uint32_t objectID;
 
@@ -15,7 +18,5 @@ namespace MyosotisFW
 
 		// ここは0からスタートし、GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 		uint32_t meshletID;
-
-		uint32_t _p1;
 	};
 }

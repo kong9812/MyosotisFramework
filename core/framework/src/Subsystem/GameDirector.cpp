@@ -63,7 +63,8 @@ namespace MyosotisFW::System::GameDirector {
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
 			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
+			customMeshInfo.meshName = "BarramundiFish.mfmodel";
+			//customMeshInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
 			//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 			component->SetCustomMeshInfo(customMeshInfo);
 			newObject->AddComponent(component);
@@ -78,7 +79,7 @@ namespace MyosotisFW::System::GameDirector {
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
 			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
+			customMeshInfo.meshName = "BarramundiFish.mfmodel";
 			//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 			component->SetCustomMeshInfo(customMeshInfo);
 			newObject->AddComponent(component);
@@ -93,7 +94,7 @@ namespace MyosotisFW::System::GameDirector {
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
 			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
+			customMeshInfo.meshName = "BarramundiFish.mfmodel";
 			//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 			component->SetCustomMeshInfo(customMeshInfo);
 			newObject->AddComponent(component);
@@ -108,13 +109,26 @@ namespace MyosotisFW::System::GameDirector {
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
 			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
+			customMeshInfo.meshName = "BarramundiFish.mfmodel";
 			//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
 			component->SetCustomMeshInfo(customMeshInfo);
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
+		{
+			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
+			newObject->SetPos(glm::vec3(10.0f, 0.0f, 0.0f));
+			newObject->SetRot(glm::vec3(0.0f));
+			newObject->SetScale(glm::vec3(10.0f));
 
+			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
+				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
+			CustomMeshInfo customMeshInfo{};
+			customMeshInfo.meshName = "Suzanne.mfmodel";
+			component->SetCustomMeshInfo(customMeshInfo);
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
 		//{
 		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
 		//	newObject->SetPos(glm::vec3(-10.0f, 0.0f, 0.0f));

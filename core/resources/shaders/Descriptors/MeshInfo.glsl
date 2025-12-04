@@ -9,9 +9,9 @@ struct MeshInfo {
   	uint meshletCount;			// MeshletMetaDataの数
   	uint vertexAttributeBit;  	// 頂点属性のビットフラグ
 	uint unitSize;            	// 一枚当たりのサイズ
+	uint vertexFloatCount;		// 頂点Floatデータの数 
   	uint _p1;					// 
   	uint _p2;					// 
-  	uint _p3;					// 
 };
 
 layout (std430, set = 2, binding = 0) readonly buffer MeshInfoDescriptor {

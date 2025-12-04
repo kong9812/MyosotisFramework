@@ -16,6 +16,7 @@
 #include "AppInfo.h"
 #include "Logger.h"
 #include "Mesh.h"
+#include "MFModelIo.h"
 
 namespace {
 	// resources/models/フォルダを見て
@@ -28,9 +29,6 @@ namespace {
 	// 例: resources/models/character.fbx -> resources/models/MFModels/character.mfmodel
 	// 例: resources/models/scene.gltf -> resources/models/MFModels/scene.mfmodel
 	// mfmodelの中身はglTFやfbxを独自バイナリ形式で保存したものとする
-
-	const char* g_modelsFolder = "resources/models/";
-	const char* g_mfModelsFolder = "resources/models/MFModels/";
 
 	const char* g_fbxExt = ".fbx";
 	const char* g_gltfExt = ".gltf";
@@ -45,6 +43,7 @@ namespace {
 		std::vector<glm::vec2> uv;
 		std::vector<glm::vec4> color;
 
+		std::vector<float> vertex;
 		std::vector<uint32_t> index;
 	};
 
@@ -90,7 +89,7 @@ static uint64_t FileTimestamp_ms(const std::filesystem::path& p)
 }
 
 
-static void CreateMFModel(const RawMeshData& rawMeshData)
+static void CreateMFModel(const char* name, const RawMeshData& rawMeshData)
 {
 	// メッシュレット数の上限
 	size_t maxMeshlets = meshopt_buildMeshletsBound(
@@ -101,13 +100,13 @@ static void CreateMFModel(const RawMeshData& rawMeshData)
 	// meshoptimizer用データ作成
 	std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
 	std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
-	std::vector<uint8_t> meshletTriangleFlags(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
+	std::vector<uint8_t> meshletTriangles(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
 
 	// メッシュレット生成
 	size_t meshletCount = meshopt_buildMeshlets(
 		meshlets.data(),
 		meshletVertices.data(),
-		meshletTriangleFlags.data(),
+		meshletTriangles.data(),
 		rawMeshData.index.data(),
 		rawMeshData.index.size(),
 		&rawMeshData.position[0].x,
@@ -117,7 +116,11 @@ static void CreateMFModel(const RawMeshData& rawMeshData)
 		MyosotisFW::AppInfo::g_maxMeshletPrimitives,
 		0.0f);
 
+	glm::vec3 meshAABBMin(FLT_MAX);
+	glm::vec3 meshAABBMax(-FLT_MAX);
+
 	MyosotisFW::Mesh meshData{};
+	meshData.vertex = rawMeshData.vertex;
 	meshData.meshlet.reserve(meshletCount);
 	for (size_t i = 0; i < meshletCount; i++)
 	{
@@ -136,7 +139,7 @@ static void CreateMFModel(const RawMeshData& rawMeshData)
 		dst.primitives.reserve(src.triangle_count * 3);
 		for (size_t t = 0; t < src.triangle_count * 3; t++)
 		{
-			uint32_t triangleIndex = static_cast<uint32_t>(meshletVertices[src.triangle_offset + t]);
+			uint32_t triangleIndex = static_cast<uint32_t>(meshletTriangles[src.triangle_offset + t]);
 			dst.primitives.push_back(triangleIndex);
 		}
 
@@ -144,12 +147,16 @@ static void CreateMFModel(const RawMeshData& rawMeshData)
 		glm::vec3 p0 = rawMeshData.position[meshletVertices[src.vertex_offset + 0]];
 		dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
 		dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
+		meshAABBMin = glm::min(meshAABBMin, p0);
+		meshAABBMax = glm::max(meshAABBMax, p0);
 		for (size_t v = 1; v < src.vertex_count; v++)
 		{
 			uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
 			const glm::vec3& pos = rawMeshData.position[vertexIndex];
-			dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 1.0f));
-			dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 1.0f));
+			dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
+			dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
+			meshAABBMin = glm::min(meshAABBMin, pos);
+			meshAABBMax = glm::max(meshAABBMax, pos);
 		}
 
 		dst.meshletInfo.vertexCount = src.vertex_count;
@@ -157,6 +164,12 @@ static void CreateMFModel(const RawMeshData& rawMeshData)
 
 		meshData.meshlet.push_back(dst);
 	}
+	meshData.meshInfo.AABBMin = glm::vec4(meshAABBMin, 0.0f);
+	meshData.meshInfo.AABBMax = glm::vec4(meshAABBMax, 0.0f);
+	meshData.meshInfo.meshletCount = meshletCount;
+	meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(rawMeshData.vertex.size());
+
+	Utility::Loader::SerializeMFModel(name, meshData);
 }
 
 static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std::filesystem::path& mfModelPath)
@@ -182,6 +195,9 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 		const ofbx::Mesh* mesh = scene->getMesh(meshIndex);
 		const ofbx::GeometryData& geomData = mesh->getGeometryData();
 		const ofbx::Vec3Attributes positions = geomData.getPositions();
+		const ofbx::Vec3Attributes normal = geomData.getNormals();
+		const ofbx::Vec2Attributes uv = geomData.getUVs();
+		const ofbx::Vec4Attributes color = geomData.getColors();
 
 		for (uint32_t partitionIdx = 0; partitionIdx < geomData.getPartitionCount(); partitionIdx++)
 		{
@@ -192,14 +208,51 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 
 				for (uint32_t vertexIdx = polygon.from_vertex; vertexIdx < polygon.from_vertex + polygon.vertex_count; vertexIdx++)
 				{
-					ofbx::Vec3 v = positions.get(vertexIdx);
-					rawMeshData.position.push_back(glm::vec3(v.x, v.y, v.z));
-					// 仮normal
-					rawMeshData.normal.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-					// 仮uv
-					rawMeshData.uv.push_back(glm::vec2(0.0f, 0.0f));
-					// 仮color
-					rawMeshData.color.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+					// Position
+					{
+						ofbx::Vec3 v = positions.get(vertexIdx);
+						rawMeshData.position.push_back(glm::vec3(v.x, v.y, v.z));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v.x, v.y, v.z, 1.0f });
+					}
+
+					// Normal
+					if (normal.count > vertexIdx)
+					{
+						ofbx::Vec3 n = normal.get(vertexIdx);
+						rawMeshData.normal.push_back(glm::vec3(n.x, n.y, n.z));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { n.x, n.y, n.z });
+					}
+					else
+					{
+						rawMeshData.normal.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f });
+					}
+
+					// UV
+					if (uv.count > vertexIdx)
+					{
+						ofbx::Vec2 u = uv.get(vertexIdx);
+						rawMeshData.uv.push_back(glm::vec2(u.x, u.y));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { u.x, u.y });
+					}
+					else
+					{
+						rawMeshData.uv.push_back(glm::vec2(0.0f, 0.0f));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f });
+					}
+
+					// Color
+					if (color.count > vertexIdx)
+					{
+						ofbx::Vec4 c = color.get(vertexIdx);
+						rawMeshData.color.push_back(glm::vec4(c.x, c.y, c.z, c.w));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { c.x, c.y, c.z, c.w });
+					}
+					else
+					{
+						rawMeshData.color.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
+					}
 				}
 			}
 
@@ -218,7 +271,144 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 	scene->destroy();
 
 	// mfmodel作成
-	CreateMFModel(rawMeshData);
+	CreateMFModel(fbxPath.stem().string().c_str(), rawMeshData);
+}
+
+static const float* GetGLTFFloatData(const tinygltf::Model& glTFModel, const tinygltf::Primitive& primitive, const char* attributeName, size_t* count = nullptr)
+{
+	if (primitive.attributes.find(attributeName) == primitive.attributes.end()) return nullptr;
+
+	const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.attributes.find(attributeName)->second];
+	const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+	if (count) *count = accessor.count;
+	return reinterpret_cast<const float*>(&(glTFModel.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
+}
+static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const std::filesystem::path& mfModelPath)
+{
+	// GLTF読み込み
+	tinygltf::Model glTFModel{};
+	tinygltf::TinyGLTF glTFLoader{};
+	std::string error{};
+	std::string warning{};
+
+	bool fileLoaded = glTFLoader.LoadASCIIFromFile(&glTFModel, &error, &warning, gltfPath.string());
+	ASSERT(fileLoaded, "Failed to open gltf file: " + gltfPath.string() + "\nerror: " + error);
+
+	// メッシュデータ抽出
+	RawMeshData rawMeshData{};
+	for (const tinygltf::Mesh& mesh : glTFModel.meshes)
+	{
+		for (const tinygltf::Primitive& primitive : mesh.primitives)
+		{
+			size_t vertexCount = 0;
+			const float* positionBuffer = GetGLTFFloatData(glTFModel, primitive, "POSITION", &vertexCount);
+			const float* normalBuffer = GetGLTFFloatData(glTFModel, primitive, "NORMAL");
+			const float* uvBuffer = GetGLTFFloatData(glTFModel, primitive, "TEXCOORD_0");
+			const float* colorBuffer = GetGLTFFloatData(glTFModel, primitive, "COLOR_0");
+
+			// Vertex
+			for (size_t vertex = 0; vertex < vertexCount; vertex++)
+			{
+				if (positionBuffer != nullptr)
+				{
+					glm::vec3 v = glm::make_vec3(&positionBuffer[vertex * 3]);
+					rawMeshData.position.push_back(v);
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v.x, v.y, v.z, 1.0f });
+				}
+				else
+				{
+					rawMeshData.position.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f, 1.0f });
+				}
+
+				if (normalBuffer != nullptr)
+				{
+					glm::vec3 n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
+					rawMeshData.normal.push_back(n);
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { n.x, n.y, n.z });
+				}
+				else
+				{
+					rawMeshData.normal.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f });
+				}
+
+				if (uvBuffer != nullptr)
+				{
+					glm::vec2 uv = glm::make_vec2(&uvBuffer[vertex * 2]);
+					rawMeshData.uv.push_back(uv);
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { uv.x, uv.y });
+				}
+				else
+				{
+					rawMeshData.uv.push_back(glm::vec2(0.0f, 0.0f));
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f });
+				}
+
+				if (colorBuffer != nullptr)
+				{
+					glm::vec3 color = glm::make_vec3(&colorBuffer[vertex * 3]);
+					rawMeshData.color.push_back(glm::vec4(color, 1.0f));
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { color.r, color.g, color.b, 1.0f });
+				}
+				else
+				{
+					rawMeshData.color.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
+				}
+			}
+
+			// Index
+			const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
+			const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+			const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
+			const uint32_t trianglesCount = accessor.count / 3;
+			switch (accessor.componentType) {
+			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
+				const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+					const uint32_t triangle[3] = {
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+					};
+					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
+				}
+				break;
+			}
+			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
+				const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+					const uint32_t triangle[3] = {
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+					};
+					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
+				}
+				break;
+			}
+			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
+				const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+					const uint32_t triangle[3] = {
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+					};
+					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
+				}
+				break;
+			}
+			default:
+				ASSERT(false, "Index component type not supported! File: " + gltfPath.string());
+				break;
+			}
+		}
+	}
+
+	// mfmodel作成
+	CreateMFModel(gltfPath.stem().string().c_str(), rawMeshData);
 }
 
 int main()
@@ -228,8 +418,8 @@ int main()
 	std::cout << std::filesystem::current_path() << std::endl;
 	// デバッグ用出力 デバッグ用出力 デバッグ用出力 デバッグ用出力
 
-	std::vector<std::filesystem::path> rawModelFiles = ListFilesRecursive(g_modelsFolder, { g_fbxExt, g_gltfExt });
-	std::vector<std::filesystem::path> mfModelFiles = ListFilesRecursive(g_mfModelsFolder, { g_mfModelExt });
+	std::vector<std::filesystem::path> rawModelFiles = ListFilesRecursive(MyosotisFW::AppInfo::g_modelFolder, { g_fbxExt, g_gltfExt });
+	std::vector<std::filesystem::path> mfModelFiles = ListFilesRecursive(MyosotisFW::AppInfo::g_mfModelFolder, { g_mfModelExt });
 
 	// デバッグ用出力 デバッグ用出力 デバッグ用出力 デバッグ用出力
 	std::cout << "========================================RawModel========================================" << std::endl;
@@ -258,7 +448,7 @@ int main()
 	std::vector<std::filesystem::path> mfModelCreateList{};
 	for (const std::filesystem::path& rawModelPath : rawModelFiles)
 	{
-		std::filesystem::path mfModelPath = std::filesystem::path(g_mfModelsFolder) / rawModelPath.filename().replace_extension(g_mfModelExt);
+		std::filesystem::path mfModelPath = std::filesystem::path(MyosotisFW::AppInfo::g_mfModelFolder) / rawModelPath.filename().replace_extension(g_mfModelExt);
 		uint64_t rawModelTimestamp = FileTimestamp_ms(rawModelPath);
 		uint64_t mfModelTimestamp = 0;
 		if (std::filesystem::exists(mfModelPath))
@@ -283,17 +473,15 @@ int main()
 		std::cout << "[Info] Generating MFModel: " << path.filename() << std::endl;
 		// 拡張子取得
 		std::string extension = path.extension().string();
-		std::filesystem::path mfModelPath = std::filesystem::path(g_mfModelsFolder) / path.filename().replace_extension(g_mfModelExt);
+		std::filesystem::path mfModelPath = std::filesystem::path(MyosotisFW::AppInfo::g_mfModelFolder) / path.filename().replace_extension(g_mfModelExt);
 		if ((extension == ".fbx") || (extension == ".FBX"))
 		{
 			CreateMFModelFromFBX(path, mfModelPath);
 		}
 		else if ((extension == ".gltf") || (extension == ".GLTF"))
 		{
-
+			CreateMFModelFromGLTF(path, mfModelPath);
 		}
 	}
-
-
 	return 0;
 }
