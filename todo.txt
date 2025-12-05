@@ -61,9 +61,9 @@
 [OK] ・GLTFLoader
 [OK] ・MFModel対応
 [OK] ・Cullingチェックフラグの追加
-・VisibilityBufferの出力画像を用意
-・VisibilityBufferの出力
-・Skybox
+[OK] ・VisibilityBufferの出力画像を用意
+[OK] ・VisibilityBufferの出力
+[OK] ・Skybox
 
 ・WeekendHomework
 　・Terrain
