@@ -1,6 +1,5 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
-#extension GL_EXT_debug_printf : enable
 
 #include "Descriptors/CameraInfo.glsl"
 
@@ -15,7 +14,6 @@ void main()
 {
     // CameraInfo (MainCameraData)
     CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
-    debugPrintfEXT("Hello from shader!\ninPosition: %f %f %f %f", inPosition.x, inPosition.y, inPosition.z, inPosition.w);
 
     mat4 view = cameraData.view;
     view[3] = vec4(0, 0, 0, 1); 
