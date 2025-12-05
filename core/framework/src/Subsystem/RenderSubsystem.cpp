@@ -22,7 +22,7 @@
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
-#include "MeshShaderRenderPass.h"
+#include "VisibilityBufferRenderPass.h"
 
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
@@ -231,7 +231,7 @@ namespace MyosotisFW::System::Render
 		// mesh shader Render Pass
 		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
 
-		m_meshShaderRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		m_visibilityBufferRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 
 		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_vbDispatchInfoCount);
 
@@ -239,7 +239,7 @@ namespace MyosotisFW::System::Render
 
 		// m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
 
-		m_meshShaderRenderPass->EndRender(currentCommandBuffer);
+		m_visibilityBufferRenderPass->EndRender(currentCommandBuffer);
 
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
@@ -248,6 +248,9 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
+
+		// Final Composition (MainRenderTarget -> SwapchainImage)
+		CopyMainRenderTargetToSwapchainImage();
 
 		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
@@ -389,8 +392,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderPass()
 	{
-		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_meshShaderRenderPass->Initialize();
+		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_visibilityBufferRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -398,11 +401,11 @@ namespace MyosotisFW::System::Render
 		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
-		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
-		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()
@@ -419,5 +422,72 @@ namespace MyosotisFW::System::Render
 		//m_shadowMapRenderPass->Resize(width, height);
 		//m_mainRenderPass->Resize(width, height);
 		//m_finalCompositionRenderPass->Resize(width, height);
+	}
+
+	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage()
+	{
+		VkImageMemoryBarrier barriers[2]{};
+		{// MainRenderTarget -> TRANSFER_DST
+			barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT;
+			barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].image = m_resources->GetMainRenderTarget().image;
+			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+		{// SwapchainImage -> TRANSFER_SRC
+			barriers[1].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[1].srcAccessMask = 0;
+			barriers[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+			barriers[1].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+			barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+		vkCmdPipelineBarrier(m_renderCommandBuffers[m_currentBufferIndex],
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			2, barriers);
+		// Copy
+		VkImageBlit copyRegion = {};
+		copyRegion.srcSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+		copyRegion.srcSubresource.layerCount = 1;
+		copyRegion.srcOffsets[0] = { 0,0,0 };
+		copyRegion.srcOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		copyRegion.dstSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+		copyRegion.dstSubresource.layerCount = 1;
+		copyRegion.dstOffsets[0] = { 0,0,0 };
+		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		vkCmdBlitImage(m_renderCommandBuffers[m_currentBufferIndex],
+			m_resources->GetMainRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1, &copyRegion,
+			VkFilter::VK_FILTER_NEAREST);
+		{// SwapchainImage -> PRESENT_SRC
+			barriers[1].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+			barriers[1].dstAccessMask = 0;
+			barriers[1].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+		vkCmdPipelineBarrier(m_renderCommandBuffers[m_currentBufferIndex],
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barriers[1]);
 	}
 }

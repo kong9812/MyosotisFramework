@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "MeshShaderRenderPass.h"
+#include "VisibilityBufferRenderPass.h"
 #include <vector>
 #include <array>
 
@@ -9,12 +9,11 @@
 
 namespace MyosotisFW::System::Render
 {
-	MeshShaderRenderPass::MeshShaderRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
-		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()),
-		m_swapchain(swapchain) {
+	VisibilityBufferRenderPass::VisibilityBufferRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
+		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()) {
 	}
 
-	MeshShaderRenderPass::~MeshShaderRenderPass()
+	VisibilityBufferRenderPass::~VisibilityBufferRenderPass()
 	{
 		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
 		for (VkFramebuffer& m_framebuffer : m_framebuffers)
@@ -23,11 +22,13 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void MeshShaderRenderPass::Initialize()
+	void VisibilityBufferRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format),// [0] main render target
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat),	// [1] Primary Depth
 		};
 
@@ -105,14 +106,14 @@ namespace MyosotisFW::System::Render
 		createFrameBuffers();
 	}
 
-	void MeshShaderRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
+	void VisibilityBufferRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
-		renderPassBeginInfo.framebuffer = m_framebuffers[currentBufferIndex];
+		renderPassBeginInfo.framebuffer = m_framebuffers[0];
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
@@ -123,21 +124,21 @@ namespace MyosotisFW::System::Render
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
-	void MeshShaderRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
+	void VisibilityBufferRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdEndRenderPass(commandBuffer);
 	}
 
-	void MeshShaderRenderPass::createFrameBuffers()
+	void VisibilityBufferRenderPass::createFrameBuffers()
 	{
 		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
-		m_framebuffers.resize(m_swapchain->GetImageCount());
+		m_framebuffers.resize(1);
 
 		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{
-			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_swapchain->GetSwapchainImage()[i].view;
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

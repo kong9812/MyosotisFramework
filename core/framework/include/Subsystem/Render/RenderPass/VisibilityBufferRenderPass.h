@@ -8,7 +8,7 @@ namespace MyosotisFW::System::Render
 	class RenderSwapchain;
 	TYPEDEF_SHARED_PTR_FWD(RenderSwapchain);
 
-	class MeshShaderRenderPass : public RenderPassBase
+	class VisibilityBufferRenderPass : public RenderPassBase
 	{
 	public:
 		enum class SubPass : uint32_t
@@ -26,8 +26,8 @@ namespace MyosotisFW::System::Render
 		};
 
 	public:
-		MeshShaderRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain);
-		~MeshShaderRenderPass();
+		VisibilityBufferRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain);
+		~VisibilityBufferRenderPass();
 
 		void Initialize() override;
 		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) override;
@@ -35,9 +35,6 @@ namespace MyosotisFW::System::Render
 
 	private:
 		void createFrameBuffers() override;
-
-		RenderSwapchain_ptr m_swapchain;
-
 	};
-	TYPEDEF_SHARED_PTR_ARGS(MeshShaderRenderPass);
+	TYPEDEF_SHARED_PTR_ARGS(VisibilityBufferRenderPass);
 }

@@ -10,7 +10,7 @@
 #include "EditorCamera.h"
 #include "StaticMesh.h"
 
-#include "MeshShaderRenderPass.h"
+#include "VisibilityBufferRenderPass.h"
 
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
@@ -132,8 +132,8 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPass()
 	{
-		m_meshShaderRenderPass = CreateMeshShaderRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_meshShaderRenderPass->Initialize();
+		m_VisibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_VisibilityBufferRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
@@ -141,11 +141,11 @@ namespace MyosotisFW::System::Render
 		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
-		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_VisibilityBufferRenderPass->GetRenderPass());
 		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
-		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_meshShaderRenderPass->GetRenderPass());
+		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_VisibilityBufferRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
