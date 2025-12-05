@@ -43,6 +43,7 @@ namespace MyosotisFW::System::Render
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
 		virtual void Resize(const uint32_t width, const uint32_t height);
+		VkSampler& CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo);
 
 	protected:
 		RenderDevice_ptr m_device;
@@ -51,6 +52,7 @@ namespace MyosotisFW::System::Render
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshVertexData;
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
+		std::vector<VkSampler> m_samplers;
 
 	public:
 		Image& GetDepthStencil() { return m_depthStencil; }

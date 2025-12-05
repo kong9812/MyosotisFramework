@@ -89,7 +89,7 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),
+			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 		};
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(colorBlendAttachmentStates);
 		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };

@@ -44,9 +44,13 @@ namespace MyosotisFW
 			TYPEDEF_SHARED_PTR_FWD(CameraBase);
 		}
 
+		class SkyboxRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPass);
 		class VisibilityBufferRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPass);
 
+		class SkyboxPipeline;
+		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
 		class VisibilityBufferRenderPhase1Pipeline;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
 		class VisibilityBufferRenderPhase2Pipeline;
@@ -74,6 +78,9 @@ namespace MyosotisFW::System::Render
 			m_currentBufferIndex(0),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
+			m_skyboxRenderPass(nullptr),
+			m_visibilityBufferRenderPass(nullptr),
+			m_skyboxPipeline(nullptr),
 			m_visibilityBufferRenderPhase1Pipeline(nullptr),
 			m_visibilityBufferRenderPhase2Pipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
@@ -98,6 +105,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData);
 		void BeginCompute();
 		void BeginRender();
+		void SkyboxRender();
 		void MeshShaderRender();
 		void EndRender();
 		void ResetGameStage();
@@ -161,9 +169,11 @@ namespace MyosotisFW::System::Render
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
 
 	protected:
+		SkyboxRenderPass_ptr m_skyboxRenderPass;
 		VisibilityBufferRenderPass_ptr m_visibilityBufferRenderPass;
 
 	protected:
+		SkyboxPipeline_ptr m_skyboxPipeline;
 		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
 		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
 

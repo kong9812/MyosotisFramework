@@ -64,6 +64,11 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), image.second.image, image.second.allocation);
 			vkDestroyImageView(*m_device, image.second.view, m_device->GetAllocationCallbacks());
 		}
+
+		for (VkSampler& sampler : m_samplers)
+		{
+			vkDestroySampler(*m_device, sampler, m_device->GetAllocationCallbacks());
+		}
 	}
 
 	void RenderResources::Initialize(const uint32_t width, const uint32_t height)
@@ -278,5 +283,13 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
+	}
+
+	VkSampler& RenderResources::CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo)
+	{
+		VkSampler sampler{};
+		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &sampler));
+		m_samplers.push_back(sampler);
+		return sampler;
 	}
 }

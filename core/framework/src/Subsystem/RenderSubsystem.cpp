@@ -22,8 +22,10 @@
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 
+#include "SkyboxRenderPass.h"
 #include "VisibilityBufferRenderPass.h"
 
+#include "SkyboxPipeline.h"
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
 
@@ -221,6 +223,20 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
 	}
 
+	void RenderSubsystem::SkyboxRender()
+	{
+		if (m_mainCamera == nullptr) return;
+
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+
+		// Skybox Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
+		m_skyboxRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		m_skyboxPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_skyboxRenderPass->EndRender(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
 	void RenderSubsystem::MeshShaderRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -230,17 +246,11 @@ namespace MyosotisFW::System::Render
 
 		// mesh shader Render Pass
 		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
-
 		m_visibilityBufferRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-
 		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_vbDispatchInfoCount);
-
 		vkCmdNextSubpass(currentCommandBuffer, VK_SUBPASS_CONTENTS_INLINE);
-
 		// m_visibilityBufferRenderPhase2Pipeline->BindCommandBuffer(currentCommandBuffer, m_meshCount);
-
 		m_visibilityBufferRenderPass->EndRender(currentCommandBuffer);
-
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
@@ -392,12 +402,22 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderPass()
 	{
+		// Skybox Render Pass
+		m_skyboxRenderPass = CreateSkyboxRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_skyboxRenderPass->Initialize();
+		// Visibility Buffer Render Pass
 		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_visibilityBufferRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
 	{
+		// Skybox Pipeline
+		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
+		// Visibility Buffer Pipeline
 		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
