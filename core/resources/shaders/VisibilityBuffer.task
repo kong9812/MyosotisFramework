@@ -16,6 +16,7 @@
 layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 
 layout(push_constant) uniform PushConstant {
+    float hiZMipLevelMax;
     uint hiZSamplerID;
     uint vbDispatchInfoCount;
 };
@@ -124,6 +125,7 @@ void main()
                 {
                     mipLevel = floor(log2(maxDim));
                 }
+                mipLevel = clamp(mipLevel, 0.0, hiZMipLevelMax);
                 ivec2 targetMipTextureSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, int(mipLevel));
 
                 ivec2 minTexel = ivec2(minUV * targetMipTextureSize);

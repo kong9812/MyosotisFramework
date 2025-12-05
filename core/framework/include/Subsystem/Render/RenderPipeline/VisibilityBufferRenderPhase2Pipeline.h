@@ -23,6 +23,7 @@ namespace MyosotisFW::System::Render
 
 	private:
 		struct {
+			float hiZMipLevelMax;
 			uint32_t hiZSamplerID;
 			uint32_t vbDispatchInfoCount;
 			//uint32_t checkFalseNegativeMesh;

@@ -28,6 +28,8 @@ namespace MyosotisFW::System::Render
 			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
 			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+
+		pushConstant.hiZMipLevelMax = static_cast<float>(resources->GetHiZDepthMap().mipView.size()) - 1.0f;
 	}
 
 	void VisibilityBufferRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount)
