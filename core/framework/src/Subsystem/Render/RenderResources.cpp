@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer.image, m_visibilityBuffer.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap.image, m_hiZDepthMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_primaryDepthStencil.image, m_primaryDepthStencil.allocation);
 
@@ -38,7 +38,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_visibilityBuffer.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_hiZDepthMap.view, m_device->GetAllocationCallbacks());
 			for (VkImageView& view : m_hiZDepthMap.mipView)
 				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
@@ -127,13 +127,13 @@ namespace MyosotisFW::System::Render
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_mainRenderTarget.image, AppInfo::g_surfaceFormat.format);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_mainRenderTarget.view));
 		}
-		{// ID Map
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_idMapFormat, width, height);
+		{// Visibility Buffer
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_visibilityBufferFormat, width, height);
 			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_idMap.image, &m_idMap.allocation, &m_idMap.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_idMap.image, AppInfo::g_idMapFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_idMap.view));
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_visibilityBuffer.image, &m_visibilityBuffer.allocation, &m_visibilityBuffer.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_visibilityBuffer.image, AppInfo::g_visibilityBufferFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_visibilityBuffer.view));
 		}
 
 		{// Hi-Z DepthMap
@@ -271,7 +271,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_shadowMap.image, m_shadowMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightingResult.image, m_lightingResult.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_idMap.image, m_idMap.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer.image, m_visibilityBuffer.allocation);
 
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
@@ -280,7 +280,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_shadowMap.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_lightingResult.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_idMap.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_visibilityBuffer.view, m_device->GetAllocationCallbacks());
 		}
 		Initialize(width, height);
 	}

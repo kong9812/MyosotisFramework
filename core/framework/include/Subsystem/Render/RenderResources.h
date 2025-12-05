@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 			m_shadowMap({}),
 			m_lightingResult({}),
 			m_mainRenderTarget({}),
-			m_idMap({}),
+			m_visibilityBuffer({}),
 			m_hiZDepthMap({}),
 			m_primaryDepthStencil({}) {
 		}
@@ -62,7 +62,7 @@ namespace MyosotisFW::System::Render
 		Image& GetShadowMap() { return m_shadowMap; }
 		Image& GetLightingResult() { return m_lightingResult; }
 		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
-		Image& GetIdMap() { return m_idMap; }
+		Image& GetVisibilityBuffer() { return m_visibilityBuffer; }
 
 		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
 		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
@@ -77,7 +77,7 @@ namespace MyosotisFW::System::Render
 		Image m_shadowMap;
 		Image m_lightingResult;
 		Image m_mainRenderTarget;
-		Image m_idMap;
+		Image m_visibilityBuffer;
 
 		Image m_hiZDepthMap;
 		Image m_primaryDepthStencil;
