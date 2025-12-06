@@ -17,6 +17,7 @@
 #include "Logger.h"
 #include "Mesh.h"
 #include "MFModelIo.h"
+#include "RawMeshData.h"
 
 namespace {
 	// resources/models/フォルダを見て
@@ -35,17 +36,6 @@ namespace {
 	const char* g_rawModelExts[] = { g_fbxExt, g_gltfExt };
 
 	const char* g_mfModelExt = ".mfmodel";
-
-	struct RawMeshData
-	{
-		std::vector<glm::vec3> position;
-		std::vector<glm::vec3> normal;
-		std::vector<glm::vec2> uv;
-		std::vector<glm::vec4> color;
-
-		std::vector<float> vertex;
-		std::vector<uint32_t> index;
-	};
 
 	struct Meshlet
 	{
@@ -89,7 +79,7 @@ static uint64_t FileTimestamp_ms(const std::filesystem::path& p)
 }
 
 
-static void CreateMFModel(const char* name, const RawMeshData& rawMeshData)
+static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMeshData)
 {
 	// メッシュレット数の上限
 	size_t maxMeshlets = meshopt_buildMeshletsBound(
@@ -188,7 +178,7 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 		static_cast<ofbx::u16>(ofbx::LoadFlags::NONE));
 
 	// メッシュデータ抽出
-	RawMeshData rawMeshData{};
+	MyosotisFW::RawMeshData rawMeshData{};
 	uint32_t meshCount = scene->getMeshCount();
 	for (uint32_t meshIndex = 0; meshIndex < meshCount; ++meshIndex)
 	{
@@ -295,7 +285,7 @@ static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const s
 	ASSERT(fileLoaded, "Failed to open gltf file: " + gltfPath.string() + "\nerror: " + error);
 
 	// メッシュデータ抽出
-	RawMeshData rawMeshData{};
+	MyosotisFW::RawMeshData rawMeshData{};
 	for (const tinygltf::Mesh& mesh : glTFModel.meshes)
 	{
 		for (const tinygltf::Primitive& primitive : mesh.primitives)

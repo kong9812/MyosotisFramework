@@ -23,10 +23,12 @@
 #include "FpsCamera.h"
 
 #include "SkyboxRenderPass.h"
+#include "TerrainRenderPass.h"
 #include "VisibilityBufferRenderPass.h"
 #include "LightingRenderPass.h"
 
 #include "SkyboxPipeline.h"
+#include "TerrainPipeline.h"
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
 #include "LightingPipeline.h"
@@ -239,6 +241,18 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
+	void RenderSubsystem::TerrainRender()
+	{
+		if (m_mainCamera == nullptr) return;
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		// Terrain Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Terrain Render"));
+		m_terrainRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		m_terrainPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_terrainRenderPass->EndRender(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
 	void RenderSubsystem::MeshShaderRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -421,6 +435,9 @@ namespace MyosotisFW::System::Render
 		// Skybox Render Pass
 		m_skyboxRenderPass = CreateSkyboxRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_skyboxRenderPass->Initialize();
+		// Terrain Render Pass
+		m_terrainRenderPass = CreateTerrainRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_terrainRenderPass->Initialize();
 		// Visibility Buffer Render Pass
 		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_visibilityBufferRenderPass->Initialize();
@@ -436,6 +453,11 @@ namespace MyosotisFW::System::Render
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
 		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
+		// Terrain Pipeline
+		m_terrainPipeline = CreateTerrainPipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_terrainPipeline->Initialize(m_resources, m_terrainRenderPass->GetRenderPass());
 		// Visibility Buffer Pipeline
 		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,

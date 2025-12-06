@@ -162,6 +162,7 @@ namespace MyosotisFW::System
 		m_renderSubsystem->BeginRender();
 		m_renderSubsystem->BeginCompute();
 		m_renderSubsystem->SkyboxRender();
+		m_renderSubsystem->TerrainRender();
 		m_renderSubsystem->MeshShaderRender();
 		m_renderSubsystem->LightingRender();
 		m_renderSubsystem->EndRender();

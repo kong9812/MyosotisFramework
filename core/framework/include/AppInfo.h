@@ -116,6 +116,8 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_mfModelFolder = ".\\resources\\models\\MFModels\\";
 	// [フォルダ]ゲームステージ
 	constexpr const char* g_gameStageFolder = ".\\resources\\gamestage\\";
+	// [フォルダ]地形
+	constexpr const char* g_terrainFolder = ".\\resources\\terrain\\";
 
 	// debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
 	constexpr uint32_t g_imguiDescriptorPoolSize = 2;
@@ -140,4 +142,7 @@ namespace MyosotisFW::AppInfo
 	// max meshlet count
 	constexpr uint32_t g_maxMeshletVertices = 64;
 	constexpr uint32_t g_maxMeshletPrimitives = 124;
+
+	// terrain
+	constexpr glm::vec3 g_terrainScale = glm::vec3(1.0f, 500.0f, 1.0f);
 }
