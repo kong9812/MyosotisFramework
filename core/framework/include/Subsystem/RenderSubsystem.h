@@ -48,6 +48,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPass);
 		class VisibilityBufferRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPass);
+		class LightingRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(LightingRenderPass);
 
 		class SkyboxPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
@@ -55,6 +57,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
 		class VisibilityBufferRenderPhase2Pipeline;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase2Pipeline);
+		class LightingPipeline;
+		TYPEDEF_SHARED_PTR_FWD(LightingPipeline);
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
@@ -80,9 +84,11 @@ namespace MyosotisFW::System::Render
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
 			m_skyboxRenderPass(nullptr),
 			m_visibilityBufferRenderPass(nullptr),
+			m_lightingRenderPass(nullptr),
 			m_skyboxPipeline(nullptr),
 			m_visibilityBufferRenderPhase1Pipeline(nullptr),
 			m_visibilityBufferRenderPhase2Pipeline(nullptr),
+			m_lightingPipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE),
 			m_vbDispatchInfoCount(0) {
@@ -107,6 +113,7 @@ namespace MyosotisFW::System::Render
 		void BeginRender();
 		void SkyboxRender();
 		void MeshShaderRender();
+		void LightingRender();
 		void EndRender();
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);
@@ -171,11 +178,13 @@ namespace MyosotisFW::System::Render
 	protected:
 		SkyboxRenderPass_ptr m_skyboxRenderPass;
 		VisibilityBufferRenderPass_ptr m_visibilityBufferRenderPass;
+		LightingRenderPass_ptr m_lightingRenderPass;
 
 	protected:
 		SkyboxPipeline_ptr m_skyboxPipeline;
 		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
 		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
+		LightingPipeline_ptr m_lightingPipeline;
 
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;

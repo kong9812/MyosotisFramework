@@ -9,9 +9,9 @@ layout (push_constant) uniform PushConstant {
     uint skyboxTextureID;
 };
 
-layout (location = 0) out vec4 outBaseColor;
+layout (location = 0) out vec4 outColor;
 
 void main() 
 {
-    outBaseColor = SamplerCubeLoader_GetTexture(skyboxTextureID, inUVW);
+    outColor = SamplerCubeLoader_GetTexture(skyboxTextureID, inUVW);
 }

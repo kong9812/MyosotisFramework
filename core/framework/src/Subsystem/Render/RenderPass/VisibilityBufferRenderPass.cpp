@@ -109,7 +109,7 @@ namespace MyosotisFW::System::Render
 	void VisibilityBufferRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = AppInfo::g_vbClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
@@ -134,12 +134,11 @@ namespace MyosotisFW::System::Render
 		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
 		m_framebuffers.resize(1);
 
+		attachments[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = m_resources->GetVisibilityBuffer().view;
 		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{
-			attachments[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = m_resources->GetVisibilityBuffer().view;
-
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			frameBufferCreateInfo.pNext = NULL;

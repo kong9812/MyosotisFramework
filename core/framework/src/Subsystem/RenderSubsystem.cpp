@@ -24,10 +24,12 @@
 
 #include "SkyboxRenderPass.h"
 #include "VisibilityBufferRenderPass.h"
+#include "LightingRenderPass.h"
 
 #include "SkyboxPipeline.h"
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
+#include "LightingPipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -254,6 +256,19 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
+	void RenderSubsystem::LightingRender()
+	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		// Lighting Render Pass
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
+		m_lightingRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+		m_lightingPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_lightingRenderPass->EndRender(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
 	void RenderSubsystem::EndRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -408,6 +423,9 @@ namespace MyosotisFW::System::Render
 		// Visibility Buffer Render Pass
 		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_visibilityBufferRenderPass->Initialize();
+		// Lighting Render Pass
+		m_lightingRenderPass = CreateLightingRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_lightingRenderPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -426,6 +444,11 @@ namespace MyosotisFW::System::Render
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
 		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
+		// Lighting Pipeline
+		m_lightingPipeline = CreateLightingPipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()

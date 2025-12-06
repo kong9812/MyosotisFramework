@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "LightingPipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -7,59 +7,56 @@
 
 namespace MyosotisFW::System::Render
 {
-	VisibilityBufferRenderPhase1Pipeline::~VisibilityBufferRenderPhase1Pipeline()
+	LightingPipeline::~LightingPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
+
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void LightingPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
-		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
-
 		prepareRenderPipeline(resources, renderPass);
 
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-			resources->GetHiZDepthMap().sampler, resources->GetHiZDepthMap().view,
-			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-
-		descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
-			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-
-		pushConstant.hiZMipLevelMax = static_cast<float>(resources->GetHiZDepthMap().mipView.size()) - 1.0f;
+		{// Visibility Buffer
+			Image visibilityBuffer = resources->GetVisibilityBuffer();
+			// Sampler
+			visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+			// descriptorImageInfo
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+				visibilityBuffer.sampler, visibilityBuffer.view,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			// add to descriptor set
+			pushConstant.visibilityBufferTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+		}
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount)
+	void LightingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		{// Phase1Render
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-			std::vector<VkDescriptorSet> descriptorSets = {
+		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+		std::vector<VkDescriptorSet> descriptorSets = {
 				m_sceneInfoDescriptorSet->GetDescriptorSet(),
 				m_objectInfoDescriptorSet->GetDescriptorSet(),
 				m_meshInfoDescriptorSet->GetDescriptorSet(),
 				m_textureDescriptorSet->GetDescriptorSet()
-			};
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
-				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-			pushConstant.hiZSamplerID = m_hiZSamplerID;
-			pushConstant.vbDispatchInfoCount = vbDispatchInfoCount;
-			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-				0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
-			uint32_t taskGroupSize = static_cast<uint32_t>(ceil(static_cast<float>(vbDispatchInfoCount) / 128.0f));
-			m_vkCmdDrawMeshTasksEXT(commandBuffer, taskGroupSize, 1, 1);
-		}
+		};
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
+			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
+		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
+			0,
+			static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void LightingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
-			// VS
-			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
+			// PS
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(pushConstant))),
 		};
@@ -78,16 +75,16 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT, resources->GetShaderModules("VisibilityBuffer.task.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MESH_BIT_EXT, resources->GetShaderModules("VisibilityBuffer.mesh.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("VisibilityBuffer.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Lighting.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Lighting.frag.spv")),
 		};
 
+		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo();
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineViewportStateCreateInfo();
-		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
+		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_NONE, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 		};
@@ -97,8 +94,8 @@ namespace MyosotisFW::System::Render
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = Utility::Vulkan::CreateInfo::graphicsPipelineCreateInfo(
 			shaderStageCreateInfo,									// シェーダーステージ
-			VK_NULL_HANDLE,											// 頂点入力
-			VK_NULL_HANDLE,											// 入力アセンブリ
+			&pipelineVertexInputStateCreateInfo,					// 頂点入力
+			&inputAssemblyStateCreateInfo,							// 入力アセンブリ
 			&viewportStateCreateInfo,								// ビューポートステート
 			&rasterizationStateCreateInfo,							// ラスタライゼーション
 			&multisampleStateCreateInfo,							// マルチサンプリング

@@ -82,6 +82,8 @@ namespace MyosotisFW::AppInfo
 	constexpr VkClearValue g_depthStencilClearValues = { 1.0f, 0.0f };
 	// depth
 	constexpr VkClearValue g_depthClearValues = { 1.0f };
+	// VB
+	constexpr VkClearValue g_vbClearValues = { 0.0f };
 
 	// [デフォルト]カメラ位置
 	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 0.0f, -20.0f);

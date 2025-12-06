@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "SkyboxRenderPass.h"
+#include "LightingRenderPass.h"
 #include <vector>
 #include <array>
 
@@ -9,11 +9,11 @@
 
 namespace MyosotisFW::System::Render
 {
-	SkyboxRenderPass::SkyboxRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
+	LightingRenderPass::LightingRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
 		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()) {
 	}
 
-	SkyboxRenderPass::~SkyboxRenderPass()
+	LightingRenderPass::~LightingRenderPass()
 	{
 		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
 		for (VkFramebuffer& m_framebuffer : m_framebuffers)
@@ -22,26 +22,26 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void SkyboxRenderPass::Initialize()
+	void LightingRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),		// [0] main render target
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
-		// skybox subpass
-		VkAttachmentReference skyboxSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(skyboxSubpassColorAttachmentReferences));
+		// Lighting subpass
+		VkAttachmentReference lightingSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(lightingSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部 -> skybox（Depth/Stencil 初期化）
+			// 外部 -> Lighting
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
-				static_cast<uint32_t>(SubPass::Skybox),
+				static_cast<uint32_t>(SubPass::Lighting),
 				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
 				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
 				0,
@@ -49,10 +49,10 @@ namespace MyosotisFW::System::Render
 				0
 			),
 
-				// 外部 -> skybox（ColorAttachment 初期化）
+				// 外部 -> Lighting
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					VK_SUBPASS_EXTERNAL,
-					static_cast<uint32_t>(SubPass::Skybox),
+					static_cast<uint32_t>(SubPass::Lighting),
 					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 					0,
@@ -60,9 +60,9 @@ namespace MyosotisFW::System::Render
 					0
 				),
 
-				// Phase2 -> 外部（完了待ち）
+				// Lighting -> 外部（完了待ち）
 				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Skybox),
+					static_cast<uint32_t>(SubPass::Lighting),
 					VK_SUBPASS_EXTERNAL,
 					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
 					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
@@ -82,7 +82,7 @@ namespace MyosotisFW::System::Render
 		createFrameBuffers();
 	}
 
-	void SkyboxRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
+	void LightingRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
@@ -99,12 +99,12 @@ namespace MyosotisFW::System::Render
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
-	void SkyboxRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
+	void LightingRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdEndRenderPass(commandBuffer);
 	}
 
-	void SkyboxRenderPass::createFrameBuffers()
+	void LightingRenderPass::createFrameBuffers()
 	{
 		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
 		m_framebuffers.resize(1);
