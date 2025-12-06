@@ -56,7 +56,7 @@ namespace MyosotisFW::System::GameDirector {
 		{
 			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
 			newObject->SetPos(glm::vec3(10.0f, 0.0f, 0.0f));
-			newObject->SetRot(glm::vec3(0.0f));
+			newObject->SetRot(glm::vec3(0.0f, 180.0f, 0.0f));
 			newObject->SetScale(glm::vec3(10.0f));
 
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(

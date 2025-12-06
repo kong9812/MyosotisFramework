@@ -8,7 +8,9 @@ namespace MyosotisFW::System::Render
 	SceneInfoDescriptorSet::SceneInfoDescriptorSet(const RenderDevice_ptr& device, const VkDescriptorPool& descriptorPool) :
 		DescriptorSetBase(device, descriptorPool),
 		m_cameras(),
-		m_cameraInfo()
+		m_screenInfo(),
+		m_cameraInfo(),
+		m_sceneInfo()
 	{
 		for (uint32_t i = 0; i < static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
 		{
@@ -26,6 +28,18 @@ namespace MyosotisFW::System::Render
 
 	void SceneInfoDescriptorSet::Update()
 	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].rebuild)
+		{
+			uint32_t size = static_cast<uint32_t>(sizeof(ScreenInfo));
+			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo), size);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].rebuild = false;
+		}
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].rebuild)
+		{
+			uint32_t size = static_cast<uint32_t>(sizeof(SceneInfo));
+			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo), size);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].rebuild = false;
+		}
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild)
 		{
 			uint32_t size = (static_cast<uint32_t>(sizeof(uint32_t)) * 4) + (static_cast<uint32_t>(sizeof(CameraData)) * static_cast<uint32_t>(m_cameraInfo.cameraData.size()));
@@ -34,7 +48,15 @@ namespace MyosotisFW::System::Render
 		}
 
 		// SSBO/UBO更新
+		updateScreenInfo();
+		updateSceneInfo();
 		updateCameraInfo();
+	}
+
+	void SceneInfoDescriptorSet::UpdateScreenSize(const glm::ivec2& screenSize)
+	{
+		m_screenInfo.screenSize = screenSize;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update = true;
 	}
 
 	void SceneInfoDescriptorSet::AddCamera(const Camera::CameraBase_ptr& camera)
@@ -45,6 +67,26 @@ namespace MyosotisFW::System::Render
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = true;
 		// cameraDataサイズ
 		m_cameraInfo.cameraData.resize(m_cameras.size());
+	}
+
+	void SceneInfoDescriptorSet::updateScreenInfo()
+	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update)
+		{
+			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].buffer.allocationInfo.pMappedData);
+			memcpy(dst, &m_screenInfo, (static_cast<uint32_t>(sizeof(ScreenInfo))));
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update = false;
+		}
+	}
+
+	void SceneInfoDescriptorSet::updateSceneInfo()
+	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].update)
+		{
+			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].buffer.allocationInfo.pMappedData);
+			memcpy(dst, &m_sceneInfo, (static_cast<uint32_t>(sizeof(SceneInfo))));
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].update = false;
+		}
 	}
 
 	void SceneInfoDescriptorSet::updateCameraInfo()

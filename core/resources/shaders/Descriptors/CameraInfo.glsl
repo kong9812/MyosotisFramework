@@ -8,7 +8,7 @@ struct CameraData {
   vec4 pos;
 };
 
-layout (std430, set = 0, binding = 0) readonly buffer CameraInfoDescriptor {
+layout (std430, set = 0, binding = 2) readonly buffer CameraInfoDescriptor {
   uint mainCameraIndex;
   uint _p1;
   uint _p2;

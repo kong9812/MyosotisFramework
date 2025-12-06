@@ -5,6 +5,8 @@
 #include "ClassPointer.h"
 #include "DescriptorSetBase.h"
 #include "CameraInfo.h"
+#include "SceneInfo.h"
+#include "ScreenInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -22,19 +24,26 @@ namespace MyosotisFW::System::Render
 
 		enum class DescriptorBindingIndex : uint32_t
 		{
-			CameraInfo = 0,
+			ScreenInfo = 0,
+			SceneInfo,
+			CameraInfo,
 			LightInfo,		// todo
 			TerrainInfo,	// todo
 			Count
 		};
 
 		void Update() override;
+		void UpdateScreenSize(const glm::ivec2& screenSize);
 		void AddCamera(const Camera::CameraBase_ptr& camera);
 
 	private:
+		void updateScreenInfo();
+		void updateSceneInfo();
 		void updateCameraInfo();
 
 		std::vector<Camera::CameraBase_ptr> m_cameras;
+		ScreenInfo m_screenInfo;
+		SceneInfo m_sceneInfo;
 		CameraInfo m_cameraInfo;
 	};
 

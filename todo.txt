@@ -64,6 +64,11 @@
 [OK] ・VisibilityBufferの出力画像を用意
 [OK] ・VisibilityBufferの出力
 [OK] ・Skybox
+[OK] ・LightingPassの追加
+[OK] ・リアルタイム計算
+・TerrainPassの追加
+・HightMapの準備
+・HightMapの描画
 
 ・WeekendHomework
 　・Terrain
@@ -78,7 +83,9 @@
 　　　・GPU側
 　　　　・GeomShaderで頂点作成、地形描画！！
 　・Lighting
-　　・時間がかかる…
+　　・リアルタイム計算
+　　・Shadow
+　　・LightMapベイク
 
 描画する時は各Objectのm_vbDispatchInfoを取り出して、objectIDをセットして使う!!
 

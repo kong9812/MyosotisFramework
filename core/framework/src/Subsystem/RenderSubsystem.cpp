@@ -352,6 +352,7 @@ namespace MyosotisFW::System::Render
 	{
 		m_descriptorPool = CreateDescriptorPoolPointer(m_device);
 		m_sceneInfoDescriptorSet = CreateSceneInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_sceneInfoDescriptorSet->UpdateScreenSize(glm::ivec2(m_swapchain->GetWidth(), m_swapchain->GetHeight()));
 		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
