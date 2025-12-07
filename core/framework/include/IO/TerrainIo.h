@@ -75,7 +75,7 @@ namespace Utility::Loader {
 		// --- 【サンプリングとパフォーマンス設定】 ---
 		// ハイトマップから頂点データを抽出する間隔 (サンプリング数決定)
 		// 値が大きいほど、生成される頂点数が減り、メッシュが粗くなる (例: 4 で 1/16 の頂点数)
-		const uint32_t samplingStep = 64;
+		const uint32_t samplingStep = 60;
 
 		uint32_t sampledWidth = textureWidth / samplingStep;
 		uint32_t sampledHeight = textureHeight / samplingStep;
@@ -105,7 +105,7 @@ namespace Utility::Loader {
 					rawMeshData.position.push_back(p);
 					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { p.x, p.y, p.z, p.w });
 				}
-				{// Normal (固定: 上向き) *todo.後で計算しないといけない…
+				{// Normal (固定: 上向き)
 					glm::vec3 n{};
 					n.x = 0.0f;
 					n.y = 1.0f;

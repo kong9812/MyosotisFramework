@@ -81,7 +81,7 @@ vec4 CalcLighting(VertexData vertex, ObjectInfo objectInfo, CameraData cameraDat
     // 指向ライト
     vec3 lightDir = normalize(vec3(0.3, -1.0, 0.2));  // 光の向き
     vec3 L = normalize(-lightDir);  // 光が当たる方向
-    vec3 lightColor = vec3(1.0);
+    vec3 lightColor = vec3(1.0, 0.85, 0.7);
 
     // DiffuseColor
     float NdotL = max(dot(worldNormal, L), 0.0);

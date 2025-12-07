@@ -29,7 +29,8 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_visibilityBufferFormat,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat),	// [1] Primary Depth
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat,
+				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE),	// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
