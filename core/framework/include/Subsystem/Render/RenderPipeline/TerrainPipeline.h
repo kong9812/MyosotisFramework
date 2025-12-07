@@ -16,8 +16,11 @@ namespace MyosotisFW::System::Render
 			const TextureDescriptorSet_ptr& textureDescriptorSet
 		) :
 			RenderPipelineBase(device, sceneInfoDescriptorSet, objectInfoDescriptorSet, meshInfoDescriptorSet, textureDescriptorSet),
-			m_vertexBuffer({}),
-			m_indexBuffer({}) {
+			pushConstant({}),
+			m_hiZSamplerID(0),
+			m_primaryDepthSamplerID(0),
+			m_meshletSize(0),
+			m_vkCmdDrawMeshTasksEXT(VK_NULL_HANDLE) {
 		}
 		~TerrainPipeline();
 
@@ -25,8 +28,19 @@ namespace MyosotisFW::System::Render
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 
 	private:
-		Buffer m_vertexBuffer;
-		Buffer m_indexBuffer;
+		struct {
+			float hiZMipLevelMax;
+			uint32_t hiZSamplerID;
+			uint32_t vbDispatchInfoCount;
+			//uint32_t checkFalseNegativeMesh;
+		}pushConstant;
+
+		uint32_t m_meshletSize;
+
+		uint32_t m_hiZSamplerID;
+		uint32_t m_primaryDepthSamplerID;
+
+		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;
 
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 	};

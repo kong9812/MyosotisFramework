@@ -1,0 +1,101 @@
+#version 450
+#extension GL_EXT_mesh_shader : require
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+
+#include "Descriptors/ObjectInfo.glsl"
+#include "Descriptors/TerrainVBDispatchInfo.glsl"
+#include "Descriptors/CameraInfo.glsl"
+#include "Descriptors/MeshInfo.glsl"
+#include "Descriptors/MeshletInfo.glsl"
+
+#include "Descriptors/VertexData.glsl"
+#include "Descriptors/UniqueIndexData.glsl"
+#include "Descriptors/PrimitivesData.glsl"
+
+#include "Culling/BackfaceCulling.glsl"
+
+// 1つのメッシュレット(VBDispatchInfo)を64スレッドで処理する
+layout(local_size_x = 64) in;
+layout(triangles, max_vertices = 64, max_primitives = 124) out;
+
+layout(location = 0) flat out uint outVBInfoIndex[];
+
+struct Payload {
+    uint vbDispatchInfoIndex[128];
+    uint renderCount;
+};
+taskPayloadSharedEXT Payload payload;
+
+void main()
+{
+    uint vbDispatchInfoIndex = payload.vbDispatchInfoIndex[gl_WorkGroupID.x];
+
+    // VBDispatchInfo
+    VBDispatchInfo dispactchInfo = TerrainVBDispatchInfo_GetVBDispatchInfo(vbDispatchInfoIndex);
+
+    // MeshInfo
+    uint meshID = dispactchInfo.meshID;
+    MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
+
+    // MeshletInfo
+    uint meshletID = meshInfo.meshletInfoOffset + dispactchInfo.meshletID;
+    MeshletInfo meshletInfo = MeshletInfo_GetMeshletInfo(meshletID);
+
+    // MeshletData
+    uint meshletVertexDataOffset = meshletInfo.vertexDataOffset;    // データの開始位置
+    uint meshletVertexCount = meshletInfo.vertexCount;              // 頂点数
+    uint meshletPrimitiveCount = meshletInfo.primitiveCount;        // ポリゴン数
+
+    // CameraInfo (MainCameraData)
+    CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
+    mat4 projView = cameraData.projection * cameraData.view;
+
+    uint vCount = min(meshletVertexCount, 64u);
+    uint pCount = min(meshletPrimitiveCount, 124u);
+    SetMeshOutputsEXT(vCount, pCount);
+    barrier();
+
+    uint stride = gl_WorkGroupSize.x; 
+    uint idx = gl_LocalInvocationIndex;
+
+    // 頂点処理：スレッドで分割し、forループで複数頂点を担当
+    for (uint i = idx; i < meshletVertexCount; i += stride) 
+    {
+        uint index = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, i);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, index);
+        vec4 worldPos = v.position;
+        gl_MeshVerticesEXT[i].gl_Position = projView * worldPos;
+        outVBInfoIndex[i] = vbDispatchInfoIndex;
+    }
+
+    // プリミティブ処理：同様に分割＋ループで処理
+    for (uint i = idx; i < meshletPrimitiveCount; i += stride) 
+    {
+        // プリミティブインデックス
+        uvec3 index = PrimitivesData_GetPrimitivesData(meshletInfo.primitivesOffset, i);
+
+        // 頂点インデックス -> VertexData -> VertexPosition -> バックフェース判定
+        vec4 pos[3];
+        uint uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.x);
+        VertexData v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
+        pos[0] = v.position;
+        uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.y);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
+        pos[1] = v.position;
+        uniqueIndexIndex = UniqueIndexData_GetUniqueIndexData(meshletInfo.uniqueIndexOffset, index.z);
+        v = VertexData_GetVertexData(meshletInfo.vertexDataOffset, meshInfo.vertexAttributeBit, meshInfo.unitSize, uniqueIndexIndex);
+        pos[2] = v.position;
+
+        // バックフェースカリング
+        bool isVisible = BackfaceCulling_IsVisible(cameraData.pos.xyz, pos[0].xyz, pos[1].xyz, pos[2].xyz);
+        if (TerrainVBDispatchInfo_IsCullingObject(dispactchInfo.bitFlags) == false)
+        {
+            isVisible = true; // 強制描画
+        }
+
+        gl_PrimitiveTriangleIndicesEXT[i] = index;
+        gl_MeshPrimitivesEXT[i].gl_PrimitiveID = int(i);
+        gl_MeshPrimitivesEXT[i].gl_CullPrimitiveEXT = !isVisible;        
+    }
+}

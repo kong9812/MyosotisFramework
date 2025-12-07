@@ -14,6 +14,7 @@
 #include "RenderQueue.h"
 #include "RawMeshData.h"
 
+#include "imeshoptimizer.h"
 #include "Mesh.h"
 
 namespace Utility::Loader {
@@ -56,6 +57,212 @@ namespace Utility::Loader {
 		{
 			n = glm::normalize(n);
 		}
+	}
+
+	inline std::vector<MyosotisFW::Mesh> loadTerrainMesh(std::string fileName)
+	{
+		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_terrainFolder + fileName);
+
+		int32_t textureWidth = -1;
+		int32_t textureHeight = -1;
+		int32_t textureChannels = -1;
+		stbi_uc* pixels = stbi_load(absolutePath.string().c_str(), &textureWidth, &textureHeight, &textureChannels, STBI_grey);
+		ASSERT(pixels, "Failed to load image: " + absolutePath.string());
+		size_t imageSize = textureWidth * textureHeight * textureChannels;
+
+		// チャンクサイズ (MyosotisFW::AppInfo::g_terrainChunkSize)
+		const glm::uvec2 chunkSize = glm::uvec2(1280, 1280);
+		const glm::uvec2 chunkCount = glm::uvec2(
+			(textureWidth + chunkSize.x - 1) / chunkSize.x,
+			(textureHeight + chunkSize.y - 1) / chunkSize.y
+		);
+		// サンプリング間隔
+		const uint32_t samplingStep = 10;
+
+		std::vector<MyosotisFW::Mesh> meshes;
+		meshes.resize(chunkCount.x * chunkCount.y);
+
+		// 全チャンクループ
+		for (uint32_t cy = 0; cy < chunkCount.y; cy++)
+		{
+			for (uint32_t cx = 0; cx < chunkCount.x; cx++)
+			{
+				const uint32_t chunkIndex = cy * chunkCount.x + cx;
+				MyosotisFW::Mesh& mesh = meshes[chunkIndex];
+				mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+				mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+
+				// AABB用
+				std::vector<glm::vec3> tmpPositions{};
+				glm::vec3 meshAABBMin(FLT_MAX);
+				glm::vec3 meshAABBMax(-FLT_MAX);
+
+				// チャンクの元画像領域（start/end）
+				uint32_t startX = cx * chunkSize.x;
+				uint32_t startY = cy * chunkSize.y;
+				uint32_t endX = std::min(startX + chunkSize.x, static_cast<uint32_t>(textureWidth));
+				uint32_t endY = std::min(startY + chunkSize.y, static_cast<uint32_t>(textureHeight));
+
+				// vertex
+				for (uint32_t y = startY; y < endY; y += samplingStep)
+				{
+					for (uint32_t x = startX; x < endX; x += samplingStep)
+					{
+						// 8bit画像(0-255) 高さ値を0～1に変換
+						float heightValue = (float)pixels[y * textureWidth + x] / 255.0f;
+
+						{// Position
+							mesh.vertex.insert(mesh.vertex.end(),
+								{
+									static_cast<float>(x) * MyosotisFW::AppInfo::g_terrainScale.x,
+									heightValue * MyosotisFW::AppInfo::g_terrainScale.y,
+									static_cast<float>(y) * MyosotisFW::AppInfo::g_terrainScale.z,
+									1.0f
+								});
+							// AABB用Position保存
+							tmpPositions.push_back(glm::vec3(
+								static_cast<float>(x) * MyosotisFW::AppInfo::g_terrainScale.x,
+								heightValue * MyosotisFW::AppInfo::g_terrainScale.y,
+								static_cast<float>(y) * MyosotisFW::AppInfo::g_terrainScale.z)
+							);
+						}
+
+						{// Normal (仮)
+							mesh.vertex.insert(mesh.vertex.end(),
+								{
+									0.0f,
+									1.0f,
+									0.0f
+								});
+						}
+						{// UV
+							mesh.vertex.insert(mesh.vertex.end(),
+								{
+									static_cast<float>(x) / static_cast<float>(textureWidth),
+									static_cast<float>(y) / static_cast<float>(textureHeight)
+								});
+						}
+						{// Color
+							mesh.vertex.insert(mesh.vertex.end(),
+								{
+									1.0f,
+									1.0f,
+									1.0f,
+									1.0f
+								});
+						}
+					}
+				}
+
+				// index (samplingStep分だけ縮んだグリッドの横幅/高さ)
+				std::vector<uint32_t> index;
+				uint32_t localW = (endX - startX) / samplingStep;
+				uint32_t localH = (endY - startY) / samplingStep;
+				for (uint32_t iy = 0; iy < localH - 1; iy++)
+				{
+					for (uint32_t ix = 0; ix < localW - 1; ix++)
+					{
+						uint32_t i0 = iy * localW + ix;
+						uint32_t i1 = i0 + 1;
+						uint32_t i2 = i0 + localW;
+						uint32_t i3 = i2 + 1;
+
+						// 三角形 1
+						index.push_back(i0);
+						index.push_back(i2);
+						index.push_back(i1);
+
+						// 三角形 2
+						index.push_back(i1);
+						index.push_back(i2);
+						index.push_back(i3);
+					}
+				}
+
+				// Meshlet生成
+				size_t maxMeshlets = meshopt_buildMeshletsBound(
+					index.size(),
+					MyosotisFW::AppInfo::g_maxMeshletVertices,
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+				// meshoptimizer用データ作成
+				std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
+				std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
+				std::vector<uint8_t> meshletTriangles(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
+
+				// メッシュレット生成
+				size_t meshletCount = meshopt_buildMeshlets(
+					meshlets.data(),
+					meshletVertices.data(),
+					meshletTriangles.data(),
+					index.data(),
+					index.size(),
+					&(mesh.vertex[0]),
+					mesh.vertex.size() / (4 + 3 + 2 + 4),
+					sizeof(float) * (4 + 3 + 2 + 4),	// Position(4) + Normal(3) + UV(2) + Color(4)
+					MyosotisFW::AppInfo::g_maxMeshletVertices,
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives,
+					0.0f);
+
+				mesh.meshlet.reserve(meshletCount);
+				for (size_t i = 0; i < meshletCount; i++)
+				{
+					const meshopt_Meshlet& src = meshlets[i];
+					MyosotisFW::Meshlet dst{};
+
+					// UniqueIndex (GlobalIndex)
+					dst.uniqueIndex.reserve(src.vertex_count);
+					for (uint32_t v = 0; v < src.vertex_count; v++)
+					{
+						uint32_t globalIndex = meshletVertices[i * MyosotisFW::AppInfo::g_maxMeshletVertices + v];
+						dst.uniqueIndex.push_back(globalIndex);
+					}
+
+					// Primitives (LocalIndex)
+					dst.primitives.reserve(src.triangle_count * 3);
+					for (uint32_t t = 0; t < src.triangle_count; t++)
+					{
+						uint8_t i0 = meshletTriangles[i * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3 + t * 3 + 0];
+						uint8_t i1 = meshletTriangles[i * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3 + t * 3 + 1];
+						uint8_t i2 = meshletTriangles[i * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3 + t * 3 + 2];
+						dst.primitives.push_back(i0);
+						dst.primitives.push_back(i1);
+						dst.primitives.push_back(i2);
+					}
+
+					// AABB
+					glm::vec3 p0 = tmpPositions[meshletVertices[src.vertex_offset + 0]];
+					dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
+					dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
+					meshAABBMin = glm::min(meshAABBMin, p0);
+					meshAABBMax = glm::max(meshAABBMax, p0);
+					for (size_t v = 1; v < src.vertex_count; v++)
+					{
+						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
+						const glm::vec3& pos = tmpPositions[vertexIndex];
+						dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
+						dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
+						meshAABBMin = glm::min(meshAABBMin, pos);
+						meshAABBMax = glm::max(meshAABBMax, pos);
+					}
+
+					dst.meshletInfo.vertexCount = src.vertex_count;
+					dst.meshletInfo.primitiveCount = src.triangle_count;
+
+					mesh.meshlet.push_back(dst);
+				}
+
+				// MeshInfo/AABB は後で算出
+				mesh.meshInfo.AABBMin = glm::vec4(meshAABBMin, 0.0f);
+				mesh.meshInfo.AABBMax = glm::vec4(meshAABBMax, 0.0f);
+				mesh.meshInfo.meshletCount = meshletCount;
+				mesh.meshInfo.vertexFloatCount = static_cast<uint32_t>(mesh.vertex.size());
+			}
+		}
+
+		stbi_image_free(pixels);
+
+		return meshes;
 	}
 
 	inline MyosotisFW::RawMeshData loadTerrain(std::string fileName)

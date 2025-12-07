@@ -7,6 +7,7 @@
 #include "CameraInfo.h"
 #include "SceneInfo.h"
 #include "ScreenInfo.h"
+#include "VBDispatchInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -29,22 +30,26 @@ namespace MyosotisFW::System::Render
 			CameraInfo,
 			LightInfo,		// todo
 			TerrainInfo,	// todo
+			TerrainVBDispatchInfo,
 			Count
 		};
 
 		void Update() override;
 		void UpdateScreenSize(const glm::ivec2& screenSize);
 		void AddCamera(const Camera::CameraBase_ptr& camera);
+		void AddTerrainVBDispatchInfo(std::vector<VBDispatchInfo>& vbDispatchInfo);
 
 	private:
 		void updateScreenInfo();
 		void updateSceneInfo();
 		void updateCameraInfo();
+		void updateTerrainVBDispatchInfo();
 
 		std::vector<Camera::CameraBase_ptr> m_cameras;
 		ScreenInfo m_screenInfo;
 		SceneInfo m_sceneInfo;
 		CameraInfo m_cameraInfo;
+		std::vector<VBDispatchInfo> m_terrainVBDispatchInfo;
 	};
 
 	TYPEDEF_SHARED_PTR_ARGS(SceneInfoDescriptorSet);

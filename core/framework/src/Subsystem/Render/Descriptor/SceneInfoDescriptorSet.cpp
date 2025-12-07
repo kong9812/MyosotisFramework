@@ -10,7 +10,8 @@ namespace MyosotisFW::System::Render
 		m_cameras(),
 		m_screenInfo(),
 		m_cameraInfo(),
-		m_sceneInfo()
+		m_sceneInfo(),
+		m_terrainVBDispatchInfo()
 	{
 		for (uint32_t i = 0; i < static_cast<uint32_t>(DescriptorBindingIndex::Count); i++)
 		{
@@ -46,11 +47,18 @@ namespace MyosotisFW::System::Render
 			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = false;
 		}
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].rebuild)
+		{
+			uint32_t size = static_cast<uint32_t>(sizeof(VBDispatchInfo)) * static_cast<uint32_t>(m_terrainVBDispatchInfo.size());
+			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo), size);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].rebuild = false;
+		}
 
 		// SSBO/UBO更新
 		updateScreenInfo();
 		updateSceneInfo();
 		updateCameraInfo();
+		updateTerrainVBDispatchInfo();
 	}
 
 	void SceneInfoDescriptorSet::UpdateScreenSize(const glm::ivec2& screenSize)
@@ -67,6 +75,12 @@ namespace MyosotisFW::System::Render
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = true;
 		// cameraDataサイズ
 		m_cameraInfo.cameraData.resize(m_cameras.size());
+	}
+
+	void SceneInfoDescriptorSet::AddTerrainVBDispatchInfo(std::vector<VBDispatchInfo>& vbDispatchInfo)
+	{
+		m_terrainVBDispatchInfo.insert(m_terrainVBDispatchInfo.end(), vbDispatchInfo.begin(), vbDispatchInfo.end());
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].update = true;
 	}
 
 	void SceneInfoDescriptorSet::updateScreenInfo()
@@ -116,5 +130,20 @@ namespace MyosotisFW::System::Render
 		dst += static_cast<uint32_t>(sizeof(uint32_t));
 		// 可変部分
 		memcpy(dst, m_cameraInfo.cameraData.data(), sizeof(CameraData) * m_cameraInfo.cameraData.size());
+	}
+
+	void SceneInfoDescriptorSet::updateTerrainVBDispatchInfo()
+	{
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].update)
+		{
+			// 可変部分
+			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].buffer.allocationInfo.pMappedData);
+			memcpy(dst, m_terrainVBDispatchInfo.data(), sizeof(VBDispatchInfo) * m_terrainVBDispatchInfo.size());
+
+			// 一時データクリア
+			m_terrainVBDispatchInfo.clear();
+
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].update = false;
+		}
 	}
 }
