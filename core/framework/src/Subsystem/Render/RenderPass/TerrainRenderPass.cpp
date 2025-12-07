@@ -29,13 +29,15 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat),	// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
 		// terrain subpass
 		VkAttachmentReference terrainSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(terrainSubpassColorAttachmentReferences));
+		VkAttachmentReference terrainSubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::PrimaryDepth), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_depth(terrainSubpassColorAttachmentReferences, terrainSubpassDepthAttachmentReference));
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// 外部 -> Terrain（Depth/Stencil 初期化）
@@ -86,6 +88,7 @@ namespace MyosotisFW::System::Render
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];
@@ -110,6 +113,7 @@ namespace MyosotisFW::System::Render
 		m_framebuffers.resize(1);
 
 		attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget().view;
+		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{

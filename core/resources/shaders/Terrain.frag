@@ -13,7 +13,7 @@ void main()
     // CameraInfo (MainCameraData) を取得
     CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
 
-    vec3 color = vec3(0.0);
+    vec3 color = vec3(0.0, 1.0, 0.0);
 
     // 指向ライト
     vec3 lightDir = normalize(vec3(0.3, -1.0, 0.2));  // 光の向き

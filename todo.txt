@@ -66,9 +66,9 @@
 [OK] ・Skybox
 [OK] ・LightingPassの追加
 [OK] ・リアルタイム計算
-・TerrainPassの追加
-・HightMapの準備 (Forward)
-・HightMapの描画
+[OK] ・TerrainPassの追加
+[OK] ・HightMapの準備 (Forward)
+[OK] ・HightMapの描画
 ・Terrain描画の変更 (Forward -> VisibilityBuffer)
 
 ・WeekendHomework

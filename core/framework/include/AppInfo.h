@@ -144,5 +144,5 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_maxMeshletPrimitives = 124;
 
 	// terrain
-	constexpr glm::vec3 g_terrainScale = glm::vec3(1.0f, 500.0f, 1.0f);
+	constexpr glm::vec3 g_terrainScale = glm::vec3(0.01f, 5.0f, 0.01f);
 }
