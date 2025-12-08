@@ -3,6 +3,7 @@
 #include "FpsCamera.h"
 #include "PrimitiveGeometry.h"
 #include "CustomMesh.h"
+#include "Terrain.h"
 
 namespace MyosotisFW::System::ComponentFactory
 {
@@ -24,6 +25,11 @@ namespace MyosotisFW::System::ComponentFactory
 		case ComponentType::CustomMesh:
 		{
 			object = Render::CreateCustomMeshPointer(objectID, meshChangedCallback);
+		}
+		break;
+		case ComponentType::Terrain:
+		{
+			object = Render::CreateTerrainPointer(objectID, meshChangedCallback);
 		}
 		break;
 		default:

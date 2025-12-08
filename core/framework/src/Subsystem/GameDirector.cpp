@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "istduuid.h"
 #include "CustomMesh.h"
+#include "Terrain.h"
 #include "GameStageIo.h"
 #include "MObject.h"
 #include "MObjectRegistry.h"
@@ -53,6 +54,19 @@ namespace MyosotisFW::System::GameDirector {
 		//		}
 		//	}
 		//}
+
+		{
+			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
+			newObject->SetPos(glm::vec3(0.0f));
+			newObject->SetRot(glm::vec3(0.0f));
+			newObject->SetScale(glm::vec3(1.0f));
+
+			Render::Terrain_ptr component = Object_Cast<Render::Terrain>(
+				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::Terrain, newObject->GetMeshChangedCallback()));
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
+
 		{
 			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
 			newObject->SetPos(glm::vec3(10.0f, 0.0f, 0.0f));
