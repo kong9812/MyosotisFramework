@@ -46,8 +46,6 @@ namespace MyosotisFW
 
 		class SkyboxRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPass);
-		class TerrainRenderPass;
-		TYPEDEF_SHARED_PTR_FWD(TerrainRenderPass);
 		class VisibilityBufferRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPass);
 		class LightingRenderPass;
@@ -55,8 +53,6 @@ namespace MyosotisFW
 
 		class SkyboxPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
-		class TerrainPipeline;
-		TYPEDEF_SHARED_PTR_FWD(TerrainPipeline);
 		class VisibilityBufferRenderPhase1Pipeline;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
 		class VisibilityBufferRenderPhase2Pipeline;
@@ -87,11 +83,9 @@ namespace MyosotisFW::System::Render
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
 			m_skyboxRenderPass(nullptr),
-			m_terrainRenderPass(nullptr),
 			m_visibilityBufferRenderPass(nullptr),
 			m_lightingRenderPass(nullptr),
 			m_skyboxPipeline(nullptr),
-			m_terrainPipeline(nullptr),
 			m_visibilityBufferRenderPhase1Pipeline(nullptr),
 			m_visibilityBufferRenderPhase2Pipeline(nullptr),
 			m_lightingPipeline(nullptr),
@@ -118,7 +112,6 @@ namespace MyosotisFW::System::Render
 		void BeginCompute();
 		void BeginRender();
 		void SkyboxRender();
-		void TerrainRender();
 		void MeshShaderRender();
 		void LightingRender();
 		void EndRender();
@@ -184,13 +177,11 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		SkyboxRenderPass_ptr m_skyboxRenderPass;
-		TerrainRenderPass_ptr m_terrainRenderPass;
 		VisibilityBufferRenderPass_ptr m_visibilityBufferRenderPass;
 		LightingRenderPass_ptr m_lightingRenderPass;
 
 	protected:
 		SkyboxPipeline_ptr m_skyboxPipeline;
-		TerrainPipeline_ptr m_terrainPipeline;
 		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
 		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
 		LightingPipeline_ptr m_lightingPipeline;

@@ -98,9 +98,9 @@ namespace MyosotisFW::AppInfo
 	// [デフォルト]カメラ FOV
 	constexpr float g_cameraFov = 60.0f;
 	// [デフォルト]カメラ Far
-	constexpr float g_cameraFar = 256.0f;
+	constexpr float g_cameraFar = 2048.0f;
 	// [デフォルト]カメラ Near
-	constexpr float g_cameraNear = 1.0f;
+	constexpr float g_cameraNear = 0.1f;
 
 	// [フォルダ]リソース
 	constexpr const char* g_resourcesFolder = ".\\resources\\";
@@ -144,5 +144,5 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_maxMeshletPrimitives = 124;
 
 	// terrain
-	constexpr glm::vec3 g_terrainScale = glm::vec3(0.01f, 5.0f, 0.01f);
+	constexpr glm::vec3 g_terrainScale = glm::vec3(0.1f, 10.0f, 0.1f);
 }
