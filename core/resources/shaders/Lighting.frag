@@ -83,9 +83,19 @@ vec4 CalcLighting(VertexData vertex, ObjectInfo objectInfo, CameraData cameraDat
     vec3 L = normalize(-lightDir);  // 光が当たる方向
     vec3 lightColor = vec3(1.0, 0.85, 0.7);
 
-    // DiffuseColor
+    // Direct Diffuse
     float NdotL = max(dot(worldNormal, L), 0.0);
-    vec3 diffuse = vertex.color.rgb * lightColor * NdotL;
+    vec3 directDiffuse = lightColor * NdotL;
+
+    // Indriect Diffuse (なんちゃって)
+    // todo. レイトレーシングでやるよ
+    vec3 skyColor = vec3(1.0, 0.85, 0.7);
+    vec3 groundColor = vec3(0.0, 0.0, 0.0);
+    float up = clamp(worldNormal.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 indirectDiffuse = mix(skyColor, groundColor, up);
+
+    // DiffuseColor
+    vec3 diffuse = vertex.color.rgb * (directDiffuse + indirectDiffuse);
 
     // SpecularColor (Blinn-Phong)
     vec3 V = normalize(cameraData.pos.xyz - worldPos);
