@@ -45,8 +45,11 @@ find_package(Vulkan REQUIRED)
 target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
-target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
-target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
+target_sources(${MFModelConverter_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
+target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
+# xatlas
+target_sources(${MFModelConverter_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
+target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 
 # work directory
 set_target_properties(${MFModelConverter_PROJECT_NAME} PROPERTIES

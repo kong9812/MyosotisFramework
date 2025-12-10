@@ -233,6 +233,20 @@ FetchContent_MakeAvailable(meshoptimizer)
 set_target_properties(meshoptimizer PROPERTIES FOLDER "external")
 FILE(GLOB meshoptimizer_SOURCES "${meshoptimizer_SOURCE_DIR}/src/*cpp") 
 
+# xatlas
+FetchContent_Declare(
+    xatlas
+    GIT_REPOSITORY https://github.com/cpp-pm/xatlas.git
+    GIT_TAG        v0.0.0-4077f0e-p0
+)
+FetchContent_MakeAvailable(xatlas)
+set_target_properties(xatlas PROPERTIES FOLDER "external")
+set(xatlas_SOURCES
+  ${xatlas_SOURCE_DIR}/xatlas.cpp
+  ${xatlas_SOURCE_DIR}/xatlas.h
+)
+
+
 # framework project
 set(FRAMEWORK_PROJECT_NAME "MyosotisFW")
 
@@ -286,6 +300,9 @@ target_link_libraries(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
+# xatlas
+target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
+target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 
 # dll project
 add_subdirectory(frameworkDLL)
