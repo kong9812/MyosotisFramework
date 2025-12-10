@@ -4,15 +4,17 @@
 const uint POSITION_VEC3 = 0x00000001;
 const uint POSITION_VEC4 = 0x00000002;
 const uint NORMAL        = 0x00000004;
-const uint UV            = 0x00000008;
-const uint TANGENT       = 0x00000010;
-const uint COLOR_VEC3    = 0x00000020;
-const uint COLOR_VEC4    = 0x00000040;
+const uint UV0           = 0x00000008;
+const uint UV1           = 0x00000010;
+const uint TANGENT       = 0x00000020;
+const uint COLOR_VEC3    = 0x00000040;
+const uint COLOR_VEC4    = 0x00000080;
 
 struct VertexData {
     vec4 position;
     vec3 normal;
-    vec2 uv;
+    vec2 uv0;
+    vec2 uv1;
     vec4 color;
 };
 
@@ -63,7 +65,7 @@ VertexData VertexData_GetVertexData(uint vertexDataOffset, uint vertexAttributeB
     VertexData v;
 
     if ((vertexAttributeBit & POSITION_VEC3) != 0) {
-        v.position = vec4(VertexData_LoadVec3(offset), 0.0);
+        v.position = vec4(VertexData_LoadVec3(offset), 1.0);
         offset += 3;
     } else if ((vertexAttributeBit & POSITION_VEC4) != 0) {
         v.position = VertexData_LoadVec4(offset);
@@ -75,8 +77,13 @@ VertexData VertexData_GetVertexData(uint vertexDataOffset, uint vertexAttributeB
         offset += 3;
     }
 
-    if ((vertexAttributeBit & UV) != 0) {
-        v.uv = VertexData_LoadVec2(offset);
+    if ((vertexAttributeBit & UV0) != 0) {
+        v.uv0 = VertexData_LoadVec2(offset);
+        offset += 2;
+    }
+
+    if ((vertexAttributeBit & UV1) != 0) {
+        v.uv1 = VertexData_LoadVec2(offset);
         offset += 2;
     }
 

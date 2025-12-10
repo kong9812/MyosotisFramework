@@ -3,6 +3,7 @@
 #include <vector>
 #include "Meshlet.h"
 #include "MeshInfo.h"
+#include "VertexData.h"
 
 namespace MyosotisFW
 {
@@ -11,7 +12,7 @@ namespace MyosotisFW
 		// Info
 		MeshInfo meshInfo;
 
-		std::vector<float> vertex;
+		std::vector<VertexData> vertex;
 		std::vector<Meshlet> meshlet;
 	};
 }

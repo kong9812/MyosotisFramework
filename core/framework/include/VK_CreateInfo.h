@@ -10,10 +10,11 @@ namespace Utility::Vulkan::CreateInfo
 		POSITION_VEC3 = 0x00000001,
 		POSITION_VEC4 = 0x00000002,
 		NORMAL = 0x00000004,
-		UV = 0x00000008,
-		TANGENT = 0x00000010,
-		COLOR_VEC3 = 0x00000020,
-		COLOR_VEC4 = 0x00000040,
+		UV0 = 0x00000008,
+		UV1 = 0x00000010,
+		TANGENT = 0x00000020,
+		COLOR_VEC3 = 0x00000040,
+		COLOR_VEC4 = 0x00000080,
 		VERTEX_ATTRIBUTE_BITS_MAX_ENUM = 0x7FFFFFFF
 	} VertexAttributeBit;
 	typedef uint32_t VertexAttributeBits;
@@ -898,8 +899,15 @@ namespace Utility::Vulkan::CreateInfo
 			offset += sizeof(glm::vec3);
 			location++;
 		}
-		// [Vec2]UV
-		if (vertexAttributes & VertexAttributeBit::UV)
+		// [Vec2]UV0
+		if (vertexAttributes & VertexAttributeBit::UV0)
+		{
+			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32_SFLOAT, offset));
+			offset += sizeof(glm::vec2);
+			location++;
+		}
+		// [Vec2]UV1
+		if (vertexAttributes & VertexAttributeBit::UV1)
 		{
 			descs.push_back(vertexInputAttributeDescription(binding, location, VkFormat::VK_FORMAT_R32G32_SFLOAT, offset));
 			offset += sizeof(glm::vec2);
@@ -949,7 +957,12 @@ namespace Utility::Vulkan::CreateInfo
 			desc.stride += sizeof(glm::vec3);
 		}
 		// [Vec2]UV
-		if (vertexAttributes & VertexAttributeBit::UV)
+		if (vertexAttributes & VertexAttributeBit::UV0)
+		{
+			desc.stride += sizeof(glm::vec2);
+		}
+		// [Vec2]UV
+		if (vertexAttributes & VertexAttributeBit::UV1)
 		{
 			desc.stride += sizeof(glm::vec2);
 		}

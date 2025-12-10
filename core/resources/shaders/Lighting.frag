@@ -58,10 +58,10 @@ VertexData InterpolateVertexAttributes(VertexData v0, VertexData v1, VertexData 
           v0.normal * bary.x +
           v1.normal * bary.y +
           v2.normal * bary.z);
-    vertexData.uv =
-          v0.uv * bary.x +
-          v1.uv * bary.y +
-          v2.uv * bary.z;
+    vertexData.uv0 =
+          v0.uv0 * bary.x +
+          v1.uv0 * bary.y +
+          v2.uv0 * bary.z;
     vertexData.color =
           v0.color * bary.x +
           v1.color * bary.y +

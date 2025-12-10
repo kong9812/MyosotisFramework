@@ -3,10 +3,11 @@
 
 #include "Descriptors/CameraInfo.glsl"
 
-layout (location = 0) in vec4 inPosition;
+layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec3 inNormal;
-layout (location = 2) in vec2 inUV;
-layout (location = 3) in vec4 inColor;
+layout (location = 2) in vec2 inUV0;
+layout (location = 3) in vec2 inUV1;
+layout (location = 4) in vec4 inColor;
 
 layout (location = 0) out vec3 outUVW;
 
@@ -18,7 +19,7 @@ void main()
     mat4 view = cameraData.view;
     view[3] = vec4(0, 0, 0, 1); 
 
-    vec4 pos = cameraData.projection * view * inPosition;    
+    vec4 pos = cameraData.projection * view * vec4(inPosition, 1.0);    
 
     // skybox を奥に固定
     gl_Position = pos.xyww; 

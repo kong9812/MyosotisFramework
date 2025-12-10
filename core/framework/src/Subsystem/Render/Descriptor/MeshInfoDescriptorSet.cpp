@@ -48,7 +48,7 @@ namespace MyosotisFW::System::Render
 		// [Descriptor作成] VertexData
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild)
 		{
-			uint32_t size = static_cast<uint32_t>(sizeof(float)) * static_cast<uint32_t>(m_vertexData.size());
+			uint32_t size = static_cast<uint32_t>(sizeof(VertexData)) * static_cast<uint32_t>(m_vertexData.size());
 			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VertexData), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild = false;
 		}
@@ -109,8 +109,13 @@ namespace MyosotisFW::System::Render
 		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 		meshInfo.AABBMin = mesh.meshInfo.AABBMin;
 		meshInfo.AABBMax = mesh.meshInfo.AABBMax;
-		meshInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-		meshInfo.unitSize = 13;
+		meshInfo.vertexAttributeBit =
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV0 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+		meshInfo.unitSize = sizeof(VertexData) / sizeof(float);
 		for (const Meshlet& meshlet : mesh.meshlet)
 		{
 			// MeshletMetaData
@@ -120,7 +125,7 @@ namespace MyosotisFW::System::Render
 			meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 			meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 			meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
-			meshletInfo.vertexDataOffset = m_vertexData.size();
+			meshletInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 			meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
 			meshletInfo.primitivesOffset = m_primitivesData.size();
 			m_meshletInfo.push_back(meshletInfo);
@@ -171,8 +176,13 @@ namespace MyosotisFW::System::Render
 			meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 			meshInfo.AABBMin = mesh.meshInfo.AABBMin;
 			meshInfo.AABBMax = mesh.meshInfo.AABBMax;
-			meshInfo.vertexAttributeBit = Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 | Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL | Utility::Vulkan::CreateInfo::VertexAttributeBit::UV | Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-			meshInfo.unitSize = 13;
+			meshInfo.vertexAttributeBit =
+				Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
+				Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
+				Utility::Vulkan::CreateInfo::VertexAttributeBit::UV0 |
+				Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
+				Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+			meshInfo.unitSize = sizeof(VertexData) / sizeof(float);
 			for (const Meshlet& meshlet : mesh.meshlet)
 			{
 				// MeshletMetaData
@@ -182,7 +192,7 @@ namespace MyosotisFW::System::Render
 				meshletInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 				meshletInfo.vertexCount = meshlet.uniqueIndex.size(); // (x,y,z,w,uv1X....)
 				meshletInfo.primitiveCount = meshlet.primitives.size() / 3; // 三角形
-				meshletInfo.vertexDataOffset = m_vertexData.size();
+				meshletInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 				meshletInfo.uniqueIndexOffset = m_uniqueIndexData.size();
 				meshletInfo.primitivesOffset = m_primitivesData.size();
 				m_meshletInfo.push_back(meshletInfo);
@@ -237,7 +247,7 @@ namespace MyosotisFW::System::Render
 	{
 		// 可変部分
 		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_vertexData.data(), sizeof(float) * m_vertexData.size());
+		memcpy(dst, m_vertexData.data(), sizeof(VertexData) * m_vertexData.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].update = false;
 	}
 

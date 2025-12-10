@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 				index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
 			}
 			{// vertex
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(float) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer.buffer, &m_vertexBuffer.allocation, &m_vertexBuffer.allocationInfo));
@@ -125,9 +125,10 @@ namespace MyosotisFW::System::Render
 
 		// pipelineVertexInputStateCreateInfo
 		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC4 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV0 |
+			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 
 		// pipelineVertexInputStateCreateInfo

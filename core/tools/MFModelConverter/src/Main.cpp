@@ -99,9 +99,9 @@ static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMe
 		meshletTriangles.data(),
 		rawMeshData.index.data(),
 		rawMeshData.index.size(),
-		&rawMeshData.position[0].x,
-		rawMeshData.position.size(),
-		sizeof(glm::vec3),
+		&rawMeshData.vertex[0].position.x,
+		rawMeshData.vertex.size(),
+		sizeof(MyosotisFW::VertexData),
 		MyosotisFW::AppInfo::g_maxMeshletVertices,
 		MyosotisFW::AppInfo::g_maxMeshletPrimitives,
 		0.0f);
@@ -134,7 +134,7 @@ static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMe
 		}
 
 		// AABB
-		glm::vec3 p0 = rawMeshData.position[meshletVertices[src.vertex_offset + 0]];
+		glm::vec3 p0 = rawMeshData.vertex[meshletVertices[src.vertex_offset + 0]].position;
 		dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
 		dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
 		meshAABBMin = glm::min(meshAABBMin, p0);
@@ -142,7 +142,7 @@ static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMe
 		for (size_t v = 1; v < src.vertex_count; v++)
 		{
 			uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
-			const glm::vec3& pos = rawMeshData.position[vertexIndex];
+			const glm::vec3& pos = rawMeshData.vertex[vertexIndex].position;
 			dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
 			dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
 			meshAABBMin = glm::min(meshAABBMin, pos);
@@ -157,7 +157,7 @@ static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMe
 	meshData.meshInfo.AABBMin = glm::vec4(meshAABBMin, 0.0f);
 	meshData.meshInfo.AABBMax = glm::vec4(meshAABBMax, 0.0f);
 	meshData.meshInfo.meshletCount = meshletCount;
-	meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(rawMeshData.vertex.size());
+	meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(rawMeshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 
 	Utility::Loader::SerializeMFModel(name, meshData);
 }
@@ -198,51 +198,31 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 
 				for (uint32_t vertexIdx = polygon.from_vertex; vertexIdx < polygon.from_vertex + polygon.vertex_count; vertexIdx++)
 				{
-					// Position
-					{
-						ofbx::Vec3 v = positions.get(vertexIdx);
-						rawMeshData.position.push_back(glm::vec3(v.x, v.y, v.z));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v.x, v.y, v.z, 1.0f });
-					}
+					glm::vec3 v = ToGlmVec3(positions.get(vertexIdx));
+					glm::vec3 n = glm::vec3(0.0f);
+					glm::vec2 u0 = glm::vec2(0.0f);
+					glm::vec2 u1 = glm::vec2(0.0f);
+					glm::vec4 c = glm::vec4(1.0f);
 
 					// Normal
 					if (normal.count > vertexIdx)
 					{
-						ofbx::Vec3 n = normal.get(vertexIdx);
-						rawMeshData.normal.push_back(glm::vec3(n.x, n.y, n.z));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { n.x, n.y, n.z });
-					}
-					else
-					{
-						rawMeshData.normal.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f });
+						n = ToGlmVec3(normal.get(vertexIdx));
 					}
 
-					// UV
+					// UV0
 					if (uv.count > vertexIdx)
 					{
-						ofbx::Vec2 u = uv.get(vertexIdx);
-						rawMeshData.uv.push_back(glm::vec2(u.x, u.y));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { u.x, u.y });
-					}
-					else
-					{
-						rawMeshData.uv.push_back(glm::vec2(0.0f, 0.0f));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f });
+						u0 = ToGlmVec2(uv.get(vertexIdx));
 					}
 
 					// Color
 					if (color.count > vertexIdx)
 					{
-						ofbx::Vec4 c = color.get(vertexIdx);
-						rawMeshData.color.push_back(glm::vec4(c.x, c.y, c.z, c.w));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { c.x, c.y, c.z, c.w });
+						c = ToGlmVec4(color.get(vertexIdx));
 					}
-					else
-					{
-						rawMeshData.color.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-						rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
-					}
+
+					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v, n, u0, u1, c });
 				}
 			}
 
@@ -299,53 +279,33 @@ static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const s
 			// Vertex
 			for (size_t vertex = 0; vertex < vertexCount; vertex++)
 			{
+				glm::vec3 v = glm::vec3(0.0f);
+				glm::vec3 n = glm::vec3(0.0f);
+				glm::vec2 u0 = glm::vec2(0.0f);
+				glm::vec2 u1 = glm::vec2(0.0f);
+				glm::vec4 c = glm::vec4(1.0f);
+
 				if (positionBuffer != nullptr)
 				{
-					glm::vec3 v = glm::make_vec3(&positionBuffer[vertex * 3]);
-					rawMeshData.position.push_back(v);
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v.x, v.y, v.z, 1.0f });
-				}
-				else
-				{
-					rawMeshData.position.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f, 1.0f });
+					v = glm::make_vec3(&positionBuffer[vertex * 3]);
 				}
 
 				if (normalBuffer != nullptr)
 				{
-					glm::vec3 n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
-					rawMeshData.normal.push_back(n);
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { n.x, n.y, n.z });
-				}
-				else
-				{
-					rawMeshData.normal.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f, 0.0f });
+					n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
 				}
 
 				if (uvBuffer != nullptr)
 				{
-					glm::vec2 uv = glm::make_vec2(&uvBuffer[vertex * 2]);
-					rawMeshData.uv.push_back(uv);
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { uv.x, uv.y });
-				}
-				else
-				{
-					rawMeshData.uv.push_back(glm::vec2(0.0f, 0.0f));
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 0.0f, 0.0f });
+					u0 = glm::make_vec2(&uvBuffer[vertex * 2]);
 				}
 
 				if (colorBuffer != nullptr)
 				{
-					glm::vec3 color = glm::make_vec3(&colorBuffer[vertex * 3]);
-					rawMeshData.color.push_back(glm::vec4(color, 1.0f));
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { color.r, color.g, color.b, 1.0f });
+					c = glm::vec4(glm::make_vec3(&colorBuffer[vertex * 3]), 1.0f);
 				}
-				else
-				{
-					rawMeshData.color.push_back(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-					rawMeshData.vertex.insert(rawMeshData.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
-				}
+
+				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v, n, u0, u1, c });
 			}
 
 			// Index

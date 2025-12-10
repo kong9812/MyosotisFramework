@@ -49,40 +49,40 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, nx, ny, nz, uvx, uvy, r, g, b, a,)
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
-			-halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 3
-			 halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 2
-			-halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 0
-			 halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,		// 1
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },	// 3
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },	// 2
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },	// 0
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 1
 
-			 // 背面 (0, 0, 1)
-			  halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 6
-			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 7
-			  halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 5
-			 -halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  0.0,  1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 4
+			// 背面 (0, 0, 1)
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  0.0f,  1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },	// 6
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  0.0f,  1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },	// 7
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  0.0f,  1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 5
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  0.0f,  1.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },	// 4
 
-			 // 上面 (0, 1, 0)
-			 -halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 11
-			  halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 10
-			 -halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 8
-			  halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  0.0,  1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 9
+			// 上面 (0, 1, 0)
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  1.0f,  0.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) }, // 11
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f,  1.0f,  0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 10
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  1.0f,  0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) }, // 8
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  1.0f,  0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) }, // 9
 
-			  // 下面 (0, -1, 0)
-			   halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 14
-			  -halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 15
-			   halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 13
-			  -halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  0.0, -1.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 12
+			// 下面 (0, -1, 0)
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f, -1.0f,  0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 14
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y,  halfSize + center.z),  glm::vec3(0.0f, -1.0f,  0.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) }, // 15
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f, -1.0f,  0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) }, // 13
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f, -1.0f,  0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) }, // 12
 
-			  // 右面 (1, 0, 0)
-			   halfSize + center.x,  halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 17
-			   halfSize + center.x,  halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 18
-			   halfSize + center.x, -halfSize + center.y, -halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 16
-			   halfSize + center.x, -halfSize + center.y,  halfSize + center.z,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 19
+			// 右面 (1, 0, 0)
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y, -halfSize + center.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) }, // 17
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y,  halfSize + center.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 18
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y, -halfSize + center.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) }, // 16
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y,  halfSize + center.z), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) }, // 19
 
-			   // 左面 (-1, 0, 0)
-			   -halfSize + center.x, -halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 1.0, color.r, color.g, color.b, color.a,	// 20
-			   -halfSize + center.x, -halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 0.0, 0.0, color.r, color.g, color.b, color.a,	// 23
-			   -halfSize + center.x,  halfSize + center.y, -halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 21
-			   -halfSize + center.x,  halfSize + center.y,  halfSize + center.z, 1.0, -1.0,  0.0,  0.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 22
+			// 左面 (-1, 0, 0)
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, -halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) }, // 20
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y,  halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) }, // 23
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, -halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) }, // 21
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y,  halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 22
 		};
 		meshlet.primitives = {
 			0,	1,	2,	2,	1,	3,	// 前面
@@ -122,10 +122,10 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
-			-halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 3
-			 halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 2
-			-halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 0
-			 halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,		// 1
+			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },	// 0
+			{ glm::vec3(halfSize + center.x,  halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },	// 1
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },	// 2
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 3
 		};
 		meshlet.primitives = {
 			0,	1,	2,	2,	1,	3,	// 前面
@@ -163,25 +163,28 @@ namespace MyosotisFW::System::Render::Shape
 		float a = glm::two_pi<float>() / static_cast<float>(side);
 
 		mesh.vertex.insert(mesh.vertex.end(), {
-			center.x, center.y, center.z, 1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f,
-			color.r, color.g, color.b, color.a });
+			glm::vec3(center.x, center.y, center.z),
+			glm::vec3(0.0f, 0.0f, -1.0f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec4(color) });
 		mesh.vertex.insert(mesh.vertex.end(), {
-			center.x + radius * sinf(a), center.y + radius * cosf(a), center.z, 1.0f,
-			0.0f, 0.0f, -1.0f,
-			0.0f, 0.0f,
-			color.r, color.g, color.b, color.a });
+			glm::vec3(center.x + radius * sinf(a), center.y + radius * cosf(a), center.z),
+			glm::vec3(0.0f, 0.0f, -1.0f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec4(color) });
 
 		for (uint32_t i = 1; i <= side; i++)
 		{
 			uint32_t idx = i + 1;
 			idx = idx > side ? idx - side : idx;
 			mesh.vertex.insert(mesh.vertex.end(), {
-				center.x + radius * sinf(a * static_cast<float>(idx)), center.y + radius * cosf(a * static_cast<float>(idx)), center.z, 1.0f,
-				0.0f, 0.0f, -1.0f,
-				0.0f, 0.0f,
-				color.r, color.g, color.b, color.a });
+				glm::vec3(center.x + radius * sinf(a * static_cast<float>(idx)), center.y + radius * cosf(a * static_cast<float>(idx)), center.z),
+				glm::vec3(0.0f, 0.0f, -1.0f),
+				glm::vec2(0.0f, 0.0f),
+				glm::vec2(0.0f, 0.0f),
+				glm::vec4(color) });
 			meshlet.primitives.insert(meshlet.primitives.end(), { 0, i, idx });
 		}
 		for (uint32_t index : meshlet.primitives)
@@ -233,10 +236,11 @@ namespace MyosotisFW::System::Render::Shape
 				glm::vec2 uv = { static_cast<float>(j) / static_cast<float>(side), static_cast<float>(i) / static_cast<float>(side) };
 
 				mesh.vertex.insert(mesh.vertex.end(), {
-					position.x, position.y, position.z, 1.0f,
-					normal.x, normal.y, normal.z,
-					uv.x, uv.y,
-					color.r, color.g, color.b, color.a });
+					glm::vec3(position.x, position.y, position.z),
+					glm::vec3(normal.x, normal.y, normal.z),
+					glm::vec2(uv.x, uv.y),
+					glm::vec2(uv.x, uv.y),
+					glm::vec4(color) });
 			}
 		}
 
@@ -284,28 +288,28 @@ namespace MyosotisFW::System::Render::Shape
 		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
 		mesh.vertex = {
 			// 上 (0, 0, -1)
-			-halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,				// 0
-			 halfSize + center.x,  halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,				// 1
-			-halfSize + center.x, holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,			// 2
-			 halfSize + center.x, holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,			// 3
+			{ glm::vec3(-halfSize + center.x, halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },			// 0
+			{ glm::vec3(halfSize + center.x, halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 0.0f),glm::vec2(1.0f, 0.0f), glm::vec4(color) },				// 1
+			{ glm::vec3(-halfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },		// 2
+			{ glm::vec3(halfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },			// 3
 
-			 // 左(0, 0, -1)
-			 -halfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 4
-			 -holeHalfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,	// 5
-			 -halfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 6
-			 -holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,	// 7
+			// 左(0, 0, -1)
+			{ glm::vec3(-halfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },		// 4
+			{ glm::vec3(-holeHalfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },	// 5
+			{ glm::vec3(-halfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },		// 6
+			{ glm::vec3(-holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 7
 
-			 // 右(0, 0, -1)
-			 holeHalfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 8
-			 halfSize + center.x,  holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,			// 9
-			 holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,		// 10
-			 halfSize + center.x, -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,			// 11
+			// 右(0, 0, -1)
+			{ glm::vec3(holeHalfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },		// 8
+			{ glm::vec3(halfSize + center.x, holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },			// 9
+			{ glm::vec3(holeHalfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },	// 10
+			{ glm::vec3(halfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },		// 11
 
-			 // 下(0, 0, -1)
-			-halfSize + center.x,  -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 0.0, color.r, color.g, color.b, color.a,		// 12
-			 halfSize + center.x,  -holeHalfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 0.0, color.r, color.g, color.b, color.a,		// 13
-			-halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 0.0, 1.0, color.r, color.g, color.b, color.a,				// 14
-			 halfSize + center.x, -halfSize + center.y, 0.0f,  1.0,  0.0,  0.0, -1.0, 1.0, 1.0, color.r, color.g, color.b, color.a,				// 15
+			// 下(0, 0, -1)
+			{ glm::vec3(-halfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },		// 12
+			{ glm::vec3(halfSize + center.x, -holeHalfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) },		// 13
+			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0),glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },			// 14
+			{ glm::vec3(halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },			// 15
 
 		};
 		meshlet.primitives = {

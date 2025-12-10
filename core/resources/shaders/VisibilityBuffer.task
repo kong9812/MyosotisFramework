@@ -128,8 +128,8 @@ void main()
                 mipLevel = clamp(mipLevel, 0.0, hiZMipLevelMax);
                 ivec2 targetMipTextureSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, int(mipLevel));
 
-                ivec2 minTexel = ivec2(minUV * targetMipTextureSize);
-                ivec2 maxTexel = ivec2(maxUV * targetMipTextureSize);
+                ivec2 minTexel = ivec2(minUV * targetMipTextureSize) - ivec2(1);    // bias: - ivec2(1) 本当にこれでいいのかなぁ…
+                ivec2 maxTexel = ivec2(maxUV * targetMipTextureSize) + ivec2(1);    // bias: + ivec2(1) 本当にこれでいいのかなぁ…
                 minTexel = clamp(minTexel, ivec2(0), targetMipTextureSize - ivec2(1));
                 maxTexel = clamp(maxTexel, ivec2(0), targetMipTextureSize - ivec2(1));
                 bool occCullingVisible = false;

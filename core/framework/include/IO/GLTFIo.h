@@ -119,10 +119,15 @@ namespace Utility::Loader {
 				// add vertex data
 				for (size_t vertex = 0; vertex < vertexCount; vertex++)
 				{
+					glm::vec3 v = glm::vec3(0.0f);
+					glm::vec3 n = glm::vec3(0.0f);
+					glm::vec2 u0 = glm::vec2(0.0f);
+					glm::vec2 u1 = glm::vec2(0.0f);
+					glm::vec4 c = glm::vec4(1.0f);
+
 					if (positionBuffer != nullptr)
 					{
-						glm::vec3 v = glm::make_vec3(&positionBuffer[vertex * 3]);
-						meshData.vertex.insert(meshData.vertex.end(), { v.x, v.y, v.z, 1.0f });
+						v = glm::make_vec3(&positionBuffer[vertex * 3]);
 
 						// aabb
 						if (firstDataForAABB)
@@ -137,40 +142,24 @@ namespace Utility::Loader {
 							meshData.meshInfo.AABBMax = glm::max(meshData.meshInfo.AABBMax, glm::vec4(v, 0.0f));
 						}
 					}
-					else
-					{
-						meshData.vertex.insert(meshData.vertex.end(), { 0.0f, 0.0f, 0.0f, 1.0f });
-					}
 
 					if (normalBuffer != nullptr)
 					{
-						glm::vec3 n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
-						meshData.vertex.insert(meshData.vertex.end(), { n.x, n.y, n.z });
+						n = glm::normalize(glm::make_vec3(&normalBuffer[vertex * 3]));
 					}
-					else
-					{
-						meshData.vertex.insert(meshData.vertex.end(), { 0.0f, 0.0f, 0.0f });
-					}
+
 
 					if (uvBuffer != nullptr)
 					{
-						glm::vec2 uv = glm::make_vec2(&uvBuffer[vertex * 2]);
-						meshData.vertex.insert(meshData.vertex.end(), { uv.x, uv.y });
-					}
-					else
-					{
-						meshData.vertex.insert(meshData.vertex.end(), { 0.0f, 0.0f });
+						u0 = glm::make_vec2(&uvBuffer[vertex * 2]);
 					}
 
 					if (colorBuffer != nullptr)
 					{
-						glm::vec3 color = glm::make_vec3(&colorBuffer[vertex * 3]);
-						meshData.vertex.insert(meshData.vertex.end(), { color.r, color.g, color.b, 1.0f });
+						c = glm::vec4(glm::make_vec3(&colorBuffer[vertex * 3]), 1.0f);
 					}
-					else
-					{
-						meshData.vertex.insert(meshData.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
-					}
+
+					meshData.vertex.insert(meshData.vertex.end(), { v, n, u0, u1, c });
 				}
 				{// add index data
 					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];

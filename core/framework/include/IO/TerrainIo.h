@@ -18,14 +18,6 @@
 #include "Mesh.h"
 
 namespace Utility::Loader {
-	// 共通の定数
-	constexpr uint32_t POSITION_COMPONENTS = 4; // x,y,z,w
-	constexpr uint32_t NORMAL_COMPONENTS = 3;
-	constexpr uint32_t UV_COMPONENTS = 2;
-	constexpr uint32_t COLOR_COMPONENTS = 4;
-	constexpr uint32_t FLOATS_PER_VERTEX = POSITION_COMPONENTS + NORMAL_COMPONENTS + UV_COMPONENTS + COLOR_COMPONENTS; // 13
-	constexpr uint32_t NORMAL_OFFSET = POSITION_COMPONENTS; // 4
-
 	// 8bit高さマップを読み込む
 	inline stbi_uc* LoadGrayImage(const std::filesystem::path& path, int32_t& outWidth, int32_t& outHeight, int32_t& outChannels)
 	{
@@ -35,11 +27,8 @@ namespace Utility::Loader {
 	}
 
 	// グリッド(幅x高さ)から法線を計算する
-	inline void ComputeNormalsFromGrid(const std::vector<glm::vec3>& positions, std::vector<glm::vec3>& outNormals, uint32_t width, uint32_t height)
+	inline void ComputeNormalsFromGrid(std::vector<MyosotisFW::VertexData>& vertex, uint32_t width, uint32_t height)
 	{
-		outNormals.clear();
-		outNormals.resize(positions.size(), glm::vec3(0.0f));
-
 		if (width < 2 || height < 2)
 			return;
 
@@ -53,46 +42,28 @@ namespace Utility::Loader {
 				const uint32_t bottomRight = bottomLeft + 1;
 
 				// 三角形 1
-				const glm::vec3 v0 = positions[topLeft];
-				const glm::vec3 v1 = positions[bottomLeft];
-				const glm::vec3 v2 = positions[topRight];
+				const glm::vec3 v0 = vertex[topLeft].position;
+				const glm::vec3 v1 = vertex[bottomLeft].position;
+				const glm::vec3 v2 = vertex[topRight].position;
 				const glm::vec3 normal1 = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
 				// 三角形 2
-				const glm::vec3 u0 = positions[topRight];
-				const glm::vec3 u1 = positions[bottomLeft];
-				const glm::vec3 u2 = positions[bottomRight];
+				const glm::vec3 u0 = vertex[topRight].position;
+				const glm::vec3 u1 = vertex[bottomLeft].position;
+				const glm::vec3 u2 = vertex[bottomRight].position;
 				const glm::vec3 normal2 = glm::normalize(glm::cross(u1 - u0, u2 - u0));
 
-				outNormals[topLeft] += normal1;
-				outNormals[bottomLeft] += (normal1 + normal2);
-				outNormals[topRight] += (normal1 + normal2);
-				outNormals[bottomRight] += normal2;
+				vertex[topLeft].normal += normal1;
+				vertex[bottomLeft].normal += (normal1 + normal2);
+				vertex[topRight].normal += (normal1 + normal2);
+				vertex[bottomRight].normal += normal2;
 			}
 		}
 
-		for (auto& n : outNormals)
+		for (auto& n : vertex)
 		{
-			n = glm::normalize(n);
+			n.normal = glm::normalize(n.normal);
 		}
-	}
-
-	inline void CalculateTerrainNormals(MyosotisFW::RawMeshData& mesh, uint32_t width, uint32_t height)
-	{
-		std::vector<glm::vec3> positions{};
-		positions.reserve(mesh.position.size());
-		for (const auto& p : mesh.position)
-			positions.push_back(glm::vec3(p));
-
-		std::vector<glm::vec3> normals{};
-		ComputeNormalsFromGrid(positions, normals, width, height);
-
-		mesh.normal = std::move(normals);
-	}
-
-	inline void CalculateTerrainNormals2(const std::vector<glm::vec3>& position, std::vector<glm::vec3>& normal, uint32_t width, uint32_t height)
-	{
-		ComputeNormalsFromGrid(position, normal, width, height);
 	}
 
 	inline uint32_t GetNearestDivisor(uint32_t step, uint32_t target)
@@ -146,8 +117,6 @@ namespace Utility::Loader {
 				mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
 				mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
 
-				std::vector<glm::vec3> tmpPositions{};
-				tmpPositions.reserve((chunkSize.x / samplingStep) * (chunkSize.y / samplingStep));
 				glm::vec3 meshAABBMin(FLT_MAX);
 				glm::vec3 meshAABBMax(-FLT_MAX);
 
@@ -164,30 +133,27 @@ namespace Utility::Loader {
 						const float heightValue = static_cast<float>(pixels[y * textureWidth + x]) / 255.0f;
 
 						// Position
-						mesh.vertex.insert(mesh.vertex.end(), {
-								static_cast<float>(x) * MyosotisFW::AppInfo::g_terrainScale.x,
-								heightValue * MyosotisFW::AppInfo::g_terrainScale.y,
-								static_cast<float>(y) * MyosotisFW::AppInfo::g_terrainScale.z,
-								1.0f
-							});
-						// tmpPositions(AABB/meshlet用)
-						tmpPositions.emplace_back(
+						glm::vec3 v = glm::vec3(
 							static_cast<float>(x) * MyosotisFW::AppInfo::g_terrainScale.x,
 							heightValue * MyosotisFW::AppInfo::g_terrainScale.y,
 							static_cast<float>(y) * MyosotisFW::AppInfo::g_terrainScale.z
 						);
 
 						// Normal(仮)
-						mesh.vertex.insert(mesh.vertex.end(), { 0.0f, 1.0f, 0.0f });
+						glm::vec3 n = glm::vec3(0.0f, 1.0f, 0.0f);
 
-						// UV
-						mesh.vertex.insert(mesh.vertex.end(), {
+						// UV0
+						glm::vec2 u0 = glm::vec2(
 							static_cast<float>(x) / static_cast<float>(textureWidth),
 							static_cast<float>(y) / static_cast<float>(textureHeight)
-							});
+						);
+						// UV1(仮)
+						glm::vec2 u1 = glm::vec2(0.0f);
 
 						// Color
-						mesh.vertex.insert(mesh.vertex.end(), { 1.0f, 1.0f, 1.0f, 1.0f });
+						glm::vec4 c = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+						mesh.vertex.push_back({ v, n, u0, u1, c });
 					}
 				}
 
@@ -196,15 +162,7 @@ namespace Utility::Loader {
 				const uint32_t localH = ((endY - startY) / samplingStep) + 1;
 
 				// normal計算
-				std::vector<glm::vec3> tmpNormal{};
-				ComputeNormalsFromGrid(tmpPositions, tmpNormal, localW, localH);
-				for (uint32_t i = 0; i < tmpNormal.size(); i++)
-				{
-					uint32_t base = i * FLOATS_PER_VERTEX + NORMAL_OFFSET;
-					mesh.vertex[base + 0] = tmpNormal[i].x;
-					mesh.vertex[base + 1] = tmpNormal[i].y;
-					mesh.vertex[base + 2] = tmpNormal[i].z;
-				}
+				ComputeNormalsFromGrid(mesh.vertex, localW, localH);
 
 				// index作成
 				std::vector<uint32_t> index{};
@@ -241,9 +199,9 @@ namespace Utility::Loader {
 					meshletTriangles.data(),
 					index.data(),
 					index.size(),
-					&(mesh.vertex[0]),
-					mesh.vertex.size() / FLOATS_PER_VERTEX,
-					size_t(sizeof(float) * FLOATS_PER_VERTEX),
+					&(mesh.vertex[0].position.x),
+					mesh.vertex.size(),
+					size_t(sizeof(MyosotisFW::VertexData)),
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives,
 					0.0f);
@@ -269,7 +227,7 @@ namespace Utility::Loader {
 					}
 
 					// AABB 計算
-					auto p0 = tmpPositions[meshletVertices[src.vertex_offset + 0]];
+					auto p0 = mesh.vertex[meshletVertices[src.vertex_offset + 0]].position;
 					dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
 					dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
 					meshAABBMin = glm::min(meshAABBMin, p0);
@@ -277,7 +235,7 @@ namespace Utility::Loader {
 					for (size_t v = 1; v < src.vertex_count; v++)
 					{
 						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
-						const glm::vec3& pos = tmpPositions[vertexIndex];
+						const glm::vec3& pos = mesh.vertex[vertexIndex].position;
 						dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
 						dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
 						meshAABBMin = glm::min(meshAABBMin, pos);
@@ -320,11 +278,7 @@ namespace Utility::Loader {
 		const uint32_t sampledHeight = static_cast<uint32_t>(textureHeight) / samplingStep;
 		size_t totalVertices = static_cast<size_t>(sampledWidth) * static_cast<size_t>(sampledHeight);
 
-		rawMeshData.position.reserve(totalVertices);
-		rawMeshData.normal.reserve(totalVertices);
-		rawMeshData.uv.reserve(totalVertices);
-		rawMeshData.color.reserve(totalVertices);
-		rawMeshData.vertex.reserve(totalVertices * FLOATS_PER_VERTEX);
+		rawMeshData.vertex.reserve(totalVertices);
 
 		for (uint32_t y = 0; y < textureHeight; y += samplingStep)
 		{
@@ -333,32 +287,27 @@ namespace Utility::Loader {
 				const float heightValue = static_cast<float>(pixels[y * textureWidth + x]) / 255.0f;
 
 				// Position
-				glm::vec4 p = glm::vec4(
+				glm::vec3 v = glm::vec3(
 					static_cast<float>(x) * MyosotisFW::AppInfo::g_terrainScale.x,
 					static_cast<float>(y) * MyosotisFW::AppInfo::g_terrainScale.z,
-					heightValue * MyosotisFW::AppInfo::g_terrainScale.y,
-					1.0f
+					heightValue * MyosotisFW::AppInfo::g_terrainScale.y
 				);
-				rawMeshData.position.push_back(p);
-				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { p.x, p.y, p.z, p.w });
 
 				// Normal (固定: 上向き)
 				glm::vec3 n = glm::vec3(0.0f, 1.0f, 0.0f);
-				rawMeshData.normal.push_back(n);
-				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { n.x, n.y, n.z });
 
-				// UV
-				glm::vec2 u = glm::vec2(
+				// UV0
+				glm::vec2 u0 = glm::vec2(
 					static_cast<float>(x) / (textureWidth - 1),
 					static_cast<float>(y) / (textureHeight - 1)
 				);
-				rawMeshData.uv.push_back(u);
-				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { u.x, u.y });
+				// UV1 (仮)
+				glm::vec2 u1 = glm::vec2(0.0f);
 
 				// Color (固定: 白)
 				glm::vec4 c = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-				rawMeshData.color.push_back(c);
-				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { c.r, c.g, c.b, c.a });
+
+				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v, n, u0, u1, c });
 			}
 		}
 
@@ -385,16 +334,8 @@ namespace Utility::Loader {
 		stbi_image_free(pixels);
 
 		// 法線計算
-		CalculateTerrainNormals(rawMeshData, sampledWidth, sampledHeight);
+		ComputeNormalsFromGrid(rawMeshData.vertex, sampledWidth, sampledHeight);
 
-		// vertex 配列のノーマルを更新（元実装と同じオフセット）
-		for (size_t i = 0; i < rawMeshData.normal.size(); i++)
-		{
-			auto base = i * FLOATS_PER_VERTEX + NORMAL_OFFSET;
-			rawMeshData.vertex[base + 0] = rawMeshData.normal[i].x;
-			rawMeshData.vertex[base + 1] = rawMeshData.normal[i].y;
-			rawMeshData.vertex[base + 2] = rawMeshData.normal[i].z;
-		}
 		return rawMeshData;
 	}
 }

@@ -69,7 +69,6 @@ namespace Utility::Loader {
 			static_cast<ofbx::u16>(ofbx::LoadFlags::NONE));
 
 		std::vector<MyosotisFW::Mesh> meshes{};
-		std::vector<glm::vec3> tmpPositions{};
 
 		uint32_t meshCount = scene->getMeshCount();
 		std::vector<int> testList{};
@@ -80,6 +79,10 @@ namespace Utility::Loader {
 			const ofbx::Mesh* mesh = scene->getMesh(meshIdx);
 			const ofbx::GeometryData& geomData = mesh->getGeometryData();
 			const ofbx::Vec3Attributes positions = geomData.getPositions();
+			const ofbx::Vec3Attributes normal = geomData.getNormals();
+			const ofbx::Vec2Attributes uv = geomData.getUVs();
+			const ofbx::Vec4Attributes color = geomData.getColors();
+
 			for (uint32_t partitionIdx = 0; partitionIdx < geomData.getPartitionCount(); partitionIdx++)
 			{
 				const ofbx::GeometryPartition& geometryPartition = geomData.getPartition(partitionIdx);
@@ -89,27 +92,29 @@ namespace Utility::Loader {
 
 					for (uint32_t vertexIdx = polygon.from_vertex; vertexIdx < polygon.from_vertex + polygon.vertex_count; vertexIdx++)
 					{
-						ofbx::Vec3 v = positions.get(vertexIdx);
-						meshData.vertex.push_back(v.x);
-						meshData.vertex.push_back(v.y);
-						meshData.vertex.push_back(v.z);
-						meshData.vertex.push_back(1.0f);
-						tmpPositions.push_back(glm::vec3(v.x, v.y, v.z));
+						glm::vec3 v = ToGlmVec3(positions.get(vertexIdx));
+						glm::vec3 n = glm::vec3(0.0f);
+						glm::vec2 u0 = glm::vec2(0.0f);
+						glm::vec2 u1 = glm::vec2(0.0f);
+						glm::vec4 c = glm::vec4(1.0f);
 
-						// 仮normal
-						meshData.vertex.push_back(0.0f);
-						meshData.vertex.push_back(0.0f);
-						meshData.vertex.push_back(0.0f);
+						// Normal
+						if (normal.count > vertexIdx)
+						{
+							n = ToGlmVec3(normal.get(vertexIdx));
+						}
 
-						// 仮uv
-						meshData.vertex.push_back(0.0f);
-						meshData.vertex.push_back(0.0f);
+						// UV0
+						if (uv.count > vertexIdx)
+						{
+							u0 = ToGlmVec2(uv.get(vertexIdx));
+						}
 
-						// 仮color
-						meshData.vertex.push_back(1.0f);
-						meshData.vertex.push_back(1.0f);
-						meshData.vertex.push_back(1.0f);
-						meshData.vertex.push_back(1.0f);
+						// Color
+						if (color.count > vertexIdx)
+						{
+							c = ToGlmVec4(color.get(vertexIdx));
+						}
 
 						// aabb
 						if (firstDataForAABB)
@@ -131,6 +136,8 @@ namespace Utility::Loader {
 							meshData.meshInfo.AABBMax.y = meshData.meshInfo.AABBMax.y > v.y ? meshData.meshInfo.AABBMax.y : v.y;
 							meshData.meshInfo.AABBMax.z = meshData.meshInfo.AABBMax.z > v.z ? meshData.meshInfo.AABBMax.z : v.z;
 						}
+
+						meshData.vertex.insert(meshData.vertex.end(), { v, n, u0, u1, c });
 					}
 				}
 
@@ -235,9 +242,9 @@ namespace Utility::Loader {
 					meshletTriangles.data(),
 					index.data(),
 					index.size(),
-					&tmpPositions[0].x,
-					tmpPositions.size(),
-					sizeof(glm::vec3),
+					&meshData.vertex[0].position.x,
+					meshData.vertex.size(),
+					sizeof(MyosotisFW::VertexData),
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives,
 					0.0f);
@@ -265,13 +272,13 @@ namespace Utility::Loader {
 					}
 
 					// AABB
-					glm::vec3 p0 = tmpPositions[meshletVertices[src.vertex_offset + 0]];
+					glm::vec3 p0 = meshData.vertex[meshletVertices[src.vertex_offset + 0]].position;
 					dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
 					dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
 					for (size_t v = 1; v < src.vertex_count; v++)
 					{
 						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
-						const glm::vec3& pos = tmpPositions[vertexIndex];
+						const glm::vec3& pos = meshData.vertex[vertexIndex].position;
 						dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
 						dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
 					}

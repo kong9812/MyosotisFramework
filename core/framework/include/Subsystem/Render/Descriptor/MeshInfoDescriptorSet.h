@@ -45,7 +45,7 @@ namespace MyosotisFW::System::Render
 		std::vector<MeshInfo> m_meshInfo;
 		std::vector<MeshletInfo> m_meshletInfo;
 
-		std::vector<float> m_vertexData;
+		std::vector<VertexData> m_vertexData;
 		std::vector<uint32_t> m_uniqueIndexData;
 		std::vector<uint32_t> m_primitivesData;
 
