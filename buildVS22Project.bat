@@ -9,7 +9,7 @@ if not exist "./bin/vs22" (
 )
 
 :: Build with CMake
-cmake -S "./core" -B "./bin/vs22" -G "Visual Studio 17 2022"
+cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -S "./core" -B "./bin/vs22" -G "Visual Studio 17 2022"
 if not %ERRORLEVEL%==0 (
     pause
 )

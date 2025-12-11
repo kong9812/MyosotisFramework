@@ -15,5 +15,5 @@ echo cl: %CL_PATH%
 echo vcvarsall: %VCVARSALL_PATH%
 
 call "%VCVARSALL_PATH%" amd64
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER="%CL_PATH%" -DCMAKE_CXX_COMPILER="%CL_PATH%" -S .\core -B .\bin\ninja
+cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER="%CL_PATH%" -DCMAKE_CXX_COMPILER="%CL_PATH%" -S .\core -B .\bin\ninja
 endlocal
