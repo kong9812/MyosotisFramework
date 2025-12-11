@@ -30,6 +30,7 @@ namespace MyosotisFW::System::Render
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer.image, m_visibilityBuffer.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap.image, m_hiZDepthMap.allocation);
 			vmaDestroyImage(m_device->GetVmaAllocator(), m_primaryDepthStencil.image, m_primaryDepthStencil.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap.image, m_lightmap.allocation);
 
 			vkDestroyImageView(*m_device, m_depthStencil.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_position.view, m_device->GetAllocationCallbacks());
@@ -40,6 +41,7 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_visibilityBuffer.view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_hiZDepthMap.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_lightmap.view, m_device->GetAllocationCallbacks());
 			for (VkImageView& view : m_hiZDepthMap.mipView)
 				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
 			vkDestroyImageView(*m_device, m_primaryDepthStencil.view, m_device->GetAllocationCallbacks());
@@ -169,6 +171,15 @@ namespace MyosotisFW::System::Render
 			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
 			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_primaryDepthStencil.sampler));
 		}
+
+		{// Lightmap
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_lightmapFormat, AppInfo::g_lightmapSize, AppInfo::g_lightmapSize);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_lightmap.image, &m_lightmap.allocation, &m_lightmap.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_lightmap.image, AppInfo::g_lightmapFormat);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_lightmap.view));
+		}
 	}
 
 	VkShaderModule RenderResources::GetShaderModules(const std::string& fileName)
@@ -291,5 +302,26 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &sampler));
 		m_samplers.push_back(sampler);
 		return sampler;
+	}
+
+	bool RenderResources::SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size)
+	{
+		VkCommandPool pool{};
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(graphicsQueue->GetQueueFamilyIndex());
+		VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
+
+		bool result = Utility::Loader::SaveImage(
+			*m_device,
+			image,
+			graphicsQueue,
+			pool,
+			m_device->GetVmaAllocator(),
+			fileName,
+			size,
+			m_device->GetAllocationCallbacks());
+
+		vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
+		return result;
 	}
 }

@@ -7,11 +7,13 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include "iglm.h"
+
 #include "itiny_gltf.h"
 #include "iofbx.h"
 
 #include "imeshoptimizer.h"
-#include "iglm.h"
+#include "ixatlas.h"
 
 #include "AppInfo.h"
 #include "Logger.h"
@@ -79,8 +81,11 @@ static uint64_t FileTimestamp_ms(const std::filesystem::path& p)
 }
 
 
-static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMeshData)
+static void CreateMFModel(const char* name, MyosotisFW::RawMeshData& rawMeshData)
 {
+	// UV1の作成
+	glm::ivec2 atlasSize = xatlas::BuildLightmapUV(rawMeshData.vertex, rawMeshData.index);
+
 	// メッシュレット数の上限
 	size_t maxMeshlets = meshopt_buildMeshletsBound(
 		rawMeshData.index.size(),
@@ -158,6 +163,7 @@ static void CreateMFModel(const char* name, const MyosotisFW::RawMeshData& rawMe
 	meshData.meshInfo.AABBMax = glm::vec4(meshAABBMax, 0.0f);
 	meshData.meshInfo.meshletCount = meshletCount;
 	meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(rawMeshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
+	meshData.meshInfo.atlasSize = atlasSize;
 
 	Utility::Loader::SerializeMFModel(name, meshData);
 }

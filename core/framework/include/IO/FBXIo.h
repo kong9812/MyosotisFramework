@@ -12,6 +12,7 @@
 #include "Logger.h"
 #include "Mesh.h"
 #include "imeshoptimizer.h"
+#include "ixatlas.h"
 
 namespace Utility::Loader {
 	inline ofbx::u32 triangulate(const ofbx::GeometryData& geom, const ofbx::GeometryPartition::Polygon& polygon, std::vector<uint32_t>& tri_indices) {
@@ -141,76 +142,6 @@ namespace Utility::Loader {
 					}
 				}
 
-				//MyosotisFW::Meshlet currentMeshletData{};
-				//std::unordered_set<uint32_t> currentUniqueIndex;
-				//bool firstDataForMeshletAABB = true;
-				//for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
-				//{
-				//	const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
-				//	std::vector<uint32_t> triangle{};
-				//	triangulate(geomData, polygon, triangle);
-				//	glm::vec3 v0 = glm::vec3(positions.get(triangle[0]).x, positions.get(triangle[0]).y, positions.get(triangle[0]).z);
-				//	glm::vec3 v1 = glm::vec3(positions.get(triangle[1]).x, positions.get(triangle[1]).y, positions.get(triangle[1]).z);
-				//	glm::vec3 v2 = glm::vec3(positions.get(triangle[2]).x, positions.get(triangle[2]).y, positions.get(triangle[2]).z);
-
-				//	// 頂点追加後のサイズ
-				//	size_t newUnique = currentMeshletData.uniqueIndex.size();
-				//	for (uint32_t i = 0; i < 3; i++)
-				//	{
-				//		if (currentUniqueIndex.find(triangle[i]) == currentUniqueIndex.end())
-				//		{
-				//			newUnique++;
-				//		}
-				//	}
-
-				//	// 制限チェック
-				//	if ((newUnique >= MyosotisFW::AppInfo::g_maxMeshletVertices) ||
-				//		((currentMeshletData.primitives.size() / 3) + 3 >= MyosotisFW::AppInfo::g_maxMeshletPrimitives))
-				//	{
-				//		meshData.meshlet.push_back(currentMeshletData);
-				//		currentMeshletData = MyosotisFW::Meshlet();
-				//		currentUniqueIndex.clear();
-				//		firstDataForMeshletAABB = true;
-				//	}
-
-				//	// 頂点追加
-				//	for (uint32_t i = 0; i < 3; i++)
-				//	{
-				//		if (currentUniqueIndex.insert(triangle[i]).second)
-				//		{
-				//			currentMeshletData.uniqueIndex.push_back(triangle[i]);
-				//		}
-				//	}
-
-				//	// AABB更新
-				//	if (firstDataForMeshletAABB)
-				//	{
-				//		currentMeshletData.meshletInfo.AABBMin = glm::vec4(glm::min(v0, glm::min(v1, v2)), 0.0f);
-				//		currentMeshletData.meshletInfo.AABBMax = glm::vec4(glm::max(v0, glm::max(v1, v2)), 0.0f);
-				//		firstDataForMeshletAABB = false;
-				//	}
-				//	else
-				//	{
-				//		currentMeshletData.meshletInfo.AABBMin = glm::min(currentMeshletData.meshletInfo.AABBMin, glm::min(glm::vec4(v0, 0.0f), glm::min(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
-				//		currentMeshletData.meshletInfo.AABBMax = glm::max(currentMeshletData.meshletInfo.AABBMax, glm::max(glm::vec4(v0, 0.0f), glm::max(glm::vec4(v1, 0.0f), glm::vec4(v2, 0.0f))));
-				//	}
-
-				//	// 三角形追加
-				//	auto tri1 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[0]);
-				//	size_t index1 = std::distance(currentMeshletData.uniqueIndex.begin(), tri1);
-				//	auto tri2 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[1]);
-				//	size_t index2 = std::distance(currentMeshletData.uniqueIndex.begin(), tri2);
-				//	auto tri3 = std::find(currentMeshletData.uniqueIndex.begin(), currentMeshletData.uniqueIndex.end(), triangle[2]);
-				//	size_t index3 = std::distance(currentMeshletData.uniqueIndex.begin(), tri3);
-				//	currentMeshletData.primitives.push_back(index1);
-				//	currentMeshletData.primitives.push_back(index2);
-				//	currentMeshletData.primitives.push_back(index3);
-				//}
-				//if (!currentMeshletData.primitives.empty())
-				//{
-				//	meshData.meshlet.push_back(currentMeshletData);
-				//}
-
 				// 本来のIndex
 				std::vector<uint32_t> index{};
 				for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
@@ -223,6 +154,9 @@ namespace Utility::Loader {
 						index.push_back(static_cast<uint32_t>(triangle[i]));
 					}
 				}
+
+				// UV1
+				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, index);
 
 				// メッシュレット数の上限
 				size_t maxMeshlets = meshopt_buildMeshletsBound(

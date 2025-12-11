@@ -125,6 +125,7 @@ void main()
                 {
                     mipLevel = floor(log2(maxDim));
                 }
+                mipLevel -= 1;
                 mipLevel = clamp(mipLevel, 0.0, hiZMipLevelMax);
                 ivec2 targetMipTextureSize = Sampler2DLoader_GetTextureSize(hiZSamplerID, int(mipLevel));
 

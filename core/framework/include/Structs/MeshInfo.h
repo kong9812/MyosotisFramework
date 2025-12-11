@@ -8,14 +8,13 @@ namespace MyosotisFW
 	{
 		glm::vec4 AABBMin;				// AABBの最小値
 		glm::vec4 AABBMax;				// AABBの最大値
+		glm::ivec2 atlasSize;			// アトラスサイズ
 		uint32_t meshID;				// [ObjectData]MeshID
 		uint32_t meshletInfoOffset;		// [DescriptorData]MeshletMetaDataの開始位置
 		uint32_t meshletCount;			// MeshletMetaDataの数
 		uint32_t vertexAttributeBit;	// [仮* DescriptorData]頂点属性のビットフラグ
 		uint32_t unitSize;				// [仮* DescriptorData]一枚当たりのサイズ
 		uint32_t vertexFloatCount;		// [仮*] 頂点Floatデータの数
-		uint32_t _p1;					// 
-		uint32_t _p2;					// 
 	};
 	// *ObjectData: Objectでセットするデータ
 	// *DescriptorData: DescriptorSetでセットするデータ

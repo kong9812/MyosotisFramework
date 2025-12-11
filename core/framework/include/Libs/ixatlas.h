@@ -4,24 +4,24 @@
 #include <xatlas.h>
 #include <vector>
 #include "Logger.h"
+#include "Mesh.h"
 
 namespace xatlas
 {
-	inline void BuildLightmapUV(
-		const float* positions, uint32_t vertexCount, uint32_t positionStride,
-		const uint32_t* indices, uint32_t indexCount,
-		std::vector<float>& outLmUV)
+	inline glm::ivec2 BuildLightmapUV(std::vector<MyosotisFW::VertexData>& meshVertex, std::vector<uint32_t>& index)
 	{
+		ASSERT((!meshVertex.empty() && (!index.empty())), "Invalid mesh data for lightmap UV generation.");
+
 		// xatlas のアトラス生成
 		Atlas* atlas = Create();
 
 		// メッシュ情報を xatlas 用に設定
 		MeshDecl decl = {};
-		decl.vertexCount = vertexCount;
-		decl.vertexPositionData = positions;		// 頂点位置バッファ先頭
-		decl.vertexPositionStride = positionStride; // 頂点1つのサイズ（バイト）
-		decl.indexCount = indexCount;
-		decl.indexData = indices;					// インデックスバッファ
+		decl.vertexCount = meshVertex.size();
+		decl.vertexPositionData = &(meshVertex[0].position.x);		// 頂点位置バッファ先頭
+		decl.vertexPositionStride = sizeof(MyosotisFW::VertexData); // 頂点1つのサイズ（バイト）
+		decl.indexCount = index.size();
+		decl.indexData = index.data();								// インデックスバッファ
 		decl.indexFormat = IndexFormat::UInt32;
 
 		// メッシュ登録（UV 展開の入力）
@@ -30,7 +30,7 @@ namespace xatlas
 		{
 			Logger::Error("Failed to create lightmap.");
 			Destroy(atlas);
-			return;
+			return glm::ivec2(0);
 		}
 
 		// UV 展開（チャート生成）とパッキングの設定
@@ -49,21 +49,35 @@ namespace xatlas
 		// 結果メッシュ（展開済み UV を保持）
 		const Mesh& m = atlas->meshes[0];
 
-		// 結果 UV 出力バッファを確保（頂点 × 2）
-		outLmUV.resize(vertexCount * 2);
+		std::vector<MyosotisFW::VertexData> outVertex(m.vertexCount);
+		std::vector<uint32_t> outIndex(m.indexCount);
 
-		// xatlas の UV はピクセル座標 → 0〜1 に正規化して格納
-		for (uint32_t v = 0; v < vertexCount; v++)
+		// vertex
+		const float invW = 1.0f / static_cast<float>(atlas->width);
+		const float invH = 1.0f / static_cast<float>(atlas->height);
+		for (uint32_t v = 0; v < m.vertexCount; v++)
 		{
 			const Vertex& vertex = m.vertexArray[v];
-			float u = vertex.uv[0] / float(atlas->width);
-			float vtex = vertex.uv[1] / float(atlas->height);
-
-			outLmUV[v * 2 + 0] = u;
-			outLmUV[v * 2 + 1] = vtex;
+			MyosotisFW::VertexData dst = meshVertex[vertex.xref];
+			dst.uv1 = glm::vec2(vertex.uv[0] * invW, vertex.uv[1] * invH);
+			outVertex[v] = dst;
 		}
+
+		// index
+		for (uint32_t i = 0; i < m.indexCount; i++)
+		{
+			outIndex[i] = m.indexArray[i];
+		}
+
+		// データセット
+		meshVertex = outVertex;
+		index = outIndex;
+
+		glm::ivec2 atlasSize = glm::ivec2(atlas->width, atlas->height);
 
 		// 後始末
 		Destroy(atlas);
+
+		return atlasSize;
 	}
 }

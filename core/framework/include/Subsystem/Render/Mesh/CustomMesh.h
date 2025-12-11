@@ -16,6 +16,7 @@ namespace MyosotisFW::System::Render
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 
 		void SetCustomMeshInfo(const CustomMeshInfo& customMeshInfo) { m_customMeshInfo = customMeshInfo; }
+		const CustomMeshInfo& GetCustomMeshInfo() const { return m_customMeshInfo; }
 
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		void Deserialize(const rapidjson::Value& doc) override;

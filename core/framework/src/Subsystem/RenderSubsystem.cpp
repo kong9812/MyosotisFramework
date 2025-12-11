@@ -25,11 +25,13 @@
 #include "SkyboxRenderPass.h"
 #include "VisibilityBufferRenderPass.h"
 #include "LightingRenderPass.h"
+#include "LightmapBakingPass.h"
 
 #include "SkyboxPipeline.h"
 #include "VisibilityBufferRenderPhase1Pipeline.h"
 #include "VisibilityBufferRenderPhase2Pipeline.h"
 #include "LightingPipeline.h"
+#include "LightmapBakingPipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -185,6 +187,15 @@ namespace MyosotisFW::System::Render
 		}
 		m_sceneInfoDescriptorSet->Update();
 		m_textureDescriptorSet->Update();
+
+		auto key = updateData.keyActions.find(GLFW_KEY_X);
+		if (key != updateData.keyActions.end())
+		{
+			if (key->second == GLFW_RELEASE)
+			{
+				m_lightmapBakingPipeline->Bake();
+			}
+		}
 	}
 
 	void RenderSubsystem::BeginCompute()
@@ -266,6 +277,26 @@ namespace MyosotisFW::System::Render
 		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
 	}
 
+	void RenderSubsystem::LightmapBake()
+	{
+		if (m_lightmapBakingPipeline->IsBaking())
+		{
+			VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+			// Lightmap Baking Pass
+			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+			m_lightmapBakingPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
+			for (MObject_ptr& object : m_objects)
+			{
+				if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+				{
+					m_lightmapBakingPipeline->BindCommandBuffer(currentCommandBuffer);
+				}
+			}
+			m_lightmapBakingPass->EndRender(currentCommandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+		}
+	}
+
 	void RenderSubsystem::EndRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -283,6 +314,7 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(m_submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
+		m_lightmapBakingPipeline->OutputLightmap(m_resources);
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -424,6 +456,9 @@ namespace MyosotisFW::System::Render
 		// Lighting Render Pass
 		m_lightingRenderPass = CreateLightingRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_lightingRenderPass->Initialize();
+		// Lightmap Baking Pass
+		m_lightmapBakingPass = CreateLightmapBakingPassPointer(m_device, m_resources, m_swapchain);
+		m_lightmapBakingPass->Initialize();
 	}
 
 	void RenderSubsystem::initializeRenderPipeline()
@@ -447,6 +482,11 @@ namespace MyosotisFW::System::Render
 			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
 			m_meshInfoDescriptorSet, m_textureDescriptorSet);
 		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());
+		// Lightmap Baking Pipeline
+		m_lightmapBakingPipeline = CreateLightmapBakingPipelinePointer(m_device,
+			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
+			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_lightmapBakingPipeline->Initialize(m_resources, m_lightmapBakingPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()

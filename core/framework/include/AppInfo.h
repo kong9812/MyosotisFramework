@@ -70,11 +70,16 @@ namespace MyosotisFW::AppInfo
 	constexpr VkFormat g_shadowMapFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定画像フォーマット (Visibility Buffer)
 	constexpr VkFormat g_visibilityBufferFormat = VkFormat::VK_FORMAT_R32_UINT;
+	// 指定画像フォーマット (Lightmap)
+	constexpr VkFormat g_lightmapFormat = VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
 
 	// シャドウマップサイズ
 	constexpr uint32_t g_shadowMapSize = 2048;
+	// ライトマップサイズ
+	constexpr uint32_t g_lightmapSize = 1024;
 
 	// 背景色
 	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 0.0f };

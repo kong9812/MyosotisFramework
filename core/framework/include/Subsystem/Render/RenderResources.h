@@ -45,6 +45,8 @@ namespace MyosotisFW::System::Render
 		virtual void Resize(const uint32_t width, const uint32_t height);
 		VkSampler& CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo);
 
+		bool SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size);
+
 	protected:
 		RenderDevice_ptr m_device;
 
@@ -63,6 +65,7 @@ namespace MyosotisFW::System::Render
 		Image& GetLightingResult() { return m_lightingResult; }
 		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
 		Image& GetVisibilityBuffer() { return m_visibilityBuffer; }
+		Image& GetLightmap() { return m_lightmap; }
 
 		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
 		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
@@ -78,6 +81,7 @@ namespace MyosotisFW::System::Render
 		Image m_lightingResult;
 		Image m_mainRenderTarget;
 		Image m_visibilityBuffer;
+		Image m_lightmap;
 
 		Image m_hiZDepthMap;
 		Image m_primaryDepthStencil;
