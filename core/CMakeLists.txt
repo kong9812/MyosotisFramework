@@ -239,7 +239,16 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/cpp-pm/xatlas.git
     GIT_TAG        v0.0.0-4077f0e-p0
 )
-FetchContent_MakeAvailable(xatlas)
+FetchContent_GetProperties(xatlas)
+if (NOT xatlas_POPULATED)
+    FetchContent_Populate(xatlas)
+endif()
+add_library(xatlas STATIC
+    ${xatlas_SOURCE_DIR}/xatlas.cpp
+)
+target_include_directories(xatlas PUBLIC
+    ${xatlas_SOURCE_DIR}
+)
 set_target_properties(xatlas PROPERTIES FOLDER "external")
 set(xatlas_SOURCES
   ${xatlas_SOURCE_DIR}/xatlas.cpp

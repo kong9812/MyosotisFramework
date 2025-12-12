@@ -44,6 +44,12 @@ target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${tinygltf_SOURCE_DIR}
 find_package(Vulkan REQUIRED)
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${EDITOR_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
+# meshoptimizer
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
+# xatlas
+target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
+target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 
 # work directory
 set_target_properties(${EDITOR_PROJECT_NAME} PROPERTIES
