@@ -128,6 +128,14 @@ namespace MyosotisFW::System::Render
 		m_maxDescriptorSetInputAttachments = properties.limits.maxDescriptorSetInputAttachments;
 #ifdef DEBUG
 		PrintPhysicalDeviceInfo(properties);
+
+		VkPhysicalDeviceSubgroupProperties subgroupProperties{};
+		subgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
+		VkPhysicalDeviceProperties2 deviceProperties2{};
+		deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		deviceProperties2.pNext = &subgroupProperties;
+		vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties2);
+		Logger::Info("Subgroup Size: " + std::to_string(subgroupProperties.subgroupSize));
 #endif
 
 		// memory properties
