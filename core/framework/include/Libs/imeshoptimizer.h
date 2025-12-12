@@ -13,13 +13,13 @@ namespace meshoptimizer
 		// メッシュレット数の上限
 		size_t maxMeshlets = meshopt_buildMeshletsBound(
 			index.size(),
-			MyosotisFW::AppInfo::g_maxMeshletVertices,
-			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+			maxMeshletVertices,
+			maxMeshletPrimitives);
 
 		// meshoptimizer用データ作成
 		std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
-		std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
-		std::vector<uint8_t> meshletTriangles(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
+		std::vector<uint32_t> meshletVertices(maxMeshlets * maxMeshletVertices);
+		std::vector<uint8_t> meshletTriangles(maxMeshlets * maxMeshletPrimitives * 3);
 
 		// メッシュレット生成
 		size_t meshletCount = meshopt_buildMeshlets(
@@ -31,8 +31,8 @@ namespace meshoptimizer
 			&meshData.vertex[0].position.x,
 			meshData.vertex.size(),
 			sizeof(MyosotisFW::VertexData),
-			MyosotisFW::AppInfo::g_maxMeshletVertices,
-			MyosotisFW::AppInfo::g_maxMeshletPrimitives,
+			maxMeshletVertices,
+			maxMeshletPrimitives,
 			0.0f);
 
 		meshData.meshlet.reserve(meshletCount);
