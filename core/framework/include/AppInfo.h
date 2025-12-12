@@ -18,6 +18,8 @@ namespace MyosotisFW::AppInfo
 	// アプリケーション情報
 	constexpr uint32_t g_windowWidth = 1440;
 	constexpr uint32_t g_windowHeight = 810;
+	//constexpr uint32_t g_windowWidth = 3840;	// 4k
+	//constexpr uint32_t g_windowHeight = 2160;	// 4k
 	constexpr uint32_t g_montorIndex = 0;
 	constexpr const char* g_applicationName = "MyosotisFW";
 	constexpr const char* g_editorName = "MyosotisEditor";
@@ -104,6 +106,7 @@ namespace MyosotisFW::AppInfo
 	constexpr float g_cameraFov = 60.0f;
 	// [デフォルト]カメラ Far
 	constexpr float g_cameraFar = 2048.0f;
+	//constexpr float g_cameraFar = 8192.0f;
 	// [デフォルト]カメラ Near
 	constexpr float g_cameraNear = 0.1f;
 
@@ -137,6 +140,7 @@ namespace MyosotisFW::AppInfo
 	// 移動
 	constexpr float g_moveSpeed = 1.0f;
 	constexpr float g_moveBoostSpeed = 10.0f;
+	//constexpr float g_moveBoostSpeed = 100.0f;
 
 	// render pipeline
 	constexpr uint32_t g_descriptorCount = 10;
@@ -149,5 +153,6 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_maxMeshletPrimitives = 124;
 
 	// terrain
-	constexpr glm::vec3 g_terrainScale = glm::vec3(0.1f, 10.0f, 0.1f);
+	constexpr glm::vec3 g_terrainScale = glm::vec3(0.1f, 10.0f, 0.1f);	// smallTerrain
+	//constexpr glm::vec3 g_terrainScale = glm::vec3(1.0f, 500.0f, 1.0f);	// terrain
 }

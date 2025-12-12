@@ -160,7 +160,7 @@ namespace MyosotisFW::System::GameDirector {
 
 			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
-			component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Sphere);
+			component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Capsule);
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
