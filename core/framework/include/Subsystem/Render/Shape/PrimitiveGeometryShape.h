@@ -9,6 +9,9 @@
 #include "Meshlet.h"
 #include "Mesh.h"
 
+#include "imeshoptimizer.h"
+#include "ixatlas.h"
+
 // 順番
 // [Vec3]Position
 // [Vec4]Position
@@ -43,10 +46,8 @@ namespace MyosotisFW::System::Render::Shape
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
-		Meshlet meshlet = {};
-		std::unordered_set<uint32_t> uniqueVertexIndices{};
 
-		// 頂点データ (x, y, z, w, nx, ny, nz, uvx, uvy, r, g, b, a,)
+		// vertex
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
 			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, -halfSize + center.z),  glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },	// 3
@@ -84,7 +85,8 @@ namespace MyosotisFW::System::Render::Shape
 			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, -halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) }, // 21
 			{ glm::vec3(-halfSize + center.x,  halfSize + center.y,  halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 22
 		};
-		meshlet.primitives = {
+		// index
+		std::vector<uint32_t> index = {
 			0,	1,	2,	2,	1,	3,	// 前面
 			4,	5,	6,	6,	5,	7,	// 背面
 			8,	9,	10,	10,	9,	11,	// 上面
@@ -92,24 +94,23 @@ namespace MyosotisFW::System::Render::Shape
 			16, 17,	18,	18,	17,	19,	// 右面
 			20, 21,	22,	22,	21,	23	// 左面
 		};
-		for (uint32_t index : meshlet.primitives)
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
-			if (uniqueVertexIndices.insert(index).second)
-			{
-				meshlet.uniqueIndex.push_back(index);
-			}
-			else
-			{
-				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
-				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
-				index = indexInUnique;
-			}
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
-		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize), 0.0f);
-		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize), 0.0f);
-		mesh.meshlet.push_back(meshlet);
-		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
-		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		return mesh;
 	}
 
@@ -117,9 +118,8 @@ namespace MyosotisFW::System::Render::Shape
 	{
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
-		Meshlet meshlet = {};
-		std::unordered_set<uint32_t> uniqueVertexIndices{};
-		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
+
+		// vertex
 		mesh.vertex = {
 			// 前面 (0, 0, -1)
 			{ glm::vec3(-halfSize + center.x,  halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },	// 0
@@ -127,43 +127,40 @@ namespace MyosotisFW::System::Render::Shape
 			{ glm::vec3(-halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f), glm::vec4(color) },	// 2
 			{ glm::vec3(halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 3
 		};
-		meshlet.primitives = {
+		// index
+		std::vector<uint32_t> index = {
 			0,	1,	2,	2,	1,	3,	// 前面
 		};
-		for (uint32_t index : meshlet.primitives)
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
-			if (uniqueVertexIndices.insert(index).second)
-			{
-				meshlet.uniqueIndex.push_back(index);
-			}
-			else
-			{
-				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
-				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
-				index = indexInUnique;
-			}
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
-		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
-		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
-		mesh.meshlet.push_back(meshlet);
-		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
-		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		return mesh;
 	}
 
-	inline Mesh createCircle(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 12)
+	inline Mesh createCircle(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 24)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
-		Meshlet meshlet = {};
-		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		ASSERT(side > 2, "circle's side must be more than 2");
 
-		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
+		// vertex
 		float a = glm::two_pi<float>() / static_cast<float>(side);
-
 		mesh.vertex.insert(mesh.vertex.end(), {
-			glm::vec3(center.x, center.y, center.z),
+			glm::vec3(center),
 			glm::vec3(0.0f, 0.0f, -1.0f),
 			glm::vec2(0.0f, 0.0f),
 			glm::vec2(0.0f, 0.0f),
@@ -175,6 +172,8 @@ namespace MyosotisFW::System::Render::Shape
 			glm::vec2(0.0f, 0.0f),
 			glm::vec4(color) });
 
+		// index&vertex
+		std::vector<uint32_t> index{};
 		for (uint32_t i = 1; i <= side; i++)
 		{
 			uint32_t idx = i + 1;
@@ -185,41 +184,35 @@ namespace MyosotisFW::System::Render::Shape
 				glm::vec2(0.0f, 0.0f),
 				glm::vec2(0.0f, 0.0f),
 				glm::vec4(color) });
-			meshlet.primitives.insert(meshlet.primitives.end(), { 0, i, idx });
+			index.insert(index.end(), { 0, i, idx });
 		}
-		for (uint32_t index : meshlet.primitives)
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
-			if (uniqueVertexIndices.insert(index).second)
-			{
-				meshlet.uniqueIndex.push_back(index);
-			}
-			else
-			{
-				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
-				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
-				index = indexInUnique;
-			}
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
-		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(radius, radius, 0.0f), 0.0f);
-		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(radius, radius, 0.0f), 0.0f);
-		mesh.meshlet.push_back(meshlet);
-		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
-		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
-		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
-		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;
 	}
 
-	// todo.今は一つのMeshletにまとめているので、壊れてる…
-	inline Mesh createSphere(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 4)
+	inline Mesh createSphere(const float size = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0.0f,0.0f,0.0f }, const uint32_t side = 24)
 	{
 		float radius = size * 0.5f;
 		Mesh mesh = {};
-		Meshlet meshlet = {};
-		std::unordered_set<uint32_t> uniqueVertexIndices{};
 		ASSERT(side > 3, "sphere's side must be more than 3");
 
-		// 頂点データ (x, y, z, w, r, g, b, a, uvx, uvy, nx, ny, nz)
+		// vertex
 		for (uint32_t i = 0; i <= side; i++)
 		{
 			float phi = glm::pi<float>() * static_cast<float>(i) / static_cast<float>(side);
@@ -243,36 +236,34 @@ namespace MyosotisFW::System::Render::Shape
 					glm::vec4(color) });
 			}
 		}
-
+		// index
+		std::vector<uint32_t> index{};
 		for (uint32_t i = 0; i < side; i++)
 		{
 			for (uint32_t j = 0; j < side; j++)
 			{
 				uint32_t idx = i * (side + 1) + j;
-				meshlet.primitives.insert(meshlet.primitives.end(), { idx + 1, idx + side + 1, idx });
-				meshlet.primitives.insert(meshlet.primitives.end(), { idx + 1, idx + side + 2, idx + side + 1 });
+				index.insert(index.end(), { idx + 1, idx + side + 1, idx });
+				index.insert(index.end(), { idx + 1, idx + side + 2, idx + side + 1 });
 			}
 		}
-		for (uint32_t index : meshlet.primitives)
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
-			if (uniqueVertexIndices.insert(index).second)
-			{
-				meshlet.uniqueIndex.push_back(index);
-			}
-			else
-			{
-				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
-				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
-				index = indexInUnique;
-			}
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
-		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(radius, radius, 0.0f), 0.0f);
-		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(radius, radius, 0.0f), 0.0f);
-		mesh.meshlet.push_back(meshlet);
-		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
-		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
-		ASSERT(meshlet.primitives.size() < AppInfo::g_maxMeshletPrimitives, "Over MeshletPrimitives count!");
-		ASSERT(meshlet.uniqueIndex.size() < AppInfo::g_maxMeshletVertices, "Over MeshletVertices count!");
 		return mesh;
 	}
 
@@ -283,9 +274,7 @@ namespace MyosotisFW::System::Render::Shape
 		float holeHalfSize = holeSize * 0.5f;
 		float halfSize = size * 0.5f;
 		Mesh mesh = {};
-		Meshlet meshlet = {};
-		std::unordered_set<uint32_t> uniqueVertexIndices{};
-		// 頂点データ (x, y, z, w, r, g, b, a, nx, ny, nz)
+		// vertex
 		mesh.vertex = {
 			// 上 (0, 0, -1)
 			{ glm::vec3(-halfSize + center.x, halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec4(color) },			// 0
@@ -312,30 +301,30 @@ namespace MyosotisFW::System::Render::Shape
 			{ glm::vec3(halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f, 0.0f, -1.0), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },			// 15
 
 		};
-		meshlet.primitives = {
+		// index
+		std::vector<uint32_t> index = {
 			0,	1,	2,	2,	1,	3,	// 上
 			4,	5,	6,	6,	5,	7,	// 左
 			8,	9,	10,	10,	9,	11,	// 右
 			12,	13,	14,	14,	13,	15,	// 下
 		};
-		for (uint32_t index : meshlet.primitives)
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
 		{
-			if (uniqueVertexIndices.insert(index).second)
-			{
-				meshlet.uniqueIndex.push_back(index);
-			}
-			else
-			{
-				auto it = std::find(meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end(), index);
-				uint32_t indexInUnique = std::distance(meshlet.uniqueIndex.begin(), it);
-				index = indexInUnique;
-			}
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
-		meshlet.meshletInfo.AABBMin = glm::vec4(center - glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
-		meshlet.meshletInfo.AABBMax = glm::vec4(center + glm::vec3(halfSize, halfSize, 0.0f), 0.0f);
-		mesh.meshlet.push_back(meshlet);
-		mesh.meshInfo.AABBMin = meshlet.meshletInfo.AABBMin;
-		mesh.meshInfo.AABBMax = meshlet.meshletInfo.AABBMax;
 		return mesh;
 	}
 

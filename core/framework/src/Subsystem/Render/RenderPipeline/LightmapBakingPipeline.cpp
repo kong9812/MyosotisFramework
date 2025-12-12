@@ -75,7 +75,10 @@ namespace MyosotisFW::System::Render
 				std::vector<uint32_t> index{};
 				for (const Meshlet& meshlet : meshes[0].meshlet)
 				{
-					index.insert(index.end(), meshlet.uniqueIndex.begin(), meshlet.uniqueIndex.end());
+					for (const uint32_t prim : meshlet.primitives)
+					{
+						index.push_back(meshlet.uniqueIndex[prim]);
+					}
 				}
 				{// vertex
 					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * meshes[0].vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -107,6 +110,58 @@ namespace MyosotisFW::System::Render
 				return true;
 			}
 		}
+
+		{// primitive geometry
+			ComponentBase_ptr ptr = object->FindComponent(ComponentType::PrimitiveGeometryMesh);
+			if (ptr)
+			{
+				PrimitiveGeometry_ptr primitiveGeom = Object_CastToPrimitiveGeometry(ptr);
+
+				// Buffer
+				Buffer* vertexBuffer = &m_vertexBuffer.emplace_back(Buffer());
+				Buffer* indexBuffer = &m_indexBuffer.emplace_back(Buffer());
+
+				// vertex buffer
+				Mesh mesh = Shape::createShape(primitiveGeom->GetPrimitiveGeometryShape());
+				std::vector<uint32_t> index{};
+				for (const Meshlet& meshlet : mesh.meshlet)
+				{
+					for (const uint32_t prim : meshlet.primitives)
+					{
+						index.push_back(meshlet.uniqueIndex[prim]);
+					}
+				}
+				{// vertex
+					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * mesh.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+					VmaAllocationCreateInfo allocationCreateInfo{};
+					allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
+					VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &vertexBuffer->buffer, &vertexBuffer->allocation, &vertexBuffer->allocationInfo));
+					vertexBuffer->descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(vertexBuffer->buffer);
+					// mapping
+					void* data{};
+					VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), vertexBuffer->allocation, &data));
+					memcpy(data, mesh.vertex.data(), bufferCreateInfo.size);
+					vmaUnmapMemory(m_device->GetVmaAllocator(), vertexBuffer->allocation);
+				}
+				{// index
+					VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+					VmaAllocationCreateInfo allocationCreateInfo{};
+					allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
+					VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &indexBuffer->buffer, &indexBuffer->allocation, &indexBuffer->allocationInfo));
+					indexBuffer->descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(indexBuffer->buffer);
+
+					// mapping
+					void* data{};
+					VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), indexBuffer->allocation, &data));
+					memcpy(data, index.data(), bufferCreateInfo.size);
+					vmaUnmapMemory(m_device->GetVmaAllocator(), indexBuffer->allocation);
+				}
+				pushConstant.size = mesh.meshInfo.atlasSize;
+				ASSERT(allocateLightmapAtlas(pushConstant.size, pushConstant.offset), "Failed to alloc from lightmap.");
+				return true;
+			}
+		}
+
 		return false;
 	}
 

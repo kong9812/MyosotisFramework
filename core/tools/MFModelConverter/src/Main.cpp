@@ -314,52 +314,7 @@ static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const s
 				rawMeshData.vertex.insert(rawMeshData.vertex.end(), { v, n, u0, u1, c });
 			}
 
-			// Index
-			const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
-			const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
-			const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
-			const uint32_t trianglesCount = accessor.count / 3;
-			switch (accessor.componentType) {
-			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-				const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-					const uint32_t triangle[3] = {
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-					};
-					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
-				}
-				break;
-			}
-			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-				const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-					const uint32_t triangle[3] = {
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-					};
-					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
-				}
-				break;
-			}
-			case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-				const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-					const uint32_t triangle[3] = {
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-						static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-					};
-					rawMeshData.index.insert(rawMeshData.index.end(), { triangle[0], triangle[1], triangle[2] });
-				}
-				break;
-			}
-			default:
-				ASSERT(false, "Index component type not supported! File: " + gltfPath.string());
-				break;
-			}
+
 		}
 	}
 

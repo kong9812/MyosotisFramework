@@ -26,7 +26,10 @@ namespace MyosotisFW::System::Render
 			std::vector<uint32_t> index{};
 			for (const Meshlet& meshlet : vertex.meshlet)
 			{
-				index.insert(index.end(), meshlet.primitives.begin(), meshlet.primitives.end());
+				for (const uint32_t prim : meshlet.primitives)
+				{
+					index.push_back(meshlet.uniqueIndex[prim]);
+				}
 			}
 			{// vertex
 				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);

@@ -6,11 +6,14 @@
 #include <chrono>
 #include <unordered_set>
 
-#include "itiny_gltf.h"
 #include "AppInfo.h"
-
 #include "Logger.h"
 #include "Mesh.h"
+
+#include "itiny_gltf.h"
+
+#include "imeshoptimizer.h"
+#include "ixatlas.h"
 
 namespace Utility::Loader {
 	inline const float* GetGLTFFloatData(const tinygltf::Model& glTFModel, const tinygltf::Primitive& primitive, const char* attributeName, size_t* count = nullptr)
@@ -161,71 +164,63 @@ namespace Utility::Loader {
 
 					meshData.vertex.insert(meshData.vertex.end(), { v, n, u0, u1, c });
 				}
-				{// add index data
-					const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
-					const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
-					const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
 
-					const uint32_t trianglesCount = accessor.count / 3;
-					MyosotisFW::Meshlet currentMeshletData{};
-					std::unordered_set<uint32_t> currentUniqueIndex{};
-					bool firstDataForMeshletAABB = true;
-
-					// glTF supports different component types of indices
-					switch (accessor.componentType) {
-					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-						const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-							const uint32_t triangle[3] = {
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-							};
-							AddIndex(positionBuffer, triangle, meshData, currentMeshletData, currentUniqueIndex, firstDataForMeshletAABB);
-						}
-						if (!currentMeshletData.primitives.empty())
-						{
-							meshData.meshlet.push_back(currentMeshletData);
-						}
-						break;
+				// Index
+				std::vector<uint32_t> index{};
+				const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
+				const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
+				const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
+				const uint32_t trianglesCount = accessor.count / 3;
+				switch (accessor.componentType) {
+				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
+					const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+						const uint32_t triangle[3] = {
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+						};
+						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
 					}
-					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-						const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-							const uint32_t triangle[3] = {
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-							};
-							AddIndex(positionBuffer, triangle, meshData, currentMeshletData, currentUniqueIndex, firstDataForMeshletAABB);
-						}
-						if (!currentMeshletData.primitives.empty())
-						{
-							meshData.meshlet.push_back(currentMeshletData);
-						}
-						break;
-					}
-					case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-						const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
-							const uint32_t triangle[3] = {
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
-								static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
-							};
-							AddIndex(positionBuffer, triangle, meshData, currentMeshletData, currentUniqueIndex, firstDataForMeshletAABB);
-						}
-						if (!currentMeshletData.primitives.empty())
-						{
-							meshData.meshlet.push_back(currentMeshletData);
-						}
-						break;
-					}
-					default:
-						ASSERT(false, "Index component type not supported! File: " + fileName);
-						break;
-					}
+					break;
 				}
+				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
+					const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+						const uint32_t triangle[3] = {
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+						};
+						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
+					}
+					break;
+				}
+				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
+					const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t primitiveIndex = 0; primitiveIndex < trianglesCount; primitiveIndex++) {
+						const uint32_t triangle[3] = {
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 0]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
+							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
+						};
+						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
+					}
+					break;
+				}
+				default:
+					ASSERT(false, "Index component type not supported! File: " + fileName);
+					break;
+				}
+
+				// UV1
+				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, index);
+
+				// Meshlet
+				meshoptimizer::BuildMeshletData(meshData, index,
+					MyosotisFW::AppInfo::g_maxMeshletVertices,
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
 				meshes.push_back(meshData);
 			}
 		}
