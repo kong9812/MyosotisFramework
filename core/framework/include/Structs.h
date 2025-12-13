@@ -95,11 +95,6 @@ namespace MyosotisFW
 		}visibleObjectsSSBO;							// SSBO
 	};
 
-	struct CustomMeshInfo
-	{
-		std::string meshName;
-	};
-
 	struct MetaData
 	{
 		uint32_t typeID;

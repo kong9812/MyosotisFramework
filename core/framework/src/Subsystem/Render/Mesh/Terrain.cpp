@@ -9,7 +9,8 @@
 
 namespace MyosotisFW::System::Render
 {
-	Terrain::Terrain(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback)
+	Terrain::Terrain(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
+		m_meshComponentInfo({})
 	{
 		m_name = "Terrain";
 	}
@@ -20,7 +21,6 @@ namespace MyosotisFW::System::Render
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareShaderStorageBuffers();
 
 		// todo.検証処理
 		m_isReady = true;
@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
 
-		//obj.AddMember("meshName", rapidjson::Value(m_TerrainInfo.meshName.c_str(), allocator), allocator);
+		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.terrainHeightmapName.c_str(), allocator), allocator);
 
 		return obj;
 	}
@@ -45,13 +45,13 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 
-		//m_TerrainInfo.meshName = doc["meshName"].GetString();
+		m_meshComponentInfo.terrainHeightmapName = doc["meshName"].GetString();
 	}
 
 	void Terrain::loadAssets()
 	{
-		std::vector<Mesh> meshes = Utility::Loader::loadTerrainMesh("smallTerrain.png");
-		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry("smallTerrain.png", meshes);
+		std::vector<Mesh> meshes = Utility::Loader::loadTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
+		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry(m_meshComponentInfo.terrainHeightmapName, meshes);
 		m_meshCount = static_cast<uint32_t>(meshes.size());
 
 		// VBDispatchInfoの作成

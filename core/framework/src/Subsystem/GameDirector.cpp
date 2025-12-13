@@ -28,33 +28,6 @@ namespace MyosotisFW::System::GameDirector {
 			m_renderSubsystem->RegisterObject(newObject);
 		}
 
-		//// パフォーマンステスト用
-		//const uint32_t objectCount = 10;
-		//for (uint32_t x = 0; x < objectCount; x++)
-		//{
-		//	for (uint32_t z = 0; z < objectCount; z++)
-		//	{
-		//		for (uint32_t y = 0; y < objectCount; y++)
-		//		{
-		//			{
-		//				MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//				newObject->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
-		//				newObject->SetRot(glm::vec3(0.0f));
-		//				newObject->SetScale(glm::vec3(10.0f));
-
-		//				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//					System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-		//				CustomMeshInfo customMeshInfo{};
-		//				customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-		//				//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-		//				component->SetCustomMeshInfo(customMeshInfo);
-		//				newObject->AddComponent(component);
-		//				m_renderSubsystem->RegisterObject(newObject);
-		//			}
-		//		}
-		//	}
-		//}
-
 		{
 			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
 			newObject->SetPos(glm::vec3(0.0f));
@@ -63,6 +36,9 @@ namespace MyosotisFW::System::GameDirector {
 
 			Render::Terrain_ptr component = Object_Cast<Render::Terrain>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::Terrain, newObject->GetMeshChangedCallback()));
+			Render::Terrain::MeshComponentInfo meshComponentInfo{};
+			meshComponentInfo.terrainHeightmapName = "smallTerrain.png";
+			component->SetMeshComponentInfo(meshComponentInfo);
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
@@ -75,82 +51,12 @@ namespace MyosotisFW::System::GameDirector {
 
 			Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
 				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-			CustomMeshInfo customMeshInfo{};
-			customMeshInfo.meshName = "Suzanne.mfmodel";
-			component->SetCustomMeshInfo(customMeshInfo);
+			Render::CustomMesh::MeshComponentInfo meshComponentInfo{};
+			meshComponentInfo.meshName = "Suzanne.mfmodel";
+			component->SetMeshComponentInfo(meshComponentInfo);
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(-10.0f, 0.0f, 0.0f));
-		//	newObject->SetRot(glm::vec3(0.0f));
-		//	newObject->SetScale(glm::vec3(10.0f));
-
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-		//	CustomMeshInfo customMeshInfo{};
-		//	customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-		//	//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(-2.0f, 2.0f, 0.0f));
-		//	newObject->SetRot(glm::vec3(0.0f));
-		//	newObject->SetScale(glm::vec3(1.0f));
-
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-		//	CustomMeshInfo customMeshInfo{};
-		//	//customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-		//	customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(-2.0f, 0.0f, 0.0f));
-		//	newObject->SetRot(glm::vec3(0.0f));
-		//	newObject->SetScale(glm::vec3(1.0f));
-
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-		//	CustomMeshInfo customMeshInfo{};
-		//	//customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-		//	customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-		//	component->SetCustomMeshInfo(customMeshInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
-
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(0.0f, 0.0f, 5.0f));
-		//	newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		//	newObject->SetScale(glm::vec3(1.0f));
-
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
-		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(0.0f, 0.0f, -15.0f));
-		//	newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		//	newObject->SetScale(glm::vec3(5.0f));
-
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
-		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::PlaneWithHole);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
 
 		{
 			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
@@ -164,69 +70,6 @@ namespace MyosotisFW::System::GameDirector {
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	newObject->SetPos(glm::vec3(-5.0f));
-		//	newObject->SetRot(glm::vec3(0.0f, 0.0f, 0.0f));
-		//	newObject->SetScale(glm::vec3(5.0f));
-
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
-		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Plane);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
-
-		//// パフォーマンステスト用
-		//const uint32_t objectCount = 10;
-		//for (uint32_t x = 0; x < objectCount; x++)
-		//{
-		//	for (uint32_t z = 0; z < objectCount; z++)
-		//	{
-		//		for (uint32_t y = 0; y < objectCount; y++)
-		//		{
-		//			{
-		//				MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//				newObject->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
-		//				newObject->SetRot(glm::vec3(0.0f));
-		//				newObject->SetScale(glm::vec3(10.0f));
-
-		//				Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//					System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
-		//				CustomMeshInfo customMeshInfo{};
-		//				customMeshInfo.meshName = "BarramundiFish/BarramundiFish.gltf";
-		//				//customMeshInfo.meshName = "Suzanne/Suzanne.gltf";
-		//				component->SetCustomMeshInfo(customMeshInfo);
-		//				newObject->AddComponent(component);
-		//				m_renderSubsystem->RegisterObject(newObject);
-		//			}
-		//		}
-		//	}
-		//}
-
-		//// パフォーマンステスト用
-		//const uint32_t objectCount = 10;
-		//for (uint32_t x = 0; x < objectCount; x++)
-		//{
-		//	for (uint32_t z = 0; z < objectCount; z++)
-		//	{
-		//		for (uint32_t y = 0; y < objectCount; y++)
-		//		{
-		//			{
-		//				MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//				newObject->SetPos(glm::vec3(2.0f * x, 2.0f * y, 15.0f + (2.0f * z)));
-		//				newObject->SetRot(glm::vec3(0.0f));
-		//				newObject->SetScale(glm::vec3(1.0f));
-
-		//				Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//					System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh));
-		//				component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
-		//				newObject->AddComponent(component);
-		//				m_renderSubsystem->RegisterObject(newObject);
-		//			}
-		//		}
-		//	}
-		//}
 		// TEST
 	}
 

@@ -22,7 +22,6 @@ namespace MyosotisFW::System::Render
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareShaderStorageBuffers();
 
 		// todo.検証処理
 		m_isReady = true;

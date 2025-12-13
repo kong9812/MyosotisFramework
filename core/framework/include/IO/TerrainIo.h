@@ -102,7 +102,7 @@ namespace Utility::Loader {
 			(static_cast<uint32_t>(textureHeight) + chunkSize.y - 1) / chunkSize.y
 		);
 
-		uint32_t samplingStep = 10;
+		uint32_t samplingStep = 50;
 		samplingStep = GetNearestDivisor(samplingStep, chunkSize.x);
 
 		std::vector<MyosotisFW::Mesh> meshes{};
@@ -186,73 +186,26 @@ namespace Utility::Loader {
 					}
 				}
 
-				// Meshlet生成
-				size_t maxMeshlets = meshopt_buildMeshletsBound(index.size(), MyosotisFW::AppInfo::g_maxMeshletVertices, MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+				// UV1
+				mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
 
-				std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
-				std::vector<uint32_t> meshletVertices(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletVertices);
-				std::vector<uint8_t> meshletTriangles(maxMeshlets * MyosotisFW::AppInfo::g_maxMeshletPrimitives * 3);
-
-				size_t meshletCount = meshopt_buildMeshlets(
-					meshlets.data(),
-					meshletVertices.data(),
-					meshletTriangles.data(),
-					index.data(),
-					index.size(),
-					&(mesh.vertex[0].position.x),
-					mesh.vertex.size(),
-					size_t(sizeof(MyosotisFW::VertexData)),
+				// Meshlet
+				meshoptimizer::BuildMeshletData(mesh, index,
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
-					MyosotisFW::AppInfo::g_maxMeshletPrimitives,
-					0.0f);
+					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
-				mesh.meshlet.reserve(meshletCount);
-				for (size_t i = 0; i < meshletCount; i++)
+				// AABB
+				mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+				mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+				for (const MyosotisFW::Meshlet& meshlet : mesh.meshlet)
 				{
-					const meshopt_Meshlet& src = meshlets[i];
-					MyosotisFW::Meshlet dst{};
-
-					dst.uniqueIndex.reserve(src.vertex_count);
-					for (size_t v = 0; v < src.vertex_count; v++)
-					{
-						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
-						dst.uniqueIndex.push_back(vertexIndex);
-					}
-
-					dst.primitives.reserve(src.triangle_count * 3);
-					for (size_t t = 0; t < src.triangle_count * 3; t++)
-					{
-						uint32_t triangleIndex = static_cast<uint32_t>(meshletTriangles[src.triangle_offset + t]);
-						dst.primitives.push_back(triangleIndex);
-					}
-
-					// AABB 計算
-					auto p0 = mesh.vertex[meshletVertices[src.vertex_offset + 0]].position;
-					dst.meshletInfo.AABBMin = glm::vec4(p0, 0.0f);
-					dst.meshletInfo.AABBMax = glm::vec4(p0, 0.0f);
-					meshAABBMin = glm::min(meshAABBMin, p0);
-					meshAABBMax = glm::max(meshAABBMax, p0);
-					for (size_t v = 1; v < src.vertex_count; v++)
-					{
-						uint32_t vertexIndex = meshletVertices[src.vertex_offset + v];
-						const glm::vec3& pos = mesh.vertex[vertexIndex].position;
-						dst.meshletInfo.AABBMin = glm::min(dst.meshletInfo.AABBMin, glm::vec4(pos, 0.0f));
-						dst.meshletInfo.AABBMax = glm::max(dst.meshletInfo.AABBMax, glm::vec4(pos, 0.0f));
-						meshAABBMin = glm::min(meshAABBMin, pos);
-						meshAABBMax = glm::max(meshAABBMax, pos);
-					}
-
-					dst.meshletInfo.vertexCount = src.vertex_count;
-					dst.meshletInfo.primitiveCount = src.triangle_count;
-
-					mesh.meshlet.push_back(dst);
+					mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+					mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 				}
 
-				// MeshInfo/AABB 設定
-				mesh.meshInfo.AABBMin = glm::vec4(meshAABBMin, 0.0f);
-				mesh.meshInfo.AABBMax = glm::vec4(meshAABBMax, 0.0f);
-				mesh.meshInfo.meshletCount = meshletCount;
-				mesh.meshInfo.vertexFloatCount = static_cast<uint32_t>(mesh.vertex.size());
+				// MeshInfo
+				mesh.meshInfo.meshletCount = static_cast<uint32_t>(mesh.meshlet.size());
+				mesh.meshInfo.vertexFloatCount = static_cast<uint32_t>(mesh.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 			}
 		}
 

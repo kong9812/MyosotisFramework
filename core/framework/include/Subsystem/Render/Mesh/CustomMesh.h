@@ -10,21 +10,26 @@ namespace MyosotisFW::System::Render
 		CustomMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~CustomMesh() {};
 
+		struct MeshComponentInfo
+		{
+			std::string meshName;
+		};
+
+	public:
 		const ComponentType GetType() const override { return ComponentType::CustomMesh; }
 
-		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet) override;
+		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& MeshInfoDescriptorSet) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 
-		void SetCustomMeshInfo(const CustomMeshInfo& customMeshInfo) { m_customMeshInfo = customMeshInfo; }
-		const CustomMeshInfo& GetCustomMeshInfo() const { return m_customMeshInfo; }
+		void SetMeshComponentInfo(const MeshComponentInfo& MeshComponentInfo) { m_meshComponentInfo = MeshComponentInfo; }
+		const MeshComponentInfo& GetMeshComponentInfo() const { return m_meshComponentInfo; }
 
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		void Deserialize(const rapidjson::Value& doc) override;
 	private:
 		void loadAssets() override;
-		void prepareShaderStorageBuffers() override {};
 
-		CustomMeshInfo m_customMeshInfo;
+		MeshComponentInfo m_meshComponentInfo;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(CustomMesh);
 	OBJECT_CAST_FUNCTION(CustomMesh);

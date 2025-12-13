@@ -58,7 +58,6 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		virtual void loadAssets() { m_meshChangedCallback(); }
-		virtual void prepareShaderStorageBuffers() {}
 
 		// render device
 		RenderDevice_ptr m_device;

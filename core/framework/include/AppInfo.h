@@ -126,6 +126,8 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_gameStageFolder = ".\\resources\\gamestage\\";
 	// [フォルダ]地形
 	constexpr const char* g_terrainFolder = ".\\resources\\terrain\\";
+	// [フォルダ]地形 (MFTerrain)
+	constexpr const char* g_mfTerrainFolder = ".\\resources\\models\\MFTerrains\\";
 
 	// debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
 	constexpr uint32_t g_imguiDescriptorPoolSize = 2;

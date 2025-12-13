@@ -9,7 +9,7 @@
 namespace MyosotisFW::System::Render
 {
 	CustomMesh::CustomMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
-		m_customMeshInfo({})
+		m_meshComponentInfo({})
 	{
 		m_name = "CustomMesh";
 	}
@@ -20,7 +20,6 @@ namespace MyosotisFW::System::Render
 
 		// プリミティブジオメトリの作成
 		loadAssets();
-		prepareShaderStorageBuffers();
 
 		// todo.検証処理
 		m_isReady = true;
@@ -36,7 +35,7 @@ namespace MyosotisFW::System::Render
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
 
-		obj.AddMember("meshName", rapidjson::Value(m_customMeshInfo.meshName.c_str(), allocator), allocator);
+		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.meshName.c_str(), allocator), allocator);
 
 		return obj;
 	}
@@ -45,13 +44,13 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 
-		m_customMeshInfo.meshName = doc["meshName"].GetString();
+		m_meshComponentInfo.meshName = doc["meshName"].GetString();
 	}
 
 	void CustomMesh::loadAssets()
 	{
-		std::vector<Mesh> meshes = m_resources->GetMesh(m_customMeshInfo.meshName);
-		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry(m_customMeshInfo.meshName, meshes);
+		std::vector<Mesh> meshes = m_resources->GetMesh(m_meshComponentInfo.meshName);
+		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry(m_meshComponentInfo.meshName, meshes);
 		m_meshCount = static_cast<uint32_t>(meshes.size());
 
 		// VBDispatchInfoの作成

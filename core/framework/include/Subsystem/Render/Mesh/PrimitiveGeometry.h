@@ -22,7 +22,6 @@ namespace MyosotisFW::System::Render
 		virtual void Deserialize(const rapidjson::Value& doc) override;
 	private:
 		void loadAssets() override;
-		void prepareShaderStorageBuffers() override {};
 
 		Shape::PrimitiveGeometryShape m_primitiveGeometryShape;
 	};

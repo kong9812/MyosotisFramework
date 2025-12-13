@@ -221,6 +221,19 @@ namespace Utility::Loader {
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
+				// AABB
+				meshData.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+				meshData.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+				for (const MyosotisFW::Meshlet& meshlet : meshData.meshlet)
+				{
+					meshData.meshInfo.AABBMin = glm::min(meshData.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+					meshData.meshInfo.AABBMax = glm::max(meshData.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
+				}
+
+				// MeshInfo更新
+				meshData.meshInfo.meshletCount = static_cast<uint32_t>(meshData.meshlet.size());
+				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
+
 				meshes.push_back(meshData);
 			}
 		}
