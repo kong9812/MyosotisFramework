@@ -204,10 +204,22 @@ namespace MyosotisFW::System::Render
 		physicalDeviceMeshShaderFeaturesEXT.taskShader = VK_TRUE;
 		physicalDeviceMeshShaderFeaturesEXT.meshShader = VK_TRUE;
 
+		// Ray Tracing Pipeline 機能
+		VkPhysicalDeviceRayTracingPipelineFeaturesKHR physicalDeviceRayTracingPipelineFeaturesKHR{};
+		physicalDeviceRayTracingPipelineFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+		physicalDeviceRayTracingPipelineFeaturesKHR.rayTracingPipeline = VK_TRUE;
+
+		// Acceleration Structure 機能
+		VkPhysicalDeviceAccelerationStructureFeaturesKHR physicalDeviceAccelerationStructureFeaturesKHR{};
+		physicalDeviceAccelerationStructureFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+		physicalDeviceAccelerationStructureFeaturesKHR.accelerationStructure = VK_TRUE;
+
 		// pNextチェーン
 		physicalDeviceDescriptorIndexingFeatures.pNext = &separateDepthStencilFeatures;
 		separateDepthStencilFeatures.pNext = &physicalDeviceMaintenance4Features;
 		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
+		physicalDeviceMeshShaderFeaturesEXT.pNext = &physicalDeviceRayTracingPipelineFeaturesKHR;
+		physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR;
 
 		// create device
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
@@ -221,12 +233,23 @@ namespace MyosotisFW::System::Render
 
 		// VMA
 		prepareVMA(vkInstance);
+
+		// 関数ポインタの取得
+		m_vkGetBufferDeviceAddressKHR = reinterpret_cast<PFN_vkGetBufferDeviceAddressKHR>(vkGetDeviceProcAddr(m_device, "vkGetBufferDeviceAddressKHR"));
 	}
 
 	RenderDevice::~RenderDevice()
 	{
 		vmaDestroyAllocator(m_allocator);
 		vkDestroyDevice(m_device, GetAllocationCallbacks());
+	}
+
+	const VkDeviceAddress RenderDevice::GetBufferDeviceAddress(const VkBuffer& buffer) const
+	{
+		VkBufferDeviceAddressInfoKHR bufferDeviceAddressInfoKHR{};
+		bufferDeviceAddressInfoKHR.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+		bufferDeviceAddressInfoKHR.buffer = buffer;
+		return m_vkGetBufferDeviceAddressKHR(m_device, &bufferDeviceAddressInfoKHR);
 	}
 
 	uint32_t RenderDevice::getMemoryTypeIndex(const uint32_t typeBits, const VkMemoryPropertyFlags& properties) const

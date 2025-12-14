@@ -23,12 +23,6 @@ namespace MyosotisFW::System::Render
 			m_meshVertexData({}),
 			m_images({}),
 			m_cubeImages({}),
-			m_depthStencil({}),
-			m_position({}),
-			m_normal({}),
-			m_baseColor({}),
-			m_shadowMap({}),
-			m_lightingResult({}),
 			m_mainRenderTarget({}),
 			m_visibilityBuffer({}),
 			m_hiZDepthMap({}),
@@ -57,12 +51,6 @@ namespace MyosotisFW::System::Render
 		std::vector<VkSampler> m_samplers;
 
 	public:
-		Image& GetDepthStencil() { return m_depthStencil; }
-		Image& GetPosition() { return m_position; }
-		Image& GetNormal() { return m_normal; }
-		Image& GetBaseColor() { return m_baseColor; }
-		Image& GetShadowMap() { return m_shadowMap; }
-		Image& GetLightingResult() { return m_lightingResult; }
 		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
 		Image& GetVisibilityBuffer() { return m_visibilityBuffer; }
 		Image& GetLightmap() { return m_lightmap; }
@@ -70,18 +58,13 @@ namespace MyosotisFW::System::Render
 		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
 		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
 
-	protected:
-		// attachments
-		Image m_depthStencil;
+		Image& GetRayTracingRenderTarget() { return m_rayTracingRenderTarget; }
 
-		Image m_position;
-		Image m_normal;
-		Image m_baseColor;
-		Image m_shadowMap;
-		Image m_lightingResult;
+	protected:
 		Image m_mainRenderTarget;
 		Image m_visibilityBuffer;
 		Image m_lightmap;
+		Image m_rayTracingRenderTarget;
 
 		Image m_hiZDepthMap;
 		Image m_primaryDepthStencil;
