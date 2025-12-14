@@ -104,6 +104,15 @@ namespace MyosotisFW::System::Render
 		accelerationStructureInstanceKHR.instanceShaderBindingTableRecordOffset = 0;
 		accelerationStructureInstanceKHR.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 		accelerationStructureInstanceKHR.accelerationStructureReference = 0; // TODO: Bottom Level ASのデバイスアドレスを設定する
+
+		// SBT構築
+		VkStridedDeviceAddressRegionKHR raygenSBT{};
+		raygenSBT.deviceAddress = 0; // TODO: Raygen SBTのデバイスアドレスを設定する
+		raygenSBT.stride = 0; // TODO: Raygen SBTのエントリサイズを設定する
+		raygenSBT.size = 0; // TODO: Raygen SBTの全体サイズを設定する
+		VkStridedDeviceAddressRegionKHR missSBT{};
+		VkStridedDeviceAddressRegionKHR hitSBT{};
+
 	}
 
 	void RayTracingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
@@ -125,8 +134,14 @@ namespace MyosotisFW::System::Render
 		//	0,
 		//	static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
 
-		// todo. Ray Tracing commands
-		//vkCmdTraceRaysKHR(commandBuffer);
+		vkCmdTraceRaysKHR(commandBuffer,
+			&m_raygenSBTBuffer.region,
+			&m_missSBTBuffer.region,
+			&m_hitSBTBuffer.region,
+			nullptr,
+			AppInfo::g_windowWidth,
+			AppInfo::g_windowHeight,
+			1);
 	}
 
 	void RayTracingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
@@ -153,50 +168,104 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Lightmap.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Lightmap.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR, resources->GetShaderModules("RayTracing.rgen.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, resources->GetShaderModules("RayTracing.rchit.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR, resources->GetShaderModules("RayTracing.rmiss.spv")),
 		};
 
-		// pipelineVertexInputStateCreateInfo
-		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV0 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
+		// rayTracingShaderGroupCreateInfoKHR
+		std::vector<VkRayTracingShaderGroupCreateInfoKHR> rayTracingShaderGroupCreateInfoKHR{};
+		VkRayTracingShaderGroupCreateInfoKHR raygenShaderGroup{};
+		raygenShaderGroup.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		raygenShaderGroup.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+		raygenShaderGroup.generalShader = 0;
+		VkRayTracingShaderGroupCreateInfoKHR rchitShaderGroup{};
+		raygenShaderGroup.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		raygenShaderGroup.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+		raygenShaderGroup.generalShader = 1;
+		VkRayTracingShaderGroupCreateInfoKHR rmissShaderGroup{};
+		rmissShaderGroup.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		rmissShaderGroup.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+		rmissShaderGroup.generalShader = 2;
+		rayTracingShaderGroupCreateInfoKHR.push_back(raygenShaderGroup);
+		rayTracingShaderGroupCreateInfoKHR.push_back(rchitShaderGroup);
+		rayTracingShaderGroupCreateInfoKHR.push_back(rmissShaderGroup);
 
-		// pipelineVertexInputStateCreateInfo
-		std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {
-			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, vertexAttributeBits)
-		};
-		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptiones = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0, vertexAttributeBits);
-		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo(vertexInputBindingDescription, vertexInputAttributeDescriptiones);
+		VkRayTracingPipelineCreateInfoKHR rayTracingPipelineCreateInfoKHR{};
+		rayTracingPipelineCreateInfoKHR.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
+		rayTracingPipelineCreateInfoKHR.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());
+		rayTracingPipelineCreateInfoKHR.pStages = shaderStageCreateInfo.data();
+		rayTracingPipelineCreateInfoKHR.groupCount = static_cast<uint32_t>(rayTracingShaderGroupCreateInfoKHR.size());
+		rayTracingPipelineCreateInfoKHR.pGroups = rayTracingShaderGroupCreateInfoKHR.data();
+		rayTracingPipelineCreateInfoKHR.maxPipelineRayRecursionDepth = 1;
+		rayTracingPipelineCreateInfoKHR.layout = m_pipelineLayout;
+		VK_VALIDATION(vkCreateRayTracingPipelinesKHR(*m_device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &rayTracingPipelineCreateInfoKHR, m_device->GetAllocationCallbacks(), &m_pipeline));
 
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineViewportStateCreateInfo();
-		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
-		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_NEVER);
-		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
-		};
-		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(colorBlendAttachmentStates);
-		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };
-		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDynamicStateCreateInfo(dynamicStates);
+		// SBTの作成
+		createShaderBindingTable();
+	}
 
-		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = Utility::Vulkan::CreateInfo::graphicsPipelineCreateInfo(
-			shaderStageCreateInfo,									// シェーダーステージ
-			&pipelineVertexInputStateCreateInfo,					// 頂点入力
-			&inputAssemblyStateCreateInfo,							// 入力アセンブリ
-			&viewportStateCreateInfo,								// ビューポートステート
-			&rasterizationStateCreateInfo,							// ラスタライゼーション
-			&multisampleStateCreateInfo,							// マルチサンプリング
-			&depthStencilStateCreateInfo,							// 深度/ステンシル
-			&colorBlendStateCreateInfo,								// カラーブレンディング
-			&dynamicStateCreateInfo,								// 動的状態
-			m_pipelineLayout,										// パイプラインレイアウト
-			renderPass);											// レンダーパス
-		graphicsPipelineCreateInfo.subpass = 0;
-		VK_VALIDATION(vkCreateGraphicsPipelines(*m_device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_pipeline));
+	void RayTracingPipeline::createShaderBindingTable()
+	{
+		// Ray Tracing Pipeline Properties
+		const VkPhysicalDeviceRayTracingPipelinePropertiesKHR rayTracingProperties = m_device->GetPhysicalDeviceRayTracingPipelinePropertiesKHR();
+
+		// Shader handle size
+		const uint32_t handleSize = rayTracingProperties.shaderGroupHandleSize;
+		const uint32_t handleAlignment = rayTracingProperties.shaderGroupHandleAlignment;
+		const uint32_t handleSizeAligned = (handleSize + handleAlignment - 1) & ~(handleAlignment - 1);
+
+		const uint32_t groupCount = 3; // raygen, miss, chit
+		const uint32_t sbtSize = groupCount * handleSizeAligned;
+
+		// 全シェーダーグループハンドルの取得
+		std::vector<uint8_t> shaderHandleStorage(sbtSize);
+		VK_VALIDATION(vkGetRayTracingShaderGroupHandlesKHR(
+			*m_device,
+			m_pipeline,
+			0,				// 最初のシェーダーグループインデックス
+			groupCount,		// 取得するシェーダーグループ数
+			sbtSize,		// バッファサイズ
+			shaderHandleStorage.data()));
+
+		// raygen SBTの作成
+		const size_t raygenOffset = handleSizeAligned;
+		createSBTBuffer(handleSizeAligned, &m_raygenSBTBuffer.sbtBuffer, shaderHandleStorage.data() + 0 * handleSize);
+		// Regionの設定
+		m_raygenSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_raygenSBTBuffer.sbtBuffer.buffer);
+		m_raygenSBTBuffer.region.stride = handleSizeAligned;
+		m_raygenSBTBuffer.region.size = raygenOffset;
+
+		// miss SBTの作成
+		const size_t missOffset = handleSizeAligned;
+		createSBTBuffer(handleSizeAligned, &m_missSBTBuffer.sbtBuffer, shaderHandleStorage.data() + 1 * handleSize);
+		// Regionの設定
+		m_missSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_missSBTBuffer.sbtBuffer.buffer);
+		m_missSBTBuffer.region.stride = handleSizeAligned;
+		m_missSBTBuffer.region.size = missOffset;
+
+		// chit SBTの作成
+		const size_t chitOffset = handleSizeAligned;
+		createSBTBuffer(handleSizeAligned, &m_hitSBTBuffer.sbtBuffer, shaderHandleStorage.data() + 2 * handleSize);
+		// Regionの設定
+		m_hitSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_hitSBTBuffer.sbtBuffer.buffer);
+		m_hitSBTBuffer.region.stride = handleSizeAligned;
+		m_hitSBTBuffer.region.size = chitOffset;
+	}
+
+	void RayTracingPipeline::createSBTBuffer(VkDeviceSize size, Buffer* sbtBuffer, const void* data)
+	{
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(
+			size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
+		VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &sbtBuffer->buffer, &sbtBuffer->allocation, &sbtBuffer->allocationInfo));
+		sbtBuffer->descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(sbtBuffer->buffer);
+		// mapping
+		void* mappedData{};
+		VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), sbtBuffer->allocation, &mappedData));
+		memcpy(mappedData, data, size);
+		vmaUnmapMemory(m_device->GetVmaAllocator(), sbtBuffer->allocation);
 	}
 }

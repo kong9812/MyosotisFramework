@@ -137,6 +137,12 @@ namespace MyosotisFW::System::Render
 		vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties2);
 		Logger::Info("Subgroup Size: " + std::to_string(subgroupProperties.subgroupSize));
 #endif
+		// Ray Tracing Pipeline properties
+		m_physicalDeviceRayTracingPipelinePropertiesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+		VkPhysicalDeviceProperties2 deviceProperties2{};
+		deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		deviceProperties2.pNext = &m_physicalDeviceRayTracingPipelinePropertiesKHR;
+		vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties2);
 
 		// memory properties
 		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalDeviceMemoryProperties);

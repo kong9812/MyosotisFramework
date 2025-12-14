@@ -42,6 +42,8 @@ namespace MyosotisFW::System::Render
 		// バッファのデバイスアドレスを取得
 		const VkDeviceAddress GetBufferDeviceAddress(const VkBuffer& buffer) const;
 
+		const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetPhysicalDeviceRayTracingPipelinePropertiesKHR() const { return m_physicalDeviceRayTracingPipelinePropertiesKHR; }
+
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkDevice m_device;
@@ -56,6 +58,7 @@ namespace MyosotisFW::System::Render
 
 		PFN_vkGetBufferDeviceAddressKHR m_vkGetBufferDeviceAddressKHR;
 
+		VkPhysicalDeviceRayTracingPipelinePropertiesKHR m_physicalDeviceRayTracingPipelinePropertiesKHR;
 	private:
 		uint32_t getMemoryTypeIndex(const uint32_t typeBits, const VkMemoryPropertyFlags& properties) const;
 		void prepareAllocationCallbacks();

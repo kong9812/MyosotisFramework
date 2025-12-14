@@ -1049,7 +1049,7 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
-	inline VkBufferCreateInfo bufferCreateInfo(const uint32_t size, const VkBufferUsageFlagBits& usage, const VkSharingMode& sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE)
+	inline VkBufferCreateInfo bufferCreateInfo(const uint32_t size, const VkBufferUsageFlags& usage, const VkSharingMode& sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE)
 	{
 		VkBufferCreateInfo ci{};
 		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

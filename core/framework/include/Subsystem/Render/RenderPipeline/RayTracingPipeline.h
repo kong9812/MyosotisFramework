@@ -37,7 +37,23 @@ namespace MyosotisFW::System::Render
 		//	glm::ivec2 size;
 		//}pushConstant;
 
+		struct {
+			Buffer sbtBuffer;
+			VkStridedDeviceAddressRegionKHR region;
+		} m_raygenSBTBuffer;
+		struct {
+			Buffer sbtBuffer;
+			VkStridedDeviceAddressRegionKHR region;
+		} m_missSBTBuffer;
+		struct {
+			Buffer sbtBuffer;
+			VkStridedDeviceAddressRegionKHR region;
+		} m_hitSBTBuffer;
+
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
+
+		void createShaderBindingTable();
+		void createSBTBuffer(VkDeviceSize size, Buffer* sbtBuffer, const void* data);
 
 		Buffer m_vertexBuffer;
 		Buffer m_indexBuffer;
