@@ -5,6 +5,8 @@
 
 #include "EditorRenderResources.h"
 #include "RenderSwapchain.h"
+#include "RenderDevice.h"
+#include "RenderQueue.h"
 
 #include "EditorGUI.h"
 #include "EditorCamera.h"
@@ -59,7 +61,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::EditorRender()
 	{
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 		//m_editorRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
 		//ImGui::Render();
 		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), currentCommandBuffer);
