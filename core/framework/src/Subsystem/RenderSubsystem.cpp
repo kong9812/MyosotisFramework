@@ -61,11 +61,12 @@ namespace MyosotisFW::System::Render
 		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.computeComplete, m_device->GetAllocationCallbacks());
 		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
-		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
-		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
-		vkDestroyCommandPool(*m_device, m_renderCommandPool, m_device->GetAllocationCallbacks());
-		vkDestroyCommandPool(*m_device, m_computeCommandPool, m_device->GetAllocationCallbacks());
-		vkDestroyCommandPool(*m_device, m_transferCommandPool, m_device->GetAllocationCallbacks());
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device);
+		m_device->GetGraphicsQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
+		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device);
+		m_device->GetComputeQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
+		m_device->GetTransferQueue()->FreeCommandBuffers(*m_device);
+		m_device->GetTransferQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
 	}
 
 	void RenderSubsystem::ResetMousePos(const glm::vec2& mousePos)
@@ -206,16 +207,16 @@ namespace MyosotisFW::System::Render
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-			VK_VALIDATION(vkBeginCommandBuffer(m_computeCommandBuffers[0], &commandBufferBeginInfo));
-			m_vkCmdBeginDebugUtilsLabelEXT(m_computeCommandBuffers[0], &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
+			VK_VALIDATION(vkBeginCommandBuffer(m_device->GetComputeQueue()->GetCommandBuffer(0), &commandBufferBeginInfo));
+			m_vkCmdBeginDebugUtilsLabelEXT(m_device->GetComputeQueue()->GetCommandBuffer(0), &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
 
-			m_hiZDepthComputePipeline->Dispatch(m_computeCommandBuffers[0], m_swapchain->GetScreenSize());
+			m_hiZDepthComputePipeline->Dispatch(m_device->GetComputeQueue()->GetCommandBuffer(0), m_swapchain->GetScreenSize());
 
-			m_vkCmdEndDebugUtilsLabelEXT(m_computeCommandBuffers[0]);
-			VK_VALIDATION(vkEndCommandBuffer(m_computeCommandBuffers[0]));
+			m_vkCmdEndDebugUtilsLabelEXT(m_device->GetComputeQueue()->GetCommandBuffer(0));
+			VK_VALIDATION(vkEndCommandBuffer(m_device->GetComputeQueue()->GetCommandBuffer(0)));
 		}
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_computeCommandBuffers[0];
+		submitInfo.pCommandBuffers = &m_device->GetComputeQueue()->GetCommandBuffer(0);
 
 		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
 		computeQueue->Submit(submitInfo);
@@ -229,7 +230,7 @@ namespace MyosotisFW::System::Render
 
 		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
 	}
 
@@ -237,7 +238,7 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera == nullptr) return;
 
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 
 		// Skybox Render Pass
 		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
@@ -252,7 +253,7 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 
 		// mesh shader Render Pass
 		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
@@ -268,7 +269,7 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 		// Lighting Render Pass
 		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
 		m_lightingRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
@@ -281,7 +282,7 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_lightmapBakingPipeline->IsBaking())
 		{
-			VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+			VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 			// Lightmap Baking Pass
 			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
 			m_lightmapBakingPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
@@ -305,7 +306,7 @@ namespace MyosotisFW::System::Render
 		// Final Composition (MainRenderTarget -> SwapchainImage)
 		CopyMainRenderTargetToSwapchainImage();
 
-		VkCommandBuffer currentCommandBuffer = m_renderCommandBuffers[m_currentBufferIndex];
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
 		m_submitInfo.commandBufferCount = 1;
 		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
@@ -340,17 +341,13 @@ namespace MyosotisFW::System::Render
 		m_resources->Resize(width, height);
 
 		// command buffers
-		vkFreeCommandBuffers(*m_device, m_renderCommandPool, static_cast<uint32_t>(m_renderCommandBuffers.size()), m_renderCommandBuffers.data());
-		vkFreeCommandBuffers(*m_device, m_computeCommandPool, static_cast<uint32_t>(m_computeCommandBuffers.size()), m_computeCommandBuffers.data());
 		{// render
-			m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_renderCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
-			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
+			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device);
+			m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
 		}
 		{// compute
-			m_computeCommandBuffers.resize(1);	// Frustum Culling
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
+			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device);
+			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
 		}
 
 		if (m_mainCamera)
@@ -397,24 +394,15 @@ namespace MyosotisFW::System::Render
 	{
 		// command pool
 		{// render
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsQueue()->GetQueueFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_renderCommandPool));
-
-			m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_renderCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, static_cast<uint32_t>(m_swapchain->GetImageCount()));
-			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_renderCommandBuffers.data()));
+			m_device->GetGraphicsQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
+			m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
 		}
 		{// compute
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetComputeQueue()->GetQueueFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_computeCommandPool));
-
-			m_computeCommandBuffers.resize(1);	// Frustum Culling
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_computeCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-			VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &commandBufferAllocateInfo, m_computeCommandBuffers.data()));
+			m_device->GetComputeQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
+			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, 1);
 		}
 		{// transfer
-			VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetTransferQueue()->GetQueueFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_transferCommandPool));
+			m_device->GetTransferQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
 		}
 	}
 
@@ -530,7 +518,7 @@ namespace MyosotisFW::System::Render
 			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_renderCommandBuffers[m_currentBufferIndex],
+		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			0,
@@ -547,7 +535,7 @@ namespace MyosotisFW::System::Render
 		copyRegion.dstSubresource.layerCount = 1;
 		copyRegion.dstOffsets[0] = { 0,0,0 };
 		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
-		vkCmdBlitImage(m_renderCommandBuffers[m_currentBufferIndex],
+		vkCmdBlitImage(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
 			m_resources->GetMainRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &copyRegion,
@@ -563,7 +551,7 @@ namespace MyosotisFW::System::Render
 			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_renderCommandBuffers[m_currentBufferIndex],
+		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 			0,

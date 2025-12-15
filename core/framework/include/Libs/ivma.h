@@ -49,4 +49,71 @@ namespace vmaTools
 			descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(pBuffer);
 		}
 	}
+
+	inline void CreateBuffer(
+		const VkDevice& device,
+		const VmaAllocator& allocator,
+		const uint32_t size,
+		const VkBufferUsageFlags& usage,
+		VkBuffer& pBuffer,
+		VmaAllocation& pAllocation,
+		VmaAllocationInfo& pAllocationInfo,
+		VkDescriptorBufferInfo& descriptor)
+	{
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size, usage);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
+		allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング
+		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+		descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(pBuffer);
+	}
+
+	inline void CreateASBuffer(
+		const VkDevice& device,
+		const VmaAllocator& allocator,
+		const uint32_t size,
+		VkBuffer& pBuffer,
+		VmaAllocation& pAllocation,
+		VmaAllocationInfo& pAllocationInfo,
+		VkDescriptorBufferInfo& descriptor)
+	{
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;	// GPU専用
+		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+	}
+
+	inline void CreateScratchBuffer(
+		const VkDevice& device,
+		const VmaAllocator& allocator,
+		const uint32_t size,
+		VkBuffer& pBuffer,
+		VmaAllocation& pAllocation,
+		VmaAllocationInfo& pAllocationInfo,
+		VkDescriptorBufferInfo& descriptor)
+	{
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;	// GPU専用
+		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+
+	}
+
+	inline void CreateASInstanceBuffer(
+		const VkDevice& device,
+		const VmaAllocator& allocator,
+		const uint32_t size,
+		VkBuffer& pBuffer,
+		VmaAllocation& pAllocation,
+		VmaAllocationInfo& pAllocationInfo,
+		VkDescriptorBufferInfo& descriptor)
+	{
+		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
+		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+	}
 }

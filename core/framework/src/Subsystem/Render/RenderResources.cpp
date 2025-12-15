@@ -177,23 +177,13 @@ namespace MyosotisFW::System::Render
 		auto image = m_images.find(fileName);
 		if (image == m_images.end())
 		{
-			// todo.　実装場所を変える
-			VkCommandPool pool{};
-			RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
-			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(transferQueue->GetQueueFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
-
 			// ないなら読み込む
 			m_images.emplace(fileName, Utility::Loader::loadImage(
 				*m_device,
-				transferQueue,
-				pool,
+				m_device->GetTransferQueue(),
 				m_device->GetVmaAllocator(),
 				fileName,
 				m_device->GetAllocationCallbacks()));
-
-			// 後片付け
-			vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
 		}
 		return { m_images[fileName].image,  m_images[fileName].view };
 	}
@@ -203,23 +193,13 @@ namespace MyosotisFW::System::Render
 		auto image = m_cubeImages.find(fileNames[0]);
 		if (image == m_cubeImages.end())
 		{
-			// todo.　実装場所を変える
-			VkCommandPool pool{};
-			RenderQueue_ptr transferQueue = m_device->GetTransferQueue();
-			VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(transferQueue->GetQueueFamilyIndex());
-			VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
-
 			// ないなら読み込む
 			m_cubeImages.emplace(fileNames[0], Utility::Loader::loadCubeImage(
 				*m_device,
-				transferQueue,
-				pool,
+				m_device->GetTransferQueue(),
 				m_device->GetVmaAllocator(),
 				fileNames,
 				m_device->GetAllocationCallbacks()));
-
-			// 後片付け
-			vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
 		}
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
@@ -241,27 +221,19 @@ namespace MyosotisFW::System::Render
 		VkSampler sampler{};
 		VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &sampler));
 		m_samplers.push_back(sampler);
-		return sampler;
+		return m_samplers.back();
 	}
 
 	bool RenderResources::SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size)
 	{
-		VkCommandPool pool{};
-		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-		VkCommandPoolCreateInfo commandPoolCreateInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(graphicsQueue->GetQueueFamilyIndex());
-		VK_VALIDATION(vkCreateCommandPool(*m_device, &commandPoolCreateInfo, m_device->GetAllocationCallbacks(), &pool));
-
 		bool result = Utility::Loader::SaveImage(
 			*m_device,
 			image,
-			graphicsQueue,
-			pool,
+			m_device->GetGraphicsQueue(),
 			m_device->GetVmaAllocator(),
 			fileName,
 			size,
 			m_device->GetAllocationCallbacks());
-
-		vkDestroyCommandPool(*m_device, pool, m_device->GetAllocationCallbacks());
 		return result;
 	}
 }

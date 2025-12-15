@@ -183,7 +183,7 @@ namespace Utility::Loader {
 			Logger::Debug("[VK_Loader] End load: " + fileName +
 				"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");
 #endif
-			return meshes;
 		}
+		return meshes;
 	}
 }

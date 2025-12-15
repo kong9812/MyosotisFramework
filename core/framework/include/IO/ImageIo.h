@@ -14,7 +14,7 @@
 #include "RenderQueue.h"
 
 namespace Utility::Loader {
-	inline MyosotisFW::Image loadImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::Image loadImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VmaAllocator allocator, std::string fileName, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
 		MyosotisFW::Image image{};
 
@@ -50,9 +50,7 @@ namespace Utility::Loader {
 		}
 
 		{// CPU -> GPU
-			VkCommandBuffer commandBuffer{};
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-			VK_VALIDATION(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+			VkCommandBuffer commandBuffer = queue->AllocateSingleUseCommandBuffer(device);
 
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(allocator, stagingBuffer.allocation, &data));
@@ -104,7 +102,7 @@ namespace Utility::Loader {
 			VK_VALIDATION(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX));
 
 			// clean up
-			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+			queue->FreeSingleUseCommandBuffer(device, commandBuffer);
 			vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 			vkDestroyFence(device, fence, pAllocationCallbacks);
 		}
@@ -115,7 +113,6 @@ namespace Utility::Loader {
 		VkDevice device,
 		const MyosotisFW::Image& image,
 		MyosotisFW::System::Render::RenderQueue_ptr queue,
-		VkCommandPool commandPool,
 		VmaAllocator allocator,
 		const std::string& fileName,
 		const glm::ivec2& textureSize,
@@ -149,9 +146,7 @@ namespace Utility::Loader {
 		}
 
 		// Command Buffer
-		VkCommandBuffer commandBuffer{};
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-		VK_VALIDATION(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+		VkCommandBuffer commandBuffer = queue->AllocateSingleUseCommandBuffer(device);
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
@@ -202,7 +197,7 @@ namespace Utility::Loader {
 
 		// clean up
 		vmaUnmapMemory(allocator, stagingBuffer.allocation);
-		vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+		queue->FreeSingleUseCommandBuffer(device, commandBuffer);
 		vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 		vkDestroyFence(device, fence, pAllocationCallbacks);
 

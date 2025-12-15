@@ -14,7 +14,7 @@
 #include "RenderQueue.h"
 
 namespace Utility::Loader {
-	inline MyosotisFW::Image loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VkCommandPool commandPool, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
+	inline MyosotisFW::Image loadCubeImage(VkDevice device, MyosotisFW::System::Render::RenderQueue_ptr queue, VmaAllocator allocator, std::vector<std::string> fileNames, const VkAllocationCallbacks* pAllocationCallbacks = nullptr)
 	{
 		MyosotisFW::Image image{};
 
@@ -58,9 +58,7 @@ namespace Utility::Loader {
 		}
 
 		{// CPU -> GPU
-			VkCommandBuffer commandBuffer{};
-			VkCommandBufferAllocateInfo commandBufferAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-			VK_VALIDATION(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+			VkCommandBuffer commandBuffer = queue->AllocateSingleUseCommandBuffer(device);
 
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(allocator, stagingBuffer.allocation, &data));
@@ -124,7 +122,7 @@ namespace Utility::Loader {
 			VK_VALIDATION(vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX));
 
 			// clean up
-			vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+			queue->FreeSingleUseCommandBuffer(device, commandBuffer);
 			vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 			vkDestroyFence(device, fence, pAllocationCallbacks);
 		}

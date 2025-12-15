@@ -80,9 +80,6 @@ namespace MyosotisFW::System::Render
 			m_resources(nullptr),
 			m_mainCamera(nullptr),
 			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
-			m_renderCommandPool(VK_NULL_HANDLE),
-			m_computeCommandPool(VK_NULL_HANDLE),
-			m_transferCommandPool(VK_NULL_HANDLE),
 			m_currentBufferIndex(0),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
@@ -168,12 +165,6 @@ namespace MyosotisFW::System::Render
 
 		VkSubmitInfo m_submitInfo;
 		VkPipelineStageFlags m_submitPipelineStages;
-
-		VkCommandPool m_renderCommandPool;
-		VkCommandPool m_computeCommandPool;
-		VkCommandPool m_transferCommandPool;
-		std::vector<VkCommandBuffer> m_renderCommandBuffers;
-		std::vector<VkCommandBuffer> m_computeCommandBuffers;
 
 		uint32_t m_currentBufferIndex;
 

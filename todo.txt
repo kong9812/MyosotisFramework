@@ -95,3 +95,207 @@ StageObjectの親子関係
 Visibility Buffer
 Mesh Shader
 2-phase occlusion culling
+
+RayTracingメモ:
+// BLAS作成
+・createBottomLevelAccelerationStructure
+　・[VkTransformMatrixKHR] Transform情報を作成
+　　・現状は 位置固定 + 回転スケールなし でOK!
+　・Transform Bufferの作成
+　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT　デバイスアドレス(GPUアドレス?)を利用
+　　・VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR Accelerationデータだから必要?
+　・VkAccelerationStructure (AS *BVHみたいもの?) の作成
+　　・VkDeviceOrHostAddressConstKHR x3 (vertex,index,transform)
+　　　・DeviceAddressの受け皿
+　　・VkAccelerationStructureGeometryKHR (ASのジオメトリ情報)
+　　　・三角形の構成
+　　　・頂点情報
+　　　・Index情報
+　　　・etc.
+　　・VkAccelerationStructureBuildRangeInfoKHR (ASのビルド範囲情報)
+　　　・最初のvertex位置
+　　　・Primitiveオフセット
+　　　・Primitive数
+　　　・Transformのオフセット
+　　・ASデータ作成の準備はここまで
+　・[必要に応じて] Bufferを作成 (必要に応じてShader内にGeom参照データを準備)
+　・VkAccelerationStructureBuildGeometryInfoKHR (AS ジオメトリビルド情報)
+　　・typeにAS種類 (TLAS/BLAS)
+　　　・VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR (BLAS)
+　　・flagsにビルドオプション
+　　　・VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR
+　　　　・ビルド時間よりもレイトレース速度を優先
+　　・geomeryCount (ジオメトリ数) pGeometries (ジオメトリポインタ)
+　・VkAccelerationStructureBuildSizesInfoKHR (ASビルドサイズ情報)
+　　・PFN_vkGetAccelerationStructureBuildSizesKHR (VKの便利関数)
+　　　・便利関数でビルドサイズを計算する
+　・BLAS Bufferの作成
+　　・VkBufferCreateInfo (いつものBufferCI)
+　　　・usage
+　　　　・VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR (AS用)
+　　　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT (DeviceAddress)
+　　　・後はvmaに任せる
+　・VkAccelerationStructureCreateInfoKHR (AS作成情報)
+　　・buffer (AS Buffer)
+　　　・BLAS Buffer をセット
+	・size (ASサイズ)
+	　・VkAccelerationStructureBuildSizesInfoKHR で計算したサイズ
+	　　・VkAccelerationStructureBuildSizesInfoKHR::accelerationStructureSize
+	・type (AS種類)
+	　・VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR (BLAS)
+　・vkCreateAccelerationStructureKHRでAS作成！！！！
+　・Scratch Bufferの作成 (ASビルド用の一時Buffer)
+　　・Bufferサイズは VkAccelerationStructureBuildSizesInfoKHR で計算した
+　　　・VkAccelerationStructureBuildSizesInfoKHR::buildScratchSize
+　　・VkBufferCreateInfo (いつものBufferCI)
+　　　・usage
+　　　　・VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+　　　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+　　　・後はvmaに任せる
+　　・VkAccelerationStructureBuildGeometryInfoKHR　に情報追加
+　　　・mode (VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR) ビルドモード
+　　　・scratchData (Scratch BufferのDeviceAddress)
+　　　・dstAccelerationStructure (BLAS ハンドル)
+　・ASビルド！！！
+　　・一時コマンドバッファの作成
+　　・flushコマンドバッファ！
+　・VkAccelerationStructureDeviceAddressInfoKHR (ASデバイスアドレス情報)
+　　・BLASのDeviceAddressを取得
+　・後片付け
+　　・Scratch Bufferの削除
+
+// TLAS作成
+・createTopLevelAccelerationStructure
+　・[VkTransformMatrixKHR] 上下反転
+　・VkAccelerationStructureInstanceKHR (TLASインスタンス情報)
+　　・transform
+　　・instanceCustomIndex = 0
+　　・mask = 0xFF
+　　・instanceShaderBindingTableRecordOffset = 0
+　　・flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR (裏面カリング無効)
+　　・accelerationStructureReference (BLASのDeviceAddress)
+　・Instace Bufferの作成
+　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT (DeviceAddress)
+　　・VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR (ASデータ)
+　・[VkDeviceOrHostAddressConstKHR] instanceのDeviceAddressを取得&セット
+　・VkAccelerationStructureGeometryKHR (ASのジオメトリ情報)
+　　・今度はvertex/indexではなく、instance情報をセット
+　　・geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR (インスタンスジオメトリ)
+　　・flags = VK_GEOMETRY_OPAQUE_BIT_KHR (不透明ジオメトリ)
+　　・geometry.instances.arrayOfPointers = VK_FALSE (ポインタ配列ではない)
+　　・geometry.instances.data = instanceのDeviceAddress (インスタンスデータ)
+　・VkAccelerationStructureBuildGeometryInfoKHR (AS ジオメトリビルド情報)
+　　・typeにAS種類 (TLAS/BLAS)
+　　　・VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR (TLAS)
+　　・flagsにビルドオプション
+　　　・VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR
+　　　　・ビルド時間よりもレイトレース速度を優先
+　・TLAS Bufferの作成
+　　・VkBufferCreateInfo (いつものBufferCI)
+　　　・usage
+　　　　・VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR (AS用)
+　　　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT (DeviceAddress)
+　　　・後はvmaに任せる
+　・VkAccelerationStructureCreateInfoKHR (AS作成情報)
+　　・buffer (AS Buffer)
+　　　・TLAS Buffer をセット
+	・size (ASサイズ)
+	　・VkAccelerationStructureBuildSizesInfoKHR で計算したサイズ
+	　　・VkAccelerationStructureBuildSizesInfoKHR::accelerationStructureSize
+	・type (AS種類)
+	　・VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR (TLAS)
+・vkCreateAccelerationStructureKHRでAS作成！！！！
+・Scratch Bufferの作成 (ASビルド用の一時Buffer)
+　・Bufferサイズは VkAccelerationStructureBuildSizesInfoKHR で計算した
+　・VkBufferCreateInfo (いつものBufferCI)
+　　・usage
+　　　・VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+　　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+　　・後はvmaに任せる
+　・VkAccelerationStructureBuildGeometryInfoKHR　に情報追加
+　　・mode (VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR) ビルドモード
+　　・scratchData (Scratch BufferのDeviceAddress)
+　　・dstAccelerationStructure (TLAS ハンドル)
+　　・geometryCount = 1; (インスタンスは1つだけ)
+　　・pGeometries = VkAccelerationStructureGeometryKHR のポインタ
+　・VkAccelerationStructureBuildRangeInfoKHR (ASのビルド範囲情報)
+　　・primitiveCount = 1 (インスタンスは1つだけ)
+　　・primiteiveOffset = 0
+　　・firstVertex = 0
+　　・transformOffset = 0
+　・ASデータ作成の準備はここまで
+　・ASビルド！！！
+　　・一時コマンドバッファの作成
+　　・flushコマンドバッファ！
+　・VkAccelerationStructureDeviceAddressInfoKHR (ASデバイスアドレス情報)
+　　・TLASのDeviceAddressを取得
+　・後片付け
+　　・Scratch Bufferの削除
+　　・instance Bufferの削除
+
+// レイトレースパイプライン作成
+・createRayTracingPipeline
+　・VkRayTracingShaderGroupCreateInfoKHR x3(raygen,raymiss,rayhit) (レイトレースシェーダグループ情報)
+　　・raygen
+　　　・type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR (汎用シェーダ)
+　　　・generalShader = 0 raygenシェーダのインデックス
+　　・raymiss
+　　　・type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR (汎用シェーダ)
+　　　・generalShader = 1 raymissシェーダのインデックス
+　　・rayhit
+　　　・type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR (三角形ヒットグループ)
+　　　・closestHitShader = 2 closesthitシェーダのインデックス
+　　・必要に応じてanyHitShaderやintersectionShaderもセット可能
+　・VkRayTracingPipelineCreateInfoKHR (レイトレースパイプライン作成情報)
+　　・stageCount ShaderStageの数 pStages ShaderStageのポインタ
+　　・groupCount シェーダグループ数 pGroups シェーダグループポインタ
+　　・maxRecursionDepth = 1 (プライマリレイのみ、二次レイなし)
+　・vkCreateRayTracingPipelinesKHRでpipeline作成！！！！
+
+// SBT作成
+・createShaderBindingTables
+　・Deviceから必要なプロパティを取得 VkPhysicalDeviceRayTracingPipelinePropertiesKHR
+　・const uint32_t handleSize (ハンドルサイズ)
+　　・VkPhysicalDeviceRayTracingPipelinePropertiesKHR::shaderGroupHandleSize
+　・const uint32_t handleSizeAligned (ハンドルサイズ 32bit アライメント済み)
+　　・VkPhysicalDeviceRayTracingPipelinePropertiesKHR::shaderGroupHandleSize
+　　・VkPhysicalDeviceRayTracingPipelinePropertiesKHR::shaderGroupHandleAlignment
+　・const uint32_t groupCount (シェーダグループ数)
+　　・パイプライン作成時に指定したシェーダグループ数
+　　・3 (raygen, raymiss, rayhit)
+　・const uint32_t sbtSize (SBTサイズ)
+　　・handleSizeAligned * groupCount
+　・std::vector<uint8_t> shaderHandleStorage(stbSize); (シェーダハンドル格納用)
+　・vkGetRayTracingShaderGroupHandlesKHR でシェーダハンドルを取得
+　・各SBT Bufferの作成 x3 (raygen, raymiss, rayhit)
+　　・Buffer作成
+　　　・usage
+　　　　・VK_BUFFER_USAVE_SHADER_BINDING_TABLE_BIT_KHR (SBT用)
+　　　　・VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT (DeviceAddress)
+　　　・size
+　　　　・[VkPhysicalDeviceRayTracingPipelinePropertiesKHR] shaderGroupHandleSize * ハンドル数
+　　・VkStrideedDeviceAddressRegionKHR (SBT情報構造体)
+　　　・deviceAddress (SBT BufferのDeviceAddress)
+　　　・stride = handleSizeAligned (ハンドルサイズ 32bit アライメント済み)
+　　　・size = handleSizeAligned * ハンドル数
+　　・mapしてSBTデータを書き込む
+　・ハンドルコピー (shaderHandleStorage)
+　　・memcpy(RayTracingShaderGroupHandles, handleSize) * 3
+
+// ディスクリプタセット作成
+・createDescriptorSets
+　・普通のVkWriteDescriptorSetではAS情報はセットできない
+　　・VkWriteDescriptorSetAccelerationStructureKHR を使う
+　・VkWriteDescriptorSetAccelerationStructureKHR (AS情報構造体)
+　　・accelerationStructureCount = 1 (LASは1つだけ)
+　　・pAccelerationStructures = TLASのハンドルポインタ
+　・VkWriteDescriptorSet (ディスクリプタセット書き込み情報)
+　　・pNext に VkWriteDescriptorSetAccelerationStructureKHR のポインタをセット
+
+// その他
+・Shaderの内部はBLASを作成する際にセットしたGeometry情報をgl_GeometryIndexEXTで取得可能が、データ構造をどうするかは要検討
+
+createTopLevelAccelerationStructure
+createRayTracingPipeline
+createShaderBindingTables
+createDescriptorSets

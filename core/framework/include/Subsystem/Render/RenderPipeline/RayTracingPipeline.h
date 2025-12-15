@@ -53,7 +53,10 @@ namespace MyosotisFW::System::Render
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		void createShaderBindingTable();
-		void createSBTBuffer(VkDeviceSize size, Buffer* sbtBuffer, const void* data);
+		void createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount);
+
+		void createBLAS();
+		void createTLAS();
 
 		Buffer m_vertexBuffer;
 		Buffer m_indexBuffer;

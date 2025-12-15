@@ -862,6 +862,21 @@ namespace Utility::Vulkan::CreateInfo
 		return ci;
 	}
 
+	inline VkRayTracingShaderGroupCreateInfoKHR rayTracingShaderGroupCreateInfo(
+		const VkRayTracingShaderGroupTypeKHR& type,
+		const uint32_t generalShader = VK_SHADER_UNUSED_KHR, const uint32_t closestHitShader = VK_SHADER_UNUSED_KHR,
+		const uint32_t anyHitShader = VK_SHADER_UNUSED_KHR, const uint32_t intersectionShader = VK_SHADER_UNUSED_KHR)
+	{
+		VkRayTracingShaderGroupCreateInfoKHR ci{};
+		ci.sType = VkStructureType::VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+		ci.type = type;
+		ci.generalShader = generalShader;
+		ci.closestHitShader = closestHitShader;
+		ci.anyHitShader = anyHitShader;
+		ci.intersectionShader = intersectionShader;
+		return ci;
+	}
+
 	inline VkVertexInputAttributeDescription vertexInputAttributeDescription(const uint32_t binding, const uint32_t location, const VkFormat& format, const uint32_t offset)
 	{
 		VkVertexInputAttributeDescription desc{};

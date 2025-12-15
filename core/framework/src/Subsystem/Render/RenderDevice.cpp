@@ -128,22 +128,19 @@ namespace MyosotisFW::System::Render
 		m_maxDescriptorSetInputAttachments = properties.limits.maxDescriptorSetInputAttachments;
 #ifdef DEBUG
 		PrintPhysicalDeviceInfo(properties);
-
+#endif
+		// Ray Tracing Pipeline properties
+		m_physicalDeviceRayTracingPipelinePropertiesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 		VkPhysicalDeviceSubgroupProperties subgroupProperties{};
 		subgroupProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES;
 		VkPhysicalDeviceProperties2 deviceProperties2{};
 		deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-		deviceProperties2.pNext = &subgroupProperties;
+		deviceProperties2.pNext = &m_physicalDeviceRayTracingPipelinePropertiesKHR;
+		m_physicalDeviceRayTracingPipelinePropertiesKHR.pNext = &subgroupProperties;
 		vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties2);
+#ifdef DEBUG
 		Logger::Info("Subgroup Size: " + std::to_string(subgroupProperties.subgroupSize));
 #endif
-		// Ray Tracing Pipeline properties
-		m_physicalDeviceRayTracingPipelinePropertiesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
-		VkPhysicalDeviceProperties2 deviceProperties2{};
-		deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-		deviceProperties2.pNext = &m_physicalDeviceRayTracingPipelinePropertiesKHR;
-		vkGetPhysicalDeviceProperties2(m_physicalDevice, &deviceProperties2);
-
 		// memory properties
 		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalDeviceMemoryProperties);
 
@@ -169,9 +166,9 @@ namespace MyosotisFW::System::Render
 		std::vector<VkExtensionProperties> extensionProperties(extCount);
 		VK_VALIDATION(vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extCount, extensionProperties.data()));
 #ifdef DEBUG
-		for (VkExtensionProperties& extensionPropertie : extensionProperties)
+		for (VkExtensionProperties& extensionProperty : extensionProperties)
 		{
-			Logger::Info(std::string("extensionName: ") + extensionPropertie.extensionName + "(" + std::to_string(extensionPropertie.specVersion) + ")");
+			Logger::Info(std::string("extensionName: ") + extensionProperty.extensionName + "(" + std::to_string(extensionProperty.specVersion) + ")");
 		}
 #endif
 		// デバイス機能を取得

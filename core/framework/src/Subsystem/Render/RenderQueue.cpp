@@ -37,6 +37,46 @@ namespace MyosotisFW::System::Render
 		vkGetDeviceQueue(device, m_queueFamilyIndex, 0, &m_queue);
 	}
 
+	void RenderQueue::CreateCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator)
+	{
+		VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_queueFamilyIndex);
+		VK_VALIDATION(vkCreateCommandPool(device, &cmdPoolInfo, pAllocator, &m_commandPool));
+	}
+
+	void RenderQueue::AllocateCommandBuffers(const VkDevice& device, const uint32_t count)
+	{
+		m_commandBuffers.resize(count);
+		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, count);
+		VK_VALIDATION(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, m_commandBuffers.data()));
+	}
+
+	void RenderQueue::FreeCommandBuffers(const VkDevice& device)
+	{
+		if (m_commandBuffers.size() > 0)
+		{
+			vkFreeCommandBuffers(device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+		}
+	}
+
+	void RenderQueue::DestroyCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator)
+	{
+		vkDestroyCommandPool(device, m_commandPool, pAllocator);
+	}
+
+	void RenderQueue::FreeSingleUseCommandBuffer(const VkDevice& device, const VkCommandBuffer& commandBuffer)
+	{
+		// todo. deviceをメンバー変数として持たせる
+		vkFreeCommandBuffers(device, m_commandPool, 1, &commandBuffer);
+	}
+
+	VkCommandBuffer RenderQueue::AllocateSingleUseCommandBuffer(const VkDevice& device)
+	{
+		VkCommandBuffer commandBuffer;
+		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+		VK_VALIDATION(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer));
+		return commandBuffer;
+	}
+
 	void RenderQueue::WaitIdle()
 	{
 		VK_VALIDATION(vkQueueWaitIdle(m_queue));
