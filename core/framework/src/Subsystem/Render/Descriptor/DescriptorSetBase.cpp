@@ -44,7 +44,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 	}
 
-	void DescriptorSetBase::buildDescriptor(const uint32_t index, const uint32_t dataSize)
+	void DescriptorSetBase::buildSSBODescriptor(const uint32_t index, const uint32_t dataSize)
 	{
 		if (dataSize > 0)
 		{
@@ -69,5 +69,24 @@ namespace MyosotisFW::System::Render
 
 			vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 		}
+	}
+
+	void DescriptorSetBase::buildASDescriptor(const uint32_t index, const std::vector<VkAccelerationStructureKHR>& handle)
+	{
+		Descriptor& descriptor = m_descriptors[index];
+		VkWriteDescriptorSetAccelerationStructureKHR descriptorASInfo{};
+		descriptorASInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+		descriptorASInfo.accelerationStructureCount = static_cast<uint32_t>(handle.size());
+		descriptorASInfo.pAccelerationStructures = handle.data();
+
+		VkDescriptorBufferInfo* nullBufferInfo = nullptr;
+		VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(
+			m_descriptorSet,
+			index,
+			VkDescriptorType::VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+			nullBufferInfo);
+		writeDescriptorSet.pNext = &descriptorASInfo;
+
+		vkUpdateDescriptorSets(*m_device, 1, &writeDescriptorSet, 0, nullptr);
 	}
 }

@@ -32,25 +32,25 @@ namespace MyosotisFW::System::Render
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(ScreenInfo));
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].rebuild = false;
 		}
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(SceneInfo));
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].rebuild = false;
 		}
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild)
 		{
 			uint32_t size = (static_cast<uint32_t>(sizeof(uint32_t)) * 4) + (static_cast<uint32_t>(sizeof(CameraData)) * static_cast<uint32_t>(m_cameraInfo.cameraData.size()));
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = false;
 		}
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(VBDispatchInfo)) * static_cast<uint32_t>(m_terrainVBDispatchInfo.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].rebuild = false;
 		}
 

@@ -33,6 +33,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(MeshInfoDescriptorSet);
 		class TextureDescriptorSet;
 		TYPEDEF_SHARED_PTR_FWD(TextureDescriptorSet);
+		class RayTracingDescriptorSet;
+		TYPEDEF_SHARED_PTR_FWD(RayTracingDescriptorSet);
 
 		class StaticMesh;
 		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
@@ -160,6 +162,7 @@ namespace MyosotisFW::System::Render
 		ObjectInfoDescriptorSet_ptr m_objectInfoDescriptorSet;
 		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 		TextureDescriptorSet_ptr m_textureDescriptorSet;
+		RayTracingDescriptorSet_ptr m_rayTracingDescriptorSet;
 
 		Camera::CameraBase_ptr m_mainCamera;
 

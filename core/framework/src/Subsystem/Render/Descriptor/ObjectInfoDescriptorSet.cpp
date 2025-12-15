@@ -38,13 +38,13 @@ namespace MyosotisFW::System::Render
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(ObjectInfo)) * static_cast<uint32_t>(m_objectInfo.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].rebuild = false;
 		}
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(VBDispatchInfo)) * static_cast<uint32_t>(m_vbDispatchInfo.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].rebuild = false;
 		}
 

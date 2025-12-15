@@ -35,35 +35,35 @@ namespace MyosotisFW::System::Render
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(MeshInfo)) * static_cast<uint32_t>(m_meshInfo.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].rebuild = false;
 		}
 		// [Descriptor作成] MeshletInfo
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(MeshletInfo)) * static_cast<uint32_t>(m_meshletInfo.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].rebuild = false;
 		}
 		// [Descriptor作成] VertexData
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(VertexData)) * static_cast<uint32_t>(m_vertexData.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VertexData), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VertexData), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].rebuild = false;
 		}
 		// [Descriptor作成] UniqueIndexData
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_uniqueIndexData.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].rebuild = false;
 		}
 		// [Descriptor作成] PrimitivesData
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].rebuild)
 		{
 			uint32_t size = static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_primitivesData.size());
-			buildDescriptor(static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData), size);
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].rebuild = false;
 		}
 

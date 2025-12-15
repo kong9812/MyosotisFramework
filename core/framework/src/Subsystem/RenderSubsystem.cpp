@@ -17,6 +17,7 @@
 #include "MeshInfoDescriptorSet.h"
 #include "ObjectInfoDescriptorSet.h"
 #include "TextureDescriptorSet.h"
+#include "RayTracingDescriptorSet.h"
 
 #include "DebugGUI.h"
 #include "StaticMesh.h"
@@ -382,6 +383,7 @@ namespace MyosotisFW::System::Render
 		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_rayTracingDescriptorSet = CreateRayTracingDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
 	}
 
 	void RenderSubsystem::initializeRenderResources()
