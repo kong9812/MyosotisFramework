@@ -6,6 +6,8 @@
 #include "ClassPointer.h"
 #include "AppInfo.h"
 
+#include "RenderDescriptors.h"
+
 namespace MyosotisFW::System::Render
 {
 	// 前方宣言
@@ -25,24 +27,14 @@ namespace MyosotisFW::System::Render
 	class HiZDepthComputePipeline
 	{
 	public:
-		HiZDepthComputePipeline(const RenderDevice_ptr& device,
-			const RenderResources_ptr& resources,
-			const SceneInfoDescriptorSet_ptr& sceneInfoDescriptorSet,
-			const ObjectInfoDescriptorSet_ptr& objectInfoDescriptorSet,
-			const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet,
-			const TextureDescriptorSet_ptr& textureDescriptorSet
-		) :
+		HiZDepthComputePipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderDescriptors_ptr& renderDescriptors) :
 			m_device(device),
 			m_resources(resources),
 			depthDownsamplePushConstant({}),
 			depthCopyPushConstant({}),
 			m_hiZDepthCopyShaderBase({}),
 			m_hiZDepthDownsampleShaderBase({}),
-			m_sceneInfoDescriptorSet(sceneInfoDescriptorSet),
-			m_objectInfoDescriptorSet(objectInfoDescriptorSet),
-			m_meshInfoDescriptorSet(meshInfoDescriptorSet),
-			m_textureDescriptorSet(textureDescriptorSet)
-		{
+			m_renderDescriptors(renderDescriptors) {
 		}
 		~HiZDepthComputePipeline();
 
@@ -72,10 +64,7 @@ namespace MyosotisFW::System::Render
 		std::vector<uint32_t> m_hiZDepthMipMapImageIndex;
 		uint32_t m_hiZDepthMapMipSamplerIndex;
 
-		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
-		ObjectInfoDescriptorSet_ptr m_objectInfoDescriptorSet;
-		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
-		TextureDescriptorSet_ptr m_textureDescriptorSet;
+		RenderDescriptors_ptr m_renderDescriptors;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(HiZDepthComputePipeline);
 }

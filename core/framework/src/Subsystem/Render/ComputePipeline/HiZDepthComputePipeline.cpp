@@ -31,12 +31,7 @@ namespace MyosotisFW::System::Render
 					0, static_cast<uint32_t>(sizeof(depthCopyPushConstant))),
 			};
 			// [pipeline]layout
-			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-				m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_textureDescriptorSet->GetDescriptorSetLayout()
-			};
+			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = m_renderDescriptors->GetDescriptorSetLayout();
 			VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 			pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 			pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
@@ -55,12 +50,7 @@ namespace MyosotisFW::System::Render
 					0, static_cast<uint32_t>(sizeof(depthDownsamplePushConstant))),
 			};
 			// [pipeline]layout
-			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-				m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
-				m_textureDescriptorSet->GetDescriptorSetLayout()
-			};
+			std::vector<VkDescriptorSetLayout> descriptorSetLayouts = m_renderDescriptors->GetDescriptorSetLayout();
 			VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 			pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 			pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();
@@ -78,13 +68,13 @@ namespace MyosotisFW::System::Render
 		{
 			// [storage image] Set image layout for HiZ depth map
 			VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, m_resources->GetHiZDepthMap().mipView[i], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-			m_hiZDepthMipMapImageIndex[i] = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
+			m_hiZDepthMipMapImageIndex[i] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
 		}
 		VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetHiZDepthMap().sampler, m_resources->GetHiZDepthMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_hiZDepthMapMipSamplerIndex = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
+		m_hiZDepthMapMipSamplerIndex = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
 		// [sampler] Set image layout for primary depth/stencil map
 		VkDescriptorImageInfo GetPrimaryDepthStencilDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetPrimaryDepthStencil().sampler, m_resources->GetPrimaryDepthStencil().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		depthCopyPushConstant.primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, GetPrimaryDepthStencilDescriptorImageInfo);
+		depthCopyPushConstant.primaryDepthSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, GetPrimaryDepthStencilDescriptorImageInfo);
 	}
 
 	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const glm::vec2& screenSize)
@@ -95,12 +85,7 @@ namespace MyosotisFW::System::Render
 			// Bind the compute pipeline
 			vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthCopyShaderBase.pipeline);
 			// Bind the descriptor sets
-			std::vector<VkDescriptorSet> descriptorSets = {
-				m_sceneInfoDescriptorSet->GetDescriptorSet(),
-				m_objectInfoDescriptorSet->GetDescriptorSet(),
-				m_meshInfoDescriptorSet->GetDescriptorSet(),
-				m_textureDescriptorSet->GetDescriptorSet()
-			};
+			std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthCopyShaderBase.pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 			// Bind the push constants
@@ -153,12 +138,7 @@ namespace MyosotisFW::System::Render
 				// Bind the compute pipeline
 				vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthDownsampleShaderBase.pipeline);
 				// Bind the descriptor sets
-				std::vector<VkDescriptorSet> descriptorSets = {
-					m_sceneInfoDescriptorSet->GetDescriptorSet(),
-					m_objectInfoDescriptorSet->GetDescriptorSet(),
-					m_meshInfoDescriptorSet->GetDescriptorSet(),
-					m_textureDescriptorSet->GetDescriptorSet()
-				};
+				std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 				vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthDownsampleShaderBase.pipelineLayout, 0,
 					static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 

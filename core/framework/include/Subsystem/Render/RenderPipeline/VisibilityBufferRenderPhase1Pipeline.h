@@ -8,13 +8,8 @@ namespace MyosotisFW::System::Render
 	class VisibilityBufferRenderPhase1Pipeline : public RenderPipelineBase
 	{
 	public:
-		VisibilityBufferRenderPhase1Pipeline(const RenderDevice_ptr& device,
-			const SceneInfoDescriptorSet_ptr& sceneInfoDescriptorSet,
-			const ObjectInfoDescriptorSet_ptr& objectInfoDescriptorSet,
-			const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet,
-			const TextureDescriptorSet_ptr& textureDescriptorSet
-		) :
-			RenderPipelineBase(device, sceneInfoDescriptorSet, objectInfoDescriptorSet, meshInfoDescriptorSet, textureDescriptorSet) {
+		VisibilityBufferRenderPhase1Pipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
+			RenderPipelineBase(device, renderDescriptors) {
 		}
 		~VisibilityBufferRenderPhase1Pipeline();
 

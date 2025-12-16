@@ -43,12 +43,7 @@ namespace MyosotisFW::System::Render
 		Buffer& currentIndexBuffer = m_indexBuffer[m_indexBuffer.size() - 1];
 
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-		std::vector<VkDescriptorSet> descriptorSets = {
-				m_sceneInfoDescriptorSet->GetDescriptorSet(),
-				m_objectInfoDescriptorSet->GetDescriptorSet(),
-				m_meshInfoDescriptorSet->GetDescriptorSet(),
-				m_textureDescriptorSet->GetDescriptorSet()
-		};
+		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
@@ -256,12 +251,7 @@ namespace MyosotisFW::System::Render
 		};
 
 		// [pipeline]layout
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-			m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_textureDescriptorSet->GetDescriptorSetLayout()
-		};
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = m_renderDescriptors->GetDescriptorSetLayout();
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRange.size());
 		pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRange.data();

@@ -14,6 +14,35 @@
 
 namespace MyosotisFW::System::Render
 {
+	RayTracingPipeline::RayTracingPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
+		RenderPipelineBase(device, renderDescriptors),
+		m_vertexBuffer({}),
+		m_indexBuffer({}),
+		m_raygenSBTBuffer({}),
+		m_missSBTBuffer({}),
+		m_hitSBTBuffer({}),
+		m_blas({}),
+		m_tlas({}),
+		m_transform({}),
+		m_vkGetRayTracingShaderGroupHandlesKHR(VK_NULL_HANDLE),
+		m_vkCreateAccelerationStructureKHR(VK_NULL_HANDLE),
+		m_vkCmdBuildAccelerationStructuresKHR(VK_NULL_HANDLE),
+		m_vkGetAccelerationStructureDeviceAddressKHR(VK_NULL_HANDLE),
+		m_vkGetAccelerationStructureBuildSizesKHR(VK_NULL_HANDLE),
+		m_vkCmdTraceRaysKHR(VK_NULL_HANDLE),
+		m_vkCreateRayTracingPipelinesKHR(VK_NULL_HANDLE)
+	{
+		// 関数ポインタの取得
+		m_vkGetRayTracingShaderGroupHandlesKHR = reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(vkGetDeviceProcAddr(*m_device, "vkGetRayTracingShaderGroupHandlesKHR"));
+		m_vkCreateAccelerationStructureKHR = reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(vkGetDeviceProcAddr(*m_device, "vkCreateAccelerationStructureKHR"));
+		m_vkCmdBuildAccelerationStructuresKHR = reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(vkGetDeviceProcAddr(*m_device, "vkCmdBuildAccelerationStructuresKHR"));
+		m_vkGetAccelerationStructureDeviceAddressKHR = reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(vkGetDeviceProcAddr(*m_device, "vkGetAccelerationStructureDeviceAddressKHR"));
+		m_vkGetAccelerationStructureBuildSizesKHR = reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(vkGetDeviceProcAddr(*m_device, "vkGetAccelerationStructureBuildSizesKHR"));
+		m_vkCmdTraceRaysKHR = reinterpret_cast<PFN_vkCmdTraceRaysKHR>(vkGetDeviceProcAddr(*m_device, "vkCmdTraceRaysKHR"));
+		m_vkCreateRayTracingPipelinesKHR = reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(vkGetDeviceProcAddr(*m_device, "vkCreateRayTracingPipelinesKHR"));
+		m_vkDestroyAccelerationStructureKHR = reinterpret_cast<PFN_vkDestroyAccelerationStructureKHR>(vkGetDeviceProcAddr(*m_device, "vkDestroyAccelerationStructureKHR"));
+	}
+
 	RayTracingPipeline::~RayTracingPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
@@ -21,66 +50,28 @@ namespace MyosotisFW::System::Render
 
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_transform.buffer, m_transform.allocation);
+
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_raygenSBTBuffer.sbtBuffer.buffer, m_raygenSBTBuffer.sbtBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_missSBTBuffer.sbtBuffer.buffer, m_missSBTBuffer.sbtBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_hitSBTBuffer.sbtBuffer.buffer, m_hitSBTBuffer.sbtBuffer.allocation);
+
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_blas.buffer.buffer, m_blas.buffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_tlas.buffer.buffer, m_tlas.buffer.allocation);
+
+		m_vkDestroyAccelerationStructureKHR(*m_device, m_blas.handle, m_device->GetAllocationCallbacks());
+		m_vkDestroyAccelerationStructureKHR(*m_device, m_tlas.handle, m_device->GetAllocationCallbacks());
 	}
 
-	void RayTracingPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void RayTracingPipeline::Initialize(const RenderResources_ptr& resources)
 	{
-		prepareRenderPipeline(resources, renderPass);
+		prepareRenderPipeline(resources);
 
 		// BLAS構築
 		createBLAS();
 
 		// TLAS構築
 		createTLAS();
-
-		// Buffer Device Address
-		VkDeviceAddress vertexAddress = m_device->GetBufferDeviceAddress(m_vertexBuffer.buffer);
-		VkDeviceAddress indexAddress = m_device->GetBufferDeviceAddress(m_indexBuffer.buffer);
-
-		// AS Geometry Buffer Info (ASジオメトリ情報の設定)
-		std::vector<VkAccelerationStructureGeometryKHR> accelerationStructureGeometryKHR{};
-		VkAccelerationStructureGeometryKHR asGeometryKHR{};
-		asGeometryKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-		asGeometryKHR.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
-		asGeometryKHR.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
-		asGeometryKHR.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-		asGeometryKHR.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
-		asGeometryKHR.geometry.triangles.vertexData.deviceAddress = vertexAddress;
-		asGeometryKHR.geometry.triangles.vertexStride = sizeof(VertexData);
-		asGeometryKHR.geometry.triangles.maxVertex = static_cast<uint32_t>(m_vertexBuffer.allocationInfo.size / sizeof(VertexData));
-		asGeometryKHR.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
-		asGeometryKHR.geometry.triangles.indexData.deviceAddress = indexAddress;
-		accelerationStructureGeometryKHR.push_back(asGeometryKHR);
-
-		// AS Build Geometry Info (TLAS構築情報の設定)
-		VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfoKHR{};
-		accelerationStructureBuildGeometryInfoKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		accelerationStructureBuildGeometryInfoKHR.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-		accelerationStructureBuildGeometryInfoKHR.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-		accelerationStructureBuildGeometryInfoKHR.geometryCount = static_cast<uint32_t>(accelerationStructureGeometryKHR.size());
-		accelerationStructureBuildGeometryInfoKHR.pGeometries = accelerationStructureGeometryKHR.data();
-
-		// AS Instance Info (構築したBLASを参照するインスタンスバッファ)
-		VkTransformMatrixKHR transformMatrix = {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, -1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f };
-		VkAccelerationStructureInstanceKHR accelerationStructureInstanceKHR{};
-		accelerationStructureInstanceKHR.transform = transformMatrix;
-		accelerationStructureInstanceKHR.instanceCustomIndex = 0;
-		accelerationStructureInstanceKHR.mask = 0xFF;
-		accelerationStructureInstanceKHR.instanceShaderBindingTableRecordOffset = 0;
-		accelerationStructureInstanceKHR.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-		accelerationStructureInstanceKHR.accelerationStructureReference = 0; // TODO: Bottom Level ASのデバイスアドレスを設定する
-
-		// SBT構築
-		VkStridedDeviceAddressRegionKHR raygenSBT{};
-		raygenSBT.deviceAddress = 0; // TODO: Raygen SBTのデバイスアドレスを設定する
-		raygenSBT.stride = 0; // TODO: Raygen SBTのエントリサイズを設定する
-		raygenSBT.size = 0; // TODO: Raygen SBTの全体サイズを設定する
-		VkStridedDeviceAddressRegionKHR missSBT{};
-		VkStridedDeviceAddressRegionKHR hitSBT{};
-
 	}
 
 	void RayTracingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
@@ -89,20 +80,11 @@ namespace MyosotisFW::System::Render
 		Buffer& currentIndexBuffer = m_indexBuffer;
 
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_pipeline);
-		std::vector<VkDescriptorSet> descriptorSets = {
-				m_sceneInfoDescriptorSet->GetDescriptorSet(),
-				m_objectInfoDescriptorSet->GetDescriptorSet(),
-				m_meshInfoDescriptorSet->GetDescriptorSet(),
-				m_textureDescriptorSet->GetDescriptorSet()
-		};
+		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		//vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-		//	VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-		//	0,
-		//	static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
 
-		vkCmdTraceRaysKHR(commandBuffer,
+		m_vkCmdTraceRaysKHR(commandBuffer,
 			&m_raygenSBTBuffer.region,
 			&m_missSBTBuffer.region,
 			&m_hitSBTBuffer.region,
@@ -112,23 +94,18 @@ namespace MyosotisFW::System::Render
 			1);
 	}
 
-	void RayTracingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void RayTracingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources)
 	{
 		// [pipeline]layout
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = {
-			m_sceneInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
-			m_textureDescriptorSet->GetDescriptorSetLayout()
-		};
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts = m_renderDescriptors->GetDescriptorSetLayout();
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Utility::Vulkan::CreateInfo::pipelineLayoutCreateInfo(descriptorSetLayouts);
 		VK_VALIDATION(vkCreatePipelineLayout(*m_device, &pipelineLayoutCreateInfo, m_device->GetAllocationCallbacks(), &m_pipelineLayout));
 
 		// shader stages
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR, resources->GetShaderModules("RayTracing.rgen.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, resources->GetShaderModules("RayTracing.rchit.spv")),
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR, resources->GetShaderModules("RayTracing.rmiss.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, resources->GetShaderModules("RayTracing.rchit.spv")),
 		};
 		// shader groups
 		std::vector<VkRayTracingShaderGroupCreateInfoKHR> rayTracingShaderGroupCreateInfoKHR{
@@ -146,7 +123,7 @@ namespace MyosotisFW::System::Render
 		rayTracingPipelineCreateInfoKHR.pGroups = rayTracingShaderGroupCreateInfoKHR.data();
 		rayTracingPipelineCreateInfoKHR.maxPipelineRayRecursionDepth = 1;
 		rayTracingPipelineCreateInfoKHR.layout = m_pipelineLayout;
-		VK_VALIDATION(vkCreateRayTracingPipelinesKHR(*m_device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &rayTracingPipelineCreateInfoKHR, m_device->GetAllocationCallbacks(), &m_pipeline));
+		VK_VALIDATION(m_vkCreateRayTracingPipelinesKHR(*m_device, VK_NULL_HANDLE, VK_NULL_HANDLE, 1, &rayTracingPipelineCreateInfoKHR, m_device->GetAllocationCallbacks(), &m_pipeline));
 
 		// SBTの作成
 		createShaderBindingTable();
@@ -167,7 +144,7 @@ namespace MyosotisFW::System::Render
 
 		// 全シェーダーグループハンドルの取得
 		std::vector<uint8_t> shaderHandleStorage(sbtSize);
-		VK_VALIDATION(vkGetRayTracingShaderGroupHandlesKHR(
+		VK_VALIDATION(m_vkGetRayTracingShaderGroupHandlesKHR(
 			*m_device,
 			m_pipeline,
 			0,				// 最初のシェーダーグループインデックス
@@ -231,6 +208,7 @@ namespace MyosotisFW::System::Render
 		}
 		{// vertex
 			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * mesh.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer.buffer, &m_vertexBuffer.allocation, &m_vertexBuffer.allocationInfo));
@@ -243,6 +221,7 @@ namespace MyosotisFW::System::Render
 		}
 		{// index
 			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer.buffer, &m_indexBuffer.allocation, &m_indexBuffer.allocationInfo));
@@ -261,25 +240,24 @@ namespace MyosotisFW::System::Render
 			0.0f, 1.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 1.0f, 0.0f };
 
-		// TransformBuffer作成
-		Buffer transformBuffer{}; // tmp
+		// m_transform.buffer.作成
 		vmaTools::CreateBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			sizeof(VkTransformMatrixKHR),
 			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
 			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			transformBuffer.buffer,
-			transformBuffer.allocation,
-			transformBuffer.allocationInfo,
-			transformBuffer.descriptor);
+			m_transform.buffer,
+			m_transform.allocation,
+			m_transform.allocationInfo,
+			m_transform.descriptor);
 		// DeviceAddress (vertex,index,transform)
 		VkDeviceOrHostAddressConstKHR vertexAddress{};
 		vertexAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_vertexBuffer.buffer);
 		VkDeviceOrHostAddressConstKHR indexAddress{};
 		indexAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_indexBuffer.buffer);
 		VkDeviceOrHostAddressConstKHR transformAddress{};
-		transformAddress.deviceAddress = m_device->GetBufferDeviceAddress(transformBuffer.buffer);
+		transformAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_transform.buffer);
 
 		// AS Geometry
 		VkAccelerationStructureGeometryKHR asGeometryKHR{};
@@ -315,7 +293,7 @@ namespace MyosotisFW::System::Render
 		// ASのビルドサイズ
 		VkAccelerationStructureBuildSizesInfoKHR asBuildSizesInfoKHR{};
 		asBuildSizesInfoKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-		vkGetAccelerationStructureBuildSizesKHR(
+		m_vkGetAccelerationStructureBuildSizesKHR(
 			*m_device,
 			VkAccelerationStructureBuildTypeKHR::VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 			&asBuildGeometryInfoKHR,
@@ -323,51 +301,51 @@ namespace MyosotisFW::System::Render
 			&asBuildSizesInfoKHR);
 
 		// BLAS Bufferの作成
-		Buffer blasBuffer{};						// tmp
-		VkAccelerationStructureKHR blasHandle{};	// tmp
-		VkDeviceAddress blasDeviceAddress{};		// tmp
 		vmaTools::CreateASBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			asBuildSizesInfoKHR.accelerationStructureSize,
-			blasBuffer.buffer,
-			blasBuffer.allocation,
-			blasBuffer.allocationInfo,
-			blasBuffer.descriptor);
+			m_blas.buffer.buffer,
+			m_blas.buffer.allocation,
+			m_blas.buffer.allocationInfo,
+			m_blas.buffer.descriptor);
 
 		// ASの作成
 		VkAccelerationStructureCreateInfoKHR asCI{};
 		asCI.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-		asCI.buffer = blasBuffer.buffer;
+		asCI.buffer = m_blas.buffer.buffer;
 		asCI.size = asBuildSizesInfoKHR.accelerationStructureSize;
 		asCI.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-		VK_VALIDATION(vkCreateAccelerationStructureKHR(*m_device, &asCI, m_device->GetAllocationCallbacks(), &blasHandle));
+		VK_VALIDATION(m_vkCreateAccelerationStructureKHR(*m_device, &asCI, m_device->GetAllocationCallbacks(), &m_blas.handle));
 
 		// Scratch Bufferの作成
-		Buffer scratchBuffer{}; // tmp
+		AccelerationStructure scratchBuffer{};
 		vmaTools::CreateScratchBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			asBuildSizesInfoKHR.buildScratchSize,
-			scratchBuffer.buffer,
-			scratchBuffer.allocation,
-			scratchBuffer.allocationInfo,
-			scratchBuffer.descriptor);
-		VkDeviceAddress scratchAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer);
+			scratchBuffer.buffer.buffer,
+			scratchBuffer.buffer.allocation,
+			scratchBuffer.buffer.allocationInfo,
+			scratchBuffer.buffer.descriptor);
+		scratchBuffer.deviceAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer.buffer);
 
 		// asBuildGeometryInfoKHRの情報追加
 		asBuildGeometryInfoKHR.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-		asBuildGeometryInfoKHR.dstAccelerationStructure = blasHandle;
-		asBuildGeometryInfoKHR.scratchData.deviceAddress = scratchAddress;
+		asBuildGeometryInfoKHR.dstAccelerationStructure = m_blas.handle;
+		asBuildGeometryInfoKHR.scratchData.deviceAddress = scratchBuffer.deviceAddress;
 
 		// CommandBufferの準備
 		const VkAccelerationStructureBuildRangeInfoKHR* pAsBuildRangeInfoKHR = &asBuildRangeInfoKHR;
 		VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
-		vkCmdBuildAccelerationStructuresKHR(
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBuildAccelerationStructuresKHR(
 			commandBuffer,
 			1,
 			&asBuildGeometryInfoKHR,
 			&pAsBuildRangeInfoKHR);
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
@@ -386,18 +364,15 @@ namespace MyosotisFW::System::Render
 		// ASのデバイスアドレス取得
 		VkAccelerationStructureDeviceAddressInfoKHR asDeviceAddressInfo{};
 		asDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
-		asDeviceAddressInfo.accelerationStructure = blasHandle;
-		blasDeviceAddress = vkGetAccelerationStructureDeviceAddressKHR(*m_device, &asDeviceAddressInfo);
+		asDeviceAddressInfo.accelerationStructure = m_blas.handle;
+		m_blas.deviceAddress = m_vkGetAccelerationStructureDeviceAddressKHR(*m_device, &asDeviceAddressInfo);
 
 		// ScratchBufferの破棄
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuffer.buffer, scratchBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuffer.buffer.buffer, scratchBuffer.buffer.allocation);
 	}
 
 	void RayTracingPipeline::createTLAS()
 	{
-		// 仮
-		VkDeviceAddress blasDeviceAddress{}; // tmp
-
 		// [仮] SceneTransform
 		VkTransformMatrixKHR transformMatrix = {
 			1.0f, 0.0f, 0.0f, 0.0f,
@@ -411,10 +386,10 @@ namespace MyosotisFW::System::Render
 		asInstanceKHR.mask = 0xFF;
 		asInstanceKHR.instanceShaderBindingTableRecordOffset = 0;
 		asInstanceKHR.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-		asInstanceKHR.accelerationStructureReference = blasDeviceAddress;	// todo. 正しい物をセットするように！
+		asInstanceKHR.accelerationStructureReference = m_blas.deviceAddress;
 
 		// AS Instance Bufferの作成
-		Buffer instanceBuffer{}; // tmp
+		Buffer instanceBuffer{};
 		vmaTools::CreateASInstanceBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
@@ -449,7 +424,7 @@ namespace MyosotisFW::System::Render
 		// ASのビルドサイズ情報
 		VkAccelerationStructureBuildSizesInfoKHR asBuildSizesInfoKHR{};
 		asBuildSizesInfoKHR.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-		vkGetAccelerationStructureBuildSizesKHR(
+		m_vkGetAccelerationStructureBuildSizesKHR(
 			*m_device,
 			VkAccelerationStructureBuildTypeKHR::VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 			&asBuildGeometryInfoKHR,
@@ -457,41 +432,38 @@ namespace MyosotisFW::System::Render
 			&asBuildSizesInfoKHR);
 
 		// TLAS Bufferの作成
-		Buffer tlasBuffer{};						// tmp
-		VkAccelerationStructureKHR tlasHandle{};	// tmp
-		VkDeviceAddress tlasDeviceAddress{};		// tmp
 		vmaTools::CreateASBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			asBuildSizesInfoKHR.accelerationStructureSize,
-			tlasBuffer.buffer,
-			tlasBuffer.allocation,
-			tlasBuffer.allocationInfo,
-			tlasBuffer.descriptor);
+			m_tlas.buffer.buffer,
+			m_tlas.buffer.allocation,
+			m_tlas.buffer.allocationInfo,
+			m_tlas.buffer.descriptor);
 
 		// ASの作成
 		VkAccelerationStructureCreateInfoKHR asCI{};
 		asCI.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-		asCI.buffer = tlasBuffer.buffer;
+		asCI.buffer = m_tlas.buffer.buffer;
 		asCI.size = asBuildSizesInfoKHR.accelerationStructureSize;
 		asCI.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-		VK_VALIDATION(vkCreateAccelerationStructureKHR(*m_device, &asCI, m_device->GetAllocationCallbacks(), &tlasHandle));
+		VK_VALIDATION(m_vkCreateAccelerationStructureKHR(*m_device, &asCI, m_device->GetAllocationCallbacks(), &m_tlas.handle));
 
 		// Scratch Bufferの作成
-		Buffer scratchBuffer{}; // tmp
+		AccelerationStructure scratchBuffer{};
 		vmaTools::CreateScratchBuffer(
 			*m_device,
 			m_device->GetVmaAllocator(),
 			asBuildSizesInfoKHR.buildScratchSize,
-			scratchBuffer.buffer,
-			scratchBuffer.allocation,
-			scratchBuffer.allocationInfo,
-			scratchBuffer.descriptor);
-		VkDeviceAddress scratchAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer);
+			scratchBuffer.buffer.buffer,
+			scratchBuffer.buffer.allocation,
+			scratchBuffer.buffer.allocationInfo,
+			scratchBuffer.buffer.descriptor);
+		VkDeviceAddress scratchAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer.buffer);
 
 		// asBuildGeometryInfoKHRの情報追加
 		asBuildGeometryInfoKHR.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-		asBuildGeometryInfoKHR.dstAccelerationStructure = tlasHandle;
+		asBuildGeometryInfoKHR.dstAccelerationStructure = m_tlas.handle;
 		asBuildGeometryInfoKHR.scratchData.deviceAddress = scratchAddress;
 		asBuildGeometryInfoKHR.geometryCount = 1;
 		asBuildGeometryInfoKHR.pGeometries = &asGeometryKHR;
@@ -506,11 +478,14 @@ namespace MyosotisFW::System::Render
 
 		// CommandBufferの準備
 		VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
-		vkCmdBuildAccelerationStructuresKHR(
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBuildAccelerationStructuresKHR(
 			commandBuffer,
 			1,
 			&asBuildGeometryInfoKHR,
 			pAsBuildRangeInfoKHRs.data());
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
@@ -530,11 +505,11 @@ namespace MyosotisFW::System::Render
 		// ASのデバイスアドレス取得
 		VkAccelerationStructureDeviceAddressInfoKHR asDeviceAddressInfo{};
 		asDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
-		asDeviceAddressInfo.accelerationStructure = tlasHandle;
-		tlasDeviceAddress = vkGetAccelerationStructureDeviceAddressKHR(*m_device, &asDeviceAddressInfo);
+		asDeviceAddressInfo.accelerationStructure = m_tlas.handle;
+		m_tlas.deviceAddress = m_vkGetAccelerationStructureDeviceAddressKHR(*m_device, &asDeviceAddressInfo);
 
 		// ScratchBufferの破棄
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuffer.buffer, scratchBuffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuffer.buffer.buffer, scratchBuffer.buffer.allocation);
 		// InstanceBufferの破棄
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), instanceBuffer.buffer, instanceBuffer.allocation);
 	}

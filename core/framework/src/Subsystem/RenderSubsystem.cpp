@@ -12,12 +12,7 @@
 #include "RenderResources.h"
 #include "MObjectRegistry.h"
 
-#include "DescriptorPool.h"
-#include "SceneInfoDescriptorSet.h"
-#include "MeshInfoDescriptorSet.h"
-#include "ObjectInfoDescriptorSet.h"
-#include "TextureDescriptorSet.h"
-#include "RayTracingDescriptorSet.h"
+#include "RenderDescriptors.h"
 
 #include "DebugGUI.h"
 #include "StaticMesh.h"
@@ -33,6 +28,7 @@
 #include "VisibilityBufferRenderPhase2Pipeline.h"
 #include "LightingPipeline.h"
 #include "LightmapBakingPipeline.h"
+#include "RayTracingPipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -87,7 +83,7 @@ namespace MyosotisFW::System::Render
 				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
 				m_mainCamera->SetMainCamera(true);
 			}
-			m_sceneInfoDescriptorSet->AddCamera(m_mainCamera);
+			m_renderDescriptors->GetSceneInfoDescriptorSet()->AddCamera(m_mainCamera);
 		}
 
 		{// StaticMesh
@@ -96,7 +92,7 @@ namespace MyosotisFW::System::Render
 				if (component->IsStaticMesh())
 				{
 					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
-					customMesh->PrepareForRender(m_device, m_resources, m_meshInfoDescriptorSet);
+					customMesh->PrepareForRender(m_device, m_resources, m_renderDescriptors->GetMeshInfoDescriptorSet());
 				}
 			}
 		}
@@ -177,18 +173,18 @@ namespace MyosotisFW::System::Render
 				}
 
 				std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
-				m_objectInfoDescriptorSet->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);
+				m_renderDescriptors->GetObjectInfoDescriptorSet()->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);
 				m_vbDispatchInfoCount += static_cast<uint32_t>(vbDispatchInfo.size());
 			}
-			m_objectInfoDescriptorSet->Update();
+			m_renderDescriptors->GetObjectInfoDescriptorSet()->Update();
 			if (meshChanged)
 			{
-				m_meshInfoDescriptorSet->Update();
+				m_renderDescriptors->GetMeshInfoDescriptorSet()->Update();
 			}
 			m_objectRegistry->ResetChangeFlags();
 		}
-		m_sceneInfoDescriptorSet->Update();
-		m_textureDescriptorSet->Update();
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->Update();
+		m_renderDescriptors->GetTextureDescriptorSet()->Update();
 
 		auto key = updateData.keyActions.find(GLFW_KEY_X);
 		if (key != updateData.keyActions.end())
@@ -377,13 +373,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderDescriptors()
 	{
-		m_descriptorPool = CreateDescriptorPoolPointer(m_device);
-		m_sceneInfoDescriptorSet = CreateSceneInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
-		m_sceneInfoDescriptorSet->UpdateScreenSize(glm::ivec2(m_swapchain->GetWidth(), m_swapchain->GetHeight()));
-		m_objectInfoDescriptorSet = CreateObjectInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
-		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
-		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
-		m_rayTracingDescriptorSet = CreateRayTracingDescriptorSetPointer(m_device, m_descriptorPool->GetDescriptorPool());
+		m_renderDescriptors = CreateRenderDescriptorsPointer(m_device);
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(glm::ivec2(m_swapchain->GetWidth(), m_swapchain->GetHeight()));
 	}
 
 	void RenderSubsystem::initializeRenderResources()
@@ -454,37 +445,27 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::initializeRenderPipeline()
 	{
 		// Skybox Pipeline
-		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device, m_renderDescriptors);
 		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
 		// Visibility Buffer Pipeline
-		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device, m_renderDescriptors);
 		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
-		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device, m_renderDescriptors);
 		m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 		// Lighting Pipeline
-		m_lightingPipeline = CreateLightingPipelinePointer(m_device,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_lightingPipeline = CreateLightingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());
 		// Lightmap Baking Pipeline
-		m_lightmapBakingPipeline = CreateLightmapBakingPipelinePointer(m_device,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_lightmapBakingPipeline = CreateLightmapBakingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightmapBakingPipeline->Initialize(m_resources, m_lightmapBakingPass->GetRenderPass());
+		// RayTracing Pipeline
+		m_rayTracingPipeline = CreateRayTracingPipelinePointer(m_device, m_renderDescriptors);
+		m_rayTracingPipeline->Initialize(m_resources);
 	}
 
 	void RenderSubsystem::initializeComputePipeline()
 	{
-		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(
-			m_device, m_resources,
-			m_sceneInfoDescriptorSet, m_objectInfoDescriptorSet,
-			m_meshInfoDescriptorSet, m_textureDescriptorSet);
+		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(m_device, m_resources, m_renderDescriptors);
 		m_hiZDepthComputePipeline->Initialize();
 	}
 

@@ -22,19 +22,8 @@ namespace MyosotisFW
 		class RenderResources;
 		TYPEDEF_SHARED_PTR_FWD(RenderResources);
 
-		class DescriptorPool;
-		TYPEDEF_SHARED_PTR_FWD(DescriptorPool);
-
-		class SceneInfoDescriptorSet;
-		TYPEDEF_SHARED_PTR_FWD(SceneInfoDescriptorSet);
-		class ObjectInfoDescriptorSet;
-		TYPEDEF_SHARED_PTR_FWD(ObjectInfoDescriptorSet);
-		class MeshInfoDescriptorSet;
-		TYPEDEF_SHARED_PTR_FWD(MeshInfoDescriptorSet);
-		class TextureDescriptorSet;
-		TYPEDEF_SHARED_PTR_FWD(TextureDescriptorSet);
-		class RayTracingDescriptorSet;
-		TYPEDEF_SHARED_PTR_FWD(RayTracingDescriptorSet);
+		class RenderDescriptors;
+		TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 		class StaticMesh;
 		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
@@ -65,6 +54,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(LightingPipeline);
 		class LightmapBakingPipeline;
 		TYPEDEF_SHARED_PTR_FWD(LightmapBakingPipeline);
+		class RayTracingPipeline;
+		TYPEDEF_SHARED_PTR_FWD(RayTracingPipeline);
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
@@ -94,6 +85,7 @@ namespace MyosotisFW::System::Render
 			m_visibilityBufferRenderPhase2Pipeline(nullptr),
 			m_lightingPipeline(nullptr),
 			m_lightmapBakingPipeline(nullptr),
+			m_rayTracingPipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
 			m_renderFence(VK_NULL_HANDLE),
 			m_vbDispatchInfoCount(0) {
@@ -157,12 +149,7 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr m_resources;
 		MObjectRegistry_ptr m_objectRegistry;
 
-		DescriptorPool_ptr m_descriptorPool;
-		SceneInfoDescriptorSet_ptr m_sceneInfoDescriptorSet;
-		ObjectInfoDescriptorSet_ptr m_objectInfoDescriptorSet;
-		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
-		TextureDescriptorSet_ptr m_textureDescriptorSet;
-		RayTracingDescriptorSet_ptr m_rayTracingDescriptorSet;
+		RenderDescriptors_ptr m_renderDescriptors;
 
 		Camera::CameraBase_ptr m_mainCamera;
 
@@ -188,6 +175,7 @@ namespace MyosotisFW::System::Render
 		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
+		RayTracingPipeline_ptr m_rayTracingPipeline;
 
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;

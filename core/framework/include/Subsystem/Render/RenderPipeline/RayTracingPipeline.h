@@ -14,29 +14,13 @@ namespace MyosotisFW::System::Render
 	class RayTracingPipeline : public RenderPipelineBase
 	{
 	public:
-		RayTracingPipeline(const RenderDevice_ptr& device,
-			const SceneInfoDescriptorSet_ptr& sceneInfoDescriptorSet,
-			const ObjectInfoDescriptorSet_ptr& objectInfoDescriptorSet,
-			const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet,
-			const TextureDescriptorSet_ptr& textureDescriptorSet
-		) :
-			RenderPipelineBase(device, sceneInfoDescriptorSet, objectInfoDescriptorSet, meshInfoDescriptorSet, textureDescriptorSet),
-			//pushConstant({}),
-			m_vertexBuffer({}),
-			m_indexBuffer({}) {
-		}
+		RayTracingPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors);
 		~RayTracingPipeline();
 
-		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
+		void Initialize(const RenderResources_ptr& resources);
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 
 	private:
-		//struct {
-		//	glm::ivec2 atlasSize;
-		//	glm::ivec2 offset;
-		//	glm::ivec2 size;
-		//}pushConstant;
-
 		struct {
 			Buffer sbtBuffer;
 			VkStridedDeviceAddressRegionKHR region;
@@ -50,7 +34,15 @@ namespace MyosotisFW::System::Render
 			VkStridedDeviceAddressRegionKHR region;
 		} m_hitSBTBuffer;
 
-		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
+		struct AccelerationStructure {
+			Buffer buffer;
+			VkAccelerationStructureKHR handle;
+			VkDeviceAddress deviceAddress;
+		};
+		AccelerationStructure m_blas;
+		AccelerationStructure m_tlas;
+
+		void prepareRenderPipeline(const RenderResources_ptr& resources);
 
 		void createShaderBindingTable();
 		void createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount);
@@ -60,6 +52,16 @@ namespace MyosotisFW::System::Render
 
 		Buffer m_vertexBuffer;
 		Buffer m_indexBuffer;
+		Buffer m_transform;
+
+		PFN_vkGetRayTracingShaderGroupHandlesKHR		m_vkGetRayTracingShaderGroupHandlesKHR;
+		PFN_vkCreateAccelerationStructureKHR			m_vkCreateAccelerationStructureKHR;
+		PFN_vkCmdBuildAccelerationStructuresKHR			m_vkCmdBuildAccelerationStructuresKHR;
+		PFN_vkGetAccelerationStructureDeviceAddressKHR	m_vkGetAccelerationStructureDeviceAddressKHR;
+		PFN_vkGetAccelerationStructureBuildSizesKHR		m_vkGetAccelerationStructureBuildSizesKHR;
+		PFN_vkCmdTraceRaysKHR							m_vkCmdTraceRaysKHR;
+		PFN_vkCreateRayTracingPipelinesKHR				m_vkCreateRayTracingPipelinesKHR;
+		PFN_vkDestroyAccelerationStructureKHR			m_vkDestroyAccelerationStructureKHR;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RayTracingPipeline);
 }

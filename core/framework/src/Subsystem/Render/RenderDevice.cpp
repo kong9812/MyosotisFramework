@@ -217,12 +217,18 @@ namespace MyosotisFW::System::Render
 		physicalDeviceAccelerationStructureFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
 		physicalDeviceAccelerationStructureFeaturesKHR.accelerationStructure = VK_TRUE;
 
+		// Device Address 機能
+		VkPhysicalDeviceBufferDeviceAddressFeatures physicalDeviceBufferDeviceAddressFeatures{};
+		physicalDeviceBufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+		physicalDeviceBufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
+
 		// pNextチェーン
 		physicalDeviceDescriptorIndexingFeatures.pNext = &separateDepthStencilFeatures;
 		separateDepthStencilFeatures.pNext = &physicalDeviceMaintenance4Features;
 		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
 		physicalDeviceMeshShaderFeaturesEXT.pNext = &physicalDeviceRayTracingPipelineFeaturesKHR;
 		physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR;
+		physicalDeviceAccelerationStructureFeaturesKHR.pNext = &physicalDeviceBufferDeviceAddressFeatures;
 
 		// create device
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
@@ -286,6 +292,7 @@ namespace MyosotisFW::System::Render
 		vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
 		VmaAllocatorCreateInfo allocatorCreateInfo{};
+		allocatorCreateInfo.flags = VmaAllocatorCreateFlagBits::VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 		allocatorCreateInfo.physicalDevice = m_physicalDevice;
 		allocatorCreateInfo.device = m_device;
 		allocatorCreateInfo.instance = vkInstance;
