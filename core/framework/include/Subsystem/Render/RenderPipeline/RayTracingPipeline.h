@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "RenderPipelineBase.h"
-#include "Structs.h"
+#include "AccelerationStructure.h"
 
 namespace MyosotisFW
 {
@@ -34,11 +34,6 @@ namespace MyosotisFW::System::Render
 			VkStridedDeviceAddressRegionKHR region;
 		} m_hitSBTBuffer;
 
-		struct AccelerationStructure {
-			Buffer buffer;
-			VkAccelerationStructureKHR handle;
-			VkDeviceAddress deviceAddress;
-		};
 		AccelerationStructure m_blas;
 		AccelerationStructure m_tlas;
 
