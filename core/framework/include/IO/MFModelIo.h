@@ -24,6 +24,10 @@ namespace Utility::Loader
 		meshData.vertex.resize(meshData.meshInfo.vertexFloatCount);
 		file.read(reinterpret_cast<char*>(meshData.vertex.data()), sizeof(float) * meshData.meshInfo.vertexFloatCount);
 
+		// Indexデータ読み込み
+		meshData.index.resize(meshData.meshInfo.indexCount);
+		file.read(reinterpret_cast<char*>(meshData.index.data()), sizeof(uint32_t) * meshData.meshInfo.indexCount);
+
 		// Meshletデータ読み込み
 		meshData.meshlet.resize(meshData.meshInfo.meshletCount);
 		for (uint32_t i = 0; i < meshData.meshInfo.meshletCount; i++)
@@ -54,6 +58,9 @@ namespace Utility::Loader
 
 		// 頂点データ書き込み
 		file.write(reinterpret_cast<const char*>(meshes.vertex.data()), sizeof(float) * meshes.meshInfo.vertexFloatCount);
+
+		// indexデータ書き込み
+		file.write(reinterpret_cast<const char*>(meshes.index.data()), sizeof(uint32_t) * meshes.meshInfo.indexCount);
 
 		// Meshletデータ書き込み
 		for (const auto& meshlet : meshes.meshlet)

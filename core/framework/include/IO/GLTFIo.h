@@ -166,7 +166,6 @@ namespace Utility::Loader {
 				}
 
 				// Index
-				std::vector<uint32_t> index{};
 				const tinygltf::Accessor& accessor = glTFModel.accessors[primitive.indices];
 				const tinygltf::BufferView& view = glTFModel.bufferViews[accessor.bufferView];
 				const tinygltf::Buffer& buffer = glTFModel.buffers[view.buffer];
@@ -180,7 +179,7 @@ namespace Utility::Loader {
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
 						};
-						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
+						meshData.index.insert(meshData.index.end(), { triangle[0], triangle[1], triangle[2] });
 					}
 					break;
 				}
@@ -192,7 +191,7 @@ namespace Utility::Loader {
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
 						};
-						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
+						meshData.index.insert(meshData.index.end(), { triangle[0], triangle[1], triangle[2] });
 					}
 					break;
 				}
@@ -204,7 +203,7 @@ namespace Utility::Loader {
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 1]),
 							static_cast<uint32_t>(buf[primitiveIndex * 3 + 2])
 						};
-						index.insert(index.end(), { triangle[0], triangle[1], triangle[2] });
+						meshData.index.insert(meshData.index.end(), { triangle[0], triangle[1], triangle[2] });
 					}
 					break;
 				}
@@ -214,10 +213,10 @@ namespace Utility::Loader {
 				}
 
 				// UV1
-				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, index);
+				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, meshData.index);
 
 				// Meshlet
-				meshoptimizer::BuildMeshletData(meshData, index,
+				meshoptimizer::BuildMeshletData(meshData, meshData.index,
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -233,6 +232,7 @@ namespace Utility::Loader {
 				// MeshInfo更新
 				meshData.meshInfo.meshletCount = static_cast<uint32_t>(meshData.meshlet.size());
 				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
+				meshData.meshInfo.indexCount = static_cast<uint32_t>(meshData.index.size());
 
 				meshes.push_back(meshData);
 			}

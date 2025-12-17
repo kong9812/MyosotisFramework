@@ -88,7 +88,7 @@ namespace MyosotisFW::System::Render::Shape
 			{ glm::vec3(-halfSize + center.x,  halfSize + center.y,  halfSize + center.z), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec4(color) }, // 22
 		};
 		// index
-		std::vector<uint32_t> index = {
+		mesh.index = {
 			0,	1,	2,	2,	1,	3,	// 前面
 			4,	5,	6,	6,	5,	7,	// 背面
 			8,	9,	10,	10,	9,	11,	// 上面
@@ -98,10 +98,10 @@ namespace MyosotisFW::System::Render::Shape
 		};
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -113,6 +113,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -130,15 +132,15 @@ namespace MyosotisFW::System::Render::Shape
 			{ glm::vec3(halfSize + center.x, -halfSize + center.y, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec4(color) },	// 3
 		};
 		// index
-		std::vector<uint32_t> index = {
+		mesh.index = {
 			0,	1,	2,	2,	1,	3,	// 前面
 		};
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -150,6 +152,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -175,7 +179,6 @@ namespace MyosotisFW::System::Render::Shape
 			glm::vec4(color) });
 
 		// index&vertex
-		std::vector<uint32_t> index{};
 		for (uint32_t i = 1; i <= side; i++)
 		{
 			uint32_t idx = i + 1;
@@ -186,14 +189,14 @@ namespace MyosotisFW::System::Render::Shape
 				glm::vec2(0.0f, 0.0f),
 				glm::vec2(0.0f, 0.0f),
 				glm::vec4(color) });
-			index.insert(index.end(), { 0, i, idx });
+			mesh.index.insert(mesh.index.end(), { 0, i, idx });
 		}
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -205,6 +208,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -239,22 +244,21 @@ namespace MyosotisFW::System::Render::Shape
 			}
 		}
 		// index
-		std::vector<uint32_t> index{};
 		for (uint32_t i = 0; i < side; i++)
 		{
 			for (uint32_t j = 0; j < side; j++)
 			{
 				uint32_t idx = i * (side + 1) + j;
-				index.insert(index.end(), { idx + 1, idx + side + 1, idx });
-				index.insert(index.end(), { idx + 1, idx + side + 2, idx + side + 1 });
+				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 1, idx });
+				mesh.index.insert(mesh.index.end(), { idx + 1, idx + side + 2, idx + side + 1 });
 			}
 		}
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -266,6 +270,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -304,7 +310,7 @@ namespace MyosotisFW::System::Render::Shape
 
 		};
 		// index
-		std::vector<uint32_t> index = {
+		mesh.index = {
 			0,	1,	2,	2,	1,	3,	// 上
 			4,	5,	6,	6,	5,	7,	// 左
 			8,	9,	10,	10,	9,	11,	// 右
@@ -312,10 +318,10 @@ namespace MyosotisFW::System::Render::Shape
 		};
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -327,6 +333,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -338,8 +346,7 @@ namespace MyosotisFW::System::Render::Shape
 		float radius = size * 0.5f;
 		float height = size;
 
-		std::vector<uint32_t> index;
-		index.reserve(side * 12);
+		mesh.index.reserve(side * 12);
 
 		// side vertex
 		for (uint32_t i = 0; i <= side; i++)
@@ -376,7 +383,7 @@ namespace MyosotisFW::System::Render::Shape
 			uint32_t top1 = top0 + 2;
 			uint32_t bot1 = top0 + 3;
 
-			index.insert(index.end(), {
+			mesh.index.insert(mesh.index.end(), {
 				top0, top1, bot0,
 				top1, bot1, bot0
 				});
@@ -409,7 +416,7 @@ namespace MyosotisFW::System::Render::Shape
 		// up index
 		for (uint32_t i = 0; i < side; i++)
 		{
-			index.insert(index.end(), { topCenterIdx, topStart + i + 1, topStart + i });
+			mesh.index.insert(mesh.index.end(), { topCenterIdx, topStart + i + 1, topStart + i });
 		}
 
 		// down vertex
@@ -439,14 +446,14 @@ namespace MyosotisFW::System::Render::Shape
 		// down index
 		for (uint32_t i = 0; i < side; i++)
 		{
-			index.insert(index.end(), { bottomCenterIdx, bottomStart + i, bottomStart + i + 1 });
+			mesh.index.insert(mesh.index.end(), { bottomCenterIdx, bottomStart + i, bottomStart + i + 1 });
 		}
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -458,6 +465,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 
@@ -469,8 +478,7 @@ namespace MyosotisFW::System::Render::Shape
 		float radius = size * 0.5f;
 		float height = size;
 
-		std::vector<uint32_t> index;
-		index.reserve(side * 12);
+		mesh.index.reserve(side * 12);
 
 		// side vertex
 		for (uint32_t i = 0; i <= side; i++)
@@ -507,7 +515,7 @@ namespace MyosotisFW::System::Render::Shape
 			uint32_t top1 = top0 + 2;
 			uint32_t bot1 = top0 + 3;
 
-			index.insert(index.end(), {
+			mesh.index.insert(mesh.index.end(), {
 				top0, top1, bot0,
 				top1, bot1, bot0
 				});
@@ -550,8 +558,8 @@ namespace MyosotisFW::System::Render::Shape
 				uint32_t i2 = i0 + (side + 1);
 				uint32_t i3 = i2 + 1;
 
-				index.insert(index.end(), { i0, i1, i2 });
-				index.insert(index.end(), { i1, i3, i2 });
+				mesh.index.insert(mesh.index.end(), { i0, i1, i2 });
+				mesh.index.insert(mesh.index.end(), { i1, i3, i2 });
 			}
 		}
 
@@ -592,16 +600,16 @@ namespace MyosotisFW::System::Render::Shape
 				uint32_t i2 = i0 + (side + 1);
 				uint32_t i3 = i2 + 1;
 
-				index.insert(index.end(), { i1, i0, i2 });
-				index.insert(index.end(), { i1, i2, i3 });
+				mesh.index.insert(mesh.index.end(), { i1, i0, i2 });
+				mesh.index.insert(mesh.index.end(), { i1, i2, i3 });
 			}
 		}
 
 		// UV1
-		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 		// Meshlet
-		meshoptimizer::BuildMeshletData(mesh, index,
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
 			MyosotisFW::AppInfo::g_maxMeshletVertices,
 			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -613,6 +621,8 @@ namespace MyosotisFW::System::Render::Shape
 			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
 			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
 		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
 		return mesh;
 	}
 

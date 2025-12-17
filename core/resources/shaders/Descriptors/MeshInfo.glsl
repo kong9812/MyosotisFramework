@@ -11,6 +11,10 @@ struct MeshInfo {
   	uint vertexAttributeBit;  	// 頂点属性のビットフラグ
 	uint unitSize;            	// 一枚当たりのサイズ
 	uint vertexFloatCount;		// 頂点Floatデータの数 
+	uint indexCount;			// Indexの数
+	uint p2;
+	uint p3;
+	uint p4;
 };
 
 layout (std430, set = 2, binding = 0) readonly buffer MeshInfoDescriptor {

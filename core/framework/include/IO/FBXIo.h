@@ -143,7 +143,6 @@ namespace Utility::Loader {
 				}
 
 				// 本来のIndex
-				std::vector<uint32_t> index{};
 				for (uint32_t polygonIdx = 0; polygonIdx < geometryPartition.polygon_count; polygonIdx++)
 				{
 					const ofbx::GeometryPartition::Polygon& polygon = geometryPartition.polygons[polygonIdx];
@@ -151,15 +150,15 @@ namespace Utility::Loader {
 					triangulate(geomData, polygon, triangle);
 					for (uint32_t i = 0; i < 3; i++)
 					{
-						index.push_back(static_cast<uint32_t>(triangle[i]));
+						meshData.index.push_back(static_cast<uint32_t>(triangle[i]));
 					}
 				}
 
 				// UV1
-				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, index);
+				meshData.meshInfo.atlasSize = xatlas::BuildLightmapUV(meshData.vertex, meshData.index);
 
 				// Meshlet
-				meshoptimizer::BuildMeshletData(meshData, index,
+				meshoptimizer::BuildMeshletData(meshData, meshData.index,
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -175,6 +174,7 @@ namespace Utility::Loader {
 				// MeshInfo更新
 				meshData.meshInfo.meshletCount = static_cast<uint32_t>(meshData.meshlet.size());
 				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
+				meshData.meshInfo.indexCount = static_cast<uint32_t>(meshData.index.size());
 
 				meshes.push_back(meshData);
 			}

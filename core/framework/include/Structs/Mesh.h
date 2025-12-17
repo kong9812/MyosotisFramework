@@ -12,6 +12,7 @@ namespace MyosotisFW
 		// Info
 		MeshInfo meshInfo;
 
+		std::vector<uint32_t> index;
 		std::vector<VertexData> vertex;
 		std::vector<Meshlet> meshlet;
 	};

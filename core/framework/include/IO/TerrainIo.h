@@ -165,8 +165,7 @@ namespace Utility::Loader {
 				ComputeNormalsFromGrid(mesh.vertex, localW, localH);
 
 				// index作成
-				std::vector<uint32_t> index{};
-				index.reserve((localW - 1) * (localH - 1) * 6);
+				mesh.index.reserve((localW - 1) * (localH - 1) * 6);
 				for (uint32_t iy = 0; iy < localH - 1; iy++)
 				{
 					for (uint32_t ix = 0; ix < localW - 1; ix++)
@@ -176,21 +175,21 @@ namespace Utility::Loader {
 						const uint32_t i2 = i0 + localW;
 						const uint32_t i3 = i2 + 1;
 
-						index.push_back(i0);
-						index.push_back(i2);
-						index.push_back(i1);
+						mesh.index.push_back(i0);
+						mesh.index.push_back(i2);
+						mesh.index.push_back(i1);
 
-						index.push_back(i1);
-						index.push_back(i2);
-						index.push_back(i3);
+						mesh.index.push_back(i1);
+						mesh.index.push_back(i2);
+						mesh.index.push_back(i3);
 					}
 				}
 
 				// UV1
-				mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, index);
+				mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
 
 				// Meshlet
-				meshoptimizer::BuildMeshletData(mesh, index,
+				meshoptimizer::BuildMeshletData(mesh, mesh.index,
 					MyosotisFW::AppInfo::g_maxMeshletVertices,
 					MyosotisFW::AppInfo::g_maxMeshletPrimitives);
 
@@ -206,6 +205,7 @@ namespace Utility::Loader {
 				// MeshInfo
 				mesh.meshInfo.meshletCount = static_cast<uint32_t>(mesh.meshlet.size());
 				mesh.meshInfo.vertexFloatCount = static_cast<uint32_t>(mesh.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
+				mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.vertex.size());
 			}
 		}
 

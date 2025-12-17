@@ -22,15 +22,6 @@ namespace MyosotisFW::System::Render
 
 		{// Skybox Mesh
 			Mesh vertex = MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-			// vertex buffer
-			std::vector<uint32_t> index{};
-			for (const Meshlet& meshlet : vertex.meshlet)
-			{
-				for (const uint32_t prim : meshlet.primitives)
-				{
-					index.push_back(meshlet.uniqueIndex[prim]);
-				}
-			}
 			{// vertex
 				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
@@ -44,7 +35,7 @@ namespace MyosotisFW::System::Render
 				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation);
 			}
 			{// index
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * vertex.index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
 				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer.buffer, &m_indexBuffer.allocation, &m_indexBuffer.allocationInfo));
@@ -53,7 +44,7 @@ namespace MyosotisFW::System::Render
 				// mapping
 				void* data{};
 				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation, &data));
-				memcpy(data, index.data(), bufferCreateInfo.size);
+				memcpy(data, vertex.index.data(), bufferCreateInfo.size);
 				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation);
 			}
 		}

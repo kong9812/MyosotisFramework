@@ -15,6 +15,10 @@ namespace MyosotisFW
 		uint32_t vertexAttributeBit;	// [仮* DescriptorData]頂点属性のビットフラグ
 		uint32_t unitSize;				// [仮* DescriptorData]一枚当たりのサイズ
 		uint32_t vertexFloatCount;		// [仮*] 頂点Floatデータの数
+		uint32_t indexCount;			// Indexの数
+		uint32_t p2;
+		uint32_t p3;
+		uint32_t p4;
 	};
 	// *ObjectData: Objectでセットするデータ
 	// *DescriptorData: DescriptorSetでセットするデータ

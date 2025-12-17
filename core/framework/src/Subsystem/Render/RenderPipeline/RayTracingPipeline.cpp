@@ -198,14 +198,6 @@ namespace MyosotisFW::System::Render
 		// primitive geometry
 		// vertex buffer
 		Mesh mesh = Shape::createQuad();
-		std::vector<uint32_t> index{};
-		for (const Meshlet& meshlet : mesh.meshlet)
-		{
-			for (const uint32_t prim : meshlet.primitives)
-			{
-				index.push_back(meshlet.uniqueIndex[prim]);
-			}
-		}
 		{// vertex
 			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * mesh.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
@@ -220,7 +212,7 @@ namespace MyosotisFW::System::Render
 			vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation);
 		}
 		{// index
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * mesh.index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
@@ -230,7 +222,7 @@ namespace MyosotisFW::System::Render
 			// mapping
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation, &data));
-			memcpy(data, index.data(), bufferCreateInfo.size);
+			memcpy(data, mesh.index.data(), bufferCreateInfo.size);
 			vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation);
 		}
 
@@ -273,7 +265,7 @@ namespace MyosotisFW::System::Render
 		asGeometryKHR.geometry.triangles.transformData = transformAddress;
 
 		// プリミティブ数
-		const uint32_t primitiveCount = static_cast<uint32_t>(index.size() / 3);
+		const uint32_t primitiveCount = static_cast<uint32_t>(mesh.index.size() / 3);
 
 		// ASのビルド範囲
 		VkAccelerationStructureBuildRangeInfoKHR asBuildRangeInfoKHR{};
