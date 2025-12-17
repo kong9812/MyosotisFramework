@@ -1,46 +1,76 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <vector>
 #include <unordered_map>
 #include "ClassPointer.h"
 #include "AccelerationStructure.h"
+#include "Mesh.h"
+#include "BLASInfo.h"
+#include "TLASInfo.h"
+#include "TLASInstanceInfo.h"
+
+namespace MyosotisFW
+{
+	// 前方宣言
+	class MObject;
+	TYPEDEF_SHARED_PTR_FWD(MObject);
+}
 
 namespace MyosotisFW::System::Render
 {
+	// 前方宣言
+	class RenderDevice;
+	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+
 	class AccelerationStructureManager
 	{
 	public:
-		AccelerationStructureManager() :
-			m_blasDirty(false),
-			m_tlasDirty(false),
-			m_blas({}),
-			m_tlas({}) {
-		}
-		~AccelerationStructureManager() {}
+		AccelerationStructureManager(const RenderDevice_ptr& device);
+		~AccelerationStructureManager();
 
-		void OnLoadedMesh();
+		void OnLoadedMesh(const std::vector<Mesh>& meshes);
 		// todo. Meshに対応するBLASを登録し、ビルドが必要な状態にする
 		// todo. MeshデータからBLASを生成するためのリソースを作成し、
 		// todo. Vertex/IndexのデバイスアドレスとBLASを登録する
 
-		void OnAddObject() {}		// todo. TLAS用のInstance情報を追加し、TLAS更新を要求する
+		void OnAddObject(const MObject_ptr& object);		// todo. TLAS用のInstance情報を追加し、TLAS更新を要求する
 
-		void NewScene() {}			// todo. シーン切り替え時にTLASとInstance情報をリセットする
+		void NewScene();			// todo. シーン切り替え時にTLASとInstance情報をリセットする
 
-		void Process() {}			//todo. ここでビルドと更新を判定し、実行する
+		void Process();			//todo. ここでビルドと更新を判定し、実行する
 
 	private:
+		RenderDevice_ptr m_device;
+
 		bool m_blasDirty;
 		bool m_tlasDirty;
 
 		std::unordered_map<uint32_t, AccelerationStructure> m_blas;
-		AccelerationStructure m_tlas;
+		TLASInfo m_tlas;
 
-		void buildBLAS() {}	// todo. 登録済みBLASをGPU上にBuildする（初回のみ）
-		void buildTLAS() {} // todo. TLASのビルド処理
+		std::vector<BLASInfo> m_pendingBLASBuild;
+		std::vector<TLASInstanceInfo> m_instances;
 
+		void buildBLAS();	// todo. 登録済みBLASをGPU上にBuildする（初回のみ）
+		void buildTLAS();	// todo. TLASのビルド処理
 		void updateTLAS() {} // todo. TLASの更新処理
+		void destroyTLAS();
 
-		// まぁやること多い…！でもレイトレーシングの結果を早く見たい！！！
+	private:
+		PFN_vkGetRayTracingShaderGroupHandlesKHR		m_vkGetRayTracingShaderGroupHandlesKHR;
+		PFN_vkCreateAccelerationStructureKHR			m_vkCreateAccelerationStructureKHR;
+		PFN_vkCmdBuildAccelerationStructuresKHR			m_vkCmdBuildAccelerationStructuresKHR;
+		PFN_vkGetAccelerationStructureDeviceAddressKHR	m_vkGetAccelerationStructureDeviceAddressKHR;
+		PFN_vkGetAccelerationStructureBuildSizesKHR		m_vkGetAccelerationStructureBuildSizesKHR;
+		PFN_vkCmdTraceRaysKHR							m_vkCmdTraceRaysKHR;
+		PFN_vkCreateRayTracingPipelinesKHR				m_vkCreateRayTracingPipelinesKHR;
+		PFN_vkDestroyAccelerationStructureKHR			m_vkDestroyAccelerationStructureKHR;
+
+		struct ScratchBuffer
+		{
+			Buffer buffer;
+			VkDeviceAddress deviceAddress;
+		};
 	};
 	TYPEDEF_SHARED_PTR_ARGS(AccelerationStructureManager);
 }

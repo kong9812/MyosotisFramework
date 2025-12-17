@@ -299,3 +299,10 @@ createTopLevelAccelerationStructure
 createRayTracingPipeline
 createShaderBindingTables
 createDescriptorSets
+
+// todo. ビルド手順
+// Scratch buffer sizeのmaxを取り出す (forとstd::maxでOK)
+// 最大値でScratchBuffer作成
+// BuildGeomInfo作成
+// BuildRangeInfo*作成 (1つでOK)
+// CmdBuildAS！
