@@ -57,9 +57,10 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].update)
 		{
-			// 可変部分
-			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].buffer.allocationInfo.pMappedData);
-			memcpy(dst, m_objectInfo.data(), sizeof(ObjectInfo) * m_objectInfo.size());
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].buffer,
+				m_objectInfo.data(),
+				sizeof(ObjectInfo) * m_objectInfo.size());
 
 			// 一時データクリア
 			m_objectInfo.clear();
@@ -72,9 +73,10 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update)
 		{
-			// 可変部分
-			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].buffer.allocationInfo.pMappedData);
-			memcpy(dst, m_vbDispatchInfo.data(), sizeof(VBDispatchInfo) * m_vbDispatchInfo.size());
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].buffer,
+				m_vbDispatchInfo.data(),
+				sizeof(VBDispatchInfo) * m_vbDispatchInfo.size());
 
 			// 一時データクリア
 			m_vbDispatchInfo.clear();

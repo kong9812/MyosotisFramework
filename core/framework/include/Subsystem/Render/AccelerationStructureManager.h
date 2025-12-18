@@ -21,11 +21,13 @@ namespace MyosotisFW::System::Render
 	// 前方宣言
 	class RenderDevice;
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderDescriptors;
+	TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 	class AccelerationStructureManager
 	{
 	public:
-		AccelerationStructureManager(const RenderDevice_ptr& device);
+		AccelerationStructureManager(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors);
 		~AccelerationStructureManager();
 
 		void OnLoadedMesh(const std::vector<Mesh>& meshes);
@@ -41,11 +43,12 @@ namespace MyosotisFW::System::Render
 
 	private:
 		RenderDevice_ptr m_device;
+		RenderDescriptors_ptr m_renderDescriptors;
 
 		bool m_blasDirty;
 		bool m_tlasDirty;
 
-		std::unordered_map<uint32_t, AccelerationStructure> m_blas;
+		std::vector<BLASInfo> m_blas;
 		TLASInfo m_tlas;
 
 		std::vector<BLASInfo> m_pendingBLASBuild;

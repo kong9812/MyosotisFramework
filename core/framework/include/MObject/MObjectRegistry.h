@@ -2,6 +2,7 @@
 #pragma once
 #include <vector>
 #include <deque>
+#include <functional>
 #include "ClassPointer.h"
 #include "ObjectInfo.h"
 
@@ -33,12 +34,16 @@ namespace MyosotisFW
 		void TransformChanged() { m_transformChanged = true; }
 		void ResetChangeFlags() { m_meshChanged = false; m_transformChanged = false; }
 
+		void SetOnAddObject(const std::function<void(const MObject_ptr&)> callback) { m_onAddObject = callback; }
+
 	private:
 		std::vector<MObject_ptr> m_object;
 		std::deque<ObjectInfo> m_objectInfo;
 
 		bool m_meshChanged;
 		bool m_transformChanged;
+
+		std::function<void(const MObject_ptr&)> m_onAddObject;
 	};
 	TYPEDEF_SHARED_PTR(MObjectRegistry);
 };

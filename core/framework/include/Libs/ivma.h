@@ -1,10 +1,10 @@
-// Copyright (c) 2025 kong9812
 // For include VMA(VulkanMemoryAllocator)
 #pragma once
 #include <vk_mem_alloc.h>
 #include <string_view>
 #include "VK_Validation.h"
 #include "VK_CreateInfo.h"
+#include "Buffer.h"
 
 namespace vmaTools
 {
@@ -30,90 +30,75 @@ namespace vmaTools
 		}
 	}
 
-	inline void ShaderBufferObjectAllocate(
-		const VkDevice& device,
+	inline MyosotisFW::Buffer CreateBuffer(
 		const VmaAllocator& allocator,
-		const uint32_t size,
-		const VkBufferUsageFlagBits& usage,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
+		const VkDeviceSize size,
+		const VkBufferUsageFlags usage,
+		const VmaMemoryUsage vmaUsage = VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN,
+		const VmaAllocationCreateFlags vmaFlags = 0)
 	{
-		{// m_staticMeshUniformBufferObject
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size, usage);
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング
-			VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
-			descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(pBuffer);
-		}
-	}
-
-	inline void CreateBuffer(
-		const VkDevice& device,
-		const VmaAllocator& allocator,
-		const uint32_t size,
-		const VkBufferUsageFlags& usage,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
-	{
+		MyosotisFW::Buffer buffer{};
 		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size, usage);
 		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;					// CPUで更新可能
-		allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT;	// 永続マッピング
-		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
-		descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(pBuffer);
+		allocationCreateInfo.usage = vmaUsage;
+		allocationCreateInfo.flags = vmaFlags;
+		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &buffer.buffer, &buffer.allocation, &buffer.allocationInfo));
+		buffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(buffer.buffer);
+		buffer.localSize = size;
+		VkMemoryPropertyFlags memoryPropertyFlags{};
+		vmaGetAllocationMemoryProperties(allocator, buffer.allocation, &memoryPropertyFlags);
+		buffer.needFlush =
+			(memoryPropertyFlags & VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+			!(memoryPropertyFlags & VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		return buffer;
 	}
 
-	inline void CreateASBuffer(
-		const VkDevice& device,
-		const VmaAllocator& allocator,
-		const uint32_t size,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
+	// SSBO作成用
+	inline MyosotisFW::Buffer CreateShaderStorageBuffer(const VmaAllocator& allocator, const VkDeviceSize size, const VkBufferUsageFlags extraUsage = 0)
 	{
-		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
-		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;	// GPU専用
-		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+		return CreateBuffer(allocator, size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | extraUsage,
+			VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+			VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
 	}
 
-	inline void CreateScratchBuffer(
-		const VkDevice& device,
-		const VmaAllocator& allocator,
-		const uint32_t size,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
+	// AccelerationStructureBuffer (AS Buffer) 作成用
+	inline MyosotisFW::Buffer CreateASBuffer(const VmaAllocator& allocator, const VkDeviceSize size)
 	{
-		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
-		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;	// GPU専用
-		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
-
+		return CreateBuffer(allocator, size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR |
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
 	}
 
-	inline void CreateASInstanceBuffer(
-		const VkDevice& device,
-		const VmaAllocator& allocator,
-		const uint32_t size,
-		VkBuffer& pBuffer,
-		VmaAllocation& pAllocation,
-		VmaAllocationInfo& pAllocationInfo,
-		VkDescriptorBufferInfo& descriptor)
+	// ScratchBuffer 作成用
+	inline MyosotisFW::Buffer CreateScratchBuffer(const VmaAllocator& allocator, const VkDeviceSize size)
 	{
-		VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(size,
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
-		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-		VK_VALIDATION(vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &pBuffer, &pAllocation, &pAllocationInfo));
+		return CreateBuffer(allocator, size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY);
+	}
+
+	// AccelerationStructureInstanceBuffer (ASInstance Buffer) 作成用
+	inline MyosotisFW::Buffer CreateASInstanceBuffer(const VmaAllocator& allocator, const VkDeviceSize size)
+	{
+		return CreateBuffer(allocator, size,
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
+			VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+			VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
+	}
+
+	inline void MemcpyBufferData(const VmaAllocator& allocator, MyosotisFW::Buffer& buffer, const void* src, VkDeviceSize size, VkDeviceSize dstOffset = 0)
+	{
+		if ((!buffer.allocationInfo.pMappedData) || (!src) || (size == 0)) return;
+
+		uint8_t* dst = static_cast<uint8_t*>(buffer.allocationInfo.pMappedData) + dstOffset;
+		memcpy(dst, src, static_cast<size_t>(size));
+		if (buffer.needFlush)
+		{
+			vmaFlushAllocation(allocator, buffer.allocation, dstOffset, size);
+		}
 	}
 }

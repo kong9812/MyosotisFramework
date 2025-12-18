@@ -16,6 +16,8 @@ namespace MyosotisFW
 		newObject->SetMeshChangedCallback([this]() { this->MeshChanged(); });
 		newObject->SetTransformChangedCallback([this]() { this->TransformChanged(); });
 
+		m_onAddObject(newObject);
+
 		return newObject;
 	}
 

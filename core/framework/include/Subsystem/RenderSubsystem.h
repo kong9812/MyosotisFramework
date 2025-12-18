@@ -59,6 +59,9 @@ namespace MyosotisFW
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
+
+		class AccelerationStructureManager;
+		TYPEDEF_SHARED_PTR_FWD(AccelerationStructureManager);
 	}
 }
 
@@ -72,6 +75,8 @@ namespace MyosotisFW::System::Render
 			m_swapchain(nullptr),
 			m_resources(nullptr),
 			m_mainCamera(nullptr),
+			m_objectRegistry(nullptr),
+			m_accelerationStructureManager(nullptr),
 			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
 			m_currentBufferIndex(0),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
@@ -131,6 +136,7 @@ namespace MyosotisFW::System::Render
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
 		virtual void initializeComputePipeline();
+		void initializeAccelerationStructureManager();
 		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
 
 		void CopyMainRenderTargetToSwapchainImage();
@@ -148,6 +154,7 @@ namespace MyosotisFW::System::Render
 		RenderSwapchain_ptr m_swapchain;
 		RenderResources_ptr m_resources;
 		MObjectRegistry_ptr m_objectRegistry;
+		AccelerationStructureManager_ptr m_accelerationStructureManager;
 
 		RenderDescriptors_ptr m_renderDescriptors;
 

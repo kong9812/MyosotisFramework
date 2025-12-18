@@ -11,6 +11,7 @@
 #include "RenderSwapchain.h"
 #include "RenderResources.h"
 #include "MObjectRegistry.h"
+#include "AccelerationStructureManager.h"
 
 #include "RenderDescriptors.h"
 
@@ -126,6 +127,9 @@ namespace MyosotisFW::System::Render
 		// Fence
 		initializeFence();
 
+		// Acceleration Structure Manager
+		initializeAccelerationStructureManager();
+
 		// Submit info
 		initializeSubmitInfo();
 
@@ -194,6 +198,8 @@ namespace MyosotisFW::System::Render
 				m_lightmapBakingPipeline->Bake();
 			}
 		}
+
+		m_accelerationStructureManager->Process();
 	}
 
 	void RenderSubsystem::BeginCompute()
@@ -467,6 +473,13 @@ namespace MyosotisFW::System::Render
 	{
 		m_hiZDepthComputePipeline = CreateHiZDepthComputePipelinePointer(m_device, m_resources, m_renderDescriptors);
 		m_hiZDepthComputePipeline->Initialize();
+	}
+
+	void RenderSubsystem::initializeAccelerationStructureManager()
+	{
+		m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors);
+		m_resources->SetOnLoadedMesh([=](const std::vector<Mesh>& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
+		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) {m_accelerationStructureManager->OnAddObject(m); });
 	}
 
 	void RenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)

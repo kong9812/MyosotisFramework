@@ -270,6 +270,7 @@ AddIncludeDirectories(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES})
 
 # build switch
 target_compile_definitions(${FRAMEWORK_PROJECT_NAME} PRIVATE
+  NOMINMAX
   $<$<CONFIG:Debug>:DEBUG>
   $<$<CONFIG:FWDLL>:FWDLL>
   $<$<CONFIG:Release>:RELEASE>

@@ -229,41 +229,46 @@ namespace MyosotisFW::System::Render
 
 	void MeshInfoDescriptorSet::updateMeshInfo()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_meshInfo.data(), sizeof(MeshInfo) * m_meshInfo.size());
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].buffer,
+			m_meshInfo.data(),
+			sizeof(MeshInfo) * m_meshInfo.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshInfo)].update = false;
 	}
 
 	void MeshInfoDescriptorSet::updateMeshletInfo()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_meshletInfo.data(), sizeof(MeshletInfo) * m_meshletInfo.size());
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].buffer,
+			m_meshletInfo.data(),
+			sizeof(MeshletInfo) * m_meshletInfo.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::MeshletInfo)].update = false;
 	}
 
 	void MeshInfoDescriptorSet::updateVertexData()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_vertexData.data(), sizeof(VertexData) * m_vertexData.size());
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].buffer,
+			m_vertexData.data(),
+			sizeof(VertexData) * m_vertexData.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VertexData)].update = false;
 	}
 
 	void MeshInfoDescriptorSet::updateUniqueIndexData()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_uniqueIndexData.data(), sizeof(uint32_t) * m_uniqueIndexData.size());
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].buffer,
+			m_uniqueIndexData.data(),
+			sizeof(uint32_t) * m_uniqueIndexData.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::UniqueIndexData)].update = false;
 	}
 
 	void MeshInfoDescriptorSet::updatePrimitivesData()
 	{
-		// 可変部分
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, m_primitivesData.data(), sizeof(uint32_t) * m_primitivesData.size());
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].buffer,
+			m_primitivesData.data(),
+			sizeof(uint32_t) * m_primitivesData.size());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::PrimitivesData)].update = false;
 	}
 }

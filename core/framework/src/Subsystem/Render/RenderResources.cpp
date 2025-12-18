@@ -42,7 +42,22 @@ namespace MyosotisFW::System::Render
 		}
 		m_shaderModules.clear();
 
-		m_meshVertexData.clear();
+		for (std::pair<std::string, std::vector<Mesh>> meshList : m_meshes)
+		{
+			for (Mesh& mesh : meshList.second)
+			{
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.indexBuffer.buffer, mesh.indexBuffer.allocation);
+			}
+		}
+		m_meshes.clear();
+
+		for (std::pair<Shape::PrimitiveGeometryShape, Mesh> meshPair : m_primitiveGeometryMeshes)
+		{
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.vertexBuffer.buffer, meshPair.second.vertexBuffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.indexBuffer.buffer, meshPair.second.indexBuffer.allocation);
+		}
+		m_primitiveGeometryMeshes.clear();
 
 		for (std::pair<std::string, Image> image : m_images)
 		{
@@ -132,6 +147,8 @@ namespace MyosotisFW::System::Render
 			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_rayTracingRenderTarget.image, AppInfo::g_surfaceFormat.format);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_rayTracingRenderTarget.view));
 		}
+
+
 	}
 
 	VkShaderModule RenderResources::GetShaderModules(const std::string& fileName)
@@ -147,29 +164,51 @@ namespace MyosotisFW::System::Render
 
 	std::vector<Mesh> RenderResources::GetMesh(const std::string& fileName)
 	{
-		auto vertexData = m_meshVertexData.find(fileName);
-		if (vertexData == m_meshVertexData.end())
+		auto vertexData = m_meshes.find(fileName);
+		if (vertexData == m_meshes.end())
 		{
 			// 拡張子判定
 			std::string extension = std::filesystem::path(fileName).extension().string();
 			if ((extension == ".fbx") || (extension == ".FBX"))
 			{
-				m_meshVertexData.emplace(fileName, Utility::Loader::loadFbx(fileName));
+				std::vector<Mesh> meshes = Utility::Loader::loadFbx(fileName);
+				createVertexIndexBuffer(meshes);
+				m_meshes.emplace(fileName, meshes);
+				m_onLoadedMesh(meshes);
 			}
 			else if ((extension == ".gltf") || (extension == ".GLTF"))
 			{
-				m_meshVertexData.emplace(fileName, Utility::Loader::loadGltf(fileName));
+				std::vector<Mesh> meshes = Utility::Loader::loadGltf(fileName);
+				createVertexIndexBuffer(meshes);
+				m_meshes.emplace(fileName, meshes);
+				m_onLoadedMesh(meshes);
 			}
 			else if ((extension == ".mfmodel") || (extension == ".MFMODEL"))
 			{
-				m_meshVertexData.emplace(fileName, Utility::Loader::loadMFModel(fileName));
+				std::vector<Mesh> meshes = Utility::Loader::loadMFModel(fileName);
+				createVertexIndexBuffer(meshes);
+				m_meshes.emplace(fileName, meshes);
+				m_onLoadedMesh(meshes);
 			}
 			else
 			{
 				ASSERT(false, "Unsupported mesh file format: " + fileName);
 			}
 		}
-		return m_meshVertexData[fileName];
+		return m_meshes[fileName];
+	}
+
+	Mesh RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
+	{
+		auto vertexData = m_primitiveGeometryMeshes.find(shape);
+		if (vertexData == m_primitiveGeometryMeshes.end())
+		{
+			std::vector<Mesh> meshes{ Shape::createShape(shape) };
+			createVertexIndexBuffer(meshes);
+			m_primitiveGeometryMeshes.emplace(shape, meshes[0]);
+			m_onLoadedMesh(meshes);
+		}
+		return m_primitiveGeometryMeshes[shape];
 	}
 
 	Image RenderResources::GetImage(const std::string& fileName)
@@ -235,5 +274,35 @@ namespace MyosotisFW::System::Render
 			size,
 			m_device->GetAllocationCallbacks());
 		return result;
+	}
+
+	void RenderResources::createVertexIndexBuffer(std::vector<Mesh>& meshes)
+	{
+		for (Mesh& mesh : meshes)
+		{
+			{// vertex
+
+				mesh.vertexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+					sizeof(VertexData) * mesh.vertex.size(),
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+					VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+					VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
+
+				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh.vertexBuffer, mesh.vertex.data(), sizeof(VertexData) * mesh.vertex.size());
+			}
+			{// index
+				mesh.indexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+					sizeof(uint32_t) * mesh.index.size(),
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+					VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+					VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+					VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
+
+				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh.indexBuffer, mesh.index.data(), sizeof(uint32_t) * mesh.index.size());
+			}
+		}
 	}
 }

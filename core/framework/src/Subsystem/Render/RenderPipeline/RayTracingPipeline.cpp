@@ -172,25 +172,21 @@ namespace MyosotisFW::System::Render
 		m_hitSBTBuffer.region.size = handleSizeAligned * chitHandleCount;
 
 		// copy handle
-		memcpy(m_raygenSBTBuffer.sbtBuffer.allocationInfo.pMappedData, shaderHandleStorage.data() + 0, handleSize);
-		memcpy(m_missSBTBuffer.sbtBuffer.allocationInfo.pMappedData, shaderHandleStorage.data() + (raygenHandleCount * handleSizeAligned), handleSize);
-		memcpy(m_hitSBTBuffer.sbtBuffer.allocationInfo.pMappedData, shaderHandleStorage.data() + ((raygenHandleCount + missHandleCount) * handleSizeAligned), handleSize);
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_raygenSBTBuffer.sbtBuffer, shaderHandleStorage.data() + 0, handleSize);
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_missSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (raygenHandleCount * handleSizeAligned), handleSize);
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_hitSBTBuffer.sbtBuffer, shaderHandleStorage.data() + ((raygenHandleCount + missHandleCount) * handleSizeAligned), handleSize);
 	}
 
 	void RayTracingPipeline::createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount)
 	{
 		const VkDeviceSize sbtSize = handleSize * handleCount;
 		// SBTバッファの作成
-		vmaTools::CreateBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			sbtSize,
+		buffer = vmaTools::CreateBuffer(
+			m_device->GetVmaAllocator(), sbtSize,
 			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |
 			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			buffer.buffer,
-			buffer.allocation,
-			buffer.allocationInfo,
-			buffer.descriptor);
+			VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+			VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
 	}
 
 	void RayTracingPipeline::createBLAS()
@@ -199,31 +195,24 @@ namespace MyosotisFW::System::Render
 		// vertex buffer
 		Mesh mesh = Shape::createQuad();
 		{// vertex
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * mesh.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer.buffer, &m_vertexBuffer.allocation, &m_vertexBuffer.allocationInfo));
-			m_vertexBuffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer.buffer);
-			// mapping
-			void* data{};
-			VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation, &data));
-			memcpy(data, mesh.vertex.data(), bufferCreateInfo.size);
-			vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation);
+			m_vertexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+				sizeof(VertexData) * mesh.vertex.size(),
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+				VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_vertexBuffer, mesh.vertex.data(), sizeof(VertexData) * mesh.vertex.size());
 		}
 		{// index
-			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * mesh.index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-			bufferCreateInfo.usage |= VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-			VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer.buffer, &m_indexBuffer.allocation, &m_indexBuffer.allocationInfo));
-			m_indexBuffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer.buffer);
-
-			// mapping
-			void* data{};
-			VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation, &data));
-			memcpy(data, mesh.index.data(), bufferCreateInfo.size);
-			vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation);
+			m_indexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+				sizeof(uint32_t) * mesh.index.size(),
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+				VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+				VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
+				VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_indexBuffer, mesh.index.data(), sizeof(uint32_t) * mesh.index.size());
 		}
 
 		// [仮] ObjectTransform
@@ -233,16 +222,10 @@ namespace MyosotisFW::System::Render
 			0.0f, 0.0f, 1.0f, 0.0f };
 
 		// m_transform.buffer.作成
-		vmaTools::CreateBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			sizeof(VkTransformMatrixKHR),
+		m_transform = vmaTools::CreateBuffer(
+			m_device->GetVmaAllocator(), sizeof(VkTransformMatrixKHR),
 			VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			m_transform.buffer,
-			m_transform.allocation,
-			m_transform.allocationInfo,
-			m_transform.descriptor);
+			VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
 		// DeviceAddress (vertex,index,transform)
 		VkDeviceOrHostAddressConstKHR vertexAddress{};
 		vertexAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_vertexBuffer.buffer);
@@ -293,14 +276,7 @@ namespace MyosotisFW::System::Render
 			&asBuildSizesInfoKHR);
 
 		// BLAS Bufferの作成
-		vmaTools::CreateASBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			asBuildSizesInfoKHR.accelerationStructureSize,
-			m_blas.buffer.buffer,
-			m_blas.buffer.allocation,
-			m_blas.buffer.allocationInfo,
-			m_blas.buffer.descriptor);
+		m_blas.buffer = vmaTools::CreateASBuffer(m_device->GetVmaAllocator(), asBuildSizesInfoKHR.accelerationStructureSize);
 
 		// ASの作成
 		VkAccelerationStructureCreateInfoKHR asCI{};
@@ -312,14 +288,7 @@ namespace MyosotisFW::System::Render
 
 		// Scratch Bufferの作成
 		AccelerationStructure scratchBuffer{};
-		vmaTools::CreateScratchBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			asBuildSizesInfoKHR.buildScratchSize,
-			scratchBuffer.buffer.buffer,
-			scratchBuffer.buffer.allocation,
-			scratchBuffer.buffer.allocationInfo,
-			scratchBuffer.buffer.descriptor);
+		scratchBuffer.buffer = vmaTools::CreateScratchBuffer(m_device->GetVmaAllocator(), asBuildSizesInfoKHR.buildScratchSize);
 		scratchBuffer.deviceAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer.buffer);
 
 		// asBuildGeometryInfoKHRの情報追加
@@ -381,15 +350,7 @@ namespace MyosotisFW::System::Render
 		asInstanceKHR.accelerationStructureReference = m_blas.deviceAddress;
 
 		// AS Instance Bufferの作成
-		Buffer instanceBuffer{};
-		vmaTools::CreateASInstanceBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			sizeof(VkAccelerationStructureInstanceKHR),
-			instanceBuffer.buffer,
-			instanceBuffer.allocation,
-			instanceBuffer.allocationInfo,
-			instanceBuffer.descriptor);
+		Buffer instanceBuffer = vmaTools::CreateASInstanceBuffer(m_device->GetVmaAllocator(), sizeof(VkAccelerationStructureInstanceKHR));
 		VkDeviceOrHostAddressConstKHR instanceDataAddress{};
 		instanceDataAddress.deviceAddress = m_device->GetBufferDeviceAddress(instanceBuffer.buffer);
 
@@ -424,14 +385,7 @@ namespace MyosotisFW::System::Render
 			&asBuildSizesInfoKHR);
 
 		// TLAS Bufferの作成
-		vmaTools::CreateASBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			asBuildSizesInfoKHR.accelerationStructureSize,
-			m_tlas.buffer.buffer,
-			m_tlas.buffer.allocation,
-			m_tlas.buffer.allocationInfo,
-			m_tlas.buffer.descriptor);
+		m_tlas.buffer = vmaTools::CreateASBuffer(m_device->GetVmaAllocator(), asBuildSizesInfoKHR.accelerationStructureSize);
 
 		// ASの作成
 		VkAccelerationStructureCreateInfoKHR asCI{};
@@ -443,14 +397,7 @@ namespace MyosotisFW::System::Render
 
 		// Scratch Bufferの作成
 		AccelerationStructure scratchBuffer{};
-		vmaTools::CreateScratchBuffer(
-			*m_device,
-			m_device->GetVmaAllocator(),
-			asBuildSizesInfoKHR.buildScratchSize,
-			scratchBuffer.buffer.buffer,
-			scratchBuffer.buffer.allocation,
-			scratchBuffer.buffer.allocationInfo,
-			scratchBuffer.buffer.descriptor);
+		scratchBuffer.buffer = vmaTools::CreateScratchBuffer(m_device->GetVmaAllocator(), asBuildSizesInfoKHR.buildScratchSize);
 		VkDeviceAddress scratchAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer.buffer);
 
 		// asBuildGeometryInfoKHRの情報追加

@@ -87,8 +87,10 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update)
 		{
-			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].buffer.allocationInfo.pMappedData);
-			memcpy(dst, &m_screenInfo, (static_cast<uint32_t>(sizeof(ScreenInfo))));
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].buffer,
+				&m_screenInfo,
+				sizeof(ScreenInfo));
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update = false;
 		}
 	}
@@ -97,8 +99,10 @@ namespace MyosotisFW::System::Render
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].update)
 		{
-			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].buffer.allocationInfo.pMappedData);
-			memcpy(dst, &m_sceneInfo, (static_cast<uint32_t>(sizeof(SceneInfo))));
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].buffer,
+				&m_sceneInfo,
+				sizeof(SceneInfo));
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::SceneInfo)].update = false;
 		}
 	}
@@ -119,26 +123,52 @@ namespace MyosotisFW::System::Render
 		m_cameraInfo._p1 = 0;
 		m_cameraInfo._p2 = 0;
 		m_cameraInfo._p3 = 0;
-		uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer.allocationInfo.pMappedData);
-		memcpy(dst, &m_cameraInfo.mainCameraIndex, (static_cast<uint32_t>(sizeof(uint32_t))));
-		dst += static_cast<uint32_t>(sizeof(uint32_t));
-		memcpy(dst, &m_cameraInfo._p1, (static_cast<uint32_t>(sizeof(uint32_t))));
-		dst += static_cast<uint32_t>(sizeof(uint32_t));
-		memcpy(dst, &m_cameraInfo._p2, (static_cast<uint32_t>(sizeof(uint32_t))));
-		dst += static_cast<uint32_t>(sizeof(uint32_t));
-		memcpy(dst, &m_cameraInfo._p3, (static_cast<uint32_t>(sizeof(uint32_t))));
-		dst += static_cast<uint32_t>(sizeof(uint32_t));
-		// 可変部分
-		memcpy(dst, m_cameraInfo.cameraData.data(), sizeof(CameraData) * m_cameraInfo.cameraData.size());
+
+		uint8_t dstOffset = 0;
+		// MainCameraIndex
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer,
+			&m_cameraInfo.mainCameraIndex,
+			sizeof(uint32_t),
+			dstOffset);
+		dstOffset += static_cast<uint8_t>(sizeof(uint32_t));
+		// p1
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer,
+			&m_cameraInfo._p1,
+			sizeof(uint32_t),
+			dstOffset);
+		dstOffset += static_cast<uint8_t>(sizeof(uint32_t));
+		// p2
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer,
+			&m_cameraInfo._p2,
+			sizeof(uint32_t),
+			dstOffset);
+		dstOffset += static_cast<uint8_t>(sizeof(uint32_t));
+		// p3
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer,
+			&m_cameraInfo._p3,
+			sizeof(uint32_t),
+			dstOffset);
+		dstOffset += static_cast<uint8_t>(sizeof(uint32_t));
+		// CameraData
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].buffer,
+			m_cameraInfo.cameraData.data(),
+			sizeof(CameraData) * m_cameraInfo.cameraData.size(),
+			dstOffset);
 	}
 
 	void SceneInfoDescriptorSet::updateTerrainVBDispatchInfo()
 	{
 		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].update)
 		{
-			// 可変部分
-			uint8_t* dst = static_cast<uint8_t*>(m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].buffer.allocationInfo.pMappedData);
-			memcpy(dst, m_terrainVBDispatchInfo.data(), sizeof(VBDispatchInfo) * m_terrainVBDispatchInfo.size());
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].buffer,
+				m_terrainVBDispatchInfo.data(),
+				sizeof(VBDispatchInfo) * m_terrainVBDispatchInfo.size());
 
 			// 一時データクリア
 			m_terrainVBDispatchInfo.clear();

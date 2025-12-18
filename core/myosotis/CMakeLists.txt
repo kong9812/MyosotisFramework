@@ -58,6 +58,7 @@ set_target_properties(${GAME_PROJECT_NAME} PROPERTIES
 
 # build switch
 target_compile_definitions(${GAME_PROJECT_NAME} PRIVATE
+  NOMINMAX
   $<$<CONFIG:Debug>:DEBUG>
   $<$<CONFIG:FWDLL>:FWDLL>
   $<$<CONFIG:Release>:RELEASE>

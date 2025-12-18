@@ -50,15 +50,7 @@ namespace MyosotisFW::System::Render
 		{
 			Descriptor& descriptor = m_descriptors[index];
 			// SSBOの作成
-			vmaTools::ShaderBufferObjectAllocate(
-				*m_device,
-				m_device->GetVmaAllocator(),
-				dataSize,
-				VkBufferUsageFlagBits::VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-				descriptor.buffer.buffer,
-				descriptor.buffer.allocation,
-				descriptor.buffer.allocationInfo,
-				descriptor.buffer.descriptor);
+			descriptor.buffer = vmaTools::CreateShaderStorageBuffer(m_device->GetVmaAllocator(), dataSize);
 
 			VkDescriptorBufferInfo vertexMetaDataDescriptorBufferInfo = Utility::Vulkan::CreateInfo::descriptorBufferInfo(descriptor.buffer.buffer);
 			VkWriteDescriptorSet writeDescriptorSet = Utility::Vulkan::CreateInfo::writeDescriptorSet(

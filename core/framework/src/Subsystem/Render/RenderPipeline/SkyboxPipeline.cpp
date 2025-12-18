@@ -3,17 +3,12 @@
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
-#include "PrimitiveGeometryShape.h"
-
 namespace MyosotisFW::System::Render
 {
 	SkyboxPipeline::~SkyboxPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
-
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_vertexBuffer.buffer, m_vertexBuffer.allocation);
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_indexBuffer.buffer, m_indexBuffer.allocation);
 	}
 
 	void SkyboxPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
@@ -21,32 +16,9 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 
 		{// Skybox Mesh
-			Mesh vertex = MyosotisFW::System::Render::Shape::createQuad(1.0f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-			{// vertex
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * vertex.vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-				VmaAllocationCreateInfo allocationCreateInfo{};
-				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_vertexBuffer.buffer, &m_vertexBuffer.allocation, &m_vertexBuffer.allocationInfo));
-				m_vertexBuffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_vertexBuffer.buffer);
-				// mapping
-				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation, &data));
-				memcpy(data, vertex.vertex.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_vertexBuffer.allocation);
-			}
-			{// index
-				VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(uint32_t) * vertex.index.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-				VmaAllocationCreateInfo allocationCreateInfo{};
-				allocationCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;	// CPUで更新可能
-				VK_VALIDATION(vmaCreateBuffer(m_device->GetVmaAllocator(), &bufferCreateInfo, &allocationCreateInfo, &m_indexBuffer.buffer, &m_indexBuffer.allocation, &m_indexBuffer.allocationInfo));
-				m_indexBuffer.descriptor = Utility::Vulkan::CreateInfo::descriptorBufferInfo(m_indexBuffer.buffer);
-
-				// mapping
-				void* data{};
-				VK_VALIDATION(vmaMapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation, &data));
-				memcpy(data, vertex.index.data(), bufferCreateInfo.size);
-				vmaUnmapMemory(m_device->GetVmaAllocator(), m_indexBuffer.allocation);
-			}
+			Mesh mesh = resources->GetPrimitiveGeometryMesh(Shape::PrimitiveGeometryShape::Quad);
+			m_vertexBuffer = mesh.vertexBuffer;
+			m_indexBuffer = mesh.indexBuffer;
 		}
 
 		{// Skybox Image
@@ -81,7 +53,7 @@ namespace MyosotisFW::System::Render
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(commandBuffer, m_indexBuffer.allocationInfo.size / sizeof(uint32_t), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, m_indexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
 	}
 
 	void SkyboxPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
