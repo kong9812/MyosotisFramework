@@ -2,7 +2,7 @@
 #include "RenderResources.h"
 #include "RenderDevice.h"
 #include "RenderQueue.h"
-#include "MeshInfoDescriptorSet.h"
+#include "RenderDescriptors.h"
 
 #include "ShaderIo.h"
 #include "CubeImageIo.h"
@@ -10,6 +10,7 @@
 #include "FBXIo.h"
 #include "GLTFIo.h"
 #include "MFModelIo.h"
+#include "TerrainIo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -51,6 +52,16 @@ namespace MyosotisFW::System::Render
 			}
 		}
 		m_meshes.clear();
+
+		for (std::pair<std::string, std::vector<Mesh>> meshList : m_terrains)
+		{
+			for (Mesh& mesh : meshList.second)
+			{
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.indexBuffer.buffer, mesh.indexBuffer.allocation);
+			}
+		}
+		m_terrains.clear();
 
 		for (std::pair<Shape::PrimitiveGeometryShape, Mesh> meshPair : m_primitiveGeometryMeshes)
 		{
@@ -140,11 +151,11 @@ namespace MyosotisFW::System::Render
 		}
 
 		{// ray tracing render target
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_rayTracingRenderTargetFormat, width, height);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 			VmaAllocationCreateInfo allocationCreateInfo{};
 			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_rayTracingRenderTarget.image, &m_rayTracingRenderTarget.allocation, &m_rayTracingRenderTarget.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_rayTracingRenderTarget.image, AppInfo::g_surfaceFormat.format);
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_rayTracingRenderTarget.image, AppInfo::g_rayTracingRenderTargetFormat);
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_rayTracingRenderTarget.view));
 		}
 
@@ -172,23 +183,44 @@ namespace MyosotisFW::System::Render
 			if ((extension == ".fbx") || (extension == ".FBX"))
 			{
 				std::vector<Mesh> meshes = Utility::Loader::loadFbx(fileName);
+				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+				for (Mesh& mesh : meshes)
+				{
+					mesh.meshInfo.meshID = meshID;
+					meshID++;
+				}
 				createVertexIndexBuffer(meshes);
-				m_meshes.emplace(fileName, meshes);
 				m_onLoadedMesh(meshes);
+				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
+				m_meshes.emplace(fileName, meshes);
 			}
 			else if ((extension == ".gltf") || (extension == ".GLTF"))
 			{
 				std::vector<Mesh> meshes = Utility::Loader::loadGltf(fileName);
+				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+				for (Mesh& mesh : meshes)
+				{
+					mesh.meshInfo.meshID = meshID;
+					meshID++;
+				}
 				createVertexIndexBuffer(meshes);
-				m_meshes.emplace(fileName, meshes);
 				m_onLoadedMesh(meshes);
+				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
+				m_meshes.emplace(fileName, meshes);
 			}
 			else if ((extension == ".mfmodel") || (extension == ".MFMODEL"))
 			{
 				std::vector<Mesh> meshes = Utility::Loader::loadMFModel(fileName);
+				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+				for (Mesh& mesh : meshes)
+				{
+					mesh.meshInfo.meshID = meshID;
+					meshID++;
+				}
 				createVertexIndexBuffer(meshes);
-				m_meshes.emplace(fileName, meshes);
 				m_onLoadedMesh(meshes);
+				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
+				m_meshes.emplace(fileName, meshes);
 			}
 			else
 			{
@@ -198,13 +230,49 @@ namespace MyosotisFW::System::Render
 		return m_meshes[fileName];
 	}
 
+	std::vector<Mesh> RenderResources::GetTerrainMesh(const std::string& fileName)
+	{
+		auto vertexData = m_terrains.find(fileName);
+		if (vertexData == m_terrains.end())
+		{
+			// 拡張子判定
+			std::string extension = std::filesystem::path(fileName).extension().string();
+			if ((extension == ".png") || (extension == ".PNG"))
+			{
+				std::vector<Mesh> meshes = Utility::Loader::loadTerrainMesh(fileName);
+				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+				for (Mesh& mesh : meshes)
+				{
+					mesh.meshInfo.meshID = meshID;
+					meshID++;
+				}
+				createVertexIndexBuffer(meshes);
+				m_onLoadedMesh(meshes);
+				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
+				m_terrains.emplace(fileName, meshes);
+			}
+			else
+			{
+				ASSERT(false, "Unsupported terrain format: " + fileName);
+			}
+		}
+		return m_terrains[fileName];
+	}
+
 	Mesh RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
 	{
 		auto vertexData = m_primitiveGeometryMeshes.find(shape);
 		if (vertexData == m_primitiveGeometryMeshes.end())
 		{
 			std::vector<Mesh> meshes{ Shape::createShape(shape) };
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			for (Mesh& mesh : meshes)
+			{
+				mesh.meshInfo.meshID = meshID;
+				meshID++;
+			}
 			createVertexIndexBuffer(meshes);
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, meshes[0]);
 			m_primitiveGeometryMeshes.emplace(shape, meshes[0]);
 			m_onLoadedMesh(meshes);
 		}
@@ -274,6 +342,44 @@ namespace MyosotisFW::System::Render
 			size,
 			m_device->GetAllocationCallbacks());
 		return result;
+	}
+
+	std::vector<Mesh> RenderResources::GetMeshFormID(const uint32_t meshID)
+	{
+		auto itm = std::find_if(m_meshes.begin(), m_meshes.end(),
+			[&](std::pair<std::string, std::vector<Mesh>> pair)
+			{
+				for (Mesh& mesh : pair.second)
+				{
+					return mesh.meshInfo.meshID == meshID;
+				}
+			});
+		if (itm != m_meshes.end())
+		{
+			return itm->second;
+		}
+		auto itp = std::find_if(m_primitiveGeometryMeshes.begin(), m_primitiveGeometryMeshes.end(),
+			[&](std::pair<Shape::PrimitiveGeometryShape, Mesh> pair)
+			{
+				return pair.second.meshInfo.meshID == meshID;
+			});
+		if (itp != m_primitiveGeometryMeshes.end())
+		{
+			return { itp->second };
+		}
+		auto itt = std::find_if(m_terrains.begin(), m_terrains.end(),
+			[&](std::pair<std::string, std::vector<Mesh>> pair)
+			{
+				for (Mesh& mesh : pair.second)
+				{
+					return mesh.meshInfo.meshID == meshID;
+				}
+			});
+		if (itt != m_terrains.end())
+		{
+			return itt->second;
+		}
+		return {};
 	}
 
 	void RenderResources::createVertexIndexBuffer(std::vector<Mesh>& meshes)

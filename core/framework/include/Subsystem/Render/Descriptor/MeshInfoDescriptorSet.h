@@ -26,12 +26,13 @@ namespace MyosotisFW::System::Render
 			VertexData,
 			UniqueIndexData,
 			PrimitivesData,
+			IndexData,
 			Count
 		};
 
 		void Update() override;
-		uint32_t AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh);
-		std::vector<uint32_t> AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes);
+		void AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh);
+		void AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes);
 		MeshInfo GetMeshInfo(const uint32_t index) const { return m_meshInfo[index]; }
 
 	private:
@@ -41,6 +42,7 @@ namespace MyosotisFW::System::Render
 		void updateVertexData();
 		void updateUniqueIndexData();
 		void updatePrimitivesData();
+		void updateIndexData();
 
 		std::vector<MeshInfo> m_meshInfo;
 		std::vector<MeshletInfo> m_meshletInfo;
@@ -48,6 +50,7 @@ namespace MyosotisFW::System::Render
 		std::vector<VertexData> m_vertexData;
 		std::vector<uint32_t> m_uniqueIndexData;
 		std::vector<uint32_t> m_primitivesData;
+		std::vector<uint32_t> m_indexData;
 
 		std::unordered_map<Shape::PrimitiveGeometryShape, uint32_t> m_primitiveMeshIDTable;
 		std::unordered_map<std::string, std::vector<uint32_t>> m_customMeshIDTable;

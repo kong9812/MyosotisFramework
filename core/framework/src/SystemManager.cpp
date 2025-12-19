@@ -165,6 +165,7 @@ namespace MyosotisFW::System
 		m_renderSubsystem->MeshShaderRender();
 		m_renderSubsystem->LightingRender();
 		m_renderSubsystem->LightmapBake();
+		m_renderSubsystem->RayTracingRender();
 		m_renderSubsystem->EndRender();
 	}
 

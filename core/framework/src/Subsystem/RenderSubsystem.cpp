@@ -98,6 +98,7 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
+		m_accelerationStructureManager->OnAddObject(object);
 		m_objects.push_back(object);
 	}
 
@@ -185,6 +186,7 @@ namespace MyosotisFW::System::Render
 			{
 				m_renderDescriptors->GetMeshInfoDescriptorSet()->Update();
 			}
+			m_accelerationStructureManager->RebuildTLAS();
 			m_objectRegistry->ResetChangeFlags();
 		}
 		m_renderDescriptors->GetSceneInfoDescriptorSet()->Update();
@@ -200,6 +202,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		m_accelerationStructureManager->Process();
+		m_renderDescriptors->GetRayTracingDescriptorSet()->Update();
 	}
 
 	void RenderSubsystem::BeginCompute()
@@ -301,6 +304,17 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
+	void RenderSubsystem::RayTracingRender()
+	{
+		if (m_mainCamera == nullptr) return;
+		if (m_objects.empty()) return;
+		// Ray Tracing Render
+		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
+		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+		m_rayTracingPipeline->BindCommandBuffer(currentCommandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+	}
+
 	void RenderSubsystem::EndRender()
 	{
 		if (m_mainCamera == nullptr) return;
@@ -385,7 +399,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateRenderResourcesPointer(m_device);
+		m_resources = CreateRenderResourcesPointer(m_device, m_renderDescriptors);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
@@ -477,8 +491,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeAccelerationStructureManager()
 	{
-		m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors);
-		m_resources->SetOnLoadedMesh([=](const std::vector<Mesh>& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
+		m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors, m_resources);
+		m_resources->SetOnLoadedMesh([=](std::vector<Mesh>& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
 		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) {m_accelerationStructureManager->OnAddObject(m); });
 	}
 

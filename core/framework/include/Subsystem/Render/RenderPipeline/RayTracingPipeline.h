@@ -22,6 +22,9 @@ namespace MyosotisFW::System::Render
 
 	private:
 		struct {
+			uint32_t storeImageID;
+		}pushConstant;
+		struct {
 			Buffer sbtBuffer;
 			VkStridedDeviceAddressRegionKHR region;
 		} m_raygenSBTBuffer;
@@ -34,20 +37,11 @@ namespace MyosotisFW::System::Render
 			VkStridedDeviceAddressRegionKHR region;
 		} m_hitSBTBuffer;
 
-		AccelerationStructure m_blas;
-		AccelerationStructure m_tlas;
 
 		void prepareRenderPipeline(const RenderResources_ptr& resources);
 
 		void createShaderBindingTable();
 		void createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount);
-
-		void createBLAS();
-		void createTLAS();
-
-		Buffer m_vertexBuffer;
-		Buffer m_indexBuffer;
-		Buffer m_transform;
 
 		PFN_vkGetRayTracingShaderGroupHandlesKHR		m_vkGetRayTracingShaderGroupHandlesKHR;
 		PFN_vkCreateAccelerationStructureKHR			m_vkCreateAccelerationStructureKHR;

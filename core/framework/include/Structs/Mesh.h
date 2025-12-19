@@ -20,5 +20,8 @@ namespace MyosotisFW
 		// Buffer
 		Buffer vertexBuffer;
 		Buffer indexBuffer;
+
+		// BLAS
+		uint32_t blasID;
 	};
 }

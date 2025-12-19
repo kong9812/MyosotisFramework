@@ -64,6 +64,8 @@ namespace MyosotisFW::System::Render::Camera
 		data.position = glm::vec4(m_cameraPos, 0.0f);
 		data.projection = GetProjectionMatrix();
 		data.view = GetViewMatrix();
+		data.invProjection = glm::inverse(data.projection);
+		data.invView = glm::inverse(data.view);
 
 		glm::mat4 vp = GetProjectionMatrix() * GetViewMatrix();
 		glm::vec4 rowX = glm::vec4(vp[0][0], vp[1][0], vp[2][0], vp[3][0]);

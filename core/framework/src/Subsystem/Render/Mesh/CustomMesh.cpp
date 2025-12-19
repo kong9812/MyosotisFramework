@@ -50,19 +50,19 @@ namespace MyosotisFW::System::Render
 	void CustomMesh::loadAssets()
 	{
 		std::vector<Mesh> meshes = m_resources->GetMesh(m_meshComponentInfo.meshName);
-		std::vector<uint32_t> meshID = m_meshInfoDescriptorSet->AddCustomGeometry(m_meshComponentInfo.meshName, meshes);
+		m_meshID = meshes[0].meshInfo.meshID;
 		m_meshCount = static_cast<uint32_t>(meshes.size());
 
 		// VBDispatchInfoの作成
 		for (uint32_t i = 0; i < m_meshCount; i++)
 		{
-			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID[i]);
+			const MeshInfo meshInfo = meshes[i].meshInfo;
 			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 			{
 				VBDispatchInfo vbDispatchInfo{};
-				vbDispatchInfo.objectID = m_objectID;	// MObjectRegistryでセットされたobjectIDを使う
-				vbDispatchInfo.meshID = meshID[i];		// meshIDそのままを使って、iではない！
-				vbDispatchInfo.meshletID = j;			// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+				vbDispatchInfo.objectID = m_objectID;		// MObjectRegistryでセットされたobjectIDを使う
+				vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
+				vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 				// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
 				m_vbDispatchInfo.push_back(vbDispatchInfo);
 			}

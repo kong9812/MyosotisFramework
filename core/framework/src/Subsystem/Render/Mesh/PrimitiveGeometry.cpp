@@ -51,22 +51,17 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::loadAssets()
 	{
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
-		Mesh mesh = MyosotisFW::System::Render::Shape::createShape(m_primitiveGeometryShape);
-		uint32_t meshID = m_meshInfoDescriptorSet->AddPrimitiveGeometry(m_primitiveGeometryShape, mesh);
+		Mesh mesh = m_resources->GetPrimitiveGeometryMesh(m_primitiveGeometryShape);
+		m_meshID = mesh.meshInfo.meshID;
 		m_meshCount = 1;
-
 		// VBDispatchInfoの作成
-		for (uint32_t i = 0; i < m_meshCount; i++)
+		for (uint32_t j = 0; j < mesh.meshInfo.meshletCount; j++)
 		{
-			const MeshInfo meshInfo = m_meshInfoDescriptorSet->GetMeshInfo(meshID);
-			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
-			{
-				VBDispatchInfo vbDispatchInfo{};
-				vbDispatchInfo.objectID = m_objectID;	// MObjectRegistryでセットされたobjectIDを使う
-				vbDispatchInfo.meshID = meshID;			// meshIDそのままを使って、iではない！
-				vbDispatchInfo.meshletID = j;			// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
-				m_vbDispatchInfo.push_back(vbDispatchInfo);
-			}
+			VBDispatchInfo vbDispatchInfo{};
+			vbDispatchInfo.objectID = m_objectID;			// MObjectRegistryでセットされたobjectIDを使う
+			vbDispatchInfo.meshID = mesh.meshInfo.meshID;	// meshIDそのままを使って、iではない！
+			vbDispatchInfo.meshletID = j;					// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+			m_vbDispatchInfo.push_back(vbDispatchInfo);
 		}
 	}
 }

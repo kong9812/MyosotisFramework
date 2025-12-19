@@ -5,6 +5,8 @@ struct CameraData {
   vec4 frustumPlanes[6];
   mat4 view;
   mat4 projection;
+  mat4 invView;
+  mat4 invProjection;
   vec4 pos;
 };
 

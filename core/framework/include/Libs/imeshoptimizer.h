@@ -71,7 +71,7 @@ namespace meshoptimizer
 
 			dst.meshletInfo.vertexCount = src.vertex_count;
 			dst.meshletInfo.primitiveCount = src.triangle_count;
-
+			meshData.meshInfo.meshletCount = meshletCount;
 			meshData.meshlet.push_back(dst);
 		}
 	}

@@ -18,7 +18,8 @@ namespace MyosotisFW::System::Render
 		m_resources(nullptr),
 		m_vbDispatchInfo(),
 		m_meshChangedCallback(meshChangedCallback),
-		m_meshCount(0)
+		m_meshCount(0),
+		m_meshID(0)
 	{
 		m_name = "StaticMesh";
 	}

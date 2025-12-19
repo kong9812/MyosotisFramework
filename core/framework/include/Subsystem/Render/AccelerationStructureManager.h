@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vector>
+#include <list>
 #include <unordered_map>
 #include "ClassPointer.h"
 #include "AccelerationStructure.h"
@@ -23,27 +24,33 @@ namespace MyosotisFW::System::Render
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
 	class RenderDescriptors;
 	TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
+	class RenderResources;
+	TYPEDEF_SHARED_PTR_FWD(RenderResources);
 
 	class AccelerationStructureManager
 	{
 	public:
-		AccelerationStructureManager(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors);
+		AccelerationStructureManager(
+			const RenderDevice_ptr& device,
+			const RenderDescriptors_ptr& renderDescriptors,
+			const RenderResources_ptr& renderResources);
 		~AccelerationStructureManager();
 
-		void OnLoadedMesh(const std::vector<Mesh>& meshes);
+		void OnLoadedMesh(std::vector<Mesh>& meshes);
 		// todo. Meshに対応するBLASを登録し、ビルドが必要な状態にする
 		// todo. MeshデータからBLASを生成するためのリソースを作成し、
 		// todo. Vertex/IndexのデバイスアドレスとBLASを登録する
 
 		void OnAddObject(const MObject_ptr& object);		// todo. TLAS用のInstance情報を追加し、TLAS更新を要求する
 
-		void NewScene();			// todo. シーン切り替え時にTLASとInstance情報をリセットする
+		void RebuildTLAS();			// todo. シーン切り替え時にTLASとInstance情報をリセットする
 
 		void Process();			//todo. ここでビルドと更新を判定し、実行する
 
 	private:
 		RenderDevice_ptr m_device;
 		RenderDescriptors_ptr m_renderDescriptors;
+		RenderResources_ptr m_renderResources;
 
 		bool m_blasDirty;
 		bool m_tlasDirty;
@@ -52,7 +59,7 @@ namespace MyosotisFW::System::Render
 		TLASInfo m_tlas;
 
 		std::vector<BLASInfo> m_pendingBLASBuild;
-		std::vector<TLASInstanceInfo> m_instances;
+		std::list<TLASInstanceInfo> m_instances;
 
 		void buildBLAS();	// todo. 登録済みBLASをGPU上にBuildする（初回のみ）
 		void buildTLAS();	// todo. TLASのビルド処理

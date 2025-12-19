@@ -12,8 +12,8 @@ struct MeshInfo {
 	uint unitSize;            	// 一枚当たりのサイズ
 	uint vertexFloatCount;		// 頂点Floatデータの数 
 	uint indexCount;			// Indexの数
-	uint p2;
-	uint p3;
+	uint vertexDataOffset;
+	uint indexDataOffset;
 	uint p4;
 };
 

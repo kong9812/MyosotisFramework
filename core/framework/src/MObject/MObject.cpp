@@ -28,6 +28,21 @@ namespace MyosotisFW
 		return 0;
 	}
 
+	const uint32_t MObject::GetMeshID() const
+	{
+		auto it = std::find_if(m_components.begin(), m_components.end(),
+			[&](const ComponentBase_ptr& existingComponent)
+			{
+				return existingComponent->IsStaticMesh();
+			});
+		if (it != m_components.end())
+		{
+			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
+			return staticMesh->GetMeshID();
+		}
+		return 0;
+	}
+
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
 	{
 		auto it = std::find_if(m_components.begin(), m_components.end(),
@@ -67,6 +82,8 @@ namespace MyosotisFW
 			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			m_objectInfo->model = glm::scale(m_objectInfo->model, glm::vec3(m_objectInfo->transform.scale));
+			m_tlasInstanceInfo->model = m_objectInfo->model;
+			m_tlasInstanceInfo->meshID = GetMeshID();
 			m_dirty = false;
 			return true;
 		}

@@ -117,6 +117,7 @@ namespace MyosotisFW::System::Render
 		void MeshShaderRender();
 		void LightingRender();
 		void LightmapBake();
+		void RayTracingRender();
 		void EndRender();
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);

@@ -15,12 +15,15 @@ namespace MyosotisFW::System::Render
 	// 前方宣言
 	class RenderDevice;
 	TYPEDEF_SHARED_PTR_FWD(RenderDevice);
+	class RenderDescriptors;
+	TYPEDEF_SHARED_PTR_FWD(RenderDescriptors);
 
 	class RenderResources
 	{
 	public:
-		RenderResources(const RenderDevice_ptr& device)
+		RenderResources(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors)
 			:m_device(device),
+			m_renderDescriptors(renderDescriptors),
 			m_shaderModules({}),
 			m_meshes({}),
 			m_images({}),
@@ -37,6 +40,7 @@ namespace MyosotisFW::System::Render
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
 		std::vector<Mesh> GetMesh(const std::string& fileName);
+		std::vector<Mesh>  GetTerrainMesh(const std::string& fileName);
 		Mesh GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
@@ -45,13 +49,16 @@ namespace MyosotisFW::System::Render
 
 		bool SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size);
 
-		void SetOnLoadedMesh(const std::function<void(const std::vector<Mesh>&)>& callback) { m_onLoadedMesh = callback; }
+		void SetOnLoadedMesh(const std::function<void(std::vector<Mesh>&)>& callback) { m_onLoadedMesh = callback; }
 
+		std::vector<Mesh> GetMeshFormID(const uint32_t meshID);
 	protected:
 		RenderDevice_ptr m_device;
+		RenderDescriptors_ptr m_renderDescriptors;
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, std::vector<Mesh>> m_meshes;
+		std::unordered_map<std::string, std::vector<Mesh>> m_terrains;
 		std::unordered_map<Shape::PrimitiveGeometryShape, Mesh> m_primitiveGeometryMeshes;
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
@@ -80,7 +87,7 @@ namespace MyosotisFW::System::Render
 		void createVertexIndexBuffer(std::vector<Mesh>& meshes);
 
 	protected:
-		std::function<void(const std::vector<Mesh>&)> m_onLoadedMesh;
+		std::function<void(std::vector<Mesh>&)> m_onLoadedMesh;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

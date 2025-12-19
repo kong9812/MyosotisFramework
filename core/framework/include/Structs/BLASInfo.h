@@ -10,7 +10,7 @@ namespace MyosotisFW
 	{
 		Buffer vertexBuffer;
 		Buffer indexBuffer;
-		Buffer transformBuffer;
+		//Buffer transformBuffer;
 
 		VkDeviceAddress vertexAddress;
 		VkDeviceAddress indexAddress;

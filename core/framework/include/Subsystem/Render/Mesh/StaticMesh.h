@@ -55,6 +55,7 @@ namespace MyosotisFW::System::Render
 		uint32_t GetMeshCount() const { return m_meshCount; }
 
 		virtual bool IsStaticMesh() const override { return true; }
+		const uint32_t GetMeshID() const { return m_meshID; }
 
 	protected:
 		virtual void loadAssets() { m_meshChangedCallback(); }
@@ -71,6 +72,8 @@ namespace MyosotisFW::System::Render
 		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 
 		std::function<void(void)> m_meshChangedCallback;
+
+		uint32_t m_meshID;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);

@@ -6,6 +6,7 @@
 #include "MObject.h"
 #include "iglm.h"
 #include "RenderDescriptors.h"
+#include "RenderResources.h"
 
 namespace {
 	VkTransformMatrixKHR ToVkTransformMatrixKHR(const glm::mat4& mat)
@@ -21,9 +22,13 @@ namespace {
 
 namespace MyosotisFW::System::Render
 {
-	AccelerationStructureManager::AccelerationStructureManager(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
+	AccelerationStructureManager::AccelerationStructureManager(
+		const RenderDevice_ptr& device,
+		const RenderDescriptors_ptr& renderDescriptors,
+		const RenderResources_ptr& renderResources) :
 		m_device(device),
 		m_renderDescriptors(renderDescriptors),
+		m_renderResources(renderResources),
 		m_blasDirty(false),
 		m_tlasDirty(false),
 		m_blas({}),
@@ -53,7 +58,7 @@ namespace MyosotisFW::System::Render
 		{
 			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.vertexBuffer.buffer, blasInfo.vertexBuffer.allocation);
 			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.indexBuffer.buffer, blasInfo.indexBuffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.transformBuffer.buffer, blasInfo.transformBuffer.allocation);
+			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.transformBuffer.buffer, blasInfo.transformBuffer.allocation);
 
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.blas.buffer.buffer, blasInfo.blas.buffer.allocation);
 
@@ -63,7 +68,7 @@ namespace MyosotisFW::System::Render
 		{
 			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.vertexBuffer.buffer, blasInfo.vertexBuffer.allocation);
 			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.indexBuffer.buffer, blasInfo.indexBuffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.transformBuffer.buffer, blasInfo.transformBuffer.allocation);
+			//vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.transformBuffer.buffer, blasInfo.transformBuffer.allocation);
 
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), blasInfo.blas.buffer.buffer, blasInfo.blas.buffer.allocation);
 
@@ -71,12 +76,13 @@ namespace MyosotisFW::System::Render
 		}
 
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_tlas.tlas.buffer.buffer, m_tlas.tlas.buffer.allocation);
+		vmaDestroyBuffer(m_device->GetVmaAllocator(), m_tlas.instanceBuffer.buffer, m_tlas.instanceBuffer.allocation);
 		m_vkDestroyAccelerationStructureKHR(*m_device, m_tlas.tlas.handle, m_device->GetAllocationCallbacks());
 	}
 
-	void AccelerationStructureManager::OnLoadedMesh(const std::vector<Mesh>& meshes)
+	void AccelerationStructureManager::OnLoadedMesh(std::vector<Mesh>& meshes)
 	{
-		for (const Mesh& mesh : meshes)
+		for (Mesh& mesh : meshes)
 		{
 			// BLAS Info
 			BLASInfo blasInfo{};
@@ -86,26 +92,11 @@ namespace MyosotisFW::System::Render
 			blasInfo.vertexBuffer = mesh.vertexBuffer;
 			blasInfo.indexBuffer = mesh.indexBuffer;
 
-			{// transform
-				// MeshTransform (固定)
-				VkTransformMatrixKHR transformMatrix = {
-					1.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 1.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f, 0.0f };
-				// transformBuffer 作成
-				blasInfo.transformBuffer = vmaTools::CreateBuffer(
-					m_device->GetVmaAllocator(), sizeof(VkTransformMatrixKHR),
-					VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-					VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
-			}
-
 			// 2. VkDeviceAddress 取得
 			VkDeviceOrHostAddressConstKHR vertexAddress{};
 			blasInfo.vertexAddress = vertexAddress.deviceAddress = m_device->GetBufferDeviceAddress(blasInfo.vertexBuffer.buffer);
 			VkDeviceOrHostAddressConstKHR indexAddress{};
 			blasInfo.indexAddress = indexAddress.deviceAddress = m_device->GetBufferDeviceAddress(blasInfo.indexBuffer.buffer);
-			VkDeviceOrHostAddressConstKHR transformAddress{};
-			blasInfo.transformAddress = transformAddress.deviceAddress = m_device->GetBufferDeviceAddress(blasInfo.transformBuffer.buffer);
 
 			// 3. BLAS Geometry 情報構築
 			blasInfo.geometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -113,11 +104,11 @@ namespace MyosotisFW::System::Render
 			blasInfo.geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 			blasInfo.geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
 			blasInfo.geometry.geometry.triangles.vertexData = vertexAddress;
-			blasInfo.geometry.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.vertex.size());
+			blasInfo.geometry.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.vertex.size() - 1);
 			blasInfo.geometry.geometry.triangles.vertexStride = sizeof(VertexData);
 			blasInfo.geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
 			blasInfo.geometry.geometry.triangles.indexData = indexAddress;
-			blasInfo.geometry.geometry.triangles.transformData = transformAddress;
+			//blasInfo.geometry.geometry.triangles.transformData = transformAddress;
 
 			// ASのビルドジオメトリ情報
 			VkAccelerationStructureBuildGeometryInfoKHR buildGeometryInfo{};
@@ -149,6 +140,7 @@ namespace MyosotisFW::System::Render
 			blasInfo.blas.buffer = vmaTools::CreateASBuffer(m_device->GetVmaAllocator(), blasInfo.buildSize.accelerationStructureSize);
 
 			// 4. BLAS登録
+			mesh.blasID = m_pendingBLASBuild.size();
 			m_pendingBLASBuild.push_back(blasInfo);
 
 			// 5. Dirty フラグ更新
@@ -158,21 +150,20 @@ namespace MyosotisFW::System::Render
 
 	void AccelerationStructureManager::OnAddObject(const MObject_ptr& object)
 	{
-		TLASInstanceInfo info{};
+		TLASInstanceInfo& info = m_instances.emplace_back();
 		info.objectID = object->GetObjectID();
 		//info.blasID = blasID;	//todo
-		info.transform = { object->GetPos(), object->GetRot(), object->GetScale(), glm::vec4(0.0f) };
+		//info.transform = { object->GetPos(), object->GetRot(), object->GetScale(), glm::vec4(0.0f) };
 		info.mask = 0xFF;
 		info.hitGroupOffset = 0;
 		info.transformDirty = true;
 
-		m_instances.push_back(info);
+		object->SetTLASInstanceInfo(info);
 		m_tlasDirty = true;
 	}
 
-	void AccelerationStructureManager::NewScene()
+	void AccelerationStructureManager::RebuildTLAS()
 	{
-		m_instances.clear();
 		destroyTLAS();
 		m_tlasDirty = true;
 	}
@@ -198,18 +189,20 @@ namespace MyosotisFW::System::Render
 		}
 
 		// Scratch Bufferの作成
-		ScratchBuffer scratchBuffer{};
+		std::vector<ScratchBuffer> scratchBuffer(m_pendingBLASBuild.size());
 		uint64_t scratchBufferOffset = 0;
-		scratchBuffer.buffer = vmaTools::CreateScratchBuffer(m_device->GetVmaAllocator(), totalScratchSize);
-		scratchBuffer.deviceAddress = m_device->GetBufferDeviceAddress(scratchBuffer.buffer.buffer);
 
 		// CommandBufferの準備
 		VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
+		uint64_t scratchBufferIndex = 0;
 		for (BLASInfo& blasInfo : m_pendingBLASBuild)
 		{
+			scratchBuffer[scratchBufferIndex].buffer = vmaTools::CreateScratchBuffer(m_device->GetVmaAllocator(), totalScratchSize);
+			scratchBuffer[scratchBufferIndex].deviceAddress = m_device->GetBufferDeviceAddress(scratchBuffer[scratchBufferIndex].buffer.buffer);
+
 			// ASの作成
 			VkAccelerationStructureCreateInfoKHR asCI{};
 			asCI.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -227,8 +220,9 @@ namespace MyosotisFW::System::Render
 			buildGeometryInfo.pGeometries = &blasInfo.geometry;
 			buildGeometryInfo.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 			buildGeometryInfo.dstAccelerationStructure = blasInfo.blas.handle;
-			buildGeometryInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress + scratchBufferOffset;
-			scratchBufferOffset += blasInfo.buildSize.buildScratchSize;
+			//buildGeometryInfo.scratchData.deviceAddress = scratchBuffer.deviceAddress + scratchBufferOffset;
+			//scratchBufferOffset += blasInfo.buildSize.buildScratchSize;
+			buildGeometryInfo.scratchData.deviceAddress = scratchBuffer[scratchBufferIndex].deviceAddress;
 
 			// 1つのみ
 			const VkAccelerationStructureBuildRangeInfoKHR* pAsBuildRangeInfoKHR = &blasInfo.buildRange;
@@ -239,6 +233,8 @@ namespace MyosotisFW::System::Render
 				1,
 				&buildGeometryInfo,
 				&pAsBuildRangeInfoKHR);
+
+			scratchBufferIndex++;
 		}
 
 		// 書き込む保証 (FenceではできないGPU->GPUの書き込みバリア)
@@ -287,28 +283,30 @@ namespace MyosotisFW::System::Render
 
 		m_pendingBLASBuild.clear();
 
-		// ScratchBufferの破棄
-		vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuffer.buffer.buffer, scratchBuffer.buffer.allocation);
+		for (ScratchBuffer& scratchBuf : scratchBuffer)
+		{
+			// ScratchBufferの破棄
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), scratchBuf.buffer.buffer, scratchBuf.buffer.allocation);
+		}
 
 		m_blasDirty = false;
 	}
 
 	void AccelerationStructureManager::buildTLAS()
 	{
-		if (m_tlasDirty) return;
-
 		if ((m_tlas.tlas.handle != VK_NULL_HANDLE) || (m_tlas.instanceBuffer.buffer != VK_NULL_HANDLE)) destroyTLAS();
 
 		std::vector<VkAccelerationStructureInstanceKHR> asInstances{};
 		for (const TLASInstanceInfo& instance : m_instances)
 		{
+			uint32_t biasID = m_renderResources->GetMeshFormID(instance.meshID)[0].blasID;
 			VkAccelerationStructureInstanceKHR asInstance{};
-			asInstance.transform = ToVkTransformMatrixKHR(instance.transform);
+			asInstance.transform = ToVkTransformMatrixKHR(instance.model);
 			asInstance.instanceCustomIndex = instance.instanceCustomIndex;
 			asInstance.mask = instance.mask;
 			asInstance.instanceShaderBindingTableRecordOffset = instance.hitGroupOffset;
 			asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-			asInstance.accelerationStructureReference = m_blas[instance.blasID].blas.deviceAddress;
+			asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
 			asInstances.push_back(asInstance);
 		}
 
@@ -389,6 +387,22 @@ namespace MyosotisFW::System::Render
 			1,
 			&asBuildGeometryInfoKHR,
 			pAsBuildRangeInfoKHRs.data());
+
+		// 書き込む保証 (FenceではできないGPU->GPUの書き込みバリア)
+		VkMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+		barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_KHR;
+		vkCmdPipelineBarrier(
+			commandBuffer,
+			VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
+			VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR |
+			VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+			0,
+			1, &barrier,
+			0, nullptr,
+			0, nullptr);
+
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
 		submitInfo.commandBufferCount = 1;
