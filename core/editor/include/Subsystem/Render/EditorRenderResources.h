@@ -7,8 +7,8 @@ namespace MyosotisFW::System::Render
 	class EditorRenderResources : public RenderResources
 	{
 	public:
-		EditorRenderResources(const RenderDevice_ptr& device) :
-			RenderResources(device),
+		EditorRenderResources(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
+			RenderResources(device, renderDescriptors),
 			m_editorRenderTarget{} {
 		}
 		~EditorRenderResources();

@@ -128,7 +128,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderResources()
 	{
-		m_resources = CreateEditorRenderResourcesPointer(m_device);
+		m_resources = CreateEditorRenderResourcesPointer(m_device, m_renderDescriptors);
 		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
 	}
 
