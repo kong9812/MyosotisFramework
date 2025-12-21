@@ -152,14 +152,15 @@ namespace MyosotisFW::System::Render
 
 	void AccelerationStructureManager::OnAddObject(const MObject_ptr& object)
 	{
-		TLASInstanceInfo& info = m_instances.emplace_back();
-		info.objectID = object->GetObjectID();
+		TLASInstanceInfo_ptr info = std::make_shared<TLASInstanceInfo>();
+		info->objectID = object->GetObjectID();
+		info->active = false;
 		//info.blasID = blasID;	//todo
 		//info.transform = { object->GetPos(), object->GetRot(), object->GetScale(), glm::vec4(0.0f) };
-		info.mask = 0xFF;
-		info.hitGroupOffset = 0;
-		info.transformDirty = true;
-
+		info->mask = 0xFF;
+		info->hitGroupOffset = 0;
+		info->transformDirty = true;
+		m_instances.push_back(info);
 		object->SetTLASInstanceInfo(info);
 		m_tlasDirty = true;
 	}
@@ -299,30 +300,39 @@ namespace MyosotisFW::System::Render
 		if ((m_tlas.tlas.handle != VK_NULL_HANDLE) || (m_tlas.instanceBuffer.buffer != VK_NULL_HANDLE)) destroyTLAS();
 
 		std::vector<VkAccelerationStructureInstanceKHR> asInstances{};
-		for (const TLASInstanceInfo& instance : m_instances)
+		for (const TLASInstanceInfo_ptr instance : m_instances)
 		{
-			for (const uint32_t meshID : instance.meshID)
+			if (!instance->active) continue;
+
+			for (const uint32_t meshID : instance->meshID)
 			{
 				MeshHandle& mesh = m_renderResources->GetMeshFormID(meshID);
 				std::shared_ptr<const Mesh> tmp = mesh.lock();
 				uint32_t biasID = tmp->blasID;
 				VkAccelerationStructureInstanceKHR asInstance{};
-				asInstance.transform = ToVkTransformMatrixKHR(instance.model);
-				asInstance.instanceCustomIndex = instance.instanceCustomIndex;
-				asInstance.mask = instance.mask;
-				asInstance.instanceShaderBindingTableRecordOffset = instance.hitGroupOffset;
+				asInstance.transform = ToVkTransformMatrixKHR(instance->model);
+				asInstance.instanceCustomIndex = instance->objectID;
+				asInstance.mask = instance->mask;
+				asInstance.instanceShaderBindingTableRecordOffset = instance->hitGroupOffset;
 				asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 				asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
 				asInstances.push_back(asInstance);
 			}
 		}
 
-		// AS Instance Bufferの作成
-		size_t bufferSize = sizeof(VkAccelerationStructureInstanceKHR) * asInstances.size();
-		m_tlas.instanceBuffer = vmaTools::CreateASInstanceBuffer(m_device->GetVmaAllocator(), bufferSize);
-		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_tlas.instanceBuffer, asInstances.data(), bufferSize);
 		VkDeviceOrHostAddressConstKHR instanceDataAddress{};
-		m_tlas.instanceAddress = instanceDataAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_tlas.instanceBuffer.buffer);
+		if (asInstances.size() > 0)
+		{
+			// AS Instance Bufferの作成
+			size_t bufferSize = sizeof(VkAccelerationStructureInstanceKHR) * asInstances.size();
+			m_tlas.instanceBuffer = vmaTools::CreateASInstanceBuffer(m_device->GetVmaAllocator(), bufferSize);
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_tlas.instanceBuffer, asInstances.data(), bufferSize);
+			m_tlas.instanceAddress = instanceDataAddress.deviceAddress = m_device->GetBufferDeviceAddress(m_tlas.instanceBuffer.buffer);
+		}
+		else
+		{
+			m_tlas.instanceAddress = 0;
+		}
 
 		// AS Geometry
 		VkAccelerationStructureGeometryKHR asGeometryKHR{};
@@ -342,7 +352,7 @@ namespace MyosotisFW::System::Render
 		asBuildGeometryInfoKHR.pGeometries = &asGeometryKHR;
 
 		// プリミティブ数
-		m_tlas.instanceCount = m_instances.size();
+		m_tlas.instanceCount = asInstances.size();
 
 		// ASのビルドサイズ情報
 		VkAccelerationStructureBuildSizesInfoKHR asBuildSizesInfoKHR{};

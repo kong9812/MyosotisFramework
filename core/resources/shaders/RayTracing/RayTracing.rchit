@@ -47,9 +47,9 @@ void main()
 	uint objectID = gl_InstanceCustomIndexEXT;
 	ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(objectID);
 
-    // MeshInfo
-    uint meshID = objectInfo.meshID;
-    MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
+      // MeshInfo
+      uint meshID = objectInfo.meshID;
+      MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
 
 	// IndexData
 	uint i0 = IndexData_GetIndexData(meshInfo.indexDataOffset, tri * 3 + 0);
@@ -63,5 +63,8 @@ void main()
 
 	VertexData v = InterpolateVertexAttributes(v0, v1, v2, bary);
 
-  	hitValue = v.color.rgb;
+  	// hitValue = v.color.rgb;
+
+      // Debug
+      hitValue = vec3(uintBitsToFloat(objectID), uintBitsToFloat(objectID), uintBitsToFloat(objectID));
 }

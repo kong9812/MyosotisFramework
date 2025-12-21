@@ -57,6 +57,7 @@ namespace MyosotisFW::System::Render
 		m_vertexBuffer.clear();
 		m_indexBuffer.clear();
 		m_atlasSize.clear();
+
 		{// custom mesh
 			ComponentBase_ptr ptr = object->FindComponent(ComponentType::CustomMesh);
 			if (ptr)

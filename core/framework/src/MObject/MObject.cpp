@@ -176,6 +176,7 @@ namespace MyosotisFW
 			});
 		ASSERT(it == m_components.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
 
+		component->SetTLASInstanceInfo(m_tlasInstanceInfo);
 		m_components.push_back(component);
 	}
 

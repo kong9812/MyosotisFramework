@@ -59,7 +59,7 @@ namespace MyosotisFW
 		void SetMeshChangedCallback(const std::function<void(void)>& callback) { m_meshChangedCallback = callback; }
 		void SetTransformChangedCallback(const std::function<void(void)>& callback) { m_transformChangedCallback = callback; }
 		std::function<void(void)> GetMeshChangedCallback() const { return m_meshChangedCallback; }
-		void SetTLASInstanceInfo(TLASInstanceInfo& tlasInstanceInfo) { m_tlasInstanceInfo = &tlasInstanceInfo; }
+		void SetTLASInstanceInfo(TLASInstanceInfo_ptr tlasInstanceInfo) { m_tlasInstanceInfo = tlasInstanceInfo; }
 		std::function<void(void)> GetTransformChangedCallback() const { return m_transformChangedCallback; }
 
 		const uint32_t GetMeshCount() const;
@@ -92,9 +92,9 @@ namespace MyosotisFW
 		std::function<void(void)> m_transformChangedCallback;
 
 		ObjectInfo_ptr m_objectInfo;
+		TLASInstanceInfo_ptr m_tlasInstanceInfo;
+
 		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;
-
-		TLASInstanceInfo* m_tlasInstanceInfo;
 	};
 };

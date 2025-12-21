@@ -98,7 +98,7 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
-		m_accelerationStructureManager->OnAddObject(object);
+		//m_accelerationStructureManager->OnAddObject(object);
 		m_objects.push_back(object);
 	}
 

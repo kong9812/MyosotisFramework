@@ -15,7 +15,7 @@ namespace MyosotisFW::System::Render
 			descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
 			descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
 			descriptor.descriptorCount = 1;
-			descriptor.rebuild = true;
+			descriptor.rebuild = false;
 			descriptor.update = false;
 			m_descriptors.push_back(descriptor);
 		}

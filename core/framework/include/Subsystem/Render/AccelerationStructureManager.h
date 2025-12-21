@@ -59,7 +59,7 @@ namespace MyosotisFW::System::Render
 		TLASInfo m_tlas;
 
 		std::vector<BLASInfo> m_pendingBLASBuild;
-		std::list<TLASInstanceInfo> m_instances;
+		std::list<TLASInstanceInfo_ptr> m_instances;
 
 		void buildBLAS();	// todo. 登録済みBLASをGPU上にBuildする（初回のみ）
 		void buildTLAS();	// todo. TLASのビルド処理
