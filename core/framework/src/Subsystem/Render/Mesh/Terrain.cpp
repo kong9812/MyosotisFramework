@@ -50,13 +50,14 @@ namespace MyosotisFW::System::Render
 
 	void Terrain::loadAssets()
 	{
-		std::vector<Mesh> meshes = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
-		m_meshID = meshes[0].meshInfo.meshID;
-		m_meshCount = static_cast<uint32_t>(meshes.size());
+		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
+		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
 		// VBDispatchInfoの作成
 		for (uint32_t i = 0; i < m_meshCount; i++)
 		{
-			const MeshInfo meshInfo = meshes[i].meshInfo;
+			std::shared_ptr<const Mesh> mesh = meshesHandle[i].lock();
+			const MeshInfo meshInfo = mesh->meshInfo;
+			m_meshID.push_back(meshInfo.meshID);
 			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 			{
 				VBDispatchInfo vbDispatchInfo{};

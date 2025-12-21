@@ -492,7 +492,7 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::initializeAccelerationStructureManager()
 	{
 		m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors, m_resources);
-		m_resources->SetOnLoadedMesh([=](std::vector<Mesh>& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
+		m_resources->SetOnLoadedMesh([=](MeshesHandle& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
 		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) {m_accelerationStructureManager->OnAddObject(m); });
 	}
 

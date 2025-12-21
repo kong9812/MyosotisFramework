@@ -63,7 +63,7 @@ namespace MyosotisFW
 		std::function<void(void)> GetTransformChangedCallback() const { return m_transformChangedCallback; }
 
 		const uint32_t GetMeshCount() const;
-		const uint32_t GetMeshID()const;
+		const std::vector<uint32_t> GetMeshID()const;
 
 		const ObjectInfo& GetObjectInfo() const { return *m_objectInfo; }
 		const std::vector<VBDispatchInfo> GetVBDispatchInfo() const;

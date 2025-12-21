@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		createDescriptorSet();
 	}
 
-	uint32_t TextureDescriptorSet::AddImage(const DescriptorBindingIndex& type, const VkDescriptorImageInfo& imageInfo)
+	uint32_t TextureDescriptorSet::AddImage(const DescriptorBindingIndex& type, VkDescriptorImageInfo imageInfo)
 	{
 		uint32_t index = 0;
 		switch (type)

@@ -4,6 +4,7 @@
 #include "AppInfo.h"
 
 #include "PrimitiveGeometryShape.h"
+#include "TextureDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {

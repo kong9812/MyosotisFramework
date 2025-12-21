@@ -80,17 +80,19 @@ namespace MyosotisFW::System::Render
 		m_vkDestroyAccelerationStructureKHR(*m_device, m_tlas.tlas.handle, m_device->GetAllocationCallbacks());
 	}
 
-	void AccelerationStructureManager::OnLoadedMesh(std::vector<Mesh>& meshes)
+	void AccelerationStructureManager::OnLoadedMesh(MeshesHandle& meshes)
 	{
-		for (Mesh& mesh : meshes)
+		for (MeshHandle& mesh : meshes)
 		{
+			std::shared_ptr<const Mesh> tmp = mesh.lock();
+
 			// BLAS Info
 			BLASInfo blasInfo{};
 			blasInfo.dirty = true;
 
 			// 1. Vertex / Index Buffer
-			blasInfo.vertexBuffer = mesh.vertexBuffer;
-			blasInfo.indexBuffer = mesh.indexBuffer;
+			blasInfo.vertexBuffer = tmp->vertexBuffer;
+			blasInfo.indexBuffer = tmp->indexBuffer;
 
 			// 2. VkDeviceAddress 取得
 			VkDeviceOrHostAddressConstKHR vertexAddress{};
@@ -104,7 +106,7 @@ namespace MyosotisFW::System::Render
 			blasInfo.geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 			blasInfo.geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
 			blasInfo.geometry.geometry.triangles.vertexData = vertexAddress;
-			blasInfo.geometry.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.vertex.size() - 1);
+			blasInfo.geometry.geometry.triangles.maxVertex = static_cast<uint32_t>(tmp->vertex.size() - 1);
 			blasInfo.geometry.geometry.triangles.vertexStride = sizeof(VertexData);
 			blasInfo.geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
 			blasInfo.geometry.geometry.triangles.indexData = indexAddress;
@@ -119,7 +121,7 @@ namespace MyosotisFW::System::Render
 			buildGeometryInfo.pGeometries = &blasInfo.geometry;
 
 			// プリミティブ数
-			const uint32_t primitiveCount = static_cast<uint32_t>(mesh.index.size() / 3);
+			const uint32_t primitiveCount = static_cast<uint32_t>(tmp->index.size() / 3);
 
 			// ASのビルド範囲
 			blasInfo.buildRange.firstVertex = 0;
@@ -140,7 +142,7 @@ namespace MyosotisFW::System::Render
 			blasInfo.blas.buffer = vmaTools::CreateASBuffer(m_device->GetVmaAllocator(), blasInfo.buildSize.accelerationStructureSize);
 
 			// 4. BLAS登録
-			mesh.blasID = m_pendingBLASBuild.size();
+			tmp->blasID = m_pendingBLASBuild.size();
 			m_pendingBLASBuild.push_back(blasInfo);
 
 			// 5. Dirty フラグ更新
@@ -299,15 +301,20 @@ namespace MyosotisFW::System::Render
 		std::vector<VkAccelerationStructureInstanceKHR> asInstances{};
 		for (const TLASInstanceInfo& instance : m_instances)
 		{
-			uint32_t biasID = m_renderResources->GetMeshFormID(instance.meshID)[0].blasID;
-			VkAccelerationStructureInstanceKHR asInstance{};
-			asInstance.transform = ToVkTransformMatrixKHR(instance.model);
-			asInstance.instanceCustomIndex = instance.instanceCustomIndex;
-			asInstance.mask = instance.mask;
-			asInstance.instanceShaderBindingTableRecordOffset = instance.hitGroupOffset;
-			asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-			asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
-			asInstances.push_back(asInstance);
+			for (const uint32_t meshID : instance.meshID)
+			{
+				MeshHandle& mesh = m_renderResources->GetMeshFormID(meshID);
+				std::shared_ptr<const Mesh> tmp = mesh.lock();
+				uint32_t biasID = tmp->blasID;
+				VkAccelerationStructureInstanceKHR asInstance{};
+				asInstance.transform = ToVkTransformMatrixKHR(instance.model);
+				asInstance.instanceCustomIndex = instance.instanceCustomIndex;
+				asInstance.mask = instance.mask;
+				asInstance.instanceShaderBindingTableRecordOffset = instance.hitGroupOffset;
+				asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+				asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
+				asInstances.push_back(asInstance);
+			}
 		}
 
 		// AS Instance Bufferの作成

@@ -8,7 +8,7 @@ namespace MyosotisFW
 	struct TLASInstanceInfo
 	{
 		uint32_t objectID;
-		uint32_t meshID;
+		std::vector<uint32_t> meshID;
 
 		glm::mat4 model;		// 差分比較用
 

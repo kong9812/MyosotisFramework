@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 			const RenderResources_ptr& renderResources);
 		~AccelerationStructureManager();
 
-		void OnLoadedMesh(std::vector<Mesh>& meshes);
+		void OnLoadedMesh(MeshesHandle& meshes);
 		// todo. Meshに対応するBLASを登録し、ビルドが必要な状態にする
 		// todo. MeshデータからBLASを生成するためのリソースを作成し、
 		// todo. Vertex/IndexのデバイスアドレスとBLASを登録する

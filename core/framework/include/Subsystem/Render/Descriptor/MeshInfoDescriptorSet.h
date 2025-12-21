@@ -31,8 +31,8 @@ namespace MyosotisFW::System::Render
 		};
 
 		void Update() override;
-		void AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh);
-		void AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes);
+		void AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const MeshHandle& meshHandle);
+		void AddCustomGeometry(const std::string name, const MeshesHandle& meshesHandle);
 		MeshInfo GetMeshInfo(const uint32_t index) const { return m_meshInfo[index]; }
 
 	private:

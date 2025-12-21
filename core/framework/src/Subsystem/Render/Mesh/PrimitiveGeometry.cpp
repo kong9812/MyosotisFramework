@@ -51,15 +51,17 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::loadAssets()
 	{
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
-		Mesh mesh = m_resources->GetPrimitiveGeometryMesh(m_primitiveGeometryShape);
-		m_meshID = mesh.meshInfo.meshID;
+		MeshHandle meshHandle = m_resources->GetPrimitiveGeometryMesh(m_primitiveGeometryShape);
+		std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 		m_meshCount = 1;
 		// VBDispatchInfoの作成
-		for (uint32_t j = 0; j < mesh.meshInfo.meshletCount; j++)
+		for (uint32_t j = 0; j < mesh->meshInfo.meshletCount; j++)
 		{
+			m_meshID.push_back(mesh->meshInfo.meshID);
+
 			VBDispatchInfo vbDispatchInfo{};
 			vbDispatchInfo.objectID = m_objectID;			// MObjectRegistryでセットされたobjectIDを使う
-			vbDispatchInfo.meshID = mesh.meshInfo.meshID;	// meshIDそのままを使って、iではない！
+			vbDispatchInfo.meshID = mesh->meshInfo.meshID;	// meshIDそのままを使って、iではない！
 			vbDispatchInfo.meshletID = j;					// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 			m_vbDispatchInfo.push_back(vbDispatchInfo);
 		}

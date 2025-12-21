@@ -107,7 +107,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void MeshInfoDescriptorSet::AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const Mesh& mesh)
+	void MeshInfoDescriptorSet::AddPrimitiveGeometry(const Shape::PrimitiveGeometryShape shape, const MeshHandle& meshHandle)
 	{
 		// データの再利用
 		auto it = m_primitiveMeshIDTable.find(shape);
@@ -116,13 +116,15 @@ namespace MyosotisFW::System::Render
 			return;
 		}
 
+		std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+
 		// MeshInfo
 		MeshInfo meshInfo{};
 		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 		meshInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 		meshInfo.indexDataOffset = static_cast<uint32_t>(m_indexData.size());
-		meshInfo.AABBMin = mesh.meshInfo.AABBMin;
-		meshInfo.AABBMax = mesh.meshInfo.AABBMax;
+		meshInfo.AABBMin = mesh->meshInfo.AABBMin;
+		meshInfo.AABBMax = mesh->meshInfo.AABBMax;
 		meshInfo.vertexAttributeBit =
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
@@ -130,7 +132,7 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 		meshInfo.unitSize = sizeof(VertexData) / sizeof(float);
-		for (const Meshlet& meshlet : mesh.meshlet)
+		for (const Meshlet& meshlet : mesh->meshlet)
 		{
 			// MeshletMetaData
 			MeshletInfo meshletInfo{};
@@ -152,10 +154,10 @@ namespace MyosotisFW::System::Render
 		}
 
 		// VertexData
-		m_vertexData.insert(m_vertexData.end(), mesh.vertex.begin(), mesh.vertex.end());
+		m_vertexData.insert(m_vertexData.end(), mesh->vertex.begin(), mesh->vertex.end());
 
 		// IndexData
-		m_indexData.insert(m_indexData.end(), mesh.index.begin(), mesh.index.end());
+		m_indexData.insert(m_indexData.end(), mesh->index.begin(), mesh->index.end());
 
 		m_meshInfo.push_back(meshInfo);
 
@@ -174,7 +176,7 @@ namespace MyosotisFW::System::Render
 		m_primitiveMeshIDTable.emplace(shape, meshInfo.meshID);
 	}
 
-	void MeshInfoDescriptorSet::AddCustomGeometry(const std::string name, const std::vector<Mesh>& meshes)
+	void MeshInfoDescriptorSet::AddCustomGeometry(const std::string name, const MeshesHandle& meshesHandle)
 	{
 		// データの再利用
 		auto it = m_customMeshIDTable.find(name);
@@ -184,15 +186,17 @@ namespace MyosotisFW::System::Render
 		}
 
 		std::vector<uint32_t> meshIDs{};
-		for (const Mesh& mesh : meshes)
+		for (const MeshHandle& meshHandle : meshesHandle)
 		{
+			std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+
 			// MeshInfo
 			MeshInfo meshInfo{};
 			meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 			meshInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 			meshInfo.indexDataOffset = static_cast<uint32_t>(m_indexData.size());
-			meshInfo.AABBMin = mesh.meshInfo.AABBMin;
-			meshInfo.AABBMax = mesh.meshInfo.AABBMax;
+			meshInfo.AABBMin = mesh->meshInfo.AABBMin;
+			meshInfo.AABBMax = mesh->meshInfo.AABBMax;
 			meshInfo.vertexAttributeBit =
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
@@ -200,7 +204,7 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
 			meshInfo.unitSize = sizeof(VertexData) / sizeof(float);
-			for (const Meshlet& meshlet : mesh.meshlet)
+			for (const Meshlet& meshlet : mesh->meshlet)
 			{
 				// MeshletMetaData
 				MeshletInfo meshletInfo{};
@@ -222,10 +226,10 @@ namespace MyosotisFW::System::Render
 			}
 
 			// VertexData
-			m_vertexData.insert(m_vertexData.end(), mesh.vertex.begin(), mesh.vertex.end());
+			m_vertexData.insert(m_vertexData.end(), mesh->vertex.begin(), mesh->vertex.end());
 
 			// IndexData
-			m_indexData.insert(m_indexData.end(), mesh.index.begin(), mesh.index.end());
+			m_indexData.insert(m_indexData.end(), mesh->index.begin(), mesh->index.end());
 
 			m_meshInfo.push_back(meshInfo);
 

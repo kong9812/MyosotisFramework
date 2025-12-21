@@ -58,13 +58,14 @@ namespace MyosotisFW::System::Render
 				CustomMesh_ptr customMesh = Object_CastToCustomMesh(ptr);
 
 				// vertex buffer
-				std::vector<Mesh> meshes = resources->GetMesh(customMesh->GetMeshComponentInfo().meshName);
-				for (const Mesh& mesh : meshes)
+				MeshesHandle meshesHandle = resources->GetMesh(customMesh->GetMeshComponentInfo().meshName);
+				for (const MeshHandle& meshHandle : meshesHandle)
 				{
-					m_vertexBuffer.push_back(mesh.vertexBuffer);
-					m_indexBuffer.push_back(mesh.indexBuffer);
+					std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+					m_vertexBuffer.push_back(mesh->vertexBuffer);
+					m_indexBuffer.push_back(mesh->indexBuffer);
+					pushConstant.size = mesh->meshInfo.atlasSize;	// todo.複数対応
 				}
-				pushConstant.size = meshes[0].meshInfo.atlasSize;
 				ASSERT(allocateLightmapAtlas(pushConstant.size, pushConstant.offset), "Failed to alloc from lightmap.");
 				return true;
 			}
@@ -77,10 +78,11 @@ namespace MyosotisFW::System::Render
 				PrimitiveGeometry_ptr primitiveGeom = Object_CastToPrimitiveGeometry(ptr);
 
 				// vertex buffer
-				Mesh mesh = resources->GetPrimitiveGeometryMesh(primitiveGeom->GetPrimitiveGeometryShape());
-				m_vertexBuffer.push_back(mesh.vertexBuffer);
-				m_indexBuffer.push_back(mesh.indexBuffer);
-				pushConstant.size = mesh.meshInfo.atlasSize;
+				MeshHandle meshHandle = resources->GetPrimitiveGeometryMesh(primitiveGeom->GetPrimitiveGeometryShape());
+				std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+				m_vertexBuffer.push_back(mesh->vertexBuffer);
+				m_indexBuffer.push_back(mesh->indexBuffer);
+				pushConstant.size = mesh->meshInfo.atlasSize;
 				ASSERT(allocateLightmapAtlas(pushConstant.size, pushConstant.offset), "Failed to alloc from lightmap.");
 				return true;
 			}
@@ -97,7 +99,7 @@ namespace MyosotisFW::System::Render
 		//		Buffer* indexBuffer = &m_indexBuffer.emplace_back(Buffer());
 
 		//		// vertex buffer
-		//		std::vector<Mesh> meshes = Utility::Loader::loadTerrainMesh(terrain->GetMeshComponentInfo().terrainHeightmapName);
+		//		Meshes meshes = Utility::Loader::loadTerrainMesh(terrain->GetMeshComponentInfo().terrainHeightmapName);
 		//		{// vertex
 		//			VkBufferCreateInfo bufferCreateInfo = Utility::Vulkan::CreateInfo::bufferCreateInfo(sizeof(VertexData) * meshes[0].vertex.size(), VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 		//			VmaAllocationCreateInfo allocationCreateInfo{};

@@ -28,7 +28,7 @@ namespace MyosotisFW
 		return 0;
 	}
 
-	const uint32_t MObject::GetMeshID() const
+	const std::vector<uint32_t> MObject::GetMeshID() const
 	{
 		auto it = std::find_if(m_components.begin(), m_components.end(),
 			[&](const ComponentBase_ptr& existingComponent)
@@ -40,7 +40,7 @@ namespace MyosotisFW
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetMeshID();
 		}
-		return 0;
+		return {};
 	}
 
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const

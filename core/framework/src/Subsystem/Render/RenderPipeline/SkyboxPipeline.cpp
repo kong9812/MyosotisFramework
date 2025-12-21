@@ -16,9 +16,10 @@ namespace MyosotisFW::System::Render
 		prepareRenderPipeline(resources, renderPass);
 
 		{// Skybox Mesh
-			Mesh mesh = resources->GetPrimitiveGeometryMesh(Shape::PrimitiveGeometryShape::Quad);
-			m_vertexBuffer = mesh.vertexBuffer;
-			m_indexBuffer = mesh.indexBuffer;
+			MeshHandle meshHandle = resources->GetPrimitiveGeometryMesh(Shape::PrimitiveGeometryShape::Quad);
+			std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+			m_vertexBuffer = mesh->vertexBuffer;
+			m_indexBuffer = mesh->indexBuffer;
 		}
 
 		{// Skybox Image

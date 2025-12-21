@@ -39,9 +39,9 @@ namespace MyosotisFW::System::Render
 		virtual void Initialize(const uint32_t width, const uint32_t height);
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
-		std::vector<Mesh> GetMesh(const std::string& fileName);
-		std::vector<Mesh>  GetTerrainMesh(const std::string& fileName);
-		Mesh GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
+		MeshesHandle GetMesh(const std::string& fileName);
+		MeshesHandle GetTerrainMesh(const std::string& fileName);
+		MeshHandle GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
 		virtual void Resize(const uint32_t width, const uint32_t height);
@@ -49,17 +49,21 @@ namespace MyosotisFW::System::Render
 
 		bool SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size);
 
-		void SetOnLoadedMesh(const std::function<void(std::vector<Mesh>&)>& callback) { m_onLoadedMesh = callback; }
+		void SetOnLoadedMesh(const std::function<void(MeshesHandle&)>& callback) { m_onLoadedMesh = callback; }
 
-		std::vector<Mesh> GetMeshFormID(const uint32_t meshID);
+		MeshHandle GetMeshFormID(const uint32_t meshID);
 	protected:
 		RenderDevice_ptr m_device;
 		RenderDescriptors_ptr m_renderDescriptors;
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
-		std::unordered_map<std::string, std::vector<Mesh>> m_meshes;
-		std::unordered_map<std::string, std::vector<Mesh>> m_terrains;
-		std::unordered_map<Shape::PrimitiveGeometryShape, Mesh> m_primitiveGeometryMeshes;
+		std::unordered_map<std::string, Meshes> m_meshes;
+		std::unordered_map<std::string, MeshesHandle> m_meshesHandle;
+		std::unordered_map<std::string, Meshes> m_terrains;
+		std::unordered_map<std::string, MeshesHandle> m_terrainsHandle;
+		std::unordered_map<Shape::PrimitiveGeometryShape, Mesh_ptr> m_primitiveGeometryMeshes;
+		std::unordered_map<Shape::PrimitiveGeometryShape, MeshHandle> m_primitiveGeometryMeshesHandle;
+
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
 		std::vector<VkSampler> m_samplers;
@@ -84,10 +88,10 @@ namespace MyosotisFW::System::Render
 		Image m_primaryDepthStencil;
 
 	protected:
-		void createVertexIndexBuffer(std::vector<Mesh>& meshes);
+		void createVertexIndexBuffer(Meshes& meshes);
 
 	protected:
-		std::function<void(std::vector<Mesh>&)> m_onLoadedMesh;
+		std::function<void(MeshesHandle&)> m_onLoadedMesh;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

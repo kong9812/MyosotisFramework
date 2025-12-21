@@ -43,30 +43,30 @@ namespace MyosotisFW::System::Render
 		}
 		m_shaderModules.clear();
 
-		for (std::pair<std::string, std::vector<Mesh>> meshList : m_meshes)
+		for (std::pair<std::string, Meshes> meshList : m_meshes)
 		{
-			for (Mesh& mesh : meshList.second)
+			for (Mesh_ptr& mesh : meshList.second)
 			{
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation);
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.indexBuffer.buffer, mesh.indexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->indexBuffer.buffer, mesh->indexBuffer.allocation);
 			}
 		}
 		m_meshes.clear();
 
-		for (std::pair<std::string, std::vector<Mesh>> meshList : m_terrains)
+		for (std::pair<std::string, Meshes> meshList : m_terrains)
 		{
-			for (Mesh& mesh : meshList.second)
+			for (Mesh_ptr& mesh : meshList.second)
 			{
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation);
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh.indexBuffer.buffer, mesh.indexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation);
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->indexBuffer.buffer, mesh->indexBuffer.allocation);
 			}
 		}
 		m_terrains.clear();
 
-		for (std::pair<Shape::PrimitiveGeometryShape, Mesh> meshPair : m_primitiveGeometryMeshes)
+		for (std::pair<Shape::PrimitiveGeometryShape, Mesh_ptr> meshPair : m_primitiveGeometryMeshes)
 		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.vertexBuffer.buffer, meshPair.second.vertexBuffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.indexBuffer.buffer, meshPair.second.indexBuffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second->vertexBuffer.buffer, meshPair.second->vertexBuffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second->indexBuffer.buffer, meshPair.second->indexBuffer.allocation);
 		}
 		m_primitiveGeometryMeshes.clear();
 
@@ -173,110 +173,120 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	std::vector<Mesh> RenderResources::GetMesh(const std::string& fileName)
+	MeshesHandle RenderResources::GetMesh(const std::string& fileName)
 	{
-		auto vertexData = m_meshes.find(fileName);
-		if (vertexData == m_meshes.end())
+		auto vertexData = m_meshesHandle.find(fileName);
+		if (vertexData == m_meshesHandle.end())
 		{
 			// 拡張子判定
 			std::string extension = std::filesystem::path(fileName).extension().string();
+			std::vector<MyosotisFW::Mesh> rawMeshes{};
 			if ((extension == ".fbx") || (extension == ".FBX"))
 			{
-				std::vector<Mesh> meshes = Utility::Loader::loadFbx(fileName);
-				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-				for (Mesh& mesh : meshes)
-				{
-					mesh.meshInfo.meshID = meshID;
-					meshID++;
-				}
-				createVertexIndexBuffer(meshes);
-				m_onLoadedMesh(meshes);
-				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
-				m_meshes.emplace(fileName, meshes);
+				rawMeshes = Utility::Loader::loadFbx(fileName);
 			}
 			else if ((extension == ".gltf") || (extension == ".GLTF"))
 			{
-				std::vector<Mesh> meshes = Utility::Loader::loadGltf(fileName);
-				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-				for (Mesh& mesh : meshes)
-				{
-					mesh.meshInfo.meshID = meshID;
-					meshID++;
-				}
-				createVertexIndexBuffer(meshes);
-				m_onLoadedMesh(meshes);
-				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
-				m_meshes.emplace(fileName, meshes);
+				rawMeshes = Utility::Loader::loadGltf(fileName);
 			}
 			else if ((extension == ".mfmodel") || (extension == ".MFMODEL"))
 			{
-				std::vector<Mesh> meshes = Utility::Loader::loadMFModel(fileName);
-				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-				for (Mesh& mesh : meshes)
-				{
-					mesh.meshInfo.meshID = meshID;
-					meshID++;
-				}
-				createVertexIndexBuffer(meshes);
-				m_onLoadedMesh(meshes);
-				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
-				m_meshes.emplace(fileName, meshes);
+				rawMeshes = Utility::Loader::loadMFModel(fileName);
 			}
 			else
 			{
 				ASSERT(false, "Unsupported mesh file format: " + fileName);
 			}
+
+			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
+
+			Meshes meshes{};
+			MeshesHandle meshesHandle{};
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			for (Mesh& mesh : rawMeshes)
+			{
+				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
+				meshPtr->meshInfo.meshID = meshID;
+				meshes.push_back(meshPtr);
+				meshesHandle.push_back(meshPtr);
+				meshID++;
+			}
+			createVertexIndexBuffer(meshes);
+			m_onLoadedMesh(meshesHandle);
+
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshesHandle);
+
+			m_meshes.emplace(fileName, std::move(meshes));
+			m_meshesHandle.emplace(fileName, std::move(meshesHandle));
 		}
-		return m_meshes[fileName];
+		return m_meshesHandle[fileName];
 	}
 
-	std::vector<Mesh> RenderResources::GetTerrainMesh(const std::string& fileName)
+	MeshesHandle RenderResources::GetTerrainMesh(const std::string& fileName)
 	{
-		auto vertexData = m_terrains.find(fileName);
-		if (vertexData == m_terrains.end())
+		auto vertexData = m_terrainsHandle.find(fileName);
+		if (vertexData == m_terrainsHandle.end())
 		{
 			// 拡張子判定
 			std::string extension = std::filesystem::path(fileName).extension().string();
+			std::vector<MyosotisFW::Mesh> rawMeshes{};
 			if ((extension == ".png") || (extension == ".PNG"))
 			{
-				std::vector<Mesh> meshes = Utility::Loader::loadTerrainMesh(fileName);
-				uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-				for (Mesh& mesh : meshes)
-				{
-					mesh.meshInfo.meshID = meshID;
-					meshID++;
-				}
-				createVertexIndexBuffer(meshes);
-				m_onLoadedMesh(meshes);
-				m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes);
-				m_terrains.emplace(fileName, meshes);
+				rawMeshes = Utility::Loader::loadTerrainMesh(fileName);
 			}
 			else
 			{
 				ASSERT(false, "Unsupported terrain format: " + fileName);
 			}
-		}
-		return m_terrains[fileName];
-	}
 
-	Mesh RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
-	{
-		auto vertexData = m_primitiveGeometryMeshes.find(shape);
-		if (vertexData == m_primitiveGeometryMeshes.end())
-		{
-			std::vector<Mesh> meshes{ Shape::createShape(shape) };
+			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
+
+			Meshes meshes{};
+			MeshesHandle meshesHandle{};
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-			for (Mesh& mesh : meshes)
+			for (Mesh& mesh : rawMeshes)
 			{
-				mesh.meshInfo.meshID = meshID;
+				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
+				meshPtr->meshInfo.meshID = meshID;
+				meshes.push_back(meshPtr);
+				meshesHandle.push_back(meshPtr);
 				meshID++;
 			}
 			createVertexIndexBuffer(meshes);
-			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, meshes[0]);
-			m_primitiveGeometryMeshes.emplace(shape, meshes[0]);
-			m_onLoadedMesh(meshes);
+			m_onLoadedMesh(meshesHandle);
+
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshesHandle);
+
+			m_terrains.emplace(fileName, std::move(meshes));
+			m_terrainsHandle.emplace(fileName, std::move(meshesHandle));
 		}
-		return m_primitiveGeometryMeshes[shape];
+		return m_terrainsHandle[fileName];
+	}
+
+	MeshHandle RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
+	{
+		auto vertexData = m_primitiveGeometryMeshesHandle.find(shape);
+		if (vertexData == m_primitiveGeometryMeshesHandle.end())
+		{
+			Mesh rawMesh = Shape::createShape(shape);
+			Mesh_ptr mesh = std::make_shared<Mesh>(std::move(rawMesh));
+			MeshHandle meshHandle = mesh;
+
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			mesh->meshInfo.meshID = meshID;
+
+			Meshes meshes{ mesh };
+			MeshesHandle meshesHandle{ mesh };
+
+			createVertexIndexBuffer(meshes);
+			m_onLoadedMesh(meshesHandle);
+
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, meshHandle);
+
+			m_primitiveGeometryMeshes.emplace(shape, std::move(mesh));
+			m_primitiveGeometryMeshesHandle.emplace(shape, std::move(meshHandle));
+		}
+		return m_primitiveGeometryMeshesHandle[shape];
 	}
 
 	Image RenderResources::GetImage(const std::string& fileName)
@@ -344,70 +354,64 @@ namespace MyosotisFW::System::Render
 		return result;
 	}
 
-	std::vector<Mesh> RenderResources::GetMeshFormID(const uint32_t meshID)
+	MeshHandle RenderResources::GetMeshFormID(const uint32_t meshID)
 	{
-		auto itm = std::find_if(m_meshes.begin(), m_meshes.end(),
-			[&](std::pair<std::string, std::vector<Mesh>> pair)
+		for (const auto& [key, value] : m_meshes)
+		{
+			for (const Mesh_ptr& mesh : value)
 			{
-				for (Mesh& mesh : pair.second)
+				if (mesh->meshInfo.meshID == meshID)
 				{
-					return mesh.meshInfo.meshID == meshID;
+					return mesh;
 				}
-			});
-		if (itm != m_meshes.end())
-		{
-			return itm->second;
+			}
 		}
-		auto itp = std::find_if(m_primitiveGeometryMeshes.begin(), m_primitiveGeometryMeshes.end(),
-			[&](std::pair<Shape::PrimitiveGeometryShape, Mesh> pair)
-			{
-				return pair.second.meshInfo.meshID == meshID;
-			});
-		if (itp != m_primitiveGeometryMeshes.end())
+		for (const auto& [key, mesh] : m_primitiveGeometryMeshes)
 		{
-			return { itp->second };
-		}
-		auto itt = std::find_if(m_terrains.begin(), m_terrains.end(),
-			[&](std::pair<std::string, std::vector<Mesh>> pair)
+			if (mesh->meshInfo.meshID == meshID)
 			{
-				for (Mesh& mesh : pair.second)
+				return mesh;
+			}
+		}
+		for (const auto& [key, value] : m_terrains)
+		{
+			for (const Mesh_ptr& mesh : value)
+			{
+				if (mesh->meshInfo.meshID == meshID)
 				{
-					return mesh.meshInfo.meshID == meshID;
+					return mesh;
 				}
-			});
-		if (itt != m_terrains.end())
-		{
-			return itt->second;
+			}
 		}
 		return {};
 	}
 
-	void RenderResources::createVertexIndexBuffer(std::vector<Mesh>& meshes)
+	void RenderResources::createVertexIndexBuffer(Meshes& meshes)
 	{
-		for (Mesh& mesh : meshes)
+		for (Mesh_ptr& mesh : meshes)
 		{
 			{// vertex
 
-				mesh.vertexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
-					sizeof(VertexData) * mesh.vertex.size(),
+				mesh->vertexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+					sizeof(VertexData) * mesh->vertex.size(),
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 					VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
 					VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
-				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh.vertexBuffer, mesh.vertex.data(), sizeof(VertexData) * mesh.vertex.size());
+				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh->vertexBuffer, mesh->vertex.data(), sizeof(VertexData) * mesh->vertex.size());
 			}
 			{// index
-				mesh.indexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
-					sizeof(uint32_t) * mesh.index.size(),
+				mesh->indexBuffer = vmaTools::CreateBuffer(m_device->GetVmaAllocator(),
+					sizeof(uint32_t) * mesh->index.size(),
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
 					VkBufferUsageFlagBits::VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 					VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU,
 					VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
-				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh.indexBuffer, mesh.index.data(), sizeof(uint32_t) * mesh.index.size());
+				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh->indexBuffer, mesh->index.data(), sizeof(uint32_t) * mesh->index.size());
 			}
 		}
 	}

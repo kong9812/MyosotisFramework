@@ -49,14 +49,18 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::loadAssets()
 	{
-		std::vector<Mesh> meshes = m_resources->GetMesh(m_meshComponentInfo.meshName);
-		m_meshID = meshes[0].meshInfo.meshID;
-		m_meshCount = static_cast<uint32_t>(meshes.size());
+		m_vbDispatchInfo.clear();
+		m_meshID.clear();
+		MeshesHandle meshesHandle = m_resources->GetMesh(m_meshComponentInfo.meshName);
+		m_vbDispatchInfo.reserve(meshesHandle.size());
+		m_meshID.reserve(meshesHandle.size());
+		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
 
 		// VBDispatchInfoの作成
 		for (uint32_t i = 0; i < m_meshCount; i++)
 		{
-			const MeshInfo meshInfo = meshes[i].meshInfo;
+			std::shared_ptr<const Mesh> mesh = meshesHandle[i].lock();
+			const MeshInfo meshInfo = mesh->meshInfo;
 			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 			{
 				VBDispatchInfo vbDispatchInfo{};
@@ -66,6 +70,7 @@ namespace MyosotisFW::System::Render
 				// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
 				m_vbDispatchInfo.push_back(vbDispatchInfo);
 			}
+			m_meshID.push_back(meshInfo.meshID);
 		}
 	}
 }
