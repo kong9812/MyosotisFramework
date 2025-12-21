@@ -22,7 +22,7 @@ namespace MyosotisFW::System::Render
 			Count
 		};
 
-		uint32_t AddImage(const DescriptorBindingIndex& type, VkDescriptorImageInfo imageInfo);
+		uint32_t AddImage(const DescriptorBindingIndex type, const VkDescriptorImageInfo imageInfo);
 		void Update() override;
 
 	private:

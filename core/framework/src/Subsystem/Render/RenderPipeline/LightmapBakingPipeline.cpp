@@ -20,6 +20,7 @@ namespace MyosotisFW::System::Render
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 		m_vertexBuffer.clear();
 		m_indexBuffer.clear();
+		m_atlasSize.clear();
 	}
 
 	void LightmapBakingPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
@@ -30,27 +31,32 @@ namespace MyosotisFW::System::Render
 
 	void LightmapBakingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
-		if ((m_vertexBuffer[m_vertexBuffer.size() - 1].buffer == VK_NULL_HANDLE) || (m_indexBuffer[m_indexBuffer.size() - 1].buffer == VK_NULL_HANDLE)) return;
-
-		Buffer& currentVertexBuffer = m_vertexBuffer[m_vertexBuffer.size() - 1];
-		Buffer& currentIndexBuffer = m_indexBuffer[m_indexBuffer.size() - 1];
-
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-			0,
-			static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
-		const VkDeviceSize offsets[1] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &currentVertexBuffer.buffer, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, currentIndexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(commandBuffer, currentIndexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(m_vertexBuffer.size()); i++)
+		{
+			pushConstant.size = m_atlasSize[i];
+			Buffer& currentVertexBuffer = m_vertexBuffer[i];
+			Buffer& currentIndexBuffer = m_indexBuffer[i];
+			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+				0,
+				static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+			const VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &currentVertexBuffer.buffer, offsets);
+			vkCmdBindIndexBuffer(commandBuffer, currentIndexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(commandBuffer, currentIndexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
+		}
 	}
 
 	bool LightmapBakingPipeline::NextObject(const RenderResources_ptr& resources, const MObject_ptr& object)
 	{
+		m_vertexBuffer.clear();
+		m_indexBuffer.clear();
+		m_atlasSize.clear();
 		{// custom mesh
 			ComponentBase_ptr ptr = object->FindComponent(ComponentType::CustomMesh);
 			if (ptr)
@@ -59,14 +65,16 @@ namespace MyosotisFW::System::Render
 
 				// vertex buffer
 				MeshesHandle meshesHandle = resources->GetMesh(customMesh->GetMeshComponentInfo().meshName);
+				glm::ivec2 totalAtlasSize = glm::ivec2(0);
 				for (const MeshHandle& meshHandle : meshesHandle)
 				{
 					std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 					m_vertexBuffer.push_back(mesh->vertexBuffer);
 					m_indexBuffer.push_back(mesh->indexBuffer);
-					pushConstant.size = mesh->meshInfo.atlasSize;	// todo.複数対応
+					m_atlasSize.push_back(mesh->meshInfo.atlasSize);
+					totalAtlasSize += mesh->meshInfo.atlasSize;
 				}
-				ASSERT(allocateLightmapAtlas(pushConstant.size, pushConstant.offset), "Failed to alloc from lightmap.");
+				ASSERT(allocateLightmapAtlas(totalAtlasSize, pushConstant.offset), "Failed to alloc from lightmap.");
 				return true;
 			}
 		}
@@ -82,7 +90,7 @@ namespace MyosotisFW::System::Render
 				std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 				m_vertexBuffer.push_back(mesh->vertexBuffer);
 				m_indexBuffer.push_back(mesh->indexBuffer);
-				pushConstant.size = mesh->meshInfo.atlasSize;
+				m_atlasSize.push_back(mesh->meshInfo.atlasSize);
 				ASSERT(allocateLightmapAtlas(pushConstant.size, pushConstant.offset), "Failed to alloc from lightmap.");
 				return true;
 			}
@@ -138,6 +146,7 @@ namespace MyosotisFW::System::Render
 	{
 		m_vertexBuffer.clear();
 		m_indexBuffer.clear();
+		m_atlasSize.clear();
 		lightmapAllocateTools.current = glm::ivec2(0);
 		lightmapAllocateTools.bottom = 0;
 		m_isBaking = true;

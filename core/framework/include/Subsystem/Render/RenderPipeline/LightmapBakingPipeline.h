@@ -42,6 +42,7 @@ namespace MyosotisFW::System::Render
 
 		std::vector<Buffer> m_vertexBuffer;
 		std::vector<Buffer> m_indexBuffer;
+		std::vector<glm::ivec2> m_atlasSize;
 
 		bool m_isBaking = false;
 
