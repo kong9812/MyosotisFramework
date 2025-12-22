@@ -11,6 +11,7 @@
 
 #include "Logger.h"
 #include "Mesh.h"
+#include "BasicMaterial.h"
 #include "imeshoptimizer.h"
 #include "ixatlas.h"
 
@@ -49,7 +50,7 @@ namespace Utility::Loader {
 		return 3 * triangleCount;
 	}
 
-	inline std::vector<MyosotisFW::Mesh> loadFbx(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadFbx(std::string fileName)
 	{
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
@@ -69,7 +70,7 @@ namespace Utility::Loader {
 			static_cast<ofbx::usize>(fileSize),
 			static_cast<ofbx::u16>(ofbx::LoadFlags::NONE));
 
-		std::vector<MyosotisFW::Mesh> meshes{};
+		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
 
 		uint32_t meshCount = scene->getMeshCount();
 		std::vector<int> testList{};
@@ -176,7 +177,12 @@ namespace Utility::Loader {
 				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 				meshData.meshInfo.indexCount = static_cast<uint32_t>(meshData.index.size());
 
-				meshes.push_back(meshData);
+				// [仮] Material
+				MyosotisFW::BasicMaterial material{};
+				material.basicMaterialInfo.bitFlags = 0;
+				material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+
+				meshes.push_back({ meshData, material });
 			}
 			scene->destroy();
 #ifdef DEBUG

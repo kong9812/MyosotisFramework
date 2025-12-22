@@ -18,7 +18,7 @@ namespace Utility::Loader {
 	{
 		MyosotisFW::Image image{};
 
-		std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_textureFolder + fileName);
+		std::filesystem::path absolutePath = std::filesystem::absolute(fileName);
 
 		// loadImage fence
 		VkFence fence = VK_NULL_HANDLE;

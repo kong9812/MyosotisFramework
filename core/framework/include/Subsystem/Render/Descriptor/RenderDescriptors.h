@@ -7,6 +7,7 @@
 #include "MeshInfoDescriptorSet.h"
 #include "TextureDescriptorSet.h"
 #include "RayTracingDescriptorSet.h"
+#include "MaterialDescriptorSet.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -24,6 +25,7 @@ namespace MyosotisFW::System::Render
 		const MeshInfoDescriptorSet_ptr GetMeshInfoDescriptorSet() const { return m_meshInfoDescriptorSet; }
 		const TextureDescriptorSet_ptr GetTextureDescriptorSet() const { return m_textureDescriptorSet; }
 		const RayTracingDescriptorSet_ptr GetRayTracingDescriptorSet() const { return m_rayTracingDescriptorSet; }
+		const MaterialDescriptorSet_ptr GetMaterialDescriptorSet() const { return m_materialDescriptorSet; }
 
 		std::vector<VkDescriptorSet> GetDescriptorSet();
 		std::vector<VkDescriptorSetLayout> GetDescriptorSetLayout();
@@ -36,6 +38,7 @@ namespace MyosotisFW::System::Render
 		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 		TextureDescriptorSet_ptr m_textureDescriptorSet;
 		RayTracingDescriptorSet_ptr m_rayTracingDescriptorSet;
+		MaterialDescriptorSet_ptr m_materialDescriptorSet;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderDescriptors);
 }

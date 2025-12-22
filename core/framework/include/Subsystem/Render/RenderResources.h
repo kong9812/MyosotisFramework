@@ -9,6 +9,7 @@
 #include "Mesh.h"
 #include "ClassPointer.h"
 #include "PrimitiveGeometryShape.h"
+#include "BasicMaterial.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -52,17 +53,31 @@ namespace MyosotisFW::System::Render
 		void SetOnLoadedMesh(const std::function<void(MeshesHandle&)>& callback) { m_onLoadedMesh = callback; }
 
 		MeshHandle GetMeshFormID(const uint32_t meshID);
+
+	protected:
+		struct MeshData
+		{
+			Mesh_ptr mesh;
+			MeshHandle meshHandle;
+			BasicMaterial_ptr material;
+			BasicMaterialHandle materialHandle;
+		};
+		struct MeshesData
+		{
+			Meshes mesh;
+			MeshesHandle meshHandle;
+			BasicMaterials material;
+			BasicMaterialsHandle materialHandle;
+		};
+
 	protected:
 		RenderDevice_ptr m_device;
 		RenderDescriptors_ptr m_renderDescriptors;
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
-		std::unordered_map<std::string, Meshes> m_meshes;
-		std::unordered_map<std::string, MeshesHandle> m_meshesHandle;
-		std::unordered_map<std::string, Meshes> m_terrains;
-		std::unordered_map<std::string, MeshesHandle> m_terrainsHandle;
-		std::unordered_map<Shape::PrimitiveGeometryShape, Mesh_ptr> m_primitiveGeometryMeshes;
-		std::unordered_map<Shape::PrimitiveGeometryShape, MeshHandle> m_primitiveGeometryMeshesHandle;
+		std::unordered_map<std::string, MeshesData> m_meshes;
+		std::unordered_map<std::string, MeshesData> m_terrains;
+		std::unordered_map<Shape::PrimitiveGeometryShape, MeshData> m_primitiveGeometryMeshes;
 
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;

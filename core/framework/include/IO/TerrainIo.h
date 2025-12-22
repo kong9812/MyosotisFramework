@@ -85,7 +85,7 @@ namespace Utility::Loader {
 		return best;
 	}
 
-	inline std::vector<MyosotisFW::Mesh> loadTerrainMesh(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadTerrainMesh(std::string fileName)
 	{
 		const std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_terrainFolder + fileName);
 
@@ -105,7 +105,7 @@ namespace Utility::Loader {
 		uint32_t samplingStep = 50;
 		samplingStep = GetNearestDivisor(samplingStep, chunkSize.x);
 
-		std::vector<MyosotisFW::Mesh> meshes{};
+		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
 		meshes.resize(chunkCount.x * chunkCount.y);
 
 		for (uint32_t cy = 0; cy < chunkCount.y; cy++)
@@ -113,7 +113,7 @@ namespace Utility::Loader {
 			for (uint32_t cx = 0; cx < chunkCount.x; cx++)
 			{
 				const uint32_t chunkIndex = cy * chunkCount.x + cx;
-				MyosotisFW::Mesh& mesh = meshes[chunkIndex];
+				MyosotisFW::Mesh& mesh = meshes[chunkIndex].first;
 				mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
 				mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
 
@@ -206,6 +206,10 @@ namespace Utility::Loader {
 				mesh.meshInfo.meshletCount = static_cast<uint32_t>(mesh.meshlet.size());
 				mesh.meshInfo.vertexFloatCount = static_cast<uint32_t>(mesh.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 				mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.vertex.size());
+
+				// [仮] Material
+				meshes[chunkIndex].second.basicMaterialInfo.bitFlags = 0;
+				meshes[chunkIndex].second.basicMaterialInfo.baseColor = glm::vec4(1.0f);
 			}
 		}
 

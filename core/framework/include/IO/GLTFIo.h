@@ -5,10 +5,12 @@
 #include <vector>
 #include <chrono>
 #include <unordered_set>
+#include <map>
 
 #include "AppInfo.h"
 #include "Logger.h"
 #include "Mesh.h"
+#include "BasicMaterial.h"
 
 #include "itiny_gltf.h"
 
@@ -92,7 +94,7 @@ namespace Utility::Loader {
 		currentMeshletData.primitives.push_back(index3);
 	}
 
-	inline std::vector<MyosotisFW::Mesh> loadGltf(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadGltf(std::string fileName)
 	{
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
@@ -106,7 +108,7 @@ namespace Utility::Loader {
 		bool fileLoaded = glTFLoader.LoadASCIIFromFile(&glTFModel, &error, &warning, std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
 		ASSERT(fileLoaded, "Failed to open gltf file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName + "\nerror: " + error);
 
-		std::vector<MyosotisFW::Mesh> meshes{};
+		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
 		for (const tinygltf::Mesh& mesh : glTFModel.meshes)
 		{
 			for (const tinygltf::Primitive& primitive : mesh.primitives)
@@ -234,7 +236,24 @@ namespace Utility::Loader {
 				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 				meshData.meshInfo.indexCount = static_cast<uint32_t>(meshData.index.size());
 
-				meshes.push_back(meshData);
+				// Material
+				MyosotisFW::BasicMaterial material{};
+				const int materialID = primitive.material;
+				tinygltf::Material gltfMaterial = glTFModel.materials[materialID];
+				// BaseColor
+				if (gltfMaterial.values.find("baseColorFactor") != gltfMaterial.values.end()) {
+					material.basicMaterialInfo.baseColor = glm::make_vec4(gltfMaterial.values["baseColorFactor"].ColorFactor().data());
+				}
+				// BaseColorTexture
+				if (gltfMaterial.values.find("baseColorTexture") != gltfMaterial.values.end()) {
+					int baseColorTextureIndex = gltfMaterial.values["baseColorTexture"].TextureIndex();
+					tinygltf::Image image = glTFModel.images[baseColorTextureIndex];
+					material.baseColorTexturePath = image.uri;
+
+					// todo. bitを設定
+					material.basicMaterialInfo.bitFlags = 0;
+				}
+				meshes.push_back({ meshData, material });
 			}
 		}
 #ifdef DEBUG

@@ -43,9 +43,9 @@ namespace MyosotisFW::System::Render
 		}
 		m_shaderModules.clear();
 
-		for (std::pair<std::string, Meshes> meshList : m_meshes)
+		for (std::pair<std::string, MeshesData> meshList : m_meshes)
 		{
-			for (Mesh_ptr& mesh : meshList.second)
+			for (Mesh_ptr& mesh : meshList.second.mesh)
 			{
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation);
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->indexBuffer.buffer, mesh->indexBuffer.allocation);
@@ -53,9 +53,9 @@ namespace MyosotisFW::System::Render
 		}
 		m_meshes.clear();
 
-		for (std::pair<std::string, Meshes> meshList : m_terrains)
+		for (std::pair<std::string, MeshesData> meshList : m_terrains)
 		{
-			for (Mesh_ptr& mesh : meshList.second)
+			for (Mesh_ptr& mesh : meshList.second.mesh)
 			{
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation);
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->indexBuffer.buffer, mesh->indexBuffer.allocation);
@@ -63,10 +63,10 @@ namespace MyosotisFW::System::Render
 		}
 		m_terrains.clear();
 
-		for (std::pair<Shape::PrimitiveGeometryShape, Mesh_ptr> meshPair : m_primitiveGeometryMeshes)
+		for (std::pair<Shape::PrimitiveGeometryShape, MeshData> meshPair : m_primitiveGeometryMeshes)
 		{
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second->vertexBuffer.buffer, meshPair.second->vertexBuffer.allocation);
-			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second->indexBuffer.buffer, meshPair.second->indexBuffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.mesh->vertexBuffer.buffer, meshPair.second.mesh->vertexBuffer.allocation);
+			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.mesh->indexBuffer.buffer, meshPair.second.mesh->indexBuffer.allocation);
 		}
 		m_primitiveGeometryMeshes.clear();
 
@@ -175,12 +175,13 @@ namespace MyosotisFW::System::Render
 
 	MeshesHandle RenderResources::GetMesh(const std::string& fileName)
 	{
-		auto vertexData = m_meshesHandle.find(fileName);
-		if (vertexData == m_meshesHandle.end())
+		auto vertexData = m_meshes.find(fileName);
+		if (vertexData == m_meshes.end())
 		{
 			// 拡張子判定
-			std::string extension = std::filesystem::path(fileName).extension().string();
-			std::vector<MyosotisFW::Mesh> rawMeshes{};
+			std::filesystem::path path(fileName);
+			std::string extension = path.extension().string();
+			std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> rawMeshes{};
 			if ((extension == ".fbx") || (extension == ".FBX"))
 			{
 				rawMeshes = Utility::Loader::loadFbx(fileName);
@@ -200,36 +201,50 @@ namespace MyosotisFW::System::Render
 
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
-			Meshes meshes{};
-			MeshesHandle meshesHandle{};
+			MeshesData meshes{};
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-			for (Mesh& mesh : rawMeshes)
+			for (auto& [mesh, material] : rawMeshes)
 			{
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
 				meshPtr->meshInfo.meshID = meshID;
-				meshes.push_back(meshPtr);
-				meshesHandle.push_back(meshPtr);
+				meshes.mesh.push_back(meshPtr);
+				meshes.meshHandle.push_back(meshPtr);
+
+				BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
+				if (!matPtr->baseColorTexturePath.empty())
+				{
+					std::filesystem::path modelFolder(AppInfo::g_modelFolder);
+					std::filesystem::path imagePath = modelFolder.append(path.parent_path().string());
+					imagePath = imagePath.append(matPtr->baseColorTexturePath);
+					Image image = GetImage(imagePath.string());
+					VkSampler& sampler = CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+					VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(sampler, image.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+					matPtr->basicMaterialInfo.baseColorTexture = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, imageInfo);
+				}
+				meshes.material.push_back(matPtr);
+				meshes.materialHandle.push_back(matPtr);
+
 				meshID++;
 			}
-			createVertexIndexBuffer(meshes);
-			m_onLoadedMesh(meshesHandle);
+			createVertexIndexBuffer(meshes.mesh);
+			m_onLoadedMesh(meshes.meshHandle);
 
-			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshesHandle);
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
+			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(meshes.materialHandle);
 
 			m_meshes.emplace(fileName, std::move(meshes));
-			m_meshesHandle.emplace(fileName, std::move(meshesHandle));
 		}
-		return m_meshesHandle[fileName];
+		return m_meshes[fileName].meshHandle;
 	}
 
 	MeshesHandle RenderResources::GetTerrainMesh(const std::string& fileName)
 	{
-		auto vertexData = m_terrainsHandle.find(fileName);
-		if (vertexData == m_terrainsHandle.end())
+		auto vertexData = m_terrains.find(fileName);
+		if (vertexData == m_terrains.end())
 		{
 			// 拡張子判定
 			std::string extension = std::filesystem::path(fileName).extension().string();
-			std::vector<MyosotisFW::Mesh> rawMeshes{};
+			std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> rawMeshes{};
 			if ((extension == ".png") || (extension == ".PNG"))
 			{
 				rawMeshes = Utility::Loader::loadTerrainMesh(fileName);
@@ -241,52 +256,64 @@ namespace MyosotisFW::System::Render
 
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
-			Meshes meshes{};
-			MeshesHandle meshesHandle{};
+			MeshesData meshes{};
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-			for (Mesh& mesh : rawMeshes)
+			for (auto& [mesh, material] : rawMeshes)
 			{
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
 				meshPtr->meshInfo.meshID = meshID;
-				meshes.push_back(meshPtr);
-				meshesHandle.push_back(meshPtr);
+				meshes.mesh.push_back(meshPtr);
+				meshes.meshHandle.push_back(meshPtr);
+
+				BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
+				meshes.material.push_back(matPtr);
+				meshes.materialHandle.push_back(matPtr);
 				meshID++;
 			}
-			createVertexIndexBuffer(meshes);
-			m_onLoadedMesh(meshesHandle);
+			createVertexIndexBuffer(meshes.mesh);
+			m_onLoadedMesh(meshes.meshHandle);
 
-			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshesHandle);
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
+			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(meshes.materialHandle);
 
 			m_terrains.emplace(fileName, std::move(meshes));
-			m_terrainsHandle.emplace(fileName, std::move(meshesHandle));
 		}
-		return m_terrainsHandle[fileName];
+		return m_terrains[fileName].meshHandle;
 	}
 
 	MeshHandle RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
 	{
-		auto vertexData = m_primitiveGeometryMeshesHandle.find(shape);
-		if (vertexData == m_primitiveGeometryMeshesHandle.end())
+		auto vertexData = m_primitiveGeometryMeshes.find(shape);
+		if (vertexData == m_primitiveGeometryMeshes.end())
 		{
+			// [仮] Material
+			BasicMaterial material{};
+			material.basicMaterialInfo.bitFlags = 0;
+			material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+
 			Mesh rawMesh = Shape::createShape(shape);
-			Mesh_ptr mesh = std::make_shared<Mesh>(std::move(rawMesh));
-			MeshHandle meshHandle = mesh;
+			MeshData mesh{};
+			mesh.mesh = std::make_shared<Mesh>(std::move(rawMesh));
+			mesh.meshHandle = mesh.mesh;
+			mesh.material = std::make_shared<BasicMaterial>(std::move(material));
+			mesh.materialHandle = mesh.material;
 
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
-			mesh->meshInfo.meshID = meshID;
+			mesh.mesh->meshInfo.meshID = meshID;
 
-			Meshes meshes{ mesh };
-			MeshesHandle meshesHandle{ mesh };
+			Meshes meshes{ mesh.mesh };
+			MeshesHandle meshesHandle{ mesh.mesh };
+			BasicMaterialsHandle materialHandle = { mesh.material };
 
 			createVertexIndexBuffer(meshes);
 			m_onLoadedMesh(meshesHandle);
 
-			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, meshHandle);
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, mesh.meshHandle);
+			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materialHandle);
 
 			m_primitiveGeometryMeshes.emplace(shape, std::move(mesh));
-			m_primitiveGeometryMeshesHandle.emplace(shape, std::move(meshHandle));
 		}
-		return m_primitiveGeometryMeshesHandle[shape];
+		return m_primitiveGeometryMeshes[shape].meshHandle;
 	}
 
 	Image RenderResources::GetImage(const std::string& fileName)
@@ -358,28 +385,30 @@ namespace MyosotisFW::System::Render
 	{
 		for (const auto& [key, value] : m_meshes)
 		{
-			for (const Mesh_ptr& mesh : value)
+			for (size_t i = 0; i < value.mesh.size(); i++)
 			{
+				const Mesh_ptr& mesh = value.mesh[i];
 				if (mesh->meshInfo.meshID == meshID)
 				{
-					return mesh;
+					return value.meshHandle[i];
 				}
 			}
 		}
 		for (const auto& [key, mesh] : m_primitiveGeometryMeshes)
 		{
-			if (mesh->meshInfo.meshID == meshID)
+			if (mesh.mesh->meshInfo.meshID == meshID)
 			{
-				return mesh;
+				return mesh.meshHandle;
 			}
 		}
 		for (const auto& [key, value] : m_terrains)
 		{
-			for (const Mesh_ptr& mesh : value)
+			for (size_t i = 0; i < value.mesh.size(); i++)
 			{
+				const Mesh_ptr& mesh = value.mesh[i];
 				if (mesh->meshInfo.meshID == meshID)
 				{
-					return mesh;
+					return value.meshHandle[i];
 				}
 			}
 		}

@@ -203,6 +203,7 @@ namespace MyosotisFW::System::Render
 
 		m_accelerationStructureManager->Process();
 		m_renderDescriptors->GetRayTracingDescriptorSet()->Update();
+		m_renderDescriptors->GetMaterialDescriptorSet()->Update();
 	}
 
 	void RenderSubsystem::BeginCompute()

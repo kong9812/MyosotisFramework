@@ -6,6 +6,7 @@
 #include "AppInfo.h"
 #include "Logger.h"
 #include "Mesh.h"
+#include "BasicMaterial.h"
 
 namespace Utility::Loader
 {
@@ -76,15 +77,21 @@ namespace Utility::Loader
 		file.close();
 	}
 
-	inline std::vector<MyosotisFW::Mesh> loadMFModel(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadMFModel(std::string fileName)
 	{
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
 		auto start = std::chrono::high_resolution_clock::now();
 #endif
 		std::string fullPath = std::string(MyosotisFW::AppInfo::g_mfModelFolder) + fileName;
-		std::vector<MyosotisFW::Mesh> meshes{};
-		meshes.push_back(DesterilizeMFModel(fullPath.c_str()));
+		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
+
+		// [仮] Material
+		MyosotisFW::BasicMaterial material{};
+		material.basicMaterialInfo.bitFlags = 0;
+		material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+
+		meshes.push_back({ DesterilizeMFModel(fullPath.c_str()), material });
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] End load: " + fileName +
 			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");

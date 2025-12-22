@@ -9,7 +9,12 @@
 #include "../Descriptors/VertexData.glsl"
 #include "../Descriptors/IndexData.glsl"
 
-layout(location = 0) rayPayloadInEXT vec3 hitValue;
+struct RayPayload {
+	vec3 color;
+	float distance;
+};
+
+layout(location = 0) rayPayloadInEXT RayPayload rayPayload;
 hitAttributeEXT vec2 attribs;
 
 // 補完済みピクセル頂点情報
@@ -47,9 +52,9 @@ void main()
 	uint objectID = gl_InstanceCustomIndexEXT;
 	ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(objectID);
 
-      // MeshInfo
-      uint meshID = objectInfo.meshID;
-      MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
+	// MeshInfo
+	uint meshID = objectInfo.meshID;
+ 	MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
 
 	// IndexData
 	uint i0 = IndexData_GetIndexData(meshInfo.indexDataOffset, tri * 3 + 0);
@@ -65,6 +70,6 @@ void main()
 
   	// hitValue = v.color.rgb;
 
-      // Debug
-      hitValue = vec3(uintBitsToFloat(objectID), uintBitsToFloat(objectID), uintBitsToFloat(objectID));
+	// Debug
+	rayPayload.color = vec3(uintBitsToFloat(objectID), uintBitsToFloat(objectID), uintBitsToFloat(objectID));
 }

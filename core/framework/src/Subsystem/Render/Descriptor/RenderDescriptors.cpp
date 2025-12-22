@@ -13,6 +13,7 @@ namespace MyosotisFW::System::Render
 		m_meshInfoDescriptorSet = CreateMeshInfoDescriptorSetPointer(device, m_descriptorPool->GetDescriptorPool());
 		m_textureDescriptorSet = CreateTextureDescriptorSetPointer(device, m_descriptorPool->GetDescriptorPool());
 		m_rayTracingDescriptorSet = CreateRayTracingDescriptorSetPointer(device, m_descriptorPool->GetDescriptorPool());
+		m_materialDescriptorSet = CreateMaterialDescriptorSetPointer(device, m_descriptorPool->GetDescriptorPool());
 	}
 
 	std::vector<VkDescriptorSet> RenderDescriptors::GetDescriptorSet()
@@ -23,6 +24,7 @@ namespace MyosotisFW::System::Render
 			m_meshInfoDescriptorSet->GetDescriptorSet(),
 			m_textureDescriptorSet->GetDescriptorSet(),
 			m_rayTracingDescriptorSet->GetDescriptorSet(),
+			m_materialDescriptorSet->GetDescriptorSet(),
 		};
 		return descriptorSets;
 	}
@@ -34,7 +36,8 @@ namespace MyosotisFW::System::Render
 			m_objectInfoDescriptorSet->GetDescriptorSetLayout(),
 			m_meshInfoDescriptorSet->GetDescriptorSetLayout(),
 			m_textureDescriptorSet->GetDescriptorSetLayout(),
-			m_rayTracingDescriptorSet->GetDescriptorSetLayout()
+			m_rayTracingDescriptorSet->GetDescriptorSetLayout(),
+			m_materialDescriptorSet->GetDescriptorSetLayout(),
 		};
 		return descriptorSetLayouts;
 	}
