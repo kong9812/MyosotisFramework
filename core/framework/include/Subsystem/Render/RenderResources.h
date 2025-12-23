@@ -76,7 +76,6 @@ namespace MyosotisFW::System::Render
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, MeshesData> m_meshes;
-		std::unordered_map<std::string, MeshesData> m_terrains;
 		std::unordered_map<Shape::PrimitiveGeometryShape, MeshData> m_primitiveGeometryMeshes;
 
 		std::unordered_map<std::string, Image> m_images;

@@ -53,16 +53,6 @@ namespace MyosotisFW::System::Render
 		}
 		m_meshes.clear();
 
-		for (std::pair<std::string, MeshesData> meshList : m_terrains)
-		{
-			for (Mesh_ptr& mesh : meshList.second.mesh)
-			{
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation);
-				vmaDestroyBuffer(m_device->GetVmaAllocator(), mesh->indexBuffer.buffer, mesh->indexBuffer.allocation);
-			}
-		}
-		m_terrains.clear();
-
 		for (std::pair<Shape::PrimitiveGeometryShape, MeshData> meshPair : m_primitiveGeometryMeshes)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), meshPair.second.mesh->vertexBuffer.buffer, meshPair.second.mesh->vertexBuffer.allocation);
@@ -202,7 +192,7 @@ namespace MyosotisFW::System::Render
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
 			MeshesData meshes{};
-			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
 			for (auto& [mesh, material] : rawMeshes)
 			{
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
@@ -239,8 +229,8 @@ namespace MyosotisFW::System::Render
 
 	MeshesHandle RenderResources::GetTerrainMesh(const std::string& fileName)
 	{
-		auto vertexData = m_terrains.find(fileName);
-		if (vertexData == m_terrains.end())
+		auto vertexData = m_meshes.find(fileName);
+		if (vertexData == m_meshes.end())
 		{
 			// 拡張子判定
 			std::string extension = std::filesystem::path(fileName).extension().string();
@@ -257,7 +247,7 @@ namespace MyosotisFW::System::Render
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
 			MeshesData meshes{};
-			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
 			for (auto& [mesh, material] : rawMeshes)
 			{
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
@@ -276,9 +266,9 @@ namespace MyosotisFW::System::Render
 			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
 			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(meshes.materialHandle);
 
-			m_terrains.emplace(fileName, std::move(meshes));
+			m_meshes.emplace(fileName, std::move(meshes));
 		}
-		return m_terrains[fileName].meshHandle;
+		return m_meshes[fileName].meshHandle;
 	}
 
 	MeshHandle RenderResources::GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape)
@@ -298,7 +288,7 @@ namespace MyosotisFW::System::Render
 			mesh.material = std::make_shared<BasicMaterial>(std::move(material));
 			mesh.materialHandle = mesh.material;
 
-			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size() + m_terrains.size();
+			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
 			mesh.mesh->meshInfo.meshID = meshID;
 
 			Meshes meshes{ mesh.mesh };
@@ -399,17 +389,6 @@ namespace MyosotisFW::System::Render
 			if (mesh.mesh->meshInfo.meshID == meshID)
 			{
 				return mesh.meshHandle;
-			}
-		}
-		for (const auto& [key, value] : m_terrains)
-		{
-			for (size_t i = 0; i < value.mesh.size(); i++)
-			{
-				const Mesh_ptr& mesh = value.mesh[i];
-				if (mesh->meshInfo.meshID == meshID)
-				{
-					return value.meshHandle[i];
-				}
 			}
 		}
 		return {};
