@@ -7,7 +7,7 @@
 #include "../Descriptors/TLAS.glsl"
 #include "../Descriptors/BasicMaterialInfo.glsl"
 
-layout (set = 3, binding = 1) writeonly uniform image2D Image2D[];
+layout (rgba32f, set = 3, binding = 1) writeonly uniform image2D Image2D[];
 
 layout(push_constant) uniform PushConstant {
     uint storeImageID;
@@ -40,7 +40,9 @@ void main()
 
     vec3 color = vec3(0.0);
 
-    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsOpaqueEXT, 0xff, 0, 1, 0, cameraData.pos.xyz, tmin, direction.xyz, tmax, 0);
+	rayPayload.color = vec3(0.0);
+	rayPayload.distance = 0.0;
+    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, cameraData.pos.xyz, tmin, direction.xyz, tmax, 0);
 	color = rayPayload.color;
-	imageStore(Image2D[storeImageID], ivec2(gl_LaunchIDEXT.xy), vec4(rayPayload.color, 0.0));
+	imageStore(Image2D[storeImageID], ivec2(gl_LaunchIDEXT.xy), vec4(rayPayload.color, 1.0));
 }

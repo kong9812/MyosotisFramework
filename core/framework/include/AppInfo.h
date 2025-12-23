@@ -78,8 +78,8 @@ namespace MyosotisFW::AppInfo
 	constexpr VkFormat g_visibilityBufferFormat = VkFormat::VK_FORMAT_R32_UINT;
 	// 指定画像フォーマット (Lightmap)
 	constexpr VkFormat g_lightmapFormat = VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
-	// 指定画像フォーマット (Lightmap)
-	constexpr VkFormat g_rayTracingRenderTargetFormat = VkFormat::VK_FORMAT_R8G8B8A8_UINT;
+	// 指定画像フォーマット (RayTracing)
+	constexpr VkFormat g_rayTracingRenderTargetFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;

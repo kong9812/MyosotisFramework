@@ -180,6 +180,8 @@ void main()
 
     // 補完済み頂点情報
     VertexData interpolateVertex = InterpolateVertexAttributes(vertex[0], vertex[1], vertex[2], bary);
+    
+    // マテリアル
     interpolateVertex.color = interpolateVertex.color * basicMaterialInfo.baseColor;
     if (BasicMaterialInfo_HasBaseColorTexture(basicMaterialInfo.bitFlags))
     {
