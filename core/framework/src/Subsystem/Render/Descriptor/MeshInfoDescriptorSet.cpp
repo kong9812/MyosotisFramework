@@ -119,12 +119,10 @@ namespace MyosotisFW::System::Render
 		std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 
 		// MeshInfo
-		MeshInfo meshInfo{};
+		MeshInfo meshInfo = mesh->meshInfo;
 		meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 		meshInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 		meshInfo.indexDataOffset = static_cast<uint32_t>(m_indexData.size());
-		meshInfo.AABBMin = mesh->meshInfo.AABBMin;
-		meshInfo.AABBMax = mesh->meshInfo.AABBMax;
 		meshInfo.vertexAttributeBit =
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
 			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
@@ -191,12 +189,10 @@ namespace MyosotisFW::System::Render
 			std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 
 			// MeshInfo
-			MeshInfo meshInfo{};
+			MeshInfo meshInfo = mesh->meshInfo;
 			meshInfo.meshletInfoOffset = static_cast<uint32_t>(m_meshletInfo.size()); // MeshMetaDataの開始位置
 			meshInfo.vertexDataOffset = m_vertexData.size() * (sizeof(VertexData) / sizeof(float));
 			meshInfo.indexDataOffset = static_cast<uint32_t>(m_indexData.size());
-			meshInfo.AABBMin = mesh->meshInfo.AABBMin;
-			meshInfo.AABBMax = mesh->meshInfo.AABBMax;
 			meshInfo.vertexAttributeBit =
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
 				Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |

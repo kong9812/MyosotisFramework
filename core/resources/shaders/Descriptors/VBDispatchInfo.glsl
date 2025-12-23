@@ -12,7 +12,7 @@ layout (std430, set = 1, binding = 1) readonly buffer VBDispatchInfoDescriptor {
   VBDispatchInfo vbDispatchInfo[];
 };
 
-bool VBDispatchInfo_IsCullingObject(uint bitFlags)
+bool VBDispatchInfo_IsForceDraw(uint bitFlags) // without culling
 {
   return (bitFlags & 0x1u) == 0u;
 }

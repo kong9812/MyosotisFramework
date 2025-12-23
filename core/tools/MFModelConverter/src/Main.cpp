@@ -80,7 +80,7 @@ static uint64_t FileTimestamp_ms(const std::filesystem::path& p)
 }
 
 
-static void CreateMFModel(const char* name, MyosotisFW::RawMeshData& rawMeshData)
+static void CreateMFModel(const char* name, MyosotisFW::RawMeshData& rawMeshData, const MyosotisFW::BasicMaterial& material)
 {
 	// UV1の作成
 	glm::ivec2 atlasSize = xatlas::BuildLightmapUV(rawMeshData.vertex, rawMeshData.index);
@@ -166,7 +166,7 @@ static void CreateMFModel(const char* name, MyosotisFW::RawMeshData& rawMeshData
 	meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(rawMeshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 	meshData.meshInfo.atlasSize = atlasSize;
 
-	Utility::Loader::SerializeMFModel(name, meshData);
+	Utility::Loader::SerializeMFModel(name, meshData, material);
 }
 
 static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std::filesystem::path& mfModelPath)
@@ -186,6 +186,7 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 
 	// メッシュデータ抽出
 	MyosotisFW::RawMeshData rawMeshData{};
+	MyosotisFW::BasicMaterial material;
 	uint32_t meshCount = scene->getMeshCount();
 	for (uint32_t meshIndex = 0; meshIndex < meshCount; ++meshIndex)
 	{
@@ -243,12 +244,30 @@ static void CreateMFModelFromFBX(const std::filesystem::path& fbxPath, const std
 					rawMeshData.index.push_back(static_cast<uint32_t>(triangle[i]));
 				}
 			}
+
+			// Material
+			material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+			material.basicMaterialInfo.bitFlags = 0;
+			const ofbx::Material* fbxMaterial = mesh->getMaterial(meshIndex);
+			const ofbx::Color fbxDiffuseColor = fbxMaterial->getDiffuseColor();
+			double fbxDiffuseFactor = fbxMaterial->getDiffuseFactor();
+			fbxDiffuseFactor = glm::clamp(fbxDiffuseFactor, static_cast<double>(-FLT_MAX), static_cast<double>(FLT_MAX));
+			fbxDiffuseFactor = fbxDiffuseFactor < 0 ? 1.0 : fbxDiffuseFactor;
+			material.basicMaterialInfo.baseColor = glm::vec4(fbxDiffuseColor.r, fbxDiffuseColor.g, fbxDiffuseColor.b, 1.0f);
+			material.basicMaterialInfo.baseColor *= static_cast<float>(fbxDiffuseFactor);
+			const ofbx::Texture* diffuseTexture = fbxMaterial->getTexture(ofbx::Texture::TextureType::DIFFUSE);
+			if (diffuseTexture)
+			{
+				ofbx::DataView fileName = diffuseTexture->getRelativeFileName();
+				material.baseColorTexturePath = std::string_view(reinterpret_cast<const char*>(fileName.begin), static_cast<size_t>(fileName.end - fileName.begin));
+				material.basicMaterialInfo.bitFlags |= (1u << 0);
+			}
 		}
 	}
 	scene->destroy();
 
 	// mfmodel作成
-	CreateMFModel(fbxPath.stem().string().c_str(), rawMeshData);
+	CreateMFModel(fbxPath.stem().string().c_str(), rawMeshData, material);
 }
 
 static const float* GetGLTFFloatData(const tinygltf::Model& glTFModel, const tinygltf::Primitive& primitive, const char* attributeName, size_t* count = nullptr)
@@ -273,6 +292,7 @@ static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const s
 
 	// メッシュデータ抽出
 	MyosotisFW::RawMeshData rawMeshData{};
+	MyosotisFW::BasicMaterial material{};
 	for (const tinygltf::Mesh& mesh : glTFModel.meshes)
 	{
 		for (const tinygltf::Primitive& primitive : mesh.primitives)
@@ -361,11 +381,29 @@ static void CreateMFModelFromGLTF(const std::filesystem::path& gltfPath, const s
 				ASSERT(false, "Index component type not supported! File: " + gltfPath.string());
 				break;
 			}
+
+			// Material
+			material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+			material.basicMaterialInfo.bitFlags = 0;
+			const int materialID = primitive.material;
+			tinygltf::Material gltfMaterial = glTFModel.materials[materialID];
+			// BaseColor
+			if (gltfMaterial.values.find("baseColorFactor") != gltfMaterial.values.end()) {
+				material.basicMaterialInfo.baseColor = glm::make_vec4(gltfMaterial.values["baseColorFactor"].ColorFactor().data());
+			}
+			// BaseColorTexture
+			if (gltfMaterial.values.find("baseColorTexture") != gltfMaterial.values.end()) {
+				int baseColorTextureIndex = gltfMaterial.values["baseColorTexture"].TextureIndex();
+				tinygltf::Image image = glTFModel.images[baseColorTextureIndex];
+				material.baseColorTexturePath = image.uri;
+
+				material.basicMaterialInfo.bitFlags |= (1u << 0);
+			}
 		}
 	}
 
 	// mfmodel作成
-	CreateMFModel(gltfPath.stem().string().c_str(), rawMeshData);
+	CreateMFModel(gltfPath.stem().string().c_str(), rawMeshData, material);
 }
 
 int main()

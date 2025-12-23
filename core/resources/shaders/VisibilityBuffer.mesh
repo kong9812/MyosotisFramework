@@ -93,7 +93,7 @@ void main()
 
         // バックフェースカリング
         bool isVisible = BackfaceCulling_IsVisible(cameraData.pos.xyz, pos[0].xyz, pos[1].xyz, pos[2].xyz);
-        if (VBDispatchInfo_IsCullingObject(dispactchInfo.bitFlags) == false)
+        if (VBDispatchInfo_IsForceDraw(dispactchInfo.bitFlags) == false)
         {
             isVisible = true; // 強制描画
         }

@@ -2,6 +2,7 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "Loader/Usampler2DLoader.glsl"
+#include "Loader/Sampler2DLoader.glsl"
 
 #include "Descriptors/VBDispatchInfo.glsl"
 #include "Descriptors/ObjectInfo.glsl"
@@ -13,6 +14,7 @@
 #include "Descriptors/VertexData.glsl"
 #include "Descriptors/UniqueIndexData.glsl"
 #include "Descriptors/PrimitivesData.glsl"
+#include "Descriptors/BasicMaterialInfo.glsl"
 
 layout (push_constant) uniform PushConstant {
     uint visibilityBufferID;
@@ -136,6 +138,10 @@ void main()
     uint meshletID = meshInfo.meshletInfoOffset + dispactchInfo.meshletID;
     MeshletInfo meshletInfo = MeshletInfo_GetMeshletInfo(meshletID);
 
+    // BasicMaterialInfo
+    uint materialID = meshInfo.materialID;
+    BasicMaterialInfo basicMaterialInfo = BasicMaterialInfo_GetBasicMaterialInfo(materialID);
+
     // CameraInfo (MainCameraData)
     CameraData cameraData = CameraInfo_GetCameraData(CameraInfo_GetMainCameraIndex());
     mat4 projView = cameraData.projection * cameraData.view;
@@ -174,7 +180,13 @@ void main()
 
     // 補完済み頂点情報
     VertexData interpolateVertex = InterpolateVertexAttributes(vertex[0], vertex[1], vertex[2], bary);
-
+    interpolateVertex.color = interpolateVertex.color * basicMaterialInfo.baseColor;
+    if (BasicMaterialInfo_HasBaseColorTexture(basicMaterialInfo.bitFlags))
+    {
+        vec3 baseColorTextureColor = Sampler2DLoader_GetTexture(basicMaterialInfo.baseColorTexture, interpolateVertex.uv0).rgb;
+        interpolateVertex.color = interpolateVertex.color * vec4(baseColorTextureColor, 1.0);
+    }
+    
     // ライティング計算
     outColor = CalcLighting(interpolateVertex, objectInfo, cameraData);
 }

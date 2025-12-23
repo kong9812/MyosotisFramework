@@ -28,19 +28,19 @@ namespace MyosotisFW::System::Render
 		for (const BasicMaterialHandle& materialHandle : basicMaterialsHandle)
 		{
 			std::shared_ptr<const BasicMaterial> material = materialHandle.lock();
-			m_basicMaterial.push_back(*material);
+			m_basicMaterial.push_back(material->basicMaterialInfo);
 		}
-		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].rebuild = true;
-		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].update = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].rebuild = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].update = true;
 	}
 
 	void MaterialDescriptorSet::Update()
 	{
-		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].rebuild)
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].rebuild)
 		{
-			uint32_t size = static_cast<uint32_t>(sizeof(BasicMaterial)) * static_cast<uint32_t>(m_basicMaterial.size());
-			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial), size);
-			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].rebuild = false;
+			uint32_t size = static_cast<uint32_t>(sizeof(BasicMaterialInfo)) * static_cast<uint32_t>(m_basicMaterial.size());
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo), size);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].rebuild = false;
 		}
 
 		// SSBO/UBO更新
@@ -49,14 +49,14 @@ namespace MyosotisFW::System::Render
 
 	void MaterialDescriptorSet::updateBasicMaterial()
 	{
-		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].update)
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].update)
 		{
 			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
-				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].buffer,
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].buffer,
 				m_basicMaterial.data(),
-				sizeof(BasicMaterial) * m_basicMaterial.size());
+				sizeof(BasicMaterialInfo) * m_basicMaterial.size());
 
-			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterial)].update = false;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::BasicMaterialInfo)].update = false;
 		}
 	}
 }

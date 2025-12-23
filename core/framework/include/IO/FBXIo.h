@@ -177,11 +177,24 @@ namespace Utility::Loader {
 				meshData.meshInfo.vertexFloatCount = static_cast<uint32_t>(meshData.vertex.size()) * (sizeof(MyosotisFW::VertexData) / sizeof(float));
 				meshData.meshInfo.indexCount = static_cast<uint32_t>(meshData.index.size());
 
-				// [仮] Material
+				// Material
 				MyosotisFW::BasicMaterial material{};
-				material.basicMaterialInfo.bitFlags = 0;
 				material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
-
+				material.basicMaterialInfo.bitFlags = 0;
+				const ofbx::Material* fbxMaterial = mesh->getMaterial(meshIdx);
+				const ofbx::Color fbxDiffuseColor = fbxMaterial->getDiffuseColor();
+				double fbxDiffuseFactor = fbxMaterial->getDiffuseFactor();
+				fbxDiffuseFactor = glm::clamp(fbxDiffuseFactor, static_cast<double>(-FLT_MAX), static_cast<double>(FLT_MAX));
+				fbxDiffuseFactor = fbxDiffuseFactor < 0 ? 1.0 : fbxDiffuseFactor;
+				material.basicMaterialInfo.baseColor = glm::vec4(fbxDiffuseColor.r, fbxDiffuseColor.g, fbxDiffuseColor.b, 1.0f);
+				material.basicMaterialInfo.baseColor *= static_cast<float>(fbxDiffuseFactor);
+				const ofbx::Texture* diffuseTexture = fbxMaterial->getTexture(ofbx::Texture::TextureType::DIFFUSE);
+				if (diffuseTexture)
+				{
+					ofbx::DataView fileName = diffuseTexture->getRelativeFileName();
+					material.baseColorTexturePath = std::string_view(reinterpret_cast<const char*>(fileName.begin), static_cast<size_t>(fileName.end - fileName.begin));
+					material.basicMaterialInfo.bitFlags |= (1u << 0);
+				}
 				meshes.push_back({ meshData, material });
 			}
 			scene->destroy();

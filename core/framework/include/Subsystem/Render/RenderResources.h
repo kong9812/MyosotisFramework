@@ -59,13 +59,14 @@ namespace MyosotisFW::System::Render
 		{
 			Mesh_ptr mesh;
 			MeshHandle meshHandle;
-			BasicMaterial_ptr material;
-			BasicMaterialHandle materialHandle;
 		};
 		struct MeshesData
 		{
 			Meshes mesh;
 			MeshesHandle meshHandle;
+		};
+		struct MaterialData
+		{
 			BasicMaterials material;
 			BasicMaterialsHandle materialHandle;
 		};
@@ -75,8 +76,12 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors_ptr m_renderDescriptors;
 
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
+
 		std::unordered_map<std::string, MeshesData> m_meshes;
+		std::unordered_map<std::string, MaterialData> m_materials;
+
 		std::unordered_map<Shape::PrimitiveGeometryShape, MeshData> m_primitiveGeometryMeshes;
+		std::unordered_map<Shape::PrimitiveGeometryShape, MaterialData> m_primitiveGeometryMaterials;
 
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
@@ -103,6 +108,7 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		void createVertexIndexBuffer(Meshes& meshes);
+		void createDefaultMaterial();
 
 	protected:
 		std::function<void(MeshesHandle&)> m_onLoadedMesh;

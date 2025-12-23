@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 
 		enum class DescriptorBindingIndex : uint32_t
 		{
-			BasicMaterial = 0,
+			BasicMaterialInfo = 0,
 			Count
 		};
 
@@ -26,7 +26,7 @@ namespace MyosotisFW::System::Render
 	private:
 		void updateBasicMaterial();
 
-		std::vector<BasicMaterial> m_basicMaterial;
+		std::vector<BasicMaterialInfo> m_basicMaterial;
 	};
 
 	TYPEDEF_SHARED_PTR_ARGS(MaterialDescriptorSet);

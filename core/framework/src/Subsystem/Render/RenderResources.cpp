@@ -149,7 +149,8 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_rayTracingRenderTarget.view));
 		}
 
-
+		// Create Default Material
+		createDefaultMaterial();
 	}
 
 	VkShaderModule RenderResources::GetShaderModules(const std::string& fileName)
@@ -192,37 +193,54 @@ namespace MyosotisFW::System::Render
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
 			MeshesData meshes{};
+			MaterialData materials{};
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
+			uint32_t materialID = m_primitiveGeometryMaterials.size() + m_materials.size();
 			for (auto& [mesh, material] : rawMeshes)
 			{
+				// Mesh
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
 				meshPtr->meshInfo.meshID = meshID;
 				meshes.mesh.push_back(meshPtr);
 				meshes.meshHandle.push_back(meshPtr);
-
-				BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
-				if (!matPtr->baseColorTexturePath.empty())
-				{
-					std::filesystem::path modelFolder(AppInfo::g_modelFolder);
-					std::filesystem::path imagePath = modelFolder.append(path.parent_path().string());
-					imagePath = imagePath.append(matPtr->baseColorTexturePath);
-					Image image = GetImage(imagePath.string());
-					VkSampler& sampler = CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
-					VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(sampler, image.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-					matPtr->basicMaterialInfo.baseColorTexture = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, imageInfo);
-				}
-				meshes.material.push_back(matPtr);
-				meshes.materialHandle.push_back(matPtr);
-
 				meshID++;
+
+				// Material
+				if (!material.isDefault())
+				{
+					BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
+					if (!matPtr->baseColorTexturePath.empty())
+					{
+						std::filesystem::path modelFolder(AppInfo::g_modelFolder);
+						std::filesystem::path imagePath = modelFolder.append(path.parent_path().string());
+						imagePath = imagePath.append(matPtr->baseColorTexturePath);
+						Image image = GetImage(imagePath.string());
+						VkSampler& sampler = CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+						VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(sampler, image.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+						matPtr->basicMaterialInfo.baseColorTexture = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, imageInfo);
+					}
+					materials.material.push_back(matPtr);
+					materials.materialHandle.push_back(matPtr);
+
+					meshPtr->meshInfo.materialID = materialID;
+					materialID++;
+				}
+				else
+				{
+					meshPtr->meshInfo.materialID = 0;
+				}
 			}
 			createVertexIndexBuffer(meshes.mesh);
 			m_onLoadedMesh(meshes.meshHandle);
 
 			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
-			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(meshes.materialHandle);
-
 			m_meshes.emplace(fileName, std::move(meshes));
+
+			if (materials.material.size() > 0)
+			{
+				m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materials.materialHandle);
+				m_materials.emplace(fileName, std::move(materials));
+			}
 		}
 		return m_meshes[fileName].meshHandle;
 	}
@@ -247,26 +265,43 @@ namespace MyosotisFW::System::Render
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
 
 			MeshesData meshes{};
+			MaterialData materials{};
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
+			uint32_t materialID = m_primitiveGeometryMaterials.size() + m_materials.size();
 			for (auto& [mesh, material] : rawMeshes)
 			{
+				// Mesh
 				Mesh_ptr meshPtr = std::make_shared<Mesh>(std::move(mesh));
 				meshPtr->meshInfo.meshID = meshID;
 				meshes.mesh.push_back(meshPtr);
 				meshes.meshHandle.push_back(meshPtr);
-
-				BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
-				meshes.material.push_back(matPtr);
-				meshes.materialHandle.push_back(matPtr);
 				meshID++;
+
+				// Material
+				if (!material.isDefault())
+				{
+					BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(material));
+					materials.material.push_back(matPtr);
+					materials.materialHandle.push_back(matPtr);
+					meshPtr->meshInfo.materialID = materialID;
+					materialID++;
+				}
+				else
+				{
+					meshPtr->meshInfo.materialID = 0;
+				}
 			}
 			createVertexIndexBuffer(meshes.mesh);
 			m_onLoadedMesh(meshes.meshHandle);
 
 			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
-			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(meshes.materialHandle);
-
 			m_meshes.emplace(fileName, std::move(meshes));
+
+			if (materials.material.size() > 0)
+			{
+				m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materials.materialHandle);
+				m_materials.emplace(fileName, std::move(materials));
+			}
 		}
 		return m_meshes[fileName].meshHandle;
 	}
@@ -281,27 +316,38 @@ namespace MyosotisFW::System::Render
 			material.basicMaterialInfo.bitFlags = 0;
 			material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
 
+			// Mesh
 			Mesh rawMesh = Shape::createShape(shape);
 			MeshData mesh{};
 			mesh.mesh = std::make_shared<Mesh>(std::move(rawMesh));
 			mesh.meshHandle = mesh.mesh;
-			mesh.material = std::make_shared<BasicMaterial>(std::move(material));
-			mesh.materialHandle = mesh.material;
-
 			uint32_t meshID = m_primitiveGeometryMeshes.size() + m_meshes.size();
 			mesh.mesh->meshInfo.meshID = meshID;
-
 			Meshes meshes{ mesh.mesh };
 			MeshesHandle meshesHandle{ mesh.mesh };
-			BasicMaterialsHandle materialHandle = { mesh.material };
+
+			// Material
+			MaterialData materials{};
+			if (!material.isDefault())
+			{
+				BasicMaterial_ptr materialPtr = std::make_shared<BasicMaterial>(std::move(material));
+				materials.material = { materialPtr };
+				materials.materialHandle = { materialPtr };
+				uint32_t materialID = m_primitiveGeometryMaterials.size() + m_materials.size();
+				mesh.mesh->meshInfo.materialID = materialID;
+			}
 
 			createVertexIndexBuffer(meshes);
 			m_onLoadedMesh(meshesHandle);
 
 			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddPrimitiveGeometry(shape, mesh.meshHandle);
-			m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materialHandle);
-
 			m_primitiveGeometryMeshes.emplace(shape, std::move(mesh));
+
+			if (materials.material.size() > 0)
+			{
+				m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materials.materialHandle);
+				m_primitiveGeometryMaterials.emplace(shape, std::move(materials));
+			}
 		}
 		return m_primitiveGeometryMeshes[shape].meshHandle;
 	}
@@ -422,5 +468,18 @@ namespace MyosotisFW::System::Render
 				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh->indexBuffer, mesh->index.data(), sizeof(uint32_t) * mesh->index.size());
 			}
 		}
+	}
+
+	void RenderResources::createDefaultMaterial()
+	{
+		BasicMaterial defaultMaterial{};
+		defaultMaterial.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+
+		MaterialData material{};
+		BasicMaterial_ptr matPtr = std::make_shared<BasicMaterial>(std::move(defaultMaterial));
+		material.material.push_back(matPtr);
+		material.materialHandle.push_back(matPtr);
+		m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(material.materialHandle);
+		m_materials.emplace("default", std::move(material));
 	}
 }

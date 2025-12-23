@@ -18,7 +18,7 @@ namespace MyosotisFW
 		uint32_t indexCount;			// Indexの数
 		uint32_t vertexDataOffset;
 		uint32_t indexDataOffset;
-		uint32_t p4;
+		uint32_t materialID;			// MaterialID
 	};
 	// *ObjectData: Objectでセットするデータ
 	// *DescriptorData: DescriptorSetでセットするデータ

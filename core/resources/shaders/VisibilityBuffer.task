@@ -42,7 +42,7 @@ void main()
         // VBDispatchInfo
         VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(gl_GlobalInvocationID.x);
 
-        if (VBDispatchInfo_IsCullingObject(dispactchInfo.bitFlags))
+        if (VBDispatchInfo_IsForceDraw(dispactchInfo.bitFlags))
         {
             // ObjectInfo
             uint objectID = dispactchInfo.objectID;

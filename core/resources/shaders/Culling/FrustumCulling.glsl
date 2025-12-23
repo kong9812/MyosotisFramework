@@ -55,10 +55,10 @@ OBBData FrustumCulling_CreateOBBData(vec3 aabbMin, vec3 aabbMax, vec3 position, 
 
     // 回転マトリクスを作成（XYZ順）
     mat3 rotMat = mat3(
-        // 回転行列の構築はZYX順（ロール→ピッチ→ヨー）
-        FrustumCulling_RotateZ(rotRad.z) *
+        // CPU側の順番通りで問題ない (MVPみたいに逆にする必要ない)
+        FrustumCulling_RotateX(rotRad.x) *
         FrustumCulling_RotateY(rotRad.y) *
-        FrustumCulling_RotateX(rotRad.x)
+        FrustumCulling_RotateZ(rotRad.z) 
     );
 
     // 各軸ベクトル + extent をwに格納

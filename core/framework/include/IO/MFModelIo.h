@@ -10,13 +10,14 @@
 
 namespace Utility::Loader
 {
-	inline MyosotisFW::Mesh DesterilizeMFModel(const char* path)
+	inline std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial> DesterilizeMFModel(const char* path)
 	{
 		std::ifstream file{};
 		file.open(path, std::ios::in | std::ios::binary);
 		ASSERT(file.is_open(), "Failed to open mfmodel file: " + std::string(path));
 
 		MyosotisFW::Mesh meshData{};
+		MyosotisFW::BasicMaterial materialData{};
 
 		// MeshInfo読み込み
 		file.read(reinterpret_cast<char*>(&meshData.meshInfo), sizeof(MyosotisFW::MeshInfo));
@@ -43,11 +44,26 @@ namespace Utility::Loader
 			file.read(reinterpret_cast<char*>(meshData.meshlet[i].primitives.data()), sizeof(uint32_t) * meshData.meshlet[i].meshletInfo.primitiveCount * 3);
 		}
 
+		// MaterialInfo読み込み
+		file.read(reinterpret_cast<char*>(&materialData.basicMaterialInfo), sizeof(MyosotisFW::BasicMaterialInfo));
+		// BaseColorTexturePathの長さ 読み込み
+		size_t length = 0;
+		file.read(reinterpret_cast<char*>(&length), sizeof(uint32_t));
+		// BaseColorTexturePath読み込み
+		materialData.baseColorTexturePath.resize(length);
+		file.read(reinterpret_cast<char*>(materialData.baseColorTexturePath.data()), sizeof(char) * length);
+		// NormalTexturePathの長さ 読み込み
+		length = 0;
+		file.read(reinterpret_cast<char*>(&length), sizeof(uint32_t));
+		// NormalTexturePath読み込み
+		materialData.normalTexturePath.resize(length);
+		file.read(reinterpret_cast<char*>(materialData.normalTexturePath.data()), sizeof(char) * length);
+
 		file.close();
-		return meshData;
+		return { meshData, materialData };
 	}
 
-	inline void SerializeMFModel(const char* path, const MyosotisFW::Mesh& meshes)
+	inline void SerializeMFModel(const char* path, const MyosotisFW::Mesh& meshes, const MyosotisFW::BasicMaterial& material)
 	{
 		std::ofstream file{};
 		std::string fullPath = std::string(MyosotisFW::AppInfo::g_mfModelFolder) + path + ".mfmodel";
@@ -74,6 +90,19 @@ namespace Utility::Loader
 			file.write(reinterpret_cast<const char*>(meshlet.primitives.data()), sizeof(uint32_t) * meshlet.meshletInfo.primitiveCount * 3);
 		}
 
+		// MaterialInfo書き込み
+		file.write(reinterpret_cast<const char*>(&material.basicMaterialInfo), sizeof(MyosotisFW::BasicMaterialInfo));
+		// BaseColorTexturePathの長さ 書き込み
+		size_t length = material.baseColorTexturePath.length();
+		file.write(reinterpret_cast<const char*>(&length), sizeof(uint32_t));
+		// BaseColorTexturePath書き込み
+		file.write(reinterpret_cast<const char*>(material.baseColorTexturePath.data()), sizeof(char) * length);
+		// NormalTexturePathの長さ 書き込み
+		length = material.normalTexturePath.length();
+		file.write(reinterpret_cast<const char*>(&length), sizeof(uint32_t));
+		// NormalTexturePath書き込み
+		file.write(reinterpret_cast<const char*>(material.normalTexturePath.data()), sizeof(char) * length);
+
 		file.close();
 	}
 
@@ -86,12 +115,7 @@ namespace Utility::Loader
 		std::string fullPath = std::string(MyosotisFW::AppInfo::g_mfModelFolder) + fileName;
 		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
 
-		// [仮] Material
-		MyosotisFW::BasicMaterial material{};
-		material.basicMaterialInfo.bitFlags = 0;
-		material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
-
-		meshes.push_back({ DesterilizeMFModel(fullPath.c_str()), material });
+		meshes.push_back(DesterilizeMFModel(fullPath.c_str()));
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] End load: " + fileName +
 			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");

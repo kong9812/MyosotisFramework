@@ -114,7 +114,7 @@ namespace MyosotisFW::AppInfo
 	constexpr float g_cameraFar = 2048.0f;
 	//constexpr float g_cameraFar = 8192.0f;
 	// [デフォルト]カメラ Near
-	constexpr float g_cameraNear = 0.1f;
+	constexpr float g_cameraNear = 0.01f;
 
 	// [フォルダ]リソース
 	constexpr const char* g_resourcesFolder = ".\\resources\\";

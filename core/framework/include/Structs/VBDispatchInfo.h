@@ -8,7 +8,8 @@ namespace MyosotisFW
 	struct VBDispatchInfo
 	{
 		// BitFlags
-		uint32_t bitFlags;	// 0: IsCullingObject
+		uint32_t bitFlags;
+		// 0: IsForceDraw(WithCulling)
 
 		// 描画直前にセット
 		uint32_t objectID;

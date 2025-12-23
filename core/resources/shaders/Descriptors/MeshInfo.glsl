@@ -14,7 +14,7 @@ struct MeshInfo {
 	uint indexCount;			// Indexの数
 	uint vertexDataOffset;
 	uint indexDataOffset;
-	uint p4;
+	uint materialID;			// MaterialID
 };
 
 layout (std430, set = 2, binding = 0) readonly buffer MeshInfoDescriptor {

@@ -10,6 +10,15 @@ namespace MyosotisFW
 {
 	struct BasicMaterial
 	{
+		bool isDefault()
+		{
+			return (
+				(basicMaterialInfo.baseColor == glm::vec4(1.0f)) &&
+				(basicMaterialInfo.bitFlags == 0) &&
+				(baseColorTexturePath.empty()) &&
+				(normalTexturePath.empty()));
+		}
+
 		// GPU Data
 		BasicMaterialInfo basicMaterialInfo;
 

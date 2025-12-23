@@ -238,6 +238,8 @@ namespace Utility::Loader {
 
 				// Material
 				MyosotisFW::BasicMaterial material{};
+				material.basicMaterialInfo.baseColor = glm::vec4(1.0f);
+				material.basicMaterialInfo.bitFlags = 0;
 				const int materialID = primitive.material;
 				tinygltf::Material gltfMaterial = glTFModel.materials[materialID];
 				// BaseColor
@@ -250,8 +252,7 @@ namespace Utility::Loader {
 					tinygltf::Image image = glTFModel.images[baseColorTextureIndex];
 					material.baseColorTexturePath = image.uri;
 
-					// todo. bitを設定
-					material.basicMaterialInfo.bitFlags = 0;
+					material.basicMaterialInfo.bitFlags |= (1u << 0);
 				}
 				meshes.push_back({ meshData, material });
 			}
