@@ -507,15 +507,26 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage()
 	{
 		VkImageMemoryBarrier barriers[2]{};
-		{// MainRenderTarget -> TRANSFER_DST
+		//{// MainRenderTarget -> TRANSFER_DST
+		//	barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		//	barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		//	barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT;
+		//	barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		//	barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		//	barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//	barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//	barriers[0].image = m_resources->GetMainRenderTarget().image;
+		//	barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		//}
+		{// RayTracingRenderTarget -> TRANSFER_DST
 			barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_WRITE_BIT;
 			barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT;
-			barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
 			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barriers[0].image = m_resources->GetMainRenderTarget().image;
+			barriers[0].image = m_resources->GetRayTracingRenderTarget().image;
 			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 		{// SwapchainImage -> TRANSFER_SRC
@@ -530,12 +541,19 @@ namespace MyosotisFW::System::Render
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barriers[0]);
+		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			0,
 			0, nullptr,
 			0, nullptr,
-			2, barriers);
+			1, &barriers[1]);
 		// Copy
 		VkImageBlit copyRegion = {};
 		copyRegion.srcSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
@@ -547,10 +565,21 @@ namespace MyosotisFW::System::Render
 		copyRegion.dstOffsets[0] = { 0,0,0 };
 		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
 		vkCmdBlitImage(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
-			m_resources->GetMainRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			m_resources->GetRayTracingRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
 			m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &copyRegion,
 			VkFilter::VK_FILTER_NEAREST);
+		{// RayTracingRenderTarget -> SHADER_WRITE
+			barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT;
+			barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_WRITE_BIT;
+			barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].image = m_resources->GetRayTracingRenderTarget().image;
+			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
 		{// SwapchainImage -> PRESENT_SRC
 			barriers[1].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 			barriers[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -562,6 +591,13 @@ namespace MyosotisFW::System::Render
 			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
+		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barriers[0]);
 		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,

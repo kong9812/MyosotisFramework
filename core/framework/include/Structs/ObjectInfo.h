@@ -10,7 +10,7 @@ namespace MyosotisFW
 		Transform transform;
 		glm::mat4 model;
 		uint32_t objectID;
-		uint32_t meshID;
+		uint32_t meshID;	// 使ってない
 		uint32_t materialID;
 		uint32_t vbDispatchInfoStartIndex;
 	};

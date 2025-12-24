@@ -311,7 +311,7 @@ namespace MyosotisFW::System::Render
 				uint32_t biasID = tmp->blasID;
 				VkAccelerationStructureInstanceKHR asInstance{};
 				asInstance.transform = ToVkTransformMatrixKHR(instance->model);
-				asInstance.instanceCustomIndex = instance->objectID;
+				asInstance.instanceCustomIndex = meshID;
 				asInstance.mask = instance->mask;
 				asInstance.instanceShaderBindingTableRecordOffset = instance->hitGroupOffset;
 				asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
