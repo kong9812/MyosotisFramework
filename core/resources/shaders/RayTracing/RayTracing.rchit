@@ -129,7 +129,7 @@ void main()
         interpolateVertex.color = interpolateVertex.color * vec4(baseColorTextureColor, 1.0);
     }
 	
-	// rayPayload.color = CalcLighting(interpolateVertex, objectInfo, cameraData).rgb;
-	rayPayload.color = interpolateVertex.color.rgb;
+	rayPayload.color = CalcLighting(interpolateVertex, objectInfo, cameraData).rgb;
+	//rayPayload.color = interpolateVertex.color.rgb;
 	rayPayload.distance = 0;	// todo
 }
