@@ -8,7 +8,7 @@
 #include "istduuid.h"
 #include "iRapidJson.h"
 #include "ComponentType.h"
-#include "TLASInstanceInfo.h"
+#include "TLASInstance.h"
 
 namespace MyosotisFW
 {
@@ -59,7 +59,7 @@ namespace MyosotisFW
 		void SetMeshChangedCallback(const std::function<void(void)>& callback) { m_meshChangedCallback = callback; }
 		void SetTransformChangedCallback(const std::function<void(void)>& callback) { m_transformChangedCallback = callback; }
 		std::function<void(void)> GetMeshChangedCallback() const { return m_meshChangedCallback; }
-		void SetTLASInstanceInfo(TLASInstanceInfo_ptr tlasInstanceInfo) { m_tlasInstanceInfo = tlasInstanceInfo; }
+		void SetTLASInstance(TLASInstance_ptr tlasInstance) { m_tlasInstance = tlasInstance; }
 		std::function<void(void)> GetTransformChangedCallback() const { return m_transformChangedCallback; }
 
 		const uint32_t GetMeshCount() const;
@@ -92,7 +92,7 @@ namespace MyosotisFW
 		std::function<void(void)> m_transformChangedCallback;
 
 		ObjectInfo_ptr m_objectInfo;
-		TLASInstanceInfo_ptr m_tlasInstanceInfo;
+		TLASInstance_ptr m_tlasInstance;
 
 		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;

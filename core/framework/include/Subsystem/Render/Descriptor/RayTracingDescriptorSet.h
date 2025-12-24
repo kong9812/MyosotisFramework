@@ -4,10 +4,7 @@
 #include <vector>
 #include "ClassPointer.h"
 #include "DescriptorSetBase.h"
-#include "CameraInfo.h"
-#include "SceneInfo.h"
-#include "ScreenInfo.h"
-#include "VBDispatchInfo.h"
+#include "TLASInstanceInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -20,14 +17,19 @@ namespace MyosotisFW::System::Render
 		enum class DescriptorBindingIndex : uint32_t
 		{
 			TLAS,
+			TLASInstanceInfo,
 			Count
 		};
 
 		void Update() override;
 		void SetTLAS(const VkAccelerationStructureKHR& tlas);
+		uint32_t AddTLASInstanceInfo(const TLASInstanceInfo tlasInstanceInfo);
 
 	private:
 		VkAccelerationStructureKHR m_tlas;
+		std::vector<TLASInstanceInfo> m_tlasInstanceInfo;
+
+		void updateTLASInstanceInfo();
 	};
 
 	TYPEDEF_SHARED_PTR_ARGS(RayTracingDescriptorSet);

@@ -82,8 +82,8 @@ namespace MyosotisFW
 			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			m_objectInfo->model = glm::rotate(m_objectInfo->model, glm::radians(m_objectInfo->transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
 			m_objectInfo->model = glm::scale(m_objectInfo->model, glm::vec3(m_objectInfo->transform.scale));
-			m_tlasInstanceInfo->model = m_objectInfo->model;
-			m_tlasInstanceInfo->meshID = GetMeshID();
+			m_tlasInstance->model = m_objectInfo->model;
+			m_tlasInstance->meshID = GetMeshID();
 			m_dirty = false;
 			return true;
 		}
@@ -176,7 +176,7 @@ namespace MyosotisFW
 			});
 		ASSERT(it == m_components.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
 
-		component->SetTLASInstanceInfo(m_tlasInstanceInfo);
+		component->SetTLASInstance(m_tlasInstance);
 		m_components.push_back(component);
 	}
 

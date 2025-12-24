@@ -7,6 +7,7 @@
 #include "iglm.h"
 #include "RenderDescriptors.h"
 #include "RenderResources.h"
+#include "TLASInstanceInfo.h"
 
 namespace {
 	VkTransformMatrixKHR ToVkTransformMatrixKHR(const glm::mat4& mat)
@@ -152,7 +153,7 @@ namespace MyosotisFW::System::Render
 
 	void AccelerationStructureManager::OnAddObject(const MObject_ptr& object)
 	{
-		TLASInstanceInfo_ptr info = std::make_shared<TLASInstanceInfo>();
+		TLASInstance_ptr info = std::make_shared<TLASInstance>();
 		info->objectID = object->GetObjectID();
 		info->active = false;
 		//info.blasID = blasID;	//todo
@@ -161,7 +162,7 @@ namespace MyosotisFW::System::Render
 		info->hitGroupOffset = 0;
 		info->transformDirty = true;
 		m_instances.push_back(info);
-		object->SetTLASInstanceInfo(info);
+		object->SetTLASInstance(info);
 		m_tlasDirty = true;
 	}
 
@@ -300,7 +301,7 @@ namespace MyosotisFW::System::Render
 		if ((m_tlas.tlas.handle != VK_NULL_HANDLE) || (m_tlas.instanceBuffer.buffer != VK_NULL_HANDLE)) destroyTLAS();
 
 		std::vector<VkAccelerationStructureInstanceKHR> asInstances{};
-		for (const TLASInstanceInfo_ptr instance : m_instances)
+		for (const TLASInstance_ptr instance : m_instances)
 		{
 			if (!instance->active) continue;
 
@@ -311,11 +312,18 @@ namespace MyosotisFW::System::Render
 				uint32_t biasID = tmp->blasID;
 				VkAccelerationStructureInstanceKHR asInstance{};
 				asInstance.transform = ToVkTransformMatrixKHR(instance->model);
-				asInstance.instanceCustomIndex = meshID;
 				asInstance.mask = instance->mask;
 				asInstance.instanceShaderBindingTableRecordOffset = instance->hitGroupOffset;
 				asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 				asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
+
+				TLASInstanceInfo tlasInstanceInfo{};
+				tlasInstanceInfo.meshID = meshID;
+				tlasInstanceInfo.objectID = instance->objectID;
+
+				// Custom Index
+				asInstance.instanceCustomIndex = m_renderDescriptors->GetRayTracingDescriptorSet()->AddTLASInstanceInfo(tlasInstanceInfo);
+
 				asInstances.push_back(asInstance);
 			}
 		}

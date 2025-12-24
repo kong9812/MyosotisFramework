@@ -44,7 +44,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkAllocateDescriptorSets(*m_device, &descriptorSetAllocateInfo, &m_descriptorSet));
 	}
 
-	void DescriptorSetBase::buildSSBODescriptor(const uint32_t index, const uint32_t dataSize)
+	void DescriptorSetBase::buildSSBODescriptor(const uint32_t index, const size_t dataSize)
 	{
 		if (dataSize > 0)
 		{

@@ -65,6 +65,6 @@ namespace MyosotisFW::System::Render
 			m_vbDispatchInfo.push_back(vbDispatchInfo);
 		}
 
-		m_tlasInstanceInfo->active = true;
+		m_tlasInstance->active = true;
 	}
 }

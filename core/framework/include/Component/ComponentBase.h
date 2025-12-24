@@ -7,7 +7,7 @@
 #include "istduuid.h"
 #include "iRapidJson.h"
 #include "ComponentFactory.h"
-#include "TLASInstanceInfo.h"
+#include "TLASInstance.h"
 
 namespace MyosotisFW
 {
@@ -31,7 +31,7 @@ namespace MyosotisFW
 		const std::string GetName() const { return m_name; }
 		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
 		const uint32_t GetHashObjectID() const { return m_objectID; }
-		void SetTLASInstanceInfo(TLASInstanceInfo_ptr tlasInstanceInfo) { m_tlasInstanceInfo = tlasInstanceInfo; }
+		void SetTLASInstance(TLASInstance_ptr tlasInstance) { m_tlasInstance = tlasInstance; }
 
 		// todo. Objectに移動する
 		//OBBData GetWorldOBBData()
@@ -91,6 +91,6 @@ namespace MyosotisFW
 		std::string m_name;
 		uint32_t m_objectID;
 
-		TLASInstanceInfo_ptr m_tlasInstanceInfo;
+		TLASInstance_ptr m_tlasInstance;
 	};
 };

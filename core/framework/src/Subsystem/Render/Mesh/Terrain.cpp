@@ -69,6 +69,6 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
-		m_tlasInstanceInfo->active = true;
+		m_tlasInstance->active = true;
 	}
 }

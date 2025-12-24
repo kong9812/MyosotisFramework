@@ -73,6 +73,6 @@ namespace MyosotisFW::System::Render
 			m_meshID.push_back(meshInfo.meshID);
 		}
 
-		m_tlasInstanceInfo->active = true;
+		m_tlasInstance->active = true;
 	}
 }

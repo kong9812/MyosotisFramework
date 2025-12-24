@@ -5,6 +5,7 @@
 
 #include "../Loader/Sampler2DLoader.glsl"
 
+#include "../Descriptors/TLASInstanceInfo.glsl"
 #include "../Descriptors/ObjectInfo.glsl"
 #include "../Descriptors/MeshInfo.glsl"
 #include "../Descriptors/CameraInfo.glsl"
@@ -89,13 +90,15 @@ void main()
 	// PrimID
 	uint tri = gl_PrimitiveID;
 
-	// // ObjectInfo
-	// uint objectID = gl_InstanceCustomIndexEXT;
-	// ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(objectID);
+    // TLASInstanceInfo
+    TLASInstanceInfo tlasInstanceInfo = TLASInstanceInfo_GetTLASInstanceInfo(gl_InstanceCustomIndexEXT);
+
+	// ObjectInfo
+	uint objectID = tlasInstanceInfo.objectID;
+	ObjectInfo objectInfo = ObjectInfo_GetObjectInfo(objectID);
 
 	// MeshInfo
-	// uint meshID = objectInfo.meshID;
-	uint meshID = gl_InstanceCustomIndexEXT;
+	uint meshID = tlasInstanceInfo.meshID;
  	MeshInfo meshInfo = MeshInfo_GetMeshInfo(meshID);
 
     // BasicMaterialInfo
