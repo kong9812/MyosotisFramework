@@ -26,9 +26,12 @@ namespace MyosotisFW::System::Render
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_lightmapFormat,
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(
+				AppInfo::g_lightmapFormat,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] Lightmap
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
+				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),// [0] Lightmap (出力用にTRANSFER_SRC)
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
@@ -38,41 +41,27 @@ namespace MyosotisFW::System::Render
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(lightmapBakingSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部 -> LightmapBaking
+			// 外部 -> LightmapBaking (Color)
+			// Lightmap 最初の書き込み
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
 				static_cast<uint32_t>(SubPass::LightmapBaking),
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				0,
-				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				0
-			),
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VkAccessFlagBits::VK_ACCESS_NONE,
+				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// 外部 -> LightmapBaking（ColorAttachment 初期化）
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					VK_SUBPASS_EXTERNAL,
-					static_cast<uint32_t>(SubPass::LightmapBaking),
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					0,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					0
-				),
-
-				// LightmapBaking -> 外部（完了待ち）
+				// Lightmap -> 外部 (Color)
+				// 次は出力の時に ColorAttachment として書き込み
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					static_cast<uint32_t>(SubPass::LightmapBaking),
 					VK_SUBPASS_EXTERNAL,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_MEMORY_READ_BIT,
-					0
-				)
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 
 

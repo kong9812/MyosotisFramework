@@ -296,23 +296,9 @@ namespace Utility::Vulkan::CreateInfo
 		return ai;
 	}
 
-	inline VkAttachmentDescription attachmentDescriptionForColor(const VkFormat& format)
-	{
-		VkAttachmentDescription ad{};
-		ad.format = format;
-		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-		ad.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-		return ad;
-	}
-
-	inline VkAttachmentDescription attachmentDescriptionForAttachment(const VkFormat& format,
+	inline VkAttachmentDescription attachmentDescriptionForColor(const VkFormat& format,
 		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-		const VkAttachmentStoreOp& storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		const VkAttachmentStoreOp& storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
 		const VkImageLayout& finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 	{
@@ -322,54 +308,45 @@ namespace Utility::Vulkan::CreateInfo
 		ad.loadOp = loadOp;
 		ad.storeOp = storeOp;
 		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE;
 		ad.initialLayout = initialLayout;
 		ad.finalLayout = finalLayout;
 		return ad;
 	}
 
-	inline VkAttachmentDescription attachmentDescriptionForDepthStencil(const VkFormat& format,
-		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR)
+	inline VkAttachmentDescription attachmentDescriptionForInput(const VkFormat& format,
+		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
+		const VkAttachmentStoreOp& storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE,
+		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+		const VkImageLayout& finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL)
 	{
 		VkAttachmentDescription ad{};
 		ad.format = format;
 		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		ad.loadOp = loadOp;
-		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		ad.storeOp = storeOp;
+		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE;
+		ad.initialLayout = initialLayout;
+		ad.finalLayout = finalLayout;
 		return ad;
 	}
 
 	inline VkAttachmentDescription attachmentDescriptionForDepth(const VkFormat& format,
 		const VkAttachmentLoadOp& loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
+		const VkAttachmentStoreOp& storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
+		const VkImageLayout& initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+		const VkImageLayout& finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
 	{
 		VkAttachmentDescription ad{};
 		ad.format = format;
 		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 		ad.loadOp = loadOp;
-		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		ad.storeOp = storeOp;
+		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE;
 		ad.initialLayout = initialLayout;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-		return ad;
-	}
-
-	inline VkAttachmentDescription attachmentDescriptionForShadowMap(const VkFormat& format)
-	{
-		VkAttachmentDescription ad{};
-		ad.format = format;
-		ad.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-		ad.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		ad.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
-		ad.stencilLoadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-		ad.stencilStoreOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		ad.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-		ad.finalLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		ad.finalLayout = finalLayout;
 		return ad;
 	}
 

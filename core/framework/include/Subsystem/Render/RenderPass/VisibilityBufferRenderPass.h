@@ -14,14 +14,13 @@ namespace MyosotisFW::System::Render
 		enum class SubPass : uint32_t
 		{
 			Phase1,
-			Phase2,
 			COUNT
 		};
 
 		enum class Attachments : uint32_t
 		{
 			VisibilityBuffer,
-			PrimaryDepth,
+			DepthBuffer,
 			COUNT
 		};
 

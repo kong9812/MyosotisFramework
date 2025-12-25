@@ -45,7 +45,8 @@ namespace MyosotisFW::System::Render
 		struct {
 			glm::ivec2 desSize;
 			uint32_t hiZImageID;
-			uint32_t primaryDepthSamplerID;
+			uint32_t depthBufferSamplerID;
+			uint32_t depthClear;
 		}depthCopyPushConstant;
 
 		struct {

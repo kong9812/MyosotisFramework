@@ -25,7 +25,7 @@ namespace MyosotisFW::System::Render
 		}pushConstant;
 
 		uint32_t m_hiZSamplerID;
-		uint32_t m_primaryDepthSamplerID;
+		uint32_t m_depthBufferSamplerID;
 
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 

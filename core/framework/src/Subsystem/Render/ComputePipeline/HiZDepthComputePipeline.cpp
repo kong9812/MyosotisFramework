@@ -73,8 +73,11 @@ namespace MyosotisFW::System::Render
 		VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetHiZDepthMap().sampler, m_resources->GetHiZDepthMap().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_hiZDepthMapMipSamplerIndex = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
 		// [sampler] Set image layout for primary depth/stencil map
-		VkDescriptorImageInfo GetPrimaryDepthStencilDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetPrimaryDepthStencil().sampler, m_resources->GetPrimaryDepthStencil().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		depthCopyPushConstant.primaryDepthSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, GetPrimaryDepthStencilDescriptorImageInfo);
+		VkDescriptorImageInfo depthBufferDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_resources->GetDepthBuffer().sampler, m_resources->GetDepthBuffer().view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		depthCopyPushConstant.depthBufferSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, depthBufferDescriptorImageInfo);
+
+		// デップスクリア (初期化)
+		depthCopyPushConstant.depthClear = 1;
 	}
 
 	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const glm::vec2& screenSize)
@@ -187,5 +190,8 @@ namespace MyosotisFW::System::Render
 				);
 			}
 		}
+
+		// 初期化完了
+		depthCopyPushConstant.depthClear = 0;
 	}
 }

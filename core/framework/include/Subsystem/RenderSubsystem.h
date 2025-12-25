@@ -48,8 +48,6 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
 		class VisibilityBufferRenderPhase1Pipeline;
 		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
-		class VisibilityBufferRenderPhase2Pipeline;
-		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase2Pipeline);
 		class LightingPipeline;
 		TYPEDEF_SHARED_PTR_FWD(LightingPipeline);
 		class LightmapBakingPipeline;
@@ -87,7 +85,6 @@ namespace MyosotisFW::System::Render
 			m_lightmapBakingPass(nullptr),
 			m_skyboxPipeline(nullptr),
 			m_visibilityBufferRenderPhase1Pipeline(nullptr),
-			m_visibilityBufferRenderPhase2Pipeline(nullptr),
 			m_lightingPipeline(nullptr),
 			m_lightmapBakingPipeline(nullptr),
 			m_rayTracingPipeline(nullptr),
@@ -141,6 +138,7 @@ namespace MyosotisFW::System::Render
 		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
 
 		void CopyMainRenderTargetToSwapchainImage();
+		void CopyRayTracingRenderTargetToSwapchainImage();
 
 	protected:
 		struct {
@@ -180,7 +178,6 @@ namespace MyosotisFW::System::Render
 	protected:
 		SkyboxPipeline_ptr m_skyboxPipeline;
 		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
-		VisibilityBufferRenderPhase2Pipeline_ptr m_visibilityBufferRenderPhase2Pipeline;
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;

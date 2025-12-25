@@ -62,8 +62,8 @@ namespace MyosotisFW::AppInfo
 	constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
 	// 指定DepthFormat
 	constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
-	// 指定Primary DepthFormat
-	constexpr VkFormat g_primaryDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
+	// 指定DepthBufferFormat
+	constexpr VkFormat g_depthBufferFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定Hi-Z DepthFormat
 	constexpr VkFormat g_hiZDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定画像フォーマット ([deferred] position)

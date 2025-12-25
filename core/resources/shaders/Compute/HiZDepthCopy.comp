@@ -12,6 +12,7 @@ layout(push_constant) uniform PushConstant {
     ivec2 desSize;
     uint hiZImageID;
     uint primaryDepthSamplerID;
+    uint depthClear;
 };
 
 void main()
@@ -20,8 +21,12 @@ void main()
     ivec2 xy = ivec2(gl_GlobalInvocationID.xy);
     if (xy.x >= desSize.x || xy.y >= desSize.y) return; // 範囲チェック
 
-    // mip0からdepth値を取り出す
-    float d = Sampler2DLoader_TexelFetch(primaryDepthSamplerID, xy, 0).r;
+    float d = 1.0;  // 一番奥
+    if (depthClear == 0)
+    {
+        // mip0からdepth値を取り出す
+        d = Sampler2DLoader_TexelFetch(primaryDepthSamplerID, xy, 0).r;
+    }
 
     // 同じDepthを同じ値を書き込む
     imageStore(Image2D[hiZImageID], xy, vec4(d, 0.0, 0.0, 0.0));

@@ -26,78 +26,50 @@ namespace MyosotisFW::System::Render
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_visibilityBufferFormat,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_primaryDepthFormat,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR),	// [1] Primary Depth
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_visibilityBufferFormat),	// [0] main render target
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_depthBufferFormat),		// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
 		// Phase1 subpass
 		VkAttachmentReference phase1SubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::VisibilityBuffer), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference phase1SubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::PrimaryDepth), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+		VkAttachmentReference phase1SubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthBuffer), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_depth(phase1SubpassColorAttachmentReferences, phase1SubpassDepthAttachmentReference));
 
-		// Phase2 subpass
-		VkAttachmentReference phase2SubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::VisibilityBuffer), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference phase2SubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::PrimaryDepth), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_depth(phase2SubpassColorAttachmentReferences, phase2SubpassDepthAttachmentReference));
-
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部 -> Phase1（Depth/Stencil 初期化）
+			// 外部 -> Phase1 (Color)
+			// VisibilityBuffer 最初の書き込み
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
 				static_cast<uint32_t>(SubPass::Phase1),
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				0,
-				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				0
-			),
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VkAccessFlagBits::VK_ACCESS_NONE,
+				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// 外部 -> Phase1（ColorAttachment 初期化）
+				// 外部 -> Phase1 (Depth)
+				// DepthBuffer クリアしてから最初の書き込み
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					VK_SUBPASS_EXTERNAL,
 					static_cast<uint32_t>(SubPass::Phase1),
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					0,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					0
-				),
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+					VkAccessFlagBits::VK_ACCESS_NONE,
+					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// Phase1 -> Phase2（Depth + Color をまとめて同期）
+				// Phase1 -> 外部 (Color)
+				// 次は Lighting の時 Sampler 経由で参照する
 				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Phase1),
-					static_cast<uint32_t>(SubPass::Phase2),
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,       // srcStageMask
-					VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT |          // dstStageMask
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,   // srcAccessMask
-					VK_ACCESS_SHADER_READ_BIT |
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,    // dstAccessMask
-					0 // BY_REGION を外す
-				),
-
-				// Phase2 -> 外部（完了待ち）
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Phase2),
 					VK_SUBPASS_EXTERNAL,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_MEMORY_READ_BIT,
-					0
-				)
+					static_cast<uint32_t>(SubPass::Phase1),
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 
 
@@ -111,7 +83,7 @@ namespace MyosotisFW::System::Render
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = AppInfo::g_vbClearValues;
-		clearValues[static_cast<uint32_t>(Attachments::PrimaryDepth)] = AppInfo::g_depthClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::DepthBuffer)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[0];
@@ -136,7 +108,7 @@ namespace MyosotisFW::System::Render
 		m_framebuffers.resize(1);
 
 		attachments[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = m_resources->GetVisibilityBuffer().view;
-		attachments[static_cast<uint32_t>(Attachments::PrimaryDepth)] = m_resources->GetPrimaryDepthStencil().view;
+		attachments[static_cast<uint32_t>(Attachments::DepthBuffer)] = m_resources->GetDepthBuffer().view;
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{

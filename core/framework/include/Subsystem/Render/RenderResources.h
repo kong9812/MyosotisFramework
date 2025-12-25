@@ -32,7 +32,7 @@ namespace MyosotisFW::System::Render
 			m_mainRenderTarget({}),
 			m_visibilityBuffer({}),
 			m_hiZDepthMap({}),
-			m_primaryDepthStencil({}),
+			m_depthBuffer({}),
 			m_onLoadedMesh() {
 		}
 		~RenderResources();
@@ -93,18 +93,19 @@ namespace MyosotisFW::System::Render
 		Image& GetLightmap() { return m_lightmap; }
 
 		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
-		Image& GetPrimaryDepthStencil() { return m_primaryDepthStencil; }
+		Image& GetDepthBuffer() { return m_depthBuffer; }
 
 		Image& GetRayTracingRenderTarget() { return m_rayTracingRenderTarget; }
 
 	protected:
 		Image m_mainRenderTarget;
-		Image m_visibilityBuffer;
-		Image m_lightmap;
 		Image m_rayTracingRenderTarget;
 
+		Image m_visibilityBuffer;
+
+		Image m_lightmap;
 		Image m_hiZDepthMap;
-		Image m_primaryDepthStencil;
+		Image m_depthBuffer;
 
 	protected:
 		void createVertexIndexBuffer(Meshes& meshes);

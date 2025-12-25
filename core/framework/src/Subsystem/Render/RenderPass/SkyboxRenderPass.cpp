@@ -26,9 +26,7 @@ namespace MyosotisFW::System::Render
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForAttachment(AppInfo::g_surfaceFormat.format,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE),// [0] main render target
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format),// [0] main render target
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
@@ -38,41 +36,27 @@ namespace MyosotisFW::System::Render
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(skyboxSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部 -> skybox（Depth/Stencil 初期化）
+			// 外部 -> skybox (Color)
+			// MainRenderTarget 最初の書き込み
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
 				static_cast<uint32_t>(SubPass::Skybox),
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				0,
-				VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				0
-			),
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VkAccessFlagBits::VK_ACCESS_NONE,
+				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// 外部 -> skybox（ColorAttachment 初期化）
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					VK_SUBPASS_EXTERNAL,
-					static_cast<uint32_t>(SubPass::Skybox),
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					0,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					0
-				),
-
-				// Phase2 -> 外部（完了待ち）
+				// skybox -> 外部 (Color)
+				// 次は Lighting FragmentShader の時に ColorAttachment として書き込み
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					static_cast<uint32_t>(SubPass::Skybox),
 					VK_SUBPASS_EXTERNAL,
-					VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-					VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-					VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-					VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-					VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_MEMORY_READ_BIT,
-					0
-				)
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 
 

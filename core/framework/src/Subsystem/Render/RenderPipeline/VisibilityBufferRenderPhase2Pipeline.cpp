@@ -26,9 +26,9 @@ namespace MyosotisFW::System::Render
 		m_hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 
 		descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-			resources->GetPrimaryDepthStencil().sampler, resources->GetPrimaryDepthStencil().view,
+			resources->GetDepthBuffer().sampler, resources->GetDepthBuffer().view,
 			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_primaryDepthSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+		m_depthBufferSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 
 		pushConstant.hiZMipLevelMax = static_cast<float>(resources->GetHiZDepthMap().mipView.size()) - 1.0f;
 	}
@@ -40,7 +40,7 @@ namespace MyosotisFW::System::Render
 			std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-			pushConstant.hiZSamplerID = m_primaryDepthSamplerID;
+			pushConstant.hiZSamplerID = m_depthBufferSamplerID;
 			pushConstant.vbDispatchInfoCount = vbDispatchInfoCount;
 			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
