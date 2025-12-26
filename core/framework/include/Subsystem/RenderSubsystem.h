@@ -75,7 +75,6 @@ namespace MyosotisFW::System::Render
 			m_mainCamera(nullptr),
 			m_objectRegistry(nullptr),
 			m_accelerationStructureManager(nullptr),
-			m_submitPipelineStages(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT),
 			m_currentBufferIndex(0),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
@@ -94,8 +93,6 @@ namespace MyosotisFW::System::Render
 			m_semaphores.presentComplete = VK_NULL_HANDLE;
 			m_semaphores.computeComplete = VK_NULL_HANDLE;
 			m_semaphores.renderComplete = VK_NULL_HANDLE;
-			m_submitInfo = {};
-			m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		}
 		~RenderSubsystem();
 
@@ -129,7 +126,6 @@ namespace MyosotisFW::System::Render
 		void initializeCommandPool();
 		void initializeSemaphore();
 		void initializeFence();
-		void initializeSubmitInfo();
 		void initializeDebugUtils(const VkInstance& instance);
 		virtual void initializeRenderPass();
 		virtual void initializeRenderPipeline();
@@ -158,9 +154,6 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors_ptr m_renderDescriptors;
 
 		Camera::CameraBase_ptr m_mainCamera;
-
-		VkSubmitInfo m_submitInfo;
-		VkPipelineStageFlags m_submitPipelineStages;
 
 		uint32_t m_currentBufferIndex;
 

@@ -130,9 +130,6 @@ namespace MyosotisFW::System::Render
 		// Acceleration Structure Manager
 		initializeAccelerationStructureManager();
 
-		// Submit info
-		initializeSubmitInfo();
-
 		// Debug Utils
 		initializeDebugUtils(instance);
 
@@ -210,7 +207,7 @@ namespace MyosotisFW::System::Render
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
-		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.presentComplete, m_semaphores.computeComplete);
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, m_semaphores.presentComplete, m_semaphores.computeComplete);
 		{
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 			VK_VALIDATION(vkBeginCommandBuffer(m_device->GetComputeQueue()->GetCommandBuffer(0), &commandBufferBeginInfo));
@@ -323,11 +320,12 @@ namespace MyosotisFW::System::Render
 
 		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
 		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
-		m_submitInfo.commandBufferCount = 1;
-		m_submitInfo.pCommandBuffers = &currentCommandBuffer;
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, m_semaphores.computeComplete, m_semaphores.renderComplete);
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &currentCommandBuffer;
 		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
 		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
-		graphicsQueue->Submit(m_submitInfo, m_renderFence);
+		graphicsQueue->Submit(submitInfo, m_renderFence);
 		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
 		graphicsQueue->WaitIdle();
 		m_lightmapBakingPipeline->OutputLightmap(m_resources);
@@ -373,7 +371,6 @@ namespace MyosotisFW::System::Render
 		// Render Pass
 		resizeRenderPass(width, height);
 
-		m_submitPipelineStages = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		m_currentBufferIndex = 0;
 
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
@@ -430,12 +427,6 @@ namespace MyosotisFW::System::Render
 	{
 		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
 		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &m_renderFence));
-	}
-
-	void RenderSubsystem::initializeSubmitInfo()
-	{
-		m_submitPipelineStages = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		m_submitInfo = Utility::Vulkan::CreateInfo::submitInfo(m_submitPipelineStages, m_semaphores.computeComplete, m_semaphores.renderComplete);
 	}
 
 	void RenderSubsystem::initializeDebugUtils(const VkInstance& instance)
