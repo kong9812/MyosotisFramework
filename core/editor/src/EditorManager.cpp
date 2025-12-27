@@ -19,11 +19,8 @@ namespace MyosotisFW::System
 
 	void EditorManager::Render()
 	{
-		m_renderSubsystem->BeginRender();
-		m_renderSubsystem->BeginCompute();
-		m_renderSubsystem->MeshShaderRender();
-		std::dynamic_pointer_cast<Render::EditorRenderSubsystem>(m_renderSubsystem)->EditorRender();
-		m_renderSubsystem->EndRender();
+		m_renderSubsystem->Render();
+		//std::dynamic_pointer_cast<Render::EditorRenderSubsystem>(m_renderSubsystem)->EditorRender();
 	}
 
 	void EditorManager::initializeRenderSubsystem(GLFWwindow* window)

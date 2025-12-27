@@ -230,108 +230,14 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkResetFences(*m_device, 1, &m_fences.inFlightFrameFence[currentFrameIndex]));
 		// コマンドバッファ取り出す
 
-		{// Compute (Hi-Z Depth)
-			// 前FrameのRenderが終わったら、このFreamのHi-ZDepthが作れる
-			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-				m_semaphores.completePreRender[previousFrameIndex],		// wait
-				m_semaphores.completeCompute[currentFrameIndex]);		// signal
+		// Compute (Hi-Z Depth)
+		createHiZDepth(currentFrameIndex, previousFrameIndex);
 
-			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-			VkCommandBuffer commandBuffer = m_commandBuffers.compute[currentFrameIndex];
-			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
-			m_hiZDepthComputePipeline->Dispatch(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
-			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+		// Graphics PreRender (VisibilityBuffer)
+		preRender(currentFrameIndex);
 
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &commandBuffer;
-			RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
-			computeQueue->Submit(submitInfo);
-		}
-
-		{// Graphics PreRender (VisibilityBuffer)
-			// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
-			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
-				m_semaphores.completeCompute[currentFrameIndex],		// wait
-				m_semaphores.completePreRender[currentFrameIndex]);		// signal
-
-			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-			VkCommandBuffer commandBuffer = m_commandBuffers.preRender[currentFrameIndex];
-			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
-			m_visibilityBufferRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-			m_visibilityBufferPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
-			m_visibilityBufferRenderPass->EndRender(commandBuffer);
-			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
-
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &commandBuffer;
-			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-			graphicsQueue->Submit(submitInfo);
-		}
-
-		{// Graphics Render (Skybox,Lighting,LightMap,RayTracing...)
-			// これから書き込むSwapchain Imageの処理が終わったら、このFreamのMainRenderTargetが作れる
-			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				m_semaphores.imageAvailable[currentFrameIndex],		// wait
-				m_semaphores.completeRender[currentFrameIndex]);	// signal
-
-			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-			VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
-			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-			{// Skybox Render Pass
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
-				m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-				m_skyboxPipeline->BindCommandBuffer(commandBuffer);
-				m_skyboxRenderPass->EndRender(commandBuffer);
-				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			}
-			{// Lighting
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
-				m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-				m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
-				m_lightingRenderPass->EndRender(commandBuffer);
-				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			}
-			{// LightMap
-				if (m_lightmapBakingPipeline->IsBaking())
-				{
-					m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
-					m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
-					for (MObject_ptr& object : m_objects)
-					{
-						if (m_lightmapBakingPipeline->NextObject(m_resources, object))
-						{
-							m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
-						}
-					}
-					m_lightmapBakingPass->EndRender(commandBuffer);
-					m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-				}
-			}
-			{// RayTracing
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
-				m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
-				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			}
-
-			{// Copy Image To Swapchain Image
-				CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
-				//CopyRayTracingRenderTargetToSwapchainImage(currentBuffer, currentFrameIndex, currentSwapchainImageIndex);
-			}
-
-			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
-
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &commandBuffer;
-			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-			graphicsQueue->Submit(submitInfo, m_fences.inFlightFrameFence[currentFrameIndex]);
-		}
+		// Graphics Render (Skybox,Lighting,LightMap,RayTracing...)
+		render(currentFrameIndex, currentSwapchainImageIndex);
 
 		{// Present
 			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
@@ -389,6 +295,112 @@ namespace MyosotisFW::System::Render
 		resizeRenderPass(width, height);
 
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
+	}
+
+	void RenderSubsystem::createHiZDepth(const uint32_t currentFrameIndex, const uint32_t previousFrameIndex)
+	{
+		// 前FrameのRenderが終わったら、このFreamのHi-ZDepthが作れる
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+			m_semaphores.completePreRender[previousFrameIndex],		// wait
+			m_semaphores.completeCompute[currentFrameIndex]);		// signal
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VkCommandBuffer commandBuffer = m_commandBuffers.compute[currentFrameIndex];
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
+		m_hiZDepthComputePipeline->Dispatch(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
+		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
+		computeQueue->Submit(submitInfo);
+	}
+
+	void RenderSubsystem::preRender(const uint32_t currentFrameIndex)
+	{
+		// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
+			m_semaphores.completeCompute[currentFrameIndex],		// wait
+			m_semaphores.completePreRender[currentFrameIndex]);		// signal
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VkCommandBuffer commandBuffer = m_commandBuffers.preRender[currentFrameIndex];
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
+		m_visibilityBufferRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+		m_visibilityBufferPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
+		m_visibilityBufferRenderPass->EndRender(commandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		graphicsQueue->Submit(submitInfo);
+	}
+
+	void RenderSubsystem::render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex)
+	{
+		// これから書き込むSwapchain Imageの処理が終わったら、このFreamのMainRenderTargetが作れる
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			m_semaphores.imageAvailable[currentFrameIndex],		// wait
+			m_semaphores.completeRender[currentFrameIndex]);	// signal
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		{// Skybox Render Pass
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
+			m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+			m_skyboxPipeline->BindCommandBuffer(commandBuffer);
+			m_skyboxRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
+		{// Lighting
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
+			m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+			m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+			m_lightingRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
+		{// LightMap
+			if (m_lightmapBakingPipeline->IsBaking())
+			{
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+				m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
+				for (MObject_ptr& object : m_objects)
+				{
+					if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+					{
+						m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
+					}
+				}
+				m_lightmapBakingPass->EndRender(commandBuffer);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+		}
+		{// RayTracing
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+			m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
+
+		{// Copy Image To Swapchain Image
+			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			//CopyRayTracingRenderTargetToSwapchainImage(currentBuffer, currentFrameIndex, currentSwapchainImageIndex);
+		}
+
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		graphicsQueue->Submit(submitInfo, m_fences.inFlightFrameFence[currentFrameIndex]);
 	}
 
 	void RenderSubsystem::initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface)

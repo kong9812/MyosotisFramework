@@ -113,6 +113,11 @@ namespace MyosotisFW::System::Render
 		std::vector<MObject_ptr> GetObjects() { return m_objects; }
 
 	protected:
+		void createHiZDepth(const uint32_t currentFrameIndex, const uint32_t previousFrameIndex);
+		void preRender(const uint32_t currentFrameIndex);
+		void render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex);
+
+	protected:
 		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);
 		void initializeRenderSwapchain(const VkSurfaceKHR& surface);
 		void initializeRenderDescriptors();

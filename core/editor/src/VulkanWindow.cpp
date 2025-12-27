@@ -241,11 +241,8 @@ namespace MyosotisFW::System::Editor
 			updateData.keyActions = m_keyActions;
 			m_renderSubsystem->Update(updateData);
 
-			m_renderSubsystem->BeginRender();
-			m_renderSubsystem->BeginCompute();
-			m_renderSubsystem->MeshShaderRender();
-			m_renderSubsystem->EditorRender();
-			m_renderSubsystem->EndRender();
+			m_renderSubsystem->Render();
+			//m_renderSubsystem->EditorRender();
 		}
 		requestUpdate();
 
