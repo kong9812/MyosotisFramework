@@ -5,31 +5,27 @@
 
 namespace MyosotisFW::System::Render
 {
-	class VisibilityBufferRenderPhase1Pipeline : public RenderPipelineBase
+	class VisibilityBufferPipeline : public RenderPipelineBase
 	{
 	public:
-		VisibilityBufferRenderPhase1Pipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
+		VisibilityBufferPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
 			RenderPipelineBase(device, renderDescriptors) {
 		}
-		~VisibilityBufferRenderPhase1Pipeline();
+		~VisibilityBufferPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t vbDispatchInfoCount);
 
 	private:
-		struct {
+		struct PushConstant {
 			float hiZMipLevelMax;
 			uint32_t hiZSamplerID;
 			uint32_t vbDispatchInfoCount;
-			//uint32_t checkFalseNegativeMesh;
-		}pushConstant;
-
-		uint32_t m_hiZSamplerID;
-		uint32_t m_depthBufferSamplerID;
+		}pushConstant[AppInfo::g_maxInFlightFrameCount];
 
 		void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 
 		PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT;
 	};
-	TYPEDEF_SHARED_PTR_ARGS(VisibilityBufferRenderPhase1Pipeline);
+	TYPEDEF_SHARED_PTR_ARGS(VisibilityBufferPipeline);
 }

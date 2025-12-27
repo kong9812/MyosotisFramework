@@ -20,20 +20,23 @@ namespace MyosotisFW::System::Render
 	{
 		prepareRenderPipeline(resources, renderPass);
 
-		{// Visibility Buffer
-			Image visibilityBuffer = resources->GetVisibilityBuffer();
-			// Sampler
-			visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
-			// descriptorImageInfo
-			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-				visibilityBuffer.sampler, visibilityBuffer.view,
-				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			// add to descriptor set
-			pushConstant.visibilityBufferTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			{// Visibility Buffer
+				Image visibilityBuffer = resources->GetVisibilityBuffer(i);
+				// Sampler
+				visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+				// descriptorImageInfo
+				VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+					visibilityBuffer.sampler, visibilityBuffer.view,
+					VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				// add to descriptor set
+				pushConstant[i].visibilityBufferTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+			}
 		}
 	}
 
-	void LightingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
+	void LightingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
@@ -42,7 +45,7 @@ namespace MyosotisFW::System::Render
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0,
-			static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+			static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant[frameIndex]);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
@@ -53,7 +56,7 @@ namespace MyosotisFW::System::Render
 			// PS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(pushConstant))),
+				static_cast<uint32_t>(sizeof(PushConstant))),
 		};
 
 		// [pipeline]layout

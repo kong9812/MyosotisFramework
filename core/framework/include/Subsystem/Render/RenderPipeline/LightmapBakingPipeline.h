@@ -29,10 +29,10 @@ namespace MyosotisFW::System::Render
 		bool NextObject(const RenderResources_ptr& resources, const MObject_ptr& object);
 		void Bake();
 		bool IsBaking() const { return m_isBaking; }
-		void OutputLightmap(const RenderResources_ptr& resources);
+		void OutputLightmap(const RenderResources_ptr& resources, const uint32_t frameIndex);
 
 	private:
-		struct {
+		struct PushConstant {
 			glm::ivec2 atlasSize;
 			glm::ivec2 offset;
 			glm::ivec2 size;

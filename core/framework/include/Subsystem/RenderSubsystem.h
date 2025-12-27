@@ -1,9 +1,12 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
+#include <vulkan/vulkan.h>
+#include <vector>
 
 #include "iglfw.h"
 #include "Structs.h"
+#include "AppInfo.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -46,8 +49,8 @@ namespace MyosotisFW
 
 		class SkyboxPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
-		class VisibilityBufferRenderPhase1Pipeline;
-		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPhase1Pipeline);
+		class VisibilityBufferPipeline;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPipeline);
 		class LightingPipeline;
 		TYPEDEF_SHARED_PTR_FWD(LightingPipeline);
 		class LightmapBakingPipeline;
@@ -75,7 +78,7 @@ namespace MyosotisFW::System::Render
 			m_mainCamera(nullptr),
 			m_objectRegistry(nullptr),
 			m_accelerationStructureManager(nullptr),
-			m_currentBufferIndex(0),
+			m_frameCounter(0),
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
 			m_skyboxRenderPass(nullptr),
@@ -83,16 +86,14 @@ namespace MyosotisFW::System::Render
 			m_lightingRenderPass(nullptr),
 			m_lightmapBakingPass(nullptr),
 			m_skyboxPipeline(nullptr),
-			m_visibilityBufferRenderPhase1Pipeline(nullptr),
+			m_visibilityBufferPipeline(nullptr),
 			m_lightingPipeline(nullptr),
 			m_lightmapBakingPipeline(nullptr),
 			m_rayTracingPipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
-			m_renderFence(VK_NULL_HANDLE),
-			m_vbDispatchInfoCount(0) {
-			m_semaphores.presentComplete = VK_NULL_HANDLE;
-			m_semaphores.computeComplete = VK_NULL_HANDLE;
-			m_semaphores.renderComplete = VK_NULL_HANDLE;
+			m_fences(),
+			m_vbDispatchInfoCount(0),
+			m_semaphores() {
 		}
 		~RenderSubsystem();
 
@@ -105,14 +106,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
-		void BeginCompute();
-		void BeginRender();
-		void SkyboxRender();
-		void MeshShaderRender();
-		void LightingRender();
-		void LightmapBake();
-		void RayTracingRender();
-		void EndRender();
+		void Render();
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);
 
@@ -133,17 +127,26 @@ namespace MyosotisFW::System::Render
 		void initializeAccelerationStructureManager();
 		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
 
-		void CopyMainRenderTargetToSwapchainImage();
-		void CopyRayTracingRenderTargetToSwapchainImage();
+		void CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex);
+		void CopyRayTracingRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex);
 
 	protected:
 		struct {
-			VkSemaphore presentComplete;
-			VkSemaphore computeComplete;
-			VkSemaphore renderComplete;
+			VkSemaphore completeCompute[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completePreRender[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completeRender[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore imageAvailable[AppInfo::g_maxInFlightFrameCount];
 		}m_semaphores;
+		struct {
+			VkFence inFlightFrameFence[AppInfo::g_maxInFlightFrameCount];
+		}m_fences;
+		struct {
+			std::vector<VkCommandBuffer> compute;
+			std::vector<VkCommandBuffer> preRender;
+			std::vector<VkCommandBuffer> render;
+		}m_commandBuffers;
 
-		VkFence m_renderFence;
+		uint32_t m_frameCounter;
 
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
@@ -154,8 +157,6 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors_ptr m_renderDescriptors;
 
 		Camera::CameraBase_ptr m_mainCamera;
-
-		uint32_t m_currentBufferIndex;
 
 		std::vector<MObject_ptr> m_objects;
 
@@ -170,7 +171,7 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		SkyboxPipeline_ptr m_skyboxPipeline;
-		VisibilityBufferRenderPhase1Pipeline_ptr m_visibilityBufferRenderPhase1Pipeline;
+		VisibilityBufferPipeline_ptr m_visibilityBufferPipeline;
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;

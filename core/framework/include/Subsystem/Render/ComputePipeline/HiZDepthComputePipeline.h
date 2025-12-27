@@ -1,6 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include <vulkan/vulkan.h>
+#include <array>
+#include <vector>
 
 #include "Structs.h"
 #include "ClassPointer.h"
@@ -30,31 +32,31 @@ namespace MyosotisFW::System::Render
 		HiZDepthComputePipeline(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderDescriptors_ptr& renderDescriptors) :
 			m_device(device),
 			m_resources(resources),
-			depthDownsamplePushConstant({}),
-			depthCopyPushConstant({}),
-			m_hiZDepthCopyShaderBase({}),
-			m_hiZDepthDownsampleShaderBase({}),
+			depthDownsamplePushConstant(),
+			depthCopyPushConstant(),
+			m_hiZDepthCopyShaderBase(),
+			m_hiZDepthDownsampleShaderBase(),
 			m_renderDescriptors(renderDescriptors) {
 		}
 		~HiZDepthComputePipeline();
 
 		void Initialize();
-		void Dispatch(const VkCommandBuffer& commandBuffer, const glm::vec2& screenSize);
+		void Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const glm::vec2& screenSize);
 
 	private:
-		struct {
+		struct DepthCopyPushConstant {
 			glm::ivec2 desSize;
 			uint32_t hiZImageID;
 			uint32_t depthBufferSamplerID;
 			uint32_t depthClear;
-		}depthCopyPushConstant;
+		}depthCopyPushConstant[AppInfo::g_maxInFlightFrameCount];
 
-		struct {
+		struct DepthDownsamplePushConstant {
 			glm::ivec2 desSize;
 			uint32_t hiZImageID;
 			uint32_t hiZSamplerID;
 			int32_t srcMip;
-		}depthDownsamplePushConstant;
+		}depthDownsamplePushConstant[AppInfo::g_maxInFlightFrameCount];
 
 		RenderDevice_ptr m_device;
 		RenderResources_ptr m_resources;
@@ -62,8 +64,7 @@ namespace MyosotisFW::System::Render
 		ShaderBase m_hiZDepthCopyShaderBase;
 		ShaderBase m_hiZDepthDownsampleShaderBase;
 
-		std::vector<uint32_t> m_hiZDepthMipMapImageIndex;
-		uint32_t m_hiZDepthMapMipSamplerIndex;
+		std::array<std::vector<uint32_t>, AppInfo::g_maxInFlightFrameCount> m_hiZDepthMipMapImageIndex;
 
 		RenderDescriptors_ptr m_renderDescriptors;
 	};

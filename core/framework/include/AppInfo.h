@@ -51,7 +51,7 @@ namespace MyosotisFW::AppInfo
 	};
 	// 指定Layer
 	const std::vector<const char*> g_layer = {
-		"VK_LAYER_KHRONOS_validation",
+		//"VK_LAYER_KHRONOS_validation",	// Nsightの時邪魔になる
 		"VK_LAYER_LUNARG_monitor"
 	};
 	// 指定物理デバイスのIndex
@@ -83,6 +83,8 @@ namespace MyosotisFW::AppInfo
 
 	// 指定スワップチェーン画像数
 	constexpr uint32_t g_minImageCount = 3;
+	// Max InFlight Frame
+	constexpr uint32_t g_maxInFlightFrameCount = 2;
 
 	// シャドウマップサイズ
 	constexpr uint32_t g_shadowMapSize = 2048;

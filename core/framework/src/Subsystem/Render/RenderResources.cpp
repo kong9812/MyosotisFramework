@@ -17,24 +17,27 @@ namespace MyosotisFW::System::Render
 	RenderResources::~RenderResources()
 	{
 		{// attachment
-			vkDestroySampler(*m_device, m_hiZDepthMap.sampler, m_device->GetAllocationCallbacks());
-			vkDestroySampler(*m_device, m_depthBuffer.sampler, m_device->GetAllocationCallbacks());
+			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+			{
+				vkDestroySampler(*m_device, m_hiZDepthMap[i].sampler, m_device->GetAllocationCallbacks());
+				vkDestroySampler(*m_device, m_depthBuffer[i].sampler, m_device->GetAllocationCallbacks());
 
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer.image, m_visibilityBuffer.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap.image, m_hiZDepthMap.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer.image, m_depthBuffer.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap.image, m_lightmap.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget.image, m_rayTracingRenderTarget.allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget[i].image, m_mainRenderTarget[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer[i].image, m_visibilityBuffer[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap[i].image, m_hiZDepthMap[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer[i].image, m_depthBuffer[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap[i].image, m_lightmap[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget[i].image, m_rayTracingRenderTarget[i].allocation);
 
-			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_visibilityBuffer.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_hiZDepthMap.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_lightmap.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_rayTracingRenderTarget.view, m_device->GetAllocationCallbacks());
-			for (VkImageView& view : m_hiZDepthMap.mipView)
-				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_depthBuffer.view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_mainRenderTarget[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_visibilityBuffer[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_hiZDepthMap[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_lightmap[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_rayTracingRenderTarget[i].view, m_device->GetAllocationCallbacks());
+				for (VkImageView& view : m_hiZDepthMap[i].mipView)
+					vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_depthBuffer[i].view, m_device->GetAllocationCallbacks());
+			}
 		}
 
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
@@ -80,74 +83,8 @@ namespace MyosotisFW::System::Render
 
 	void RenderResources::Initialize(const uint32_t width, const uint32_t height)
 	{
-		{// main render target
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_mainRenderTarget.image, &m_mainRenderTarget.allocation, &m_mainRenderTarget.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_mainRenderTarget.image, AppInfo::g_surfaceFormat.format);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_mainRenderTarget.view));
-		}
-		{// Visibility Buffer
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_visibilityBufferFormat, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_visibilityBuffer.image, &m_visibilityBuffer.allocation, &m_visibilityBuffer.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_visibilityBuffer.image, AppInfo::g_visibilityBufferFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_visibilityBuffer.view));
-		}
-
-		{// Hi-Z DepthMap
-			uint32_t hiZMipLevels = floor(log2(std::max(width, height)));
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, hiZMipLevels);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT |
-				VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_hiZDepthMap.image, &m_hiZDepthMap.allocation, &m_hiZDepthMap.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
-			imageViewCreateInfo.subresourceRange.levelCount = hiZMipLevels;
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.view));
-			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-			samplerCreateInfo.compareEnable = VK_FALSE;
-			samplerCreateInfo.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
-			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.sampler));
-			m_hiZDepthMap.mipView.resize(hiZMipLevels);
-			for (uint8_t i = 0; i < hiZMipLevels; i++)
-			{
-				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap.image, AppInfo::g_hiZDepthFormat);
-				imageViewCreateInfo.subresourceRange.baseMipLevel = i;
-				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap.mipView[i]));
-			}
-		}
-
-		{// DepthBuffer
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthBufferFormat, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_depthBuffer.image, &m_depthBuffer.allocation, &m_depthBuffer.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_depthBuffer.image, AppInfo::g_depthBufferFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_depthBuffer.view));
-			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
-			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_depthBuffer.sampler));
-		}
-
-		{// Lightmap
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_lightmapFormat, AppInfo::g_lightmapSize, AppInfo::g_lightmapSize);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_lightmap.image, &m_lightmap.allocation, &m_lightmap.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_lightmap.image, AppInfo::g_lightmapFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_lightmap.view));
-		}
-
-		{// ray tracing render target
-			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_rayTracingRenderTargetFormat, width, height);
-			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
-			VmaAllocationCreateInfo allocationCreateInfo{};
-			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_rayTracingRenderTarget.image, &m_rayTracingRenderTarget.allocation, &m_rayTracingRenderTarget.allocationInfo));
-			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_rayTracingRenderTarget.image, AppInfo::g_rayTracingRenderTargetFormat);
-			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_rayTracingRenderTarget.view));
-		}
+		// createAttachment
+		createAttachment(width, height);
 
 		// Create Default Material
 		createDefaultMaterial();
@@ -387,13 +324,31 @@ namespace MyosotisFW::System::Render
 	void RenderResources::Resize(const uint32_t width, const uint32_t height)
 	{
 		{// attachment
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget.image, m_mainRenderTarget.allocation);
-			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer.image, m_visibilityBuffer.allocation);
+			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+			{
+				vkDestroySampler(*m_device, m_hiZDepthMap[i].sampler, m_device->GetAllocationCallbacks());
+				vkDestroySampler(*m_device, m_depthBuffer[i].sampler, m_device->GetAllocationCallbacks());
 
-			vkDestroyImageView(*m_device, m_mainRenderTarget.view, m_device->GetAllocationCallbacks());
-			vkDestroyImageView(*m_device, m_visibilityBuffer.view, m_device->GetAllocationCallbacks());
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget[i].image, m_mainRenderTarget[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer[i].image, m_visibilityBuffer[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap[i].image, m_hiZDepthMap[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer[i].image, m_depthBuffer[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap[i].image, m_lightmap[i].allocation);
+				vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget[i].image, m_rayTracingRenderTarget[i].allocation);
+
+				vkDestroyImageView(*m_device, m_mainRenderTarget[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_visibilityBuffer[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_hiZDepthMap[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_lightmap[i].view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_rayTracingRenderTarget[i].view, m_device->GetAllocationCallbacks());
+				for (VkImageView& view : m_hiZDepthMap[i].mipView)
+					vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
+				vkDestroyImageView(*m_device, m_depthBuffer[i].view, m_device->GetAllocationCallbacks());
+			}
 		}
-		Initialize(width, height);
+
+		// createAttachment
+		createAttachment(width, height);
 	}
 
 	VkSampler& RenderResources::CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo)
@@ -466,6 +421,81 @@ namespace MyosotisFW::System::Render
 					VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
 				vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), mesh->indexBuffer, mesh->index.data(), sizeof(uint32_t) * mesh->index.size());
+			}
+		}
+	}
+
+	void RenderResources::createAttachment(const uint32_t width, const uint32_t height)
+	{
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			{// main render target
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, width, height);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_mainRenderTarget[i].image, &m_mainRenderTarget[i].allocation, &m_mainRenderTarget[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_mainRenderTarget[i].image, AppInfo::g_surfaceFormat.format);
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_mainRenderTarget[i].view));
+			}
+			{// Visibility Buffer
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_visibilityBufferFormat, width, height);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_visibilityBuffer[i].image, &m_visibilityBuffer[i].allocation, &m_visibilityBuffer[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_visibilityBuffer[i].image, AppInfo::g_visibilityBufferFormat);
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_visibilityBuffer[i].view));
+			}
+
+			{// Hi-Z DepthMap
+				uint32_t hiZMipLevels = floor(log2(std::max(width, height)));
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, hiZMipLevels);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT |
+					VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_hiZDepthMap[i].image, &m_hiZDepthMap[i].allocation, &m_hiZDepthMap[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap[i].image, AppInfo::g_hiZDepthFormat);
+				imageViewCreateInfo.subresourceRange.levelCount = hiZMipLevels;
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap[i].view));
+				VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+				samplerCreateInfo.compareEnable = VK_FALSE;
+				samplerCreateInfo.mipmapMode = VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
+				VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap[i].sampler));
+				m_hiZDepthMap[i].mipView.resize(hiZMipLevels);
+				for (uint8_t j = 0; j < hiZMipLevels; j++)
+				{
+					VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_hiZDepthMap[i].image, AppInfo::g_hiZDepthFormat);
+					imageViewCreateInfo.subresourceRange.baseMipLevel = j;
+					VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthMap[i].mipView[j]));
+				}
+			}
+
+			{// DepthBuffer
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthBufferFormat, width, height);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_depthBuffer[i].image, &m_depthBuffer[i].allocation, &m_depthBuffer[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_depthBuffer[i].image, AppInfo::g_depthBufferFormat);
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_depthBuffer[i].view));
+				VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+				VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_depthBuffer[i].sampler));
+			}
+
+			{// Lightmap
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_lightmapFormat, AppInfo::g_lightmapSize, AppInfo::g_lightmapSize);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_lightmap[i].image, &m_lightmap[i].allocation, &m_lightmap[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_lightmap[i].image, AppInfo::g_lightmapFormat);
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_lightmap[i].view));
+			}
+
+			{// ray tracing render target
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_rayTracingRenderTargetFormat, width, height);
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
+				VmaAllocationCreateInfo allocationCreateInfo{};
+				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_rayTracingRenderTarget[i].image, &m_rayTracingRenderTarget[i].allocation, &m_rayTracingRenderTarget[i].allocationInfo));
+				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_rayTracingRenderTarget[i].image, AppInfo::g_rayTracingRenderTargetFormat);
+				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_rayTracingRenderTarget[i].view));
 			}
 		}
 	}

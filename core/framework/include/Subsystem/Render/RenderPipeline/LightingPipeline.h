@@ -2,6 +2,7 @@
 #pragma once
 #include "RenderPipelineBase.h"
 #include "Structs.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -10,19 +11,19 @@ namespace MyosotisFW::System::Render
 	public:
 		LightingPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
 			RenderPipelineBase(device, renderDescriptors),
-			pushConstant({}),
-			m_vertexBuffer({}),
-			m_indexBuffer({}) {
+			pushConstant(),
+			m_vertexBuffer(),
+			m_indexBuffer() {
 		}
 		~LightingPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex);
 
 	private:
-		struct {
+		struct PushConstant {
 			uint32_t visibilityBufferTextureID;
-		}pushConstant;
+		}pushConstant[AppInfo::g_maxInFlightFrameCount];
 
 		Buffer m_vertexBuffer;
 		Buffer m_indexBuffer;

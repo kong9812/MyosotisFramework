@@ -20,7 +20,7 @@ namespace MyosotisFW::System::Render
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 
 	private:
-		struct {
+		struct PushConstant {
 			uint32_t skyboxTextureID;
 		}pushConstant;
 

@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 		~VisibilityBufferRenderPass();
 
 		void Initialize() override;
-		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) override;
+		void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex) override;
 		void EndRender(const VkCommandBuffer& commandBuffer) override;
 
 	private:

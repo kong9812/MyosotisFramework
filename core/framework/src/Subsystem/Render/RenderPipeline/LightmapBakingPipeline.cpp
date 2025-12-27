@@ -44,7 +44,7 @@ namespace MyosotisFW::System::Render
 			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+				static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
 			const VkDeviceSize offsets[1] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &currentVertexBuffer.buffer, offsets);
 			vkCmdBindIndexBuffer(commandBuffer, currentIndexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
@@ -153,11 +153,11 @@ namespace MyosotisFW::System::Render
 		m_isBaking = true;
 	}
 
-	void LightmapBakingPipeline::OutputLightmap(const RenderResources_ptr& resources)
+	void LightmapBakingPipeline::OutputLightmap(const RenderResources_ptr& resources, const uint32_t frameIndex)
 	{
 		if (m_isBaking)
 		{
-			resources->SaveImage(resources->GetLightmap(), "Lightmap.png", pushConstant.atlasSize);
+			resources->SaveImage(resources->GetLightmap(frameIndex), "Lightmap.png", pushConstant.atlasSize);
 			m_isBaking = false;
 		}
 	}
@@ -169,7 +169,7 @@ namespace MyosotisFW::System::Render
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(pushConstant))),
+				static_cast<uint32_t>(sizeof(PushConstant))),
 		};
 
 		// [pipeline]layout

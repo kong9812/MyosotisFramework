@@ -10,6 +10,7 @@
 #include "ClassPointer.h"
 #include "PrimitiveGeometryShape.h"
 #include "BasicMaterial.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -29,10 +30,10 @@ namespace MyosotisFW::System::Render
 			m_meshes({}),
 			m_images({}),
 			m_cubeImages({}),
-			m_mainRenderTarget({}),
-			m_visibilityBuffer({}),
-			m_hiZDepthMap({}),
-			m_depthBuffer({}),
+			m_mainRenderTarget(),
+			m_visibilityBuffer(),
+			m_hiZDepthMap(),
+			m_depthBuffer(),
 			m_onLoadedMesh() {
 		}
 		~RenderResources();
@@ -75,44 +76,41 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderDescriptors_ptr m_renderDescriptors;
 
+	protected:
+		// resoureces
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
-
 		std::unordered_map<std::string, MeshesData> m_meshes;
 		std::unordered_map<std::string, MaterialData> m_materials;
-
 		std::unordered_map<Shape::PrimitiveGeometryShape, MeshData> m_primitiveGeometryMeshes;
 		std::unordered_map<Shape::PrimitiveGeometryShape, MaterialData> m_primitiveGeometryMaterials;
-
 		std::unordered_map<std::string, Image> m_images;
 		std::unordered_map<std::string, Image> m_cubeImages;
 		std::vector<VkSampler> m_samplers;
 
 	public:
-		Image& GetMainRenderTarget() { return m_mainRenderTarget; }
-		Image& GetVisibilityBuffer() { return m_visibilityBuffer; }
-		Image& GetLightmap() { return m_lightmap; }
-
-		Image& GetHiZDepthMap() { return m_hiZDepthMap; }
-		Image& GetDepthBuffer() { return m_depthBuffer; }
-
-		Image& GetRayTracingRenderTarget() { return m_rayTracingRenderTarget; }
+		// attachment
+		Image& GetMainRenderTarget(const uint32_t index) { return m_mainRenderTarget[index]; }
+		Image& GetVisibilityBuffer(const uint32_t index) { return m_visibilityBuffer[index]; }
+		Image& GetLightmap(const uint32_t index) { return m_lightmap[index]; }
+		Image& GetHiZDepthMap(const uint32_t index) { return m_hiZDepthMap[index]; }
+		Image& GetDepthBuffer(const uint32_t index) { return m_depthBuffer[index]; }
+		Image& GetRayTracingRenderTarget(const uint32_t index) { return m_rayTracingRenderTarget[index]; }
 
 	protected:
-		Image m_mainRenderTarget;
-		Image m_rayTracingRenderTarget;
-
-		Image m_visibilityBuffer;
-
-		Image m_lightmap;
-		Image m_hiZDepthMap;
-		Image m_depthBuffer;
+		// attachment
+		Image m_mainRenderTarget[AppInfo::g_maxInFlightFrameCount];
+		Image m_rayTracingRenderTarget[AppInfo::g_maxInFlightFrameCount];
+		Image m_visibilityBuffer[AppInfo::g_maxInFlightFrameCount];
+		Image m_lightmap[AppInfo::g_maxInFlightFrameCount];
+		Image m_hiZDepthMap[AppInfo::g_maxInFlightFrameCount];
+		Image m_depthBuffer[AppInfo::g_maxInFlightFrameCount];
 
 	protected:
 		void createVertexIndexBuffer(Meshes& meshes);
+		void createAttachment(const uint32_t width, const uint32_t height);
 		void createDefaultMaterial();
-
-	protected:
 		std::function<void(MeshesHandle&)> m_onLoadedMesh;
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

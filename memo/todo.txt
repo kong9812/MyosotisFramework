@@ -294,15 +294,3 @@ RayTracingメモ:
 
 // その他
 ・Shaderの内部はBLASを作成する際にセットしたGeometry情報をgl_GeometryIndexEXTで取得可能が、データ構造をどうするかは要検討
-
-createTopLevelAccelerationStructure
-createRayTracingPipeline
-createShaderBindingTables
-createDescriptorSets
-
-// todo. ビルド手順
-// Scratch buffer sizeのmaxを取り出す (forとstd::maxでOK)
-// 最大値でScratchBuffer作成
-// BuildGeomInfo作成
-// BuildRangeInfo*作成 (1つでOK)
-// CmdBuildAS！

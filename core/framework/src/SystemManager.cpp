@@ -48,7 +48,8 @@ namespace {
 		case VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT:
 		default:
 		{
-			ASSERT(false, message);
+			//ASSERT(false, message);	// Nsightの時邪魔になる
+			Logger::Error(message);
 		}
 		break;
 		}
@@ -159,14 +160,7 @@ namespace MyosotisFW::System
 
 	void SystemManager::Render()
 	{
-		m_renderSubsystem->BeginRender();
-		m_renderSubsystem->BeginCompute();
-		m_renderSubsystem->SkyboxRender();
-		m_renderSubsystem->MeshShaderRender();
-		m_renderSubsystem->LightingRender();
-		m_renderSubsystem->LightmapBake();
-		m_renderSubsystem->RayTracingRender();
-		m_renderSubsystem->EndRender();
+		m_renderSubsystem->Render();
 	}
 
 	void SystemManager::initializeGLFW(GLFWwindow* window)

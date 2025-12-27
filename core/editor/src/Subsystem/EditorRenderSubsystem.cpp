@@ -14,8 +14,7 @@
 
 #include "VisibilityBufferRenderPass.h"
 
-#include "VisibilityBufferRenderPhase1Pipeline.h"
-#include "VisibilityBufferRenderPhase2Pipeline.h"
+#include "VisibilityBufferPipeline.h"
 
 #include "AppInfo.h"
 
@@ -140,8 +139,8 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
+		m_visibilityBufferPipeline = CreateVisibilityBufferPipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 		//m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device, m_renderDescriptors);
 		//m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 	}

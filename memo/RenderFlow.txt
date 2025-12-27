@@ -1,0 +1,88 @@
+・流れ
+　[1]・Compute (wait CompletePreRender [N-1] 前frameのDepthが使い終わったら)
+　　[1.1]・Hi-Z Copy
+　　　　　　・Need:
+　　　　　　　・[Sampler] Depth
+　　　　　　　・[StorageImage] Hi-Z
+　　[1.2]・Hi-Z Downsampling
+　　　　　・Need:
+　　　　　　　・[Sampler] Hi-Z
+　　　　　　　・[StorageImage] Hi-Z
+　・Submit(Compute, CompleteCompute [N] 現frameのHi-Zが完成)
+　
+　[2]・PreRender (wait CompleteCompute [N] 現frameのHi-Zが完成)
+　　　　[2.1]・VisibilityBuffer
+　　　　　　　　・Need:
+　　　　　　　　　・[Color] VisibilityBuffer
+　　　　　　　　　・[Depth] Depth
+　　　　　　　　　・[Sampler] Hi-Z
+　[3]・Render (PreRender と同じQueueなので、wait不要)
+　　　　[3.1]・Skybox
+　　　　　　　　・Need:
+　　　　　　　　　・[Color] MainRenderTarget
+　　　　[3.2]・Lighting
+　　　　　　　　・Need:
+　　　　　　　　　・[Color] MainRenderTarget
+　　　　　　　　　・[Sampler] VisibilityBuffer
+　　　　　　　・必要に応じてSwapchainImageへコピー
+　　　　[3.3]・LightMap (必要な時のみ)
+　　　　　　　　・Need:
+　　　　　　　　　・[Color] LightMap
+　　　　[3.4]・RayTracing
+　　　　　　　　・Need:
+　　　　　　　　　・[StorageImage] RayTracingRenderTarget
+　　　　　　　・必要に応じてSwapchainImageへコピー
+　　・Submit(PreRender & Render, CompleteRender [N] 現frameのSwapchainImage完成)
+　　・Present(wait CompleteRender [N] 現frameのSwapchainImage完成)
+
+// --- GPU Frame Render Flow ---
+
+uint32_t fi = frameIndex % MAX_FRAMES_IN_FLIGHT;      // 今フレーム
+uint32_t pi = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT; // 前フレーム (N-1)
+
+// 1. CPU-GPU同期: このスロットのGPU処理が完全に終わるのを待つ
+vkWaitForFences(device, 1, &inFlightFence[fi], VK_TRUE, UINT64_MAX);
+
+// 2. 次の表示用画像を取得
+uint32_t imageIndex = 0;
+vkAcquireNextImageKHR(..., imageAvailable[fi], &imageIndex);
+
+// 3. 実行準備 (フェンスとコマンドバッファのリセット)
+vkResetFences(device, 1, &inFlightFence[fi]);
+resetCommandBuffers(fi); 
+
+
+// --- [1] Compute Submit ---
+// Record: Hi-Z Copy / Downsampling
+// Wait:   completePreRender[pi] (前フレームのPreRender完了を待つ)
+// Signal: completeCompute[fi] (今フレームのHi-Z完成を通知)
+SubmitCompute(cmdCompute[fi])
+   - Wait:   completeRender[pi] (Stage: VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT)
+   - Signal: completeCompute[fi]
+
+
+// --- [2] PreRender Submit ---
+// Record: VisibilityBuffer (GPU Culling)
+// Wait:   completeCompute[fi] (今フレームのHi-Z完成を待つ)
+// Signal: completePreRender[fi]
+SubmitPreRender(cmdPreRender[fi])
+   - Wait:   completeCompute[fi] (Stage: TaskShaderBit??)
+   - Signal: completePreRender[fi]
+
+
+// --- [3] Render Submit ---
+// Record: Skybox / Lighting / RayTracing / Blit
+// Wait:   imageAvailable[fi] (Swapchain画像が取れるのを待つ)
+// Signal: completeRender[fi] & inFlightFence[fi]
+SubmitRender(cmdRender[fi])
+   - Wait:   imageAvailable[fi] (Stage: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+   - Signal: completeRender[fi]
+   - Fence:  inFlightFence[fi] (CPUにこのスロットの完了を通知用)
+
+
+// --- [4] Present ---
+// Wait:   completeRender[fi] (すべての描画とBlitが終わったら表示)
+PresentQueue(imageIndex)
+   - Wait:   completeRender[fi]
+
+frameIndex++;

@@ -50,7 +50,7 @@ namespace MyosotisFW::System::Render
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0,
-			static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+			static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
@@ -64,7 +64,7 @@ namespace MyosotisFW::System::Render
 			// PS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
-				static_cast<uint32_t>(sizeof(pushConstant))),
+				static_cast<uint32_t>(sizeof(PushConstant))),
 		};
 
 		// [pipeline]layout

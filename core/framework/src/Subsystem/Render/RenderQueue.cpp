@@ -43,18 +43,19 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateCommandPool(device, &cmdPoolInfo, pAllocator, &m_commandPool));
 	}
 
-	void RenderQueue::AllocateCommandBuffers(const VkDevice& device, const uint32_t count)
+	std::vector<VkCommandBuffer> RenderQueue::AllocateCommandBuffers(const VkDevice& device, const uint32_t count)
 	{
-		m_commandBuffers.resize(count);
+		std::vector<VkCommandBuffer> commandBuffers(count);
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, count);
-		VK_VALIDATION(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, m_commandBuffers.data()));
+		VK_VALIDATION(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, commandBuffers.data()));
+		return commandBuffers;
 	}
 
-	void RenderQueue::FreeCommandBuffers(const VkDevice& device)
+	void RenderQueue::FreeCommandBuffers(const VkDevice& device, std::vector<VkCommandBuffer> commandBuffers)
 	{
-		if (m_commandBuffers.size() > 0)
+		if (commandBuffers.size() > 0)
 		{
-			vkFreeCommandBuffers(device, m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+			vkFreeCommandBuffers(device, m_commandPool, commandBuffers.size(), commandBuffers.data());
 		}
 	}
 

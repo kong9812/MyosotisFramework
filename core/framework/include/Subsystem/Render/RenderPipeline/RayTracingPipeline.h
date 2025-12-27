@@ -18,12 +18,12 @@ namespace MyosotisFW::System::Render
 		~RayTracingPipeline();
 
 		void Initialize(const RenderResources_ptr& resources);
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex);
 
 	private:
-		struct {
+		struct PushConstant {
 			uint32_t storeImageID;
-		}pushConstant;
+		}pushConstant[AppInfo::g_maxInFlightFrameCount];
 		struct {
 			Buffer sbtBuffer;
 			VkStridedDeviceAddressRegionKHR region;

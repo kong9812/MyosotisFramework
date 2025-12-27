@@ -25,7 +25,7 @@
 #include "LightmapBakingPass.h"
 
 #include "SkyboxPipeline.h"
-#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferPipeline.h"
 #include "LightingPipeline.h"
 #include "LightmapBakingPipeline.h"
 #include "RayTracingPipeline.h"
@@ -54,15 +54,24 @@ namespace MyosotisFW::System::Render
 {
 	RenderSubsystem::~RenderSubsystem()
 	{
-		vkDestroyFence(*m_device, m_renderFence, m_device->GetAllocationCallbacks());
-		vkDestroySemaphore(*m_device, m_semaphores.presentComplete, m_device->GetAllocationCallbacks());
-		vkDestroySemaphore(*m_device, m_semaphores.computeComplete, m_device->GetAllocationCallbacks());
-		vkDestroySemaphore(*m_device, m_semaphores.renderComplete, m_device->GetAllocationCallbacks());
-		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device);
+		m_device->GetGraphicsQueue()->WaitIdle();
+		m_device->GetComputeQueue()->WaitIdle();
+		m_device->GetTransferQueue()->WaitIdle();
+
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			vkDestroyFence(*m_device, m_fences.inFlightFrameFence[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeCompute[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completePreRender[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeRender[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.imageAvailable[i], m_device->GetAllocationCallbacks());
+		}
+
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.preRender);
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.render);
 		m_device->GetGraphicsQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
-		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device);
+		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.compute);
 		m_device->GetComputeQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
-		m_device->GetTransferQueue()->FreeCommandBuffers(*m_device);
 		m_device->GetTransferQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
 	}
 
@@ -202,133 +211,135 @@ namespace MyosotisFW::System::Render
 		m_renderDescriptors->GetMaterialDescriptorSet()->Update();
 	}
 
-	void RenderSubsystem::BeginCompute()
+	void RenderSubsystem::Render()
 	{
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
-		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, m_semaphores.presentComplete, m_semaphores.computeComplete);
-		{
+		const uint32_t currentFrameIndex = m_frameCounter % AppInfo::g_maxInFlightFrameCount;
+		const uint32_t previousFrameIndex = (m_frameCounter + 1) % AppInfo::g_maxInFlightFrameCount;
+
+		// これから使うFrameIndexのRenderSubmitが終わるまで待つ
+		VK_VALIDATION(vkWaitForFences(*m_device, 1, &m_fences.inFlightFrameFence[currentFrameIndex], VK_TRUE, UINT64_MAX));
+
+		// これから書き込むSwapchain ImageのIndexを取得
+		uint32_t currentSwapchainImageIndex = 0;
+		m_swapchain->AcquireNextImage(m_semaphores.imageAvailable[currentFrameIndex], currentSwapchainImageIndex);
+
+		// 実行準備 (inFlightFrameFenceのリセット)
+		VK_VALIDATION(vkResetFences(*m_device, 1, &m_fences.inFlightFrameFence[currentFrameIndex]));
+		// コマンドバッファ取り出す
+
+		{// Compute (Hi-Z Depth)
+			// 前FrameのRenderが終わったら、このFreamのHi-ZDepthが作れる
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				m_semaphores.completePreRender[previousFrameIndex],		// wait
+				m_semaphores.completeCompute[currentFrameIndex]);		// signal
+
 			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-			VK_VALIDATION(vkBeginCommandBuffer(m_device->GetComputeQueue()->GetCommandBuffer(0), &commandBufferBeginInfo));
-			m_vkCmdBeginDebugUtilsLabelEXT(m_device->GetComputeQueue()->GetCommandBuffer(0), &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
+			VkCommandBuffer commandBuffer = m_commandBuffers.compute[currentFrameIndex];
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
+			m_hiZDepthComputePipeline->Dispatch(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 
-			m_hiZDepthComputePipeline->Dispatch(m_device->GetComputeQueue()->GetCommandBuffer(0), m_swapchain->GetScreenSize());
-
-			m_vkCmdEndDebugUtilsLabelEXT(m_device->GetComputeQueue()->GetCommandBuffer(0));
-			VK_VALIDATION(vkEndCommandBuffer(m_device->GetComputeQueue()->GetCommandBuffer(0)));
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+			RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
+			computeQueue->Submit(submitInfo);
 		}
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_device->GetComputeQueue()->GetCommandBuffer(0);
 
-		RenderQueue_ptr computeQueue = m_device->GetComputeQueue();
-		computeQueue->Submit(submitInfo);
-		computeQueue->WaitIdle();
-	}
+		{// Graphics PreRender (VisibilityBuffer)
+			// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
+				m_semaphores.completeCompute[currentFrameIndex],		// wait
+				m_semaphores.completePreRender[currentFrameIndex]);		// signal
 
-	void RenderSubsystem::BeginRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
+			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+			VkCommandBuffer commandBuffer = m_commandBuffers.preRender[currentFrameIndex];
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
+			m_visibilityBufferRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+			m_visibilityBufferPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
+			m_visibilityBufferRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 
-		m_swapchain->AcquireNextImage(m_semaphores.presentComplete, m_currentBufferIndex);
-		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-		VK_VALIDATION(vkBeginCommandBuffer(currentCommandBuffer, &commandBufferBeginInfo));
-	}
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+			graphicsQueue->Submit(submitInfo);
+		}
 
-	void RenderSubsystem::SkyboxRender()
-	{
-		if (m_mainCamera == nullptr) return;
+		{// Graphics Render (Skybox,Lighting,LightMap,RayTracing...)
+			// これから書き込むSwapchain Imageの処理が終わったら、このFreamのMainRenderTargetが作れる
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				m_semaphores.imageAvailable[currentFrameIndex],		// wait
+				m_semaphores.completeRender[currentFrameIndex]);	// signal
 
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-
-		// Skybox Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
-		m_skyboxRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-		m_skyboxPipeline->BindCommandBuffer(currentCommandBuffer);
-		m_skyboxRenderPass->EndRender(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::MeshShaderRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-
-		// mesh shader Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
-		m_visibilityBufferRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-		m_visibilityBufferRenderPhase1Pipeline->BindCommandBuffer(currentCommandBuffer, m_vbDispatchInfoCount);
-		m_visibilityBufferRenderPass->EndRender(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::LightingRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-		// Lighting Render Pass
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
-		m_lightingRenderPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-		m_lightingPipeline->BindCommandBuffer(currentCommandBuffer);
-		m_lightingRenderPass->EndRender(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
-
-	void RenderSubsystem::LightmapBake()
-	{
-		if (m_lightmapBakingPipeline->IsBaking())
-		{
-			VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-			// Lightmap Baking Pass
-			m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
-			m_lightmapBakingPass->BeginRender(currentCommandBuffer, m_currentBufferIndex);
-			for (MObject_ptr& object : m_objects)
-			{
-				if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+			VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			{// Skybox Render Pass
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
+				m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+				m_skyboxPipeline->BindCommandBuffer(commandBuffer);
+				m_skyboxRenderPass->EndRender(commandBuffer);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+			{// Lighting
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
+				m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+				m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+				m_lightingRenderPass->EndRender(commandBuffer);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+			{// LightMap
+				if (m_lightmapBakingPipeline->IsBaking())
 				{
-					m_lightmapBakingPipeline->BindCommandBuffer(currentCommandBuffer);
+					m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+					m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
+					for (MObject_ptr& object : m_objects)
+					{
+						if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+						{
+							m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
+						}
+					}
+					m_lightmapBakingPass->EndRender(commandBuffer);
+					m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 				}
 			}
-			m_lightmapBakingPass->EndRender(currentCommandBuffer);
-			m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
+			{// RayTracing
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+				m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+
+			{// Copy Image To Swapchain Image
+				CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+				//CopyRayTracingRenderTargetToSwapchainImage(currentBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			}
+
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+			graphicsQueue->Submit(submitInfo, m_fences.inFlightFrameFence[currentFrameIndex]);
 		}
-	}
 
-	void RenderSubsystem::RayTracingRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-		// Ray Tracing Render
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-		m_vkCmdBeginDebugUtilsLabelEXT(currentCommandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
-		m_rayTracingPipeline->BindCommandBuffer(currentCommandBuffer);
-		m_vkCmdEndDebugUtilsLabelEXT(currentCommandBuffer);
-	}
+		{// Present
+			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+			m_swapchain->QueuePresent(graphicsQueue->GetQueue(), currentSwapchainImageIndex, m_semaphores.completeRender[currentFrameIndex]);
+			m_lightmapBakingPipeline->OutputLightmap(m_resources, currentFrameIndex);
+		}
 
-	void RenderSubsystem::EndRender()
-	{
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
-
-		// Final Composition (MainRenderTarget -> SwapchainImage)
-		CopyMainRenderTargetToSwapchainImage();
-
-		VkCommandBuffer currentCommandBuffer = m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex);
-		VK_VALIDATION(vkEndCommandBuffer(currentCommandBuffer));
-		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, m_semaphores.computeComplete, m_semaphores.renderComplete);
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &currentCommandBuffer;
-		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
-		graphicsQueue->Submit(submitInfo, m_renderFence);
-		m_swapchain->QueuePresent(graphicsQueue->GetQueue(), m_currentBufferIndex, m_semaphores.renderComplete);
-		graphicsQueue->WaitIdle();
-		m_lightmapBakingPipeline->OutputLightmap(m_resources);
+		m_frameCounter++;
 	}
 
 	void RenderSubsystem::ResetGameStage()
@@ -341,7 +352,10 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height)
 	{
 		// デバイスの処理を待つ
-		VK_VALIDATION(vkResetFences(*m_device, 1, &m_renderFence));
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			VK_VALIDATION(vkResetFences(*m_device, 1, &m_fences.inFlightFrameFence[i]));
+		}
 		m_device->GetGraphicsQueue()->WaitIdle();
 		m_device->GetComputeQueue()->WaitIdle();
 		m_device->GetTransferQueue()->WaitIdle();
@@ -355,12 +369,15 @@ namespace MyosotisFW::System::Render
 
 		// command buffers
 		{// render
-			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device);
-			m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
+			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.preRender);
+			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.render);
+			m_commandBuffers.preRender = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.render = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// compute
-			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device);
+			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.compute);
 			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
+			m_commandBuffers.compute = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 
 		if (m_mainCamera)
@@ -370,8 +387,6 @@ namespace MyosotisFW::System::Render
 
 		// Render Pass
 		resizeRenderPass(width, height);
-
-		m_currentBufferIndex = 0;
 
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
 	}
@@ -403,11 +418,12 @@ namespace MyosotisFW::System::Render
 		// command pool
 		{// render
 			m_device->GetGraphicsQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
-			m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
+			m_commandBuffers.preRender = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.render = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// compute
 			m_device->GetComputeQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
-			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, 1);
+			m_commandBuffers.compute = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// transfer
 			m_device->GetTransferQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
@@ -418,15 +434,32 @@ namespace MyosotisFW::System::Render
 	{
 		// semaphore(present/render)
 		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.presentComplete));
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.computeComplete));
-		VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.renderComplete));
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeCompute[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completePreRender[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeRender[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.imageAvailable[i]));
+		}
+
+		// 最初のcompletePreRenderをsingleする
+		const uint32_t previousFrameIndex = (m_frameCounter + 1) % AppInfo::g_maxInFlightFrameCount;
+		VkSubmitInfo signalOnlySubmit{};
+		signalOnlySubmit.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		signalOnlySubmit.signalSemaphoreCount = 1;
+		signalOnlySubmit.pSignalSemaphores = &m_semaphores.completePreRender[previousFrameIndex];
+		// 何も実行せずにセマフォだけシグナル状態にする
+		VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, VK_NULL_HANDLE));
 	}
 
 	void RenderSubsystem::initializeFence()
 	{
 		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
-		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &m_renderFence));
+		fenceCreateInfo.flags = VkFenceCreateFlagBits::VK_FENCE_CREATE_SIGNALED_BIT;
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &m_fences.inFlightFrameFence[i]));
+		}
 	}
 
 	void RenderSubsystem::initializeDebugUtils(const VkInstance& instance)
@@ -457,8 +490,8 @@ namespace MyosotisFW::System::Render
 		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device, m_renderDescriptors);
 		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
 		// Visibility Buffer Pipeline
-		m_visibilityBufferRenderPhase1Pipeline = CreateVisibilityBufferRenderPhase1PipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferRenderPhase1Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
+		m_visibilityBufferPipeline = CreateVisibilityBufferPipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
 		// Lighting Pipeline
 		m_lightingPipeline = CreateLightingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());
@@ -490,8 +523,11 @@ namespace MyosotisFW::System::Render
 		//m_finalCompositionRenderPass->Resize(width, height);
 	}
 
-	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage()
+	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex)
 	{
+		const Image& swapchainImage = m_swapchain->GetSwapchainImage()[swapchainImageIndex];
+		const Image& mainRenderTarget = m_resources->GetMainRenderTarget(frameIndex);
+
 		VkImageMemoryBarrier barrier{};
 		{// SwapchainImage -> TRANSFER_SRC
 			barrier.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -501,10 +537,10 @@ namespace MyosotisFW::System::Render
 			barrier.newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barrier.image = swapchainImage.image;
 			barrier.subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			0,
@@ -521,9 +557,9 @@ namespace MyosotisFW::System::Render
 		copyRegion.dstSubresource.layerCount = 1;
 		copyRegion.dstOffsets[0] = { 0,0,0 };
 		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
-		vkCmdBlitImage(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
-			m_resources->GetMainRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		vkCmdBlitImage(commandBuffer,
+			mainRenderTarget.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			swapchainImage.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &copyRegion,
 			VkFilter::VK_FILTER_NEAREST);
 		{// SwapchainImage -> PRESENT_SRC
@@ -534,10 +570,10 @@ namespace MyosotisFW::System::Render
 			barrier.newLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barrier.image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barrier.image = swapchainImage.image;
 			barrier.subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 			0,
@@ -546,8 +582,11 @@ namespace MyosotisFW::System::Render
 			1, &barrier);
 	}
 
-	void RenderSubsystem::CopyRayTracingRenderTargetToSwapchainImage()
+	void RenderSubsystem::CopyRayTracingRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex)
 	{
+		const Image& swapchainImage = m_swapchain->GetSwapchainImage()[swapchainImageIndex];
+		const Image& rayTracingRenderTarget = m_resources->GetRayTracingRenderTarget(frameIndex);
+
 		VkImageMemoryBarrier barriers[2]{};
 		{// RayTracingRenderTarget -> TRANSFER_DST
 			barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -557,7 +596,7 @@ namespace MyosotisFW::System::Render
 			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
 			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barriers[0].image = m_resources->GetRayTracingRenderTarget().image;
+			barriers[0].image = rayTracingRenderTarget.image;
 			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 		{// SwapchainImage -> TRANSFER_SRC
@@ -568,17 +607,17 @@ namespace MyosotisFW::System::Render
 			barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barriers[1].image = swapchainImage.image;
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			0,
 			0, nullptr,
 			0, nullptr,
 			1, &barriers[0]);
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			0,
@@ -595,9 +634,9 @@ namespace MyosotisFW::System::Render
 		copyRegion.dstSubresource.layerCount = 1;
 		copyRegion.dstOffsets[0] = { 0,0,0 };
 		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
-		vkCmdBlitImage(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
-			m_resources->GetRayTracingRenderTarget().image, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
-			m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		vkCmdBlitImage(commandBuffer,
+			rayTracingRenderTarget.image, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
+			swapchainImage.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1, &copyRegion,
 			VkFilter::VK_FILTER_NEAREST);
 		{// RayTracingRenderTarget -> SHADER_WRITE
@@ -608,7 +647,7 @@ namespace MyosotisFW::System::Render
 			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
 			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barriers[0].image = m_resources->GetRayTracingRenderTarget().image;
+			barriers[0].image = rayTracingRenderTarget.image;
 			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 		{// SwapchainImage -> PRESENT_SRC
@@ -619,17 +658,17 @@ namespace MyosotisFW::System::Render
 			barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			barriers[1].image = m_swapchain->GetSwapchainImage()[m_currentBufferIndex].image;
+			barriers[1].image = swapchainImage.image;
 			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
 		}
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
 			0,
 			0, nullptr,
 			0, nullptr,
 			1, &barriers[0]);
-		vkCmdPipelineBarrier(m_device->GetGraphicsQueue()->GetCommandBuffer(m_currentBufferIndex),
+		vkCmdPipelineBarrier(commandBuffer,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 			0,

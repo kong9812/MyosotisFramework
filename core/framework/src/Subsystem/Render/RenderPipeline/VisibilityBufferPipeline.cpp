@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "VisibilityBufferRenderPhase1Pipeline.h"
+#include "VisibilityBufferPipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -8,56 +8,53 @@
 
 namespace MyosotisFW::System::Render
 {
-	VisibilityBufferRenderPhase1Pipeline::~VisibilityBufferRenderPhase1Pipeline()
+	VisibilityBufferPipeline::~VisibilityBufferPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
 		prepareRenderPipeline(resources, renderPass);
 
-		VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-			resources->GetHiZDepthMap().sampler, resources->GetHiZDepthMap().view,
-			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-
-		descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-			resources->GetDepthBuffer().sampler, resources->GetDepthBuffer().view,
-			VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		m_depthBufferSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-
-		pushConstant.hiZMipLevelMax = static_cast<float>(resources->GetHiZDepthMap().mipView.size()) - 1.0f;
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			const Image& hiZDepth = resources->GetHiZDepthMap(i);
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+				resources->GetHiZDepthMap(i).sampler, hiZDepth.view,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pushConstant[i].hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+			pushConstant[i].hiZMipLevelMax = static_cast<float>(hiZDepth.mipView.size()) - 1.0f;
+		}
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t vbDispatchInfoCount)
+	void VisibilityBufferPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t vbDispatchInfoCount)
 	{
 		{// Phase1Render
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 			std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-			pushConstant.hiZSamplerID = m_hiZSamplerID;
-			pushConstant.vbDispatchInfoCount = vbDispatchInfoCount;
+			pushConstant[frameIndex].vbDispatchInfoCount = vbDispatchInfoCount;
 			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-				0, static_cast<uint32_t>(sizeof(pushConstant)), &pushConstant);
+				0, static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
 			uint32_t taskGroupSize = static_cast<uint32_t>(ceil(static_cast<float>(vbDispatchInfoCount) / 128.0f));
 			m_vkCmdDrawMeshTasksEXT(commandBuffer, taskGroupSize, 1, 1);
 		}
 	}
 
-	void VisibilityBufferRenderPhase1Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
 			// VS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
 				0,
-				static_cast<uint32_t>(sizeof(pushConstant))),
+				static_cast<uint32_t>(sizeof(PushConstant))),
 		};
 
 		// [pipeline]layout
