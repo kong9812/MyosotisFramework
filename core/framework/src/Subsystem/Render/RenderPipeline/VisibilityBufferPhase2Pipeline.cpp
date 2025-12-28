@@ -52,6 +52,19 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
+	void VisibilityBufferPhase2Pipeline::Resize(const RenderResources_ptr& resources)
+	{
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			const Image& hiZDepth = resources->GetHiZDepthMap(i);
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+				resources->GetHiZDepthMap(i).sampler, hiZDepth.view,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_textureDescriptorSet->UpdateImage(pushConstant[i].hiZSamplerID, TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+			pushConstant[i].hiZMipLevelMax = static_cast<float>(hiZDepth.mipView.size()) - 1.0f;
+		}
+	}
+
 	void VisibilityBufferPhase2Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant

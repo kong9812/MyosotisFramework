@@ -124,6 +124,18 @@ namespace MyosotisFW::System::Render
 			1);
 	}
 
+	void RayTracingPipeline::Resize(const RenderResources_ptr& resources)
+	{
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			const Image& rayTracingRenderTarget = resources->GetRayTracingRenderTarget(i);
+
+			// [storage image] ray tracing render target
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, rayTracingRenderTarget.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+			m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(pushConstant[i].storeImageID, TextureDescriptorSet::DescriptorBindingIndex::StorageImage, descriptorImageInfo);
+		}
+	}
+
 	void RayTracingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources)
 	{
 		// push constant

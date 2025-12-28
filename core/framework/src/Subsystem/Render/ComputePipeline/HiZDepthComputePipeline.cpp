@@ -246,4 +246,86 @@ namespace MyosotisFW::System::Render
 		// 初期化完了
 		depthCopyPushConstant[dstFrameIndex].depthClear = 0;
 	}
+
+	void HiZDepthComputePipeline::Resize()
+	{
+		{// DepthBuffer -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			std::array<VkImageMemoryBarrier, AppInfo::g_maxInFlightFrameCount> barrier{};
+			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+			{
+				// Barrier
+				const Image& depthBuffer = m_resources->GetDepthBuffer(i);
+				barrier[i].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier[i].srcAccessMask = VkAccessFlagBits::VK_ACCESS_NONE;
+				barrier[i].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT;
+				barrier[i].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+				barrier[i].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				barrier[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].image = depthBuffer.image;
+				barrier[i].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT);
+
+				// forを便乗する
+				{// PushConstant Data
+					// Hi-Z Depth
+					const Image& hiZDepthMap = m_resources->GetHiZDepthMap(i);
+					uint32_t hiZMipLevels = static_cast<uint32_t>(hiZDepthMap.mipView.size());
+					uint32_t addImage = 0;
+					uint32_t oldImageCount = m_hiZDepthMipMapImageIndex[i].size();
+					if (m_hiZDepthMipMapImageIndex[i].size() < hiZMipLevels)
+					{
+						addImage = hiZMipLevels - m_hiZDepthMipMapImageIndex[i].size();
+					}
+					m_hiZDepthMipMapImageIndex[i].resize(hiZMipLevels);
+					for (uint8_t j = 0; j < hiZMipLevels; j++)
+					{
+						// image mips (for write)
+						VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+						m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(m_hiZDepthMipMapImageIndex[i][j], TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
+					}
+					for (uint8_t j = oldImageCount; j < hiZMipLevels; j++)
+					{
+						// image mips (for write)
+						VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+						m_hiZDepthMipMapImageIndex[i][j] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
+					}
+					// image (for read)
+					VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(hiZDepthMap.sampler, hiZDepthMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(depthDownsamplePushConstant[i].hiZSamplerID, TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
+
+					// Depth
+					const Image& previousDepth = m_resources->GetDepthBuffer(i);
+					VkDescriptorImageInfo depthBufferDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(previousDepth.sampler, previousDepth.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(m_depthBufferSamplerID[i], TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, depthBufferDescriptorImageInfo);
+				}
+			}
+
+			VkFence fence = VK_NULL_HANDLE;
+			VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
+
+			VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
+
+			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			vkCmdPipelineBarrier(commandBuffer,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barrier.size()), barrier.data());
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+
+			m_device->GetGraphicsQueue()->Submit(submitInfo, fence);
+			VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
+
+			m_device->GetGraphicsQueue()->FreeSingleUseCommandBuffer(*m_device, commandBuffer);
+			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
+		}
+
+		// デップスクリア (初期化)
+		depthCopyPushConstant[0].depthClear = 1;	// 最初のだけでOK!
+	}
 }

@@ -24,10 +24,11 @@ namespace MyosotisFW::System::Render
 		}
 		virtual ~RenderPipelineBase() = default;
 
-		virtual void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) {};
+		virtual void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) {}
+		virtual void Resize(const RenderResources_ptr& resources) {}
 
 	protected:
-		virtual void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) {};
+		virtual void prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass) {}
 
 		RenderDevice_ptr m_device;
 

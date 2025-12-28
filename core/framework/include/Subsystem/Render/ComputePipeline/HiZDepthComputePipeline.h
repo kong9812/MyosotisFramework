@@ -42,6 +42,7 @@ namespace MyosotisFW::System::Render
 
 		void Initialize();
 		void Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const glm::vec2& screenSize);
+		void Resize();
 
 	private:
 		struct DepthCopyPushConstant {

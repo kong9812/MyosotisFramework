@@ -15,6 +15,7 @@ namespace MyosotisFW::System::Render
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex);
+		void Resize(const RenderResources_ptr& resources) override;
 
 	private:
 		struct PushConstant {

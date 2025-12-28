@@ -12,9 +12,11 @@
 #include "EditorCamera.h"
 #include "StaticMesh.h"
 
-#include "VisibilityBufferRenderPass.h"
+#include "VisibilityBufferPhase1RenderPass.h"
+#include "VisibilityBufferPhase2RenderPass.h"
 
-#include "VisibilityBufferPipeline.h"
+#include "VisibilityBufferPhase1Pipeline.h"
+#include "VisibilityBufferPhase2Pipeline.h"
 
 #include "AppInfo.h"
 
@@ -133,16 +135,18 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPass()
 	{
-		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_visibilityBufferRenderPass->Initialize();
+		m_visibilityBufferPhase1RenderPass = CreateVisibilityBufferPhase1RenderPassPointer(m_device, m_resources, m_swapchain);
+		m_visibilityBufferPhase1RenderPass->Initialize();
+		m_visibilityBufferPhase2RenderPass = CreateVisibilityBufferPhase2RenderPassPointer(m_device, m_resources, m_swapchain);
+		m_visibilityBufferPhase2RenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		m_visibilityBufferPipeline = CreateVisibilityBufferPipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferPipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
-		//m_visibilityBufferRenderPhase2Pipeline = CreateVisibilityBufferRenderPhase2PipelinePointer(m_device, m_renderDescriptors);
-		//m_visibilityBufferRenderPhase2Pipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
+		m_visibilityBufferPhase1Pipeline = CreateVisibilityBufferPhase1PipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPhase1Pipeline->Initialize(m_resources, m_visibilityBufferPhase1RenderPass->GetRenderPass());
+		m_visibilityBufferPhase2Pipeline = CreateVisibilityBufferPhase2PipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPhase2Pipeline->Initialize(m_resources, m_visibilityBufferPhase2RenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)

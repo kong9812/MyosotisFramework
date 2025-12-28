@@ -138,6 +138,7 @@ namespace MyosotisFW::System::Render
 		virtual void initializeComputePipeline();
 		void initializeAccelerationStructureManager();
 		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
+		virtual void resizeRenderPipeline();
 
 		void CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex);
 		void CopyRayTracingRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex);
@@ -187,15 +188,13 @@ namespace MyosotisFW::System::Render
 		LightmapBakingPass_ptr m_lightmapBakingPass;
 
 	protected:
+		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
 		SkyboxPipeline_ptr m_skyboxPipeline;
 		VisibilityBufferPhase1Pipeline_ptr m_visibilityBufferPhase1Pipeline;
 		VisibilityBufferPhase2Pipeline_ptr m_visibilityBufferPhase2Pipeline;
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;
-
-	protected:
-		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;
 
 	protected:
 		uint32_t m_vbDispatchInfoCount;

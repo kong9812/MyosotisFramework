@@ -49,6 +49,24 @@ namespace MyosotisFW::System::Render
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
+	void LightingPipeline::Resize(const RenderResources_ptr& resources)
+	{
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			{// Visibility Buffer
+				Image visibilityBuffer = resources->GetVisibilityBuffer(i);
+				// Sampler
+				visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+				// descriptorImageInfo
+				VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+					visibilityBuffer.sampler, visibilityBuffer.view,
+					VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				// Update
+				m_textureDescriptorSet->UpdateImage(pushConstant[i].visibilityBufferTextureID, TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+			}
+		}
+	}
+
 	void LightingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant

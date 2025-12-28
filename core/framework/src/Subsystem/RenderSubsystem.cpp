@@ -272,14 +272,13 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height)
 	{
 		// デバイスの処理を待つ
-		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-		{
-			VK_VALIDATION(vkResetFences(*m_device, 1, &m_fences.inFlightFrameFence[i]));
-		}
+		VK_VALIDATION(vkResetFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence));
 		m_device->GetGraphicsQueue()->WaitIdle();
 		m_device->GetComputeQueue()->WaitIdle();
 		m_device->GetTransferQueue()->WaitIdle();
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
+
+		m_frameCounter = 0;
 
 		// swapchain
 		m_swapchain->Resize(surface);
@@ -309,10 +308,32 @@ namespace MyosotisFW::System::Render
 			m_mainCamera->UpdateScreenSize(glm::vec2(width, height));
 		}
 
+		// Render Descriptors
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(glm::ivec2(width, height));
+
 		// Render Pass
 		resizeRenderPass(width, height);
 
+		// Render Pipeline
+		resizeRenderPipeline();
+
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
+
+		// 最初のcompletePreRenderをsingleする
+		const uint32_t previousFrameIndex = (m_frameCounter + 1) % AppInfo::g_maxInFlightFrameCount;
+		VkSubmitInfo signalOnlySubmit{};
+		signalOnlySubmit.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		signalOnlySubmit.signalSemaphoreCount = 1;
+		signalOnlySubmit.pSignalSemaphores = &m_semaphores.completeVBufferPhase2[previousFrameIndex];
+		// 何も実行せずにセマフォだけシグナル状態にする
+		VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, VK_NULL_HANDLE));
+		signalOnlySubmit.signalSemaphoreCount = 0;
+		signalOnlySubmit.pSignalSemaphores = VK_NULL_HANDLE;
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, m_fences.inFlightFrameFence[i]));
+		}
+		VK_VALIDATION(vkWaitForFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence, VK_TRUE, UINT64_MAX));
 	}
 
 	void RenderSubsystem::createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal)
@@ -576,9 +597,22 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
 	{
-		//m_shadowMapRenderPass->Resize(width, height);
-		//m_mainRenderPass->Resize(width, height);
-		//m_finalCompositionRenderPass->Resize(width, height);
+		m_skyboxRenderPass->Resize(width, height);
+		m_visibilityBufferPhase1RenderPass->Resize(width, height);
+		m_visibilityBufferPhase2RenderPass->Resize(width, height);
+		m_lightingRenderPass->Resize(width, height);
+		m_lightmapBakingPass->Resize(width, height);
+	}
+
+	void RenderSubsystem::resizeRenderPipeline()
+	{
+		m_hiZDepthComputePipeline->Resize();
+		m_skyboxPipeline->Resize(m_resources);
+		m_visibilityBufferPhase1Pipeline->Resize(m_resources);
+		m_visibilityBufferPhase2Pipeline->Resize(m_resources);
+		m_lightingPipeline->Resize(m_resources);
+		m_lightmapBakingPipeline->Resize(m_resources);
+		m_rayTracingPipeline->Resize(m_resources);
 	}
 
 	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex)

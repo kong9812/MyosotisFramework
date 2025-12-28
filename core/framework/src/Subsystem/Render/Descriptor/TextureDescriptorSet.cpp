@@ -15,14 +15,14 @@ namespace MyosotisFW::System::Render
 		descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
 		descriptor.descriptorBindingFlags = VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 		descriptor.descriptorCount = m_device->GetMaxDescriptorSetSampledImages();
-		descriptor.rebuild = true;
+		descriptor.rebuild = false;
 		descriptor.update = true;
 		m_descriptors.push_back(descriptor);
 		descriptor.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 		descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
 		descriptor.descriptorBindingFlags = VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 		descriptor.descriptorCount = m_device->GetMaxDescriptorSetStorageImages();
-		descriptor.rebuild = true;
+		descriptor.rebuild = false;
 		descriptor.update = true;
 		m_descriptors.push_back(descriptor);
 
@@ -38,16 +38,39 @@ namespace MyosotisFW::System::Render
 			index = static_cast<uint32_t>(m_combinedImageSamplerImageInfo.size());
 			m_combinedImageSamplerImageInfo.push_back(imageInfo);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].rebuild = true;
 			break;
 		case DescriptorBindingIndex::StorageImage:
 			index = static_cast<uint32_t>(m_storageImageInfo.size());
 			m_storageImageInfo.push_back(imageInfo);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].rebuild = true;
 			break;
 		default:
 			break;
 		}
 		return index;
+	}
+
+	void TextureDescriptorSet::UpdateImage(const uint32_t imageID, const DescriptorBindingIndex type, const VkDescriptorImageInfo imageInfo)
+	{
+		switch (type)
+		{
+		case DescriptorBindingIndex::CombinedImageSampler:
+		{
+			m_combinedImageSamplerImageInfo[imageID] = imageInfo;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = true;
+		}
+		break;
+		case DescriptorBindingIndex::StorageImage:
+		{
+			m_storageImageInfo[imageID] = imageInfo;
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
+		}
+		break;
+		default:
+			break;
+		}
 	}
 
 	void TextureDescriptorSet::Update()
