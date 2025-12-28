@@ -2,6 +2,7 @@
 #pragma once
 #include "HiZDepthComputePipeline.h"
 #include "RenderDevice.h"
+#include "RenderQueue.h"
 #include "RenderResources.h"
 #include "AppInfo.h"
 
@@ -62,37 +63,79 @@ namespace MyosotisFW::System::Render
 			VK_VALIDATION(vkCreateComputePipelines(*m_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, m_device->GetAllocationCallbacks(), &m_hiZDepthDownsampleShaderBase.pipeline));
 		}
 
-		// Attachment
-		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-		{
-			// Hi-Z Depth
-			const Image& hiZDepthMap = m_resources->GetHiZDepthMap(i);
-			uint32_t hiZMipLevels = static_cast<uint32_t>(hiZDepthMap.mipView.size());
-			m_hiZDepthMipMapImageIndex[i].resize(hiZMipLevels);
-			for (uint8_t j = 0; j < hiZMipLevels; j++)
+		{// DepthBuffer -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+			std::array<VkImageMemoryBarrier, AppInfo::g_maxInFlightFrameCount> barrier{};
+			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 			{
-				// image mips (for write)
-				VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-				m_hiZDepthMipMapImageIndex[i][j] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
-			}
-			// image (for read)
-			VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(hiZDepthMap.sampler, hiZDepthMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			depthDownsamplePushConstant[i].hiZSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
+				// Barrier
+				const Image& depthBuffer = m_resources->GetDepthBuffer(i);
+				barrier[i].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier[i].srcAccessMask = VkAccessFlagBits::VK_ACCESS_NONE;
+				barrier[i].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT;
+				barrier[i].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+				barrier[i].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				barrier[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].image = depthBuffer.image;
+				barrier[i].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT);
 
-			// Previous Depth (前フレームのDepth)
-			const uint32_t previousDepthBufferIndex = (i + 1) % AppInfo::g_maxInFlightFrameCount;
-			const Image& previousDepth = m_resources->GetDepthBuffer(previousDepthBufferIndex);
-			VkDescriptorImageInfo depthBufferDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(previousDepth.sampler, previousDepth.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			depthCopyPushConstant[i].depthBufferSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, depthBufferDescriptorImageInfo);
+				// forを便乗する
+				{// PushConstant Data
+					// Hi-Z Depth
+					const Image& hiZDepthMap = m_resources->GetHiZDepthMap(i);
+					uint32_t hiZMipLevels = static_cast<uint32_t>(hiZDepthMap.mipView.size());
+					m_hiZDepthMipMapImageIndex[i].resize(hiZMipLevels);
+					for (uint8_t j = 0; j < hiZMipLevels; j++)
+					{
+						// image mips (for write)
+						VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+						m_hiZDepthMipMapImageIndex[i][j] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
+					}
+					// image (for read)
+					VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(hiZDepthMap.sampler, hiZDepthMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					depthDownsamplePushConstant[i].hiZSamplerID = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, hiZDepthMapSamplerDescriptorImageInfo);
+
+					// Depth
+					const Image& previousDepth = m_resources->GetDepthBuffer(i);
+					VkDescriptorImageInfo depthBufferDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(previousDepth.sampler, previousDepth.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+					m_depthBufferSamplerID[i] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, depthBufferDescriptorImageInfo);
+				}
+			}
+
+			VkFence fence = VK_NULL_HANDLE;
+			VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
+
+			VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
+
+			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			vkCmdPipelineBarrier(commandBuffer,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barrier.size()), barrier.data());
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+
+			m_device->GetGraphicsQueue()->Submit(submitInfo, fence);
+			VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
+
+			m_device->GetGraphicsQueue()->FreeSingleUseCommandBuffer(*m_device, commandBuffer);
+			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 
 		// デップスクリア (初期化)
 		depthCopyPushConstant[0].depthClear = 1;	// 最初のだけでOK!
 	}
 
-	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const glm::vec2& screenSize)
+	void HiZDepthComputePipeline::Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const glm::vec2& screenSize)
 	{
-		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap(frameIndex).mipView.size());
+		uint32_t hiZMipLevels = static_cast<uint32_t>(m_resources->GetHiZDepthMap(dstFrameIndex).mipView.size());
+
+		depthCopyPushConstant[dstFrameIndex].depthBufferSamplerID = m_depthBufferSamplerID[srcFrameIndex];
 
 		{// HiZ Depth Copy
 			// Bind the compute pipeline
@@ -102,11 +145,11 @@ namespace MyosotisFW::System::Render
 			vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, m_hiZDepthCopyShaderBase.pipelineLayout, 0,
 				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 			// Bind the push constants
-			depthCopyPushConstant[frameIndex].hiZImageID = m_hiZDepthMipMapImageIndex[frameIndex][0];
-			depthCopyPushConstant[frameIndex].desSize = static_cast<glm::ivec2>(screenSize);
+			depthCopyPushConstant[dstFrameIndex].hiZImageID = m_hiZDepthMipMapImageIndex[dstFrameIndex][0];
+			depthCopyPushConstant[dstFrameIndex].desSize = static_cast<glm::ivec2>(screenSize);
 			vkCmdPushConstants(commandBuffer, m_hiZDepthCopyShaderBase.pipelineLayout,
 				VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
-				0, static_cast<uint32_t>(sizeof(DepthCopyPushConstant)), &depthCopyPushConstant[frameIndex]);
+				0, static_cast<uint32_t>(sizeof(DepthCopyPushConstant)), &depthCopyPushConstant[dstFrameIndex]);
 			// Dispatch the compute shader
 			uint32_t threadNumX = 16;	// xのスレッド数
 			uint32_t threadNumY = 16;	// yのスレッド数
@@ -128,7 +171,7 @@ namespace MyosotisFW::System::Render
 				barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrier.image = m_resources->GetHiZDepthMap(frameIndex).image;
+				barrier.image = m_resources->GetHiZDepthMap(dstFrameIndex).image;
 				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 				barrier.subresourceRange.baseMipLevel = 1;
 				barrier.subresourceRange.levelCount = hiZMipLevels - 1;
@@ -162,9 +205,9 @@ namespace MyosotisFW::System::Render
 				uint32_t groupY = (mipSize.y + threadNumY - 1) / threadNumY;
 
 				// Push constant 設定
-				depthDownsamplePushConstant[frameIndex].hiZImageID = m_hiZDepthMipMapImageIndex[frameIndex][dstMip];
-				depthDownsamplePushConstant[frameIndex].desSize = mipSize;
-				depthDownsamplePushConstant[frameIndex].srcMip = srcMip;
+				depthDownsamplePushConstant[dstFrameIndex].hiZImageID = m_hiZDepthMipMapImageIndex[dstFrameIndex][dstMip];
+				depthDownsamplePushConstant[dstFrameIndex].desSize = mipSize;
+				depthDownsamplePushConstant[dstFrameIndex].srcMip = srcMip;
 				vkCmdPushConstants(commandBuffer, m_hiZDepthDownsampleShaderBase.pipelineLayout,
 					VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT,
 					0, static_cast<uint32_t>(sizeof(DepthDownsamplePushConstant)), &depthDownsamplePushConstant);
@@ -181,7 +224,7 @@ namespace MyosotisFW::System::Render
 				barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;    // 同じレイアウト
 				barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 				barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barrier.image = m_resources->GetHiZDepthMap(frameIndex).image;
+				barrier.image = m_resources->GetHiZDepthMap(dstFrameIndex).image;
 				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 				barrier.subresourceRange.baseMipLevel = dstMip;
 				barrier.subresourceRange.levelCount = 1;
@@ -201,6 +244,6 @@ namespace MyosotisFW::System::Render
 		}
 
 		// 初期化完了
-		depthCopyPushConstant[frameIndex].depthClear = 0;
+		depthCopyPushConstant[dstFrameIndex].depthClear = 0;
 	}
 }

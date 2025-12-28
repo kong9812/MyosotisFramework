@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "VisibilityBufferPipeline.h"
+#include "VisibilityBufferPhase2Pipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -8,13 +8,13 @@
 
 namespace MyosotisFW::System::Render
 {
-	VisibilityBufferPipeline::~VisibilityBufferPipeline()
+	VisibilityBufferPhase2Pipeline::~VisibilityBufferPhase2Pipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void VisibilityBufferPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferPhase2Pipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		m_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(*m_device, "vkCmdDrawMeshTasksEXT");
 
@@ -28,26 +28,31 @@ namespace MyosotisFW::System::Render
 				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			pushConstant[i].hiZSamplerID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 			pushConstant[i].hiZMipLevelMax = static_cast<float>(hiZDepth.mipView.size()) - 1.0f;
+			pushConstant[i].phase = 2;
 		}
 	}
 
-	void VisibilityBufferPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t vbDispatchInfoCount)
+	void VisibilityBufferPhase2Pipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
-		{// Phase1Render
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
-			std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
-				static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-			pushConstant[frameIndex].vbDispatchInfoCount = vbDispatchInfoCount;
-			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
-				0, static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
-			uint32_t taskGroupSize = static_cast<uint32_t>(ceil(static_cast<float>(vbDispatchInfoCount) / 128.0f));
-			m_vkCmdDrawMeshTasksEXT(commandBuffer, taskGroupSize, 1, 1);
+		uint32_t dispatchInfoCount = m_renderDescriptors->GetObjectInfoDescriptorSet()->GetFalseNegativeVBDispatchInfoIndexCount();
+		if (dispatchInfoCount > 0)
+		{
+			{// Phase1Render
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+				std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
+					static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
+				pushConstant[frameIndex].pcVBDispatchInfoCount = dispatchInfoCount;
+				vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+					VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT,
+					0, static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
+				uint32_t taskGroupSize = static_cast<uint32_t>(ceil(static_cast<float>(dispatchInfoCount) / 128.0f));
+				m_vkCmdDrawMeshTasksEXT(commandBuffer, taskGroupSize, 1, 1);
+			}
 		}
 	}
 
-	void VisibilityBufferPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void VisibilityBufferPhase2Pipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {

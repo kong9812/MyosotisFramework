@@ -20,12 +20,14 @@
 #include "FpsCamera.h"
 
 #include "SkyboxRenderPass.h"
-#include "VisibilityBufferRenderPass.h"
+#include "VisibilityBufferPhase1RenderPass.h"
+#include "VisibilityBufferPhase2RenderPass.h"
 #include "LightingRenderPass.h"
 #include "LightmapBakingPass.h"
 
 #include "SkyboxPipeline.h"
-#include "VisibilityBufferPipeline.h"
+#include "VisibilityBufferPhase1Pipeline.h"
+#include "VisibilityBufferPhase2Pipeline.h"
 #include "LightingPipeline.h"
 #include "LightmapBakingPipeline.h"
 #include "RayTracingPipeline.h"
@@ -61,16 +63,20 @@ namespace MyosotisFW::System::Render
 		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 		{
 			vkDestroyFence(*m_device, m_fences.inFlightFrameFence[i], m_device->GetAllocationCallbacks());
-			vkDestroySemaphore(*m_device, m_semaphores.completeCompute[i], m_device->GetAllocationCallbacks());
-			vkDestroySemaphore(*m_device, m_semaphores.completePreRender[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeHiZPhase1[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeVBufferPhase1[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeHiZPhase2[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeVBufferPhase2[i], m_device->GetAllocationCallbacks());
 			vkDestroySemaphore(*m_device, m_semaphores.completeRender[i], m_device->GetAllocationCallbacks());
 			vkDestroySemaphore(*m_device, m_semaphores.imageAvailable[i], m_device->GetAllocationCallbacks());
 		}
 
-		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.preRender);
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase1);
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase1);
 		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.render);
 		m_device->GetGraphicsQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
-		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.compute);
+		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase1);
+		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase2);
 		m_device->GetComputeQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
 		m_device->GetTransferQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
 	}
@@ -231,10 +237,18 @@ namespace MyosotisFW::System::Render
 		// コマンドバッファ取り出す
 
 		// Compute (Hi-Z Depth)
-		createHiZDepth(currentFrameIndex, previousFrameIndex);
+		// 前FrameのVBufferPhase2が終わったら、このFreamのHi-ZDepthが作れる
+		createHiZDepth(m_commandBuffers.completeHiZPhase1[currentFrameIndex], currentFrameIndex, previousFrameIndex, m_semaphores.completeVBufferPhase2[previousFrameIndex], m_semaphores.completeHiZPhase1[currentFrameIndex]);
 
-		// Graphics PreRender (VisibilityBuffer)
-		preRender(currentFrameIndex);
+		// Graphics VBufferPhase1 (VisibilityBuffer)
+		createVBufferPhase1(currentFrameIndex);
+
+		// Compute (Hi-Z Depth)
+		// このFreamのVBufferPhase1が終わったら、Phase1のHi-ZDepthが作れる
+		createHiZDepth(m_commandBuffers.completeHiZPhase2[currentFrameIndex], currentFrameIndex, currentFrameIndex, m_semaphores.completeVBufferPhase1[currentFrameIndex], m_semaphores.completeHiZPhase2[currentFrameIndex]);
+
+		// Graphics VBufferPhase2 (VisibilityBuffer)
+		createVBufferPhase2(currentFrameIndex);
 
 		// Graphics Render (Skybox,Lighting,LightMap,RayTracing...)
 		render(currentFrameIndex, currentSwapchainImageIndex);
@@ -275,15 +289,19 @@ namespace MyosotisFW::System::Render
 
 		// command buffers
 		{// render
-			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.preRender);
+			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase1);
+			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase2);
 			m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.render);
-			m_commandBuffers.preRender = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.createVBufferPhase1 = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.createVBufferPhase2 = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 			m_commandBuffers.render = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// compute
-			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.compute);
+			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase1);
+			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase2);
 			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
-			m_commandBuffers.compute = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.completeHiZPhase1 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.completeHiZPhase2 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 
 		if (m_mainCamera)
@@ -297,19 +315,17 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
 	}
 
-	void RenderSubsystem::createHiZDepth(const uint32_t currentFrameIndex, const uint32_t previousFrameIndex)
+	void RenderSubsystem::createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal)
 	{
-		// 前FrameのRenderが終わったら、このFreamのHi-ZDepthが作れる
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-			m_semaphores.completePreRender[previousFrameIndex],		// wait
-			m_semaphores.completeCompute[currentFrameIndex]);		// signal
+			wait,		// wait
+			signal);	// signal
 
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-		VkCommandBuffer commandBuffer = m_commandBuffers.compute[currentFrameIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
-		m_hiZDepthComputePipeline->Dispatch(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
+		m_hiZDepthComputePipeline->Dispatch(commandBuffer, dstFrameIndex, srcFrameIndex, m_swapchain->GetScreenSize());
 		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 
@@ -319,24 +335,46 @@ namespace MyosotisFW::System::Render
 		computeQueue->Submit(submitInfo);
 	}
 
-	void RenderSubsystem::preRender(const uint32_t currentFrameIndex)
+	void RenderSubsystem::createVBufferPhase1(const uint32_t currentFrameIndex)
 	{
 		// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
-			m_semaphores.completeCompute[currentFrameIndex],		// wait
-			m_semaphores.completePreRender[currentFrameIndex]);		// signal
+			m_semaphores.completeHiZPhase1[currentFrameIndex],		// wait
+			m_semaphores.completeVBufferPhase1[currentFrameIndex]);	// signal
 
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
-		VkCommandBuffer commandBuffer = m_commandBuffers.preRender[currentFrameIndex];
+		VkCommandBuffer commandBuffer = m_commandBuffers.createVBufferPhase1[currentFrameIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render"));
-		m_visibilityBufferRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-		m_visibilityBufferPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
-		m_visibilityBufferRenderPass->EndRender(commandBuffer);
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase1"));
+		m_visibilityBufferPhase1RenderPass->BeginRender(commandBuffer, currentFrameIndex);
+		m_visibilityBufferPhase1Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
+		m_visibilityBufferPhase1RenderPass->EndRender(commandBuffer);
 		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
+		graphicsQueue->Submit(submitInfo);
+	}
 
+	void RenderSubsystem::createVBufferPhase2(const uint32_t currentFrameIndex)
+	{
+		// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
+			m_semaphores.completeHiZPhase2[currentFrameIndex],		// wait
+			m_semaphores.completeVBufferPhase2[currentFrameIndex]);	// signal
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VkCommandBuffer commandBuffer = m_commandBuffers.createVBufferPhase2[currentFrameIndex];
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase2"));
+		m_visibilityBufferPhase2RenderPass->BeginRender(commandBuffer, currentFrameIndex);
+		m_visibilityBufferPhase2Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+		m_visibilityBufferPhase2RenderPass->EndRender(commandBuffer);
+		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
@@ -430,12 +468,14 @@ namespace MyosotisFW::System::Render
 		// command pool
 		{// render
 			m_device->GetGraphicsQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
-			m_commandBuffers.preRender = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.createVBufferPhase1 = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.createVBufferPhase2 = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 			m_commandBuffers.render = m_device->GetGraphicsQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// compute
 			m_device->GetComputeQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
-			m_commandBuffers.compute = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.completeHiZPhase1 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
+			m_commandBuffers.completeHiZPhase2 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
 		{// transfer
 			m_device->GetTransferQueue()->CreateCommandPool(*m_device, m_device->GetAllocationCallbacks());
@@ -448,8 +488,10 @@ namespace MyosotisFW::System::Render
 		VkSemaphoreCreateInfo semaphoreCreateInfo = Utility::Vulkan::CreateInfo::semaphoreCreateInfo();
 		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 		{
-			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeCompute[i]));
-			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completePreRender[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeHiZPhase1[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeVBufferPhase1[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeHiZPhase2[i]));
+			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeVBufferPhase2[i]));
 			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.completeRender[i]));
 			VK_VALIDATION(vkCreateSemaphore(*m_device, &semaphoreCreateInfo, m_device->GetAllocationCallbacks(), &m_semaphores.imageAvailable[i]));
 		}
@@ -459,7 +501,7 @@ namespace MyosotisFW::System::Render
 		VkSubmitInfo signalOnlySubmit{};
 		signalOnlySubmit.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		signalOnlySubmit.signalSemaphoreCount = 1;
-		signalOnlySubmit.pSignalSemaphores = &m_semaphores.completePreRender[previousFrameIndex];
+		signalOnlySubmit.pSignalSemaphores = &m_semaphores.completeVBufferPhase2[previousFrameIndex];
 		// 何も実行せずにセマフォだけシグナル状態にする
 		VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, VK_NULL_HANDLE));
 	}
@@ -486,8 +528,10 @@ namespace MyosotisFW::System::Render
 		m_skyboxRenderPass = CreateSkyboxRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_skyboxRenderPass->Initialize();
 		// Visibility Buffer Render Pass
-		m_visibilityBufferRenderPass = CreateVisibilityBufferRenderPassPointer(m_device, m_resources, m_swapchain);
-		m_visibilityBufferRenderPass->Initialize();
+		m_visibilityBufferPhase1RenderPass = CreateVisibilityBufferPhase1RenderPassPointer(m_device, m_resources, m_swapchain);
+		m_visibilityBufferPhase1RenderPass->Initialize();
+		m_visibilityBufferPhase2RenderPass = CreateVisibilityBufferPhase2RenderPassPointer(m_device, m_resources, m_swapchain);
+		m_visibilityBufferPhase2RenderPass->Initialize();
 		// Lighting Render Pass
 		m_lightingRenderPass = CreateLightingRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_lightingRenderPass->Initialize();
@@ -502,8 +546,10 @@ namespace MyosotisFW::System::Render
 		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device, m_renderDescriptors);
 		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
 		// Visibility Buffer Pipeline
-		m_visibilityBufferPipeline = CreateVisibilityBufferPipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferPipeline->Initialize(m_resources, m_visibilityBufferRenderPass->GetRenderPass());
+		m_visibilityBufferPhase1Pipeline = CreateVisibilityBufferPhase1PipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPhase1Pipeline->Initialize(m_resources, m_visibilityBufferPhase1RenderPass->GetRenderPass());
+		m_visibilityBufferPhase2Pipeline = CreateVisibilityBufferPhase2PipelinePointer(m_device, m_renderDescriptors);
+		m_visibilityBufferPhase2Pipeline->Initialize(m_resources, m_visibilityBufferPhase2RenderPass->GetRenderPass());
 		// Lighting Pipeline
 		m_lightingPipeline = CreateLightingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());

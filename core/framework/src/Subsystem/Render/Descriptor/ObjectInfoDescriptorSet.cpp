@@ -31,6 +31,14 @@ namespace MyosotisFW::System::Render
 		m_vbDispatchInfo.insert(m_vbDispatchInfo.end(), vbDispatchInfo.begin(), vbDispatchInfo.end());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ObjectInfo)].update = true;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].update = true;
+	}
+
+	uint32_t ObjectInfoDescriptorSet::GetFalseNegativeVBDispatchInfoIndexCount()
+	{
+		uint32_t count = 0;
+		memcpy(&count, m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].buffer.allocationInfo.pMappedData, sizeof(uint32_t));
+		return count;
 	}
 
 	void ObjectInfoDescriptorSet::Update()
@@ -46,6 +54,12 @@ namespace MyosotisFW::System::Render
 			uint32_t size = static_cast<uint32_t>(sizeof(VBDispatchInfo)) * static_cast<uint32_t>(m_vbDispatchInfo.size());
 			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].rebuild = false;
+		}
+		if (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].rebuild)
+		{
+			uint32_t size = static_cast<uint32_t>(sizeof(uint32_t)) + static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_vbDispatchInfo.size());
+			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex), size);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].rebuild = false;
 		}
 
 		// SSBO/UBO更新

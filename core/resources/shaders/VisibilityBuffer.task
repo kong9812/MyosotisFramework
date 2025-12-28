@@ -8,6 +8,7 @@
 #include "Descriptors/CameraInfo.glsl"
 #include "Descriptors/MeshInfo.glsl"
 #include "Descriptors/MeshletInfo.glsl"
+#include "Descriptors/FalseNegativeVBDispatchInfoIndex.glsl"
 
 #include "Culling/FrustumCulling.glsl"
 #include "Culling/2PhaseOcclusionCulling.glsl"
@@ -17,7 +18,8 @@ layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
 layout(push_constant) uniform PushConstant {
     float hiZMipLevelMax;
     uint hiZSamplerID;
-    uint vbDispatchInfoCount;
+    uint pcVBDispatchInfoCount;
+    uint phase;
 };
 
 struct Payload {
@@ -34,12 +36,34 @@ void main()
     {
         sRenderCount = 0;
     }
+     // phase 1
+    if ((gl_GlobalInvocationID.x == 0) && (phase == 1))
+    {
+        FalseNegativeVBDispatchInfoIndex_ResetCount();
+    }
     barrier();
 
-    if (gl_GlobalInvocationID.x <= vbDispatchInfoCount)
+    uint VBDispatchInfoIndex = gl_GlobalInvocationID.x;
+    uint vbDispatchInfoCount = pcVBDispatchInfoCount;
+
+    // phase 1
+    if (phase == 1)
     {
+        FalseNegativeVBDispatchInfoIndex_Reset(VBDispatchInfoIndex);
+    }
+    else
+    {
+        // phase 2
+        vbDispatchInfoCount = FalseNegativeVBDispatchInfoIndex_GetCount();
+        VBDispatchInfoIndex = FalseNegativeVBDispatchInfoIndex_GetIndex(gl_GlobalInvocationID.x);
+    }
+
+    if (gl_GlobalInvocationID.x < vbDispatchInfoCount)
+    {
+        debugPrintfEXT("InVBDispatchInfoIndex: %d [%d]", VBDispatchInfoIndex, gl_GlobalInvocationID.x);
+
         // VBDispatchInfo
-        VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(gl_GlobalInvocationID.x);
+        VBDispatchInfo dispactchInfo = VBDispatchInfo_GetVBDispatchInfo(VBDispatchInfoIndex);
 
         if (VBDispatchInfo_IsForceDraw(dispactchInfo.bitFlags))
         {
@@ -71,7 +95,13 @@ void main()
                 if (occCullingVisible)
                 {
                     uint appendIndex = atomicAdd(sRenderCount, 1);
-                    payload.vbDispatchInfoIndex[appendIndex] = gl_GlobalInvocationID.x;
+                    payload.vbDispatchInfoIndex[appendIndex] = VBDispatchInfoIndex;
+                    debugPrintfEXT("VBDispatchInfoIndex: %d", VBDispatchInfoIndex);
+                }
+                else if (phase == 1)
+                {
+                    uint appendIndex = atomicAdd(falseNegativeVBDispatchInfoIndexCount, 1);
+                    FalseNegativeVBDispatchInfoIndex_SetData(appendIndex, VBDispatchInfoIndex);
                 }
             }
         }
@@ -79,7 +109,7 @@ void main()
         {
             // 強制描画
             uint appendIndex = atomicAdd(sRenderCount, 1);
-            payload.vbDispatchInfoIndex[appendIndex] = gl_GlobalInvocationID.x;
+            payload.vbDispatchInfoIndex[appendIndex] = VBDispatchInfoIndex;
         }
     }
     barrier();

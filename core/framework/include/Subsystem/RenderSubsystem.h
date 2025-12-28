@@ -40,8 +40,10 @@ namespace MyosotisFW
 
 		class SkyboxRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxRenderPass);
-		class VisibilityBufferRenderPass;
-		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferRenderPass);
+		class VisibilityBufferPhase1RenderPass;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPhase1RenderPass);
+		class VisibilityBufferPhase2RenderPass;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPhase2RenderPass);
 		class LightingRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(LightingRenderPass);
 		class LightmapBakingPass;
@@ -49,8 +51,10 @@ namespace MyosotisFW
 
 		class SkyboxPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
-		class VisibilityBufferPipeline;
-		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPipeline);
+		class VisibilityBufferPhase1Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPhase1Pipeline);
+		class VisibilityBufferPhase2Pipeline;
+		TYPEDEF_SHARED_PTR_FWD(VisibilityBufferPhase2Pipeline);
 		class LightingPipeline;
 		TYPEDEF_SHARED_PTR_FWD(LightingPipeline);
 		class LightmapBakingPipeline;
@@ -82,11 +86,13 @@ namespace MyosotisFW::System::Render
 			m_vkCmdBeginDebugUtilsLabelEXT(nullptr),
 			m_vkCmdEndDebugUtilsLabelEXT(nullptr),
 			m_skyboxRenderPass(nullptr),
-			m_visibilityBufferRenderPass(nullptr),
+			m_visibilityBufferPhase1RenderPass(nullptr),
+			m_visibilityBufferPhase2RenderPass(nullptr),
 			m_lightingRenderPass(nullptr),
 			m_lightmapBakingPass(nullptr),
 			m_skyboxPipeline(nullptr),
-			m_visibilityBufferPipeline(nullptr),
+			m_visibilityBufferPhase1Pipeline(nullptr),
+			m_visibilityBufferPhase2Pipeline(nullptr),
 			m_lightingPipeline(nullptr),
 			m_lightmapBakingPipeline(nullptr),
 			m_rayTracingPipeline(nullptr),
@@ -113,8 +119,9 @@ namespace MyosotisFW::System::Render
 		std::vector<MObject_ptr> GetObjects() { return m_objects; }
 
 	protected:
-		void createHiZDepth(const uint32_t currentFrameIndex, const uint32_t previousFrameIndex);
-		void preRender(const uint32_t currentFrameIndex);
+		void createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal);
+		void createVBufferPhase1(const uint32_t currentFrameIndex);
+		void createVBufferPhase2(const uint32_t currentFrameIndex);
 		void render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex);
 
 	protected:
@@ -137,8 +144,10 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		struct {
-			VkSemaphore completeCompute[AppInfo::g_maxInFlightFrameCount];
-			VkSemaphore completePreRender[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completeHiZPhase1[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completeVBufferPhase1[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completeHiZPhase2[AppInfo::g_maxInFlightFrameCount];
+			VkSemaphore completeVBufferPhase2[AppInfo::g_maxInFlightFrameCount];
 			VkSemaphore completeRender[AppInfo::g_maxInFlightFrameCount];
 			VkSemaphore imageAvailable[AppInfo::g_maxInFlightFrameCount];
 		}m_semaphores;
@@ -146,8 +155,10 @@ namespace MyosotisFW::System::Render
 			VkFence inFlightFrameFence[AppInfo::g_maxInFlightFrameCount];
 		}m_fences;
 		struct {
-			std::vector<VkCommandBuffer> compute;
-			std::vector<VkCommandBuffer> preRender;
+			std::vector<VkCommandBuffer> completeHiZPhase1;
+			std::vector<VkCommandBuffer> completeHiZPhase2;
+			std::vector<VkCommandBuffer> createVBufferPhase1;
+			std::vector<VkCommandBuffer> createVBufferPhase2;
 			std::vector<VkCommandBuffer> render;
 		}m_commandBuffers;
 
@@ -170,13 +181,15 @@ namespace MyosotisFW::System::Render
 
 	protected:
 		SkyboxRenderPass_ptr m_skyboxRenderPass;
-		VisibilityBufferRenderPass_ptr m_visibilityBufferRenderPass;
+		VisibilityBufferPhase1RenderPass_ptr m_visibilityBufferPhase1RenderPass;
+		VisibilityBufferPhase2RenderPass_ptr m_visibilityBufferPhase2RenderPass;
 		LightingRenderPass_ptr m_lightingRenderPass;
 		LightmapBakingPass_ptr m_lightmapBakingPass;
 
 	protected:
 		SkyboxPipeline_ptr m_skyboxPipeline;
-		VisibilityBufferPipeline_ptr m_visibilityBufferPipeline;
+		VisibilityBufferPhase1Pipeline_ptr m_visibilityBufferPhase1Pipeline;
+		VisibilityBufferPhase2Pipeline_ptr m_visibilityBufferPhase2Pipeline;
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;

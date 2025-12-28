@@ -19,10 +19,12 @@ namespace MyosotisFW::System::Render
 		{
 			ObjectInfo = 0,
 			VBDispatchInfo,
+			FalseNegativeVBDispatchInfoIndex,	// phase2用
 			Count
 		};
 
 		void AddObjectInfo(const ObjectInfo& objectInfo, std::vector<VBDispatchInfo> vbDispatchInfo);
+		uint32_t GetFalseNegativeVBDispatchInfoIndexCount();
 		void Update() override;
 
 	private:

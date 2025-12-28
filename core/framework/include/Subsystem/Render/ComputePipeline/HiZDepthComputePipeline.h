@@ -41,7 +41,7 @@ namespace MyosotisFW::System::Render
 		~HiZDepthComputePipeline();
 
 		void Initialize();
-		void Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const glm::vec2& screenSize);
+		void Dispatch(const VkCommandBuffer& commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const glm::vec2& screenSize);
 
 	private:
 		struct DepthCopyPushConstant {
@@ -57,6 +57,8 @@ namespace MyosotisFW::System::Render
 			uint32_t hiZSamplerID;
 			int32_t srcMip;
 		}depthDownsamplePushConstant[AppInfo::g_maxInFlightFrameCount];
+
+		uint32_t m_depthBufferSamplerID[AppInfo::g_maxInFlightFrameCount];
 
 		RenderDevice_ptr m_device;
 		RenderResources_ptr m_resources;
