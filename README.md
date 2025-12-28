@@ -13,7 +13,7 @@ A framework created with Vulkan
 |           ![win-badge]             |
 
 [win-badge]: https://ci.appveyor.com/api/projects/status/6tr51vx4415hflfo/branch/main?svg=true "AppVeyor build status"
-[win-link]:  https://ci.appveyor.com/project/kong9812/myosotisframework/branch/main "AppVeyor build status"
+[win-link]:  https://ci.appveyor.com/api/projects/status/6tr51vx4415hflfo/branch/main "AppVeyor build status"
 
 ---
 
