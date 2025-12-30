@@ -231,7 +231,7 @@ namespace MyosotisFW::System
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
-		systemManager->GetRenderSubsystem()->Resize(systemManager->GetSurface(), width, height);
+		systemManager->GetRenderSubsystem()->Resize(systemManager->GetSurface(), glm::ivec2(width, height));
 	}
 
 	void SystemManager::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

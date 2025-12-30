@@ -4,19 +4,19 @@
 
 #include "RenderDevice.h"
 #include "RenderResources.h"
+#include "iglm.h"
 
 namespace MyosotisFW::System::Render
 {
 	class RenderPassBase
 	{
 	public:
-		RenderPassBase(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const uint32_t width, const uint32_t height) :
+		RenderPassBase(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const glm::ivec2& screenSize) :
 			m_device(device),
 			m_resources(resources),
-			m_width(width),
-			m_height(height),
+			m_screenSize(screenSize),
 			m_renderPass(VK_NULL_HANDLE),
-			m_framebuffers({}) {
+			m_framebuffers() {
 		}
 		virtual ~RenderPassBase() = default;
 
@@ -26,10 +26,9 @@ namespace MyosotisFW::System::Render
 
 		virtual void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) = 0;
 		virtual void EndRender(const VkCommandBuffer& commandBuffer) = 0;
-		virtual void Resize(const uint32_t width, const uint32_t height)
+		virtual void Resize(const glm::ivec2& screenSize)
 		{
-			m_width = width;
-			m_height = height;
+			m_screenSize = screenSize;
 			for (VkFramebuffer& m_framebuffer : m_framebuffers)
 			{
 				vkDestroyFramebuffer(*m_device, m_framebuffer, m_device->GetAllocationCallbacks());
@@ -43,8 +42,7 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		RenderResources_ptr m_resources;
 
-		uint32_t m_width;
-		uint32_t m_height;
+		glm::ivec2 m_screenSize;
 
 		VkRenderPass m_renderPass;
 		std::vector<VkFramebuffer> m_framebuffers;

@@ -100,7 +100,7 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RayTracingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
+	void RayTracingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const glm::ivec2& screenSize)
 	{
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
@@ -119,20 +119,57 @@ namespace MyosotisFW::System::Render
 			&m_missSBTBuffer.region,
 			&m_hitSBTBuffer.region,
 			&callableRegion,
-			AppInfo::g_windowWidth,
-			AppInfo::g_windowHeight,
+			screenSize.x,
+			screenSize.y,
 			1);
 	}
 
 	void RayTracingPipeline::Resize(const RenderResources_ptr& resources)
 	{
-		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-		{
-			const Image& rayTracingRenderTarget = resources->GetRayTracingRenderTarget(i);
+		{// RayTracingRenderTarget -> VK_IMAGE_LAYOUT_GENERAL
+			std::array<VkImageMemoryBarrier, AppInfo::g_maxInFlightFrameCount> barrier{};
+			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+			{
+				const Image& rayTracingRenderTarget = resources->GetRayTracingRenderTarget(i);
 
-			// [storage image] ray tracing render target
-			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, rayTracingRenderTarget.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-			m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(pushConstant[i].storeImageID, TextureDescriptorSet::DescriptorBindingIndex::StorageImage, descriptorImageInfo);
+				// [storage image] ray tracing render target
+				VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, rayTracingRenderTarget.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+				m_renderDescriptors->GetTextureDescriptorSet()->UpdateImage(pushConstant[i].storeImageID, TextureDescriptorSet::DescriptorBindingIndex::StorageImage, descriptorImageInfo);
+
+				barrier[i].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier[i].srcAccessMask = VkAccessFlagBits::VK_ACCESS_NONE;
+				barrier[i].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_WRITE_BIT;
+				barrier[i].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+				barrier[i].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+				barrier[i].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+				barrier[i].image = rayTracingRenderTarget.image;
+				barrier[i].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+			}
+
+			VkFence fence = VK_NULL_HANDLE;
+			VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+			VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
+
+			VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
+
+			VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+			VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+			vkCmdPipelineBarrier(commandBuffer,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,
+				0, 0, nullptr, 0, nullptr, static_cast<uint32_t>(barrier.size()), barrier.data());
+			VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+			VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+
+			m_device->GetGraphicsQueue()->Submit(submitInfo, fence);
+			VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
+
+			m_device->GetGraphicsQueue()->FreeSingleUseCommandBuffer(*m_device, commandBuffer);
+			vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 		}
 	}
 

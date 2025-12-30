@@ -18,7 +18,7 @@ namespace MyosotisFW::System::Render
 		~RayTracingPipeline();
 
 		void Initialize(const RenderResources_ptr& resources);
-		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex);
+		void BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const glm::ivec2& screenSize);
 		void Resize(const RenderResources_ptr& resources) override;
 
 	private:

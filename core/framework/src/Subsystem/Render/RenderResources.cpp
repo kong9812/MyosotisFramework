@@ -16,28 +16,15 @@ namespace MyosotisFW::System::Render
 {
 	RenderResources::~RenderResources()
 	{
-		{// attachment
-			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-			{
-				vkDestroySampler(*m_device, m_hiZDepthMap[i].sampler, m_device->GetAllocationCallbacks());
-				vkDestroySampler(*m_device, m_depthBuffer[i].sampler, m_device->GetAllocationCallbacks());
+		// attachment
+		destroyAllAttachment();
 
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget[i].image, m_mainRenderTarget[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer[i].image, m_visibilityBuffer[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap[i].image, m_hiZDepthMap[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer[i].image, m_depthBuffer[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap[i].image, m_lightmap[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget[i].image, m_rayTracingRenderTarget[i].allocation);
-
-				vkDestroyImageView(*m_device, m_mainRenderTarget[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_visibilityBuffer[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_hiZDepthMap[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_lightmap[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_rayTracingRenderTarget[i].view, m_device->GetAllocationCallbacks());
-				for (VkImageView& view : m_hiZDepthMap[i].mipView)
-					vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_depthBuffer[i].view, m_device->GetAllocationCallbacks());
-			}
+		{// Dummy images
+			vkDestroySampler(*m_device, m_dummyImages.sampled2D.sampler, m_device->GetAllocationCallbacks());
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_dummyImages.sampled2D.image, m_dummyImages.sampled2D.allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_dummyImages.storage2D.image, m_dummyImages.storage2D.allocation);
+			vkDestroyImageView(*m_device, m_dummyImages.sampled2D.view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_dummyImages.storage2D.view, m_device->GetAllocationCallbacks());
 		}
 
 		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
@@ -81,10 +68,13 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderResources::Initialize(const uint32_t width, const uint32_t height)
+	void RenderResources::Initialize(const glm::ivec2& screenSize)
 	{
 		// createAttachment
-		createAttachment(width, height);
+		createAttachment(screenSize);
+
+		// create dummy images
+		createDummyImages();
 
 		// Create Default Material
 		createDefaultMaterial();
@@ -321,34 +311,13 @@ namespace MyosotisFW::System::Render
 		return { m_cubeImages[fileNames[0]].image,  m_cubeImages[fileNames[0]].view };
 	}
 
-	void RenderResources::Resize(const uint32_t width, const uint32_t height)
+	void RenderResources::Resize(const glm::ivec2& screenSize)
 	{
-		{// attachment
-			for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-			{
-				vkDestroySampler(*m_device, m_hiZDepthMap[i].sampler, m_device->GetAllocationCallbacks());
-				vkDestroySampler(*m_device, m_depthBuffer[i].sampler, m_device->GetAllocationCallbacks());
-
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget[i].image, m_mainRenderTarget[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer[i].image, m_visibilityBuffer[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap[i].image, m_hiZDepthMap[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer[i].image, m_depthBuffer[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap[i].image, m_lightmap[i].allocation);
-				vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget[i].image, m_rayTracingRenderTarget[i].allocation);
-
-				vkDestroyImageView(*m_device, m_mainRenderTarget[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_visibilityBuffer[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_hiZDepthMap[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_lightmap[i].view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_rayTracingRenderTarget[i].view, m_device->GetAllocationCallbacks());
-				for (VkImageView& view : m_hiZDepthMap[i].mipView)
-					vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
-				vkDestroyImageView(*m_device, m_depthBuffer[i].view, m_device->GetAllocationCallbacks());
-			}
-		}
+		// attachment
+		destroyAllAttachment();
 
 		// createAttachment
-		createAttachment(width, height);
+		createAttachment(screenSize);
 	}
 
 	VkSampler& RenderResources::CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo)
@@ -395,6 +364,31 @@ namespace MyosotisFW::System::Render
 		return {};
 	}
 
+	void RenderResources::destroyAllAttachment()
+	{
+		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
+		{
+			vkDestroySampler(*m_device, m_hiZDepthMap[i].sampler, m_device->GetAllocationCallbacks());
+			vkDestroySampler(*m_device, m_depthBuffer[i].sampler, m_device->GetAllocationCallbacks());
+
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_mainRenderTarget[i].image, m_mainRenderTarget[i].allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_visibilityBuffer[i].image, m_visibilityBuffer[i].allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_hiZDepthMap[i].image, m_hiZDepthMap[i].allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_depthBuffer[i].image, m_depthBuffer[i].allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_lightmap[i].image, m_lightmap[i].allocation);
+			vmaDestroyImage(m_device->GetVmaAllocator(), m_rayTracingRenderTarget[i].image, m_rayTracingRenderTarget[i].allocation);
+
+			vkDestroyImageView(*m_device, m_mainRenderTarget[i].view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_visibilityBuffer[i].view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_hiZDepthMap[i].view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_lightmap[i].view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_rayTracingRenderTarget[i].view, m_device->GetAllocationCallbacks());
+			for (VkImageView& view : m_hiZDepthMap[i].mipView)
+				vkDestroyImageView(*m_device, view, m_device->GetAllocationCallbacks());
+			vkDestroyImageView(*m_device, m_depthBuffer[i].view, m_device->GetAllocationCallbacks());
+		}
+	}
+
 	void RenderResources::createVertexIndexBuffer(Meshes& meshes)
 	{
 		for (Mesh_ptr& mesh : meshes)
@@ -425,12 +419,12 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderResources::createAttachment(const uint32_t width, const uint32_t height)
+	void RenderResources::createAttachment(const glm::ivec2& screenSize)
 	{
 		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 		{
 			{// main render target
-				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, width, height);
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_surfaceFormat.format, screenSize.x, screenSize.y);
 				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_mainRenderTarget[i].image, &m_mainRenderTarget[i].allocation, &m_mainRenderTarget[i].allocationInfo));
@@ -438,7 +432,7 @@ namespace MyosotisFW::System::Render
 				VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_mainRenderTarget[i].view));
 			}
 			{// Visibility Buffer
-				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_visibilityBufferFormat, width, height);
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_visibilityBufferFormat, screenSize.x, screenSize.y);
 				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_visibilityBuffer[i].image, &m_visibilityBuffer[i].allocation, &m_visibilityBuffer[i].allocationInfo));
@@ -447,8 +441,8 @@ namespace MyosotisFW::System::Render
 			}
 
 			{// Hi-Z DepthMap
-				uint32_t hiZMipLevels = floor(log2(std::max(width, height)));
-				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, width, height, hiZMipLevels);
+				uint32_t hiZMipLevels = floor(log2(std::max(screenSize.x, screenSize.y)));
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForHiZDepthStencil(AppInfo::g_hiZDepthFormat, screenSize.x, screenSize.y, hiZMipLevels);
 				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT |
 					VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
@@ -470,7 +464,7 @@ namespace MyosotisFW::System::Render
 			}
 
 			{// DepthBuffer
-				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthBufferFormat, width, height);
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthBufferFormat, screenSize.x, screenSize.y);
 				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_depthBuffer[i].image, &m_depthBuffer[i].allocation, &m_depthBuffer[i].allocationInfo));
@@ -490,7 +484,7 @@ namespace MyosotisFW::System::Render
 			}
 
 			{// ray tracing render target
-				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_rayTracingRenderTargetFormat, width, height);
+				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(AppInfo::g_rayTracingRenderTargetFormat, screenSize.x, screenSize.y);
 				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_rayTracingRenderTarget[i].image, &m_rayTracingRenderTarget[i].allocation, &m_rayTracingRenderTarget[i].allocationInfo));
@@ -511,5 +505,119 @@ namespace MyosotisFW::System::Render
 		material.materialHandle.push_back(matPtr);
 		m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(material.materialHandle);
 		m_materials.emplace("default", std::move(material));
+	}
+
+	void RenderResources::createDummyImages()
+	{
+		{// Sampled2D
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(VkFormat::VK_FORMAT_R8G8B8A8_UNORM, 1, 1);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_dummyImages.sampled2D.image, &m_dummyImages.sampled2D.allocation, &m_dummyImages.sampled2D.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_dummyImages.sampled2D.image, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_dummyImages.sampled2D.view));
+			VkSamplerCreateInfo samplerCreateInfo = Utility::Vulkan::CreateInfo::samplerCreateInfo();
+			VK_VALIDATION(vkCreateSampler(*m_device, &samplerCreateInfo, m_device->GetAllocationCallbacks(), &m_dummyImages.sampled2D.sampler));
+
+			VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(m_dummyImages.sampled2D.sampler, m_dummyImages.sampled2D.view, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			m_renderDescriptors->GetTextureDescriptorSet()->SetDummySampled2D(imageInfo);
+		}
+		{// Storage2D
+			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForAttachment(VkFormat::VK_FORMAT_R8G8B8A8_UNORM, 1, 1);
+			imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			VmaAllocationCreateInfo allocationCreateInfo{};
+			VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_dummyImages.storage2D.image, &m_dummyImages.storage2D.allocation, &m_dummyImages.storage2D.allocationInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForAttachment(m_dummyImages.storage2D.image, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
+			VK_VALIDATION(vkCreateImageView(*m_device, &imageViewCreateInfo, m_device->GetAllocationCallbacks(), &m_dummyImages.storage2D.view));
+
+			VkDescriptorImageInfo imageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, m_dummyImages.storage2D.view, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
+			m_renderDescriptors->GetTextureDescriptorSet()->SetDummyStorage2D(imageInfo);
+		}
+
+		// DataSet
+		VkImageMemoryBarrier barriers[2]{};
+		{// Sampled2D
+			barriers[0].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_NONE;
+			barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+			barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+			barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[0].image = m_dummyImages.sampled2D.image;
+			barriers[0].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+		{// Storage2D
+			barriers[1].sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barriers[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_NONE;
+			barriers[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+			barriers[1].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+			barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barriers[1].image = m_dummyImages.storage2D.image;
+			barriers[1].subresourceRange = Utility::Vulkan::CreateInfo::defaultImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+		VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
+		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+		vkCmdPipelineBarrier(commandBuffer,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0, 0, nullptr, 0, nullptr, 2, barriers);
+
+		VkClearColorValue clearColor{};
+		clearColor.float32[0] = 0.0f;
+		clearColor.float32[1] = 0.0f;
+		clearColor.float32[2] = 0.0f;
+		clearColor.float32[3] = 1.0f;
+		vkCmdClearColorImage(
+			commandBuffer,
+			m_dummyImages.sampled2D.image,
+			VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			&clearColor,
+			1,
+			&barriers[0].subresourceRange
+		);
+		vkCmdClearColorImage(
+			commandBuffer,
+			m_dummyImages.storage2D.image,
+			VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			&clearColor,
+			1,
+			&barriers[1].subresourceRange
+		);
+
+		// Sampled2D
+		barriers[0].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barriers[0].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barriers[0].srcAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+		barriers[0].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT;
+		vkCmdPipelineBarrier(commandBuffer,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+			0, 0, nullptr, 0, nullptr, 1, &barriers[0]);
+
+		// Storage2D
+		barriers[1].oldLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barriers[1].newLayout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+		barriers[1].srcAccessMask = VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT;
+		barriers[1].dstAccessMask = VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT | VkAccessFlagBits::VK_ACCESS_SHADER_WRITE_BIT;
+		vkCmdPipelineBarrier(commandBuffer,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+			0, 0, nullptr, 0, nullptr, 1, &barriers[1]);
+
+		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo();
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		VkFence fence = VK_NULL_HANDLE;
+		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
+		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
+		m_device->GetGraphicsQueue()->Submit(submitInfo, fence);
+		VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
 	}
 }

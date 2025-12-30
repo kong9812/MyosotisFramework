@@ -10,7 +10,7 @@
 namespace MyosotisFW::System::Render
 {
 	LightingRenderPass::LightingRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
-		RenderPassBase(device, resources, swapchain->GetWidth(), swapchain->GetHeight()) {
+		RenderPassBase(device, resources, swapchain->GetScreenSize()) {
 	}
 
 	LightingRenderPass::~LightingRenderPass()
@@ -75,15 +75,15 @@ namespace MyosotisFW::System::Render
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
 		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
 
-		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_width, m_height, clearValues);
+		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_screenSize.x, m_screenSize.y, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[frameIndex];
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
 
-		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_width), static_cast<float>(m_height));
+		VkViewport viewport = Utility::Vulkan::CreateInfo::viewport(static_cast<float>(m_screenSize.x), static_cast<float>(m_screenSize.y));
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_width, m_height);
+		VkRect2D scissor = Utility::Vulkan::CreateInfo::rect2D(m_screenSize.x, m_screenSize.y);
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
@@ -107,8 +107,8 @@ namespace MyosotisFW::System::Render
 			frameBufferCreateInfo.renderPass = m_renderPass;
 			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(Attachments::COUNT);
 			frameBufferCreateInfo.pAttachments = attachments.data();
-			frameBufferCreateInfo.width = m_width;
-			frameBufferCreateInfo.height = m_height;
+			frameBufferCreateInfo.width = m_screenSize.x;
+			frameBufferCreateInfo.height = m_screenSize.y;
 			frameBufferCreateInfo.layers = 1;
 			VK_VALIDATION(vkCreateFramebuffer(*m_device, &frameBufferCreateInfo, m_device->GetAllocationCallbacks(), &m_framebuffers[i]));
 		}

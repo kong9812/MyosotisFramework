@@ -99,7 +99,8 @@ namespace MyosotisFW::System::Render
 			m_hiZDepthComputePipeline(nullptr),
 			m_fences(),
 			m_vbDispatchInfoCount(0),
-			m_semaphores() {
+			m_semaphores(),
+			m_stopRender(false) {
 		}
 		~RenderSubsystem();
 
@@ -114,7 +115,7 @@ namespace MyosotisFW::System::Render
 		virtual void Update(const UpdateData& updateData);
 		void Render();
 		void ResetGameStage();
-		void Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height);
+		void Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize);
 
 		std::vector<MObject_ptr> GetObjects() { return m_objects; }
 
@@ -137,7 +138,7 @@ namespace MyosotisFW::System::Render
 		virtual void initializeRenderPipeline();
 		virtual void initializeComputePipeline();
 		void initializeAccelerationStructureManager();
-		virtual void resizeRenderPass(const uint32_t width, const uint32_t height);
+		virtual void resizeRenderPass();
 		virtual void resizeRenderPipeline();
 
 		void CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex);
@@ -163,7 +164,9 @@ namespace MyosotisFW::System::Render
 			std::vector<VkCommandBuffer> render;
 		}m_commandBuffers;
 
+		bool m_stopRender;
 		uint32_t m_frameCounter;
+		uint32_t m_vbDispatchInfoCount;
 
 		RenderDevice_ptr m_device;
 		RenderSwapchain_ptr m_swapchain;
@@ -195,9 +198,6 @@ namespace MyosotisFW::System::Render
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;
-
-	protected:
-		uint32_t m_vbDispatchInfoCount;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

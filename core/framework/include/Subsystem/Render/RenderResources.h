@@ -38,7 +38,7 @@ namespace MyosotisFW::System::Render
 		}
 		~RenderResources();
 
-		virtual void Initialize(const uint32_t width, const uint32_t height);
+		virtual void Initialize(const glm::ivec2& screenSize);
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
 		MeshesHandle GetMesh(const std::string& fileName);
@@ -46,7 +46,7 @@ namespace MyosotisFW::System::Render
 		MeshHandle GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);
-		virtual void Resize(const uint32_t width, const uint32_t height);
+		virtual void Resize(const glm::ivec2& screenSize);
 		VkSampler& CreateSampler(const VkSamplerCreateInfo& samplerCreateInfo);
 
 		bool SaveImage(const Image& image, const std::string& fileName, const glm::ivec2& size);
@@ -96,6 +96,9 @@ namespace MyosotisFW::System::Render
 		Image& GetDepthBuffer(const uint32_t index) { return m_depthBuffer[index]; }
 		Image& GetRayTracingRenderTarget(const uint32_t index) { return m_rayTracingRenderTarget[index]; }
 
+		Image& GetDummySampled2D() { return m_dummyImages.sampled2D; }
+		Image& GetDummyStorage2D() { return m_dummyImages.storage2D; }
+
 	protected:
 		// attachment
 		Image m_mainRenderTarget[AppInfo::g_maxInFlightFrameCount];
@@ -106,11 +109,18 @@ namespace MyosotisFW::System::Render
 		Image m_depthBuffer[AppInfo::g_maxInFlightFrameCount];
 
 	protected:
+		struct DummyImages
+		{
+			Image sampled2D;
+			Image storage2D;
+		}m_dummyImages;
+		void destroyAllAttachment();
 		void createVertexIndexBuffer(Meshes& meshes);
-		void createAttachment(const uint32_t width, const uint32_t height);
+		void createAttachment(const glm::ivec2& screenSize);
 		void createDefaultMaterial();
-		std::function<void(MeshesHandle&)> m_onLoadedMesh;
+		void createDummyImages();
 
+		std::function<void(MeshesHandle&)> m_onLoadedMesh;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderResources);
 }

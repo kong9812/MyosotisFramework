@@ -35,14 +35,32 @@ namespace MyosotisFW::System::Render
 		switch (type)
 		{
 		case DescriptorBindingIndex::CombinedImageSampler:
-			index = static_cast<uint32_t>(m_combinedImageSamplerImageInfo.size());
-			m_combinedImageSamplerImageInfo.push_back(imageInfo);
+			if (!m_freeCombinedImageSamplerImageList.empty())
+			{
+				index = m_freeCombinedImageSamplerImageList.front();
+				m_freeCombinedImageSamplerImageList.pop();
+				m_combinedImageSamplerImageInfo[index] = imageInfo;
+			}
+			else
+			{
+				index = static_cast<uint32_t>(m_combinedImageSamplerImageInfo.size());
+				m_combinedImageSamplerImageInfo.push_back(imageInfo);
+			}
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = true;
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].rebuild = true;
 			break;
 		case DescriptorBindingIndex::StorageImage:
-			index = static_cast<uint32_t>(m_storageImageInfo.size());
-			m_storageImageInfo.push_back(imageInfo);
+			if (!m_freeStorageImageList.empty())
+			{
+				index = m_freeStorageImageList.front();
+				m_freeStorageImageList.pop();
+				m_storageImageInfo[index] = imageInfo;
+			}
+			else
+			{
+				index = static_cast<uint32_t>(m_storageImageInfo.size());
+				m_storageImageInfo.push_back(imageInfo);
+			}
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].rebuild = true;
 			break;
@@ -68,6 +86,25 @@ namespace MyosotisFW::System::Render
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
 		}
 		break;
+		default:
+			break;
+		}
+	}
+
+	void TextureDescriptorSet::DeleteImage(const uint32_t imageID, const DescriptorBindingIndex type)
+	{
+		switch (type)
+		{
+		case DescriptorBindingIndex::CombinedImageSampler:
+			m_combinedImageSamplerImageInfo[imageID] = m_dummySampled2D;
+			m_freeCombinedImageSamplerImageList.push(imageID);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CombinedImageSampler)].update = true;
+			break;
+		case DescriptorBindingIndex::StorageImage:
+			m_storageImageInfo[imageID] = m_dummyStorage2D;
+			m_freeStorageImageList.push(imageID);
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::StorageImage)].update = true;
+			break;
 		default:
 			break;
 		}

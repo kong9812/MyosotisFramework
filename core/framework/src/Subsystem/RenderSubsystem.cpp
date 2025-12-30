@@ -95,7 +95,7 @@ namespace MyosotisFW::System::Render
 			if (!m_mainCamera)
 			{
 				m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
-				m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+				m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
 				m_mainCamera->SetMainCamera(true);
 			}
 			m_renderDescriptors->GetSceneInfoDescriptorSet()->AddCamera(m_mainCamera);
@@ -127,14 +127,14 @@ namespace MyosotisFW::System::Render
 		// Swapchain
 		initializeRenderSwapchain(surface);
 
+		// Command pool
+		initializeCommandPool();
+
 		// Descriptors
 		initializeRenderDescriptors();
 
 		// Resources
 		initializeRenderResources();
-
-		// Command pool
-		initializeCommandPool();
 
 		// Semaphore
 		initializeSemaphore();
@@ -219,6 +219,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::Render()
 	{
+		if (m_stopRender) return;
 		if (m_mainCamera == nullptr) return;
 		if (m_objects.empty()) return;
 
@@ -265,12 +266,15 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::ResetGameStage()
 	{
 		m_mainCamera->ResetCamera();
-		m_mainCamera->UpdateScreenSize(glm::vec2(static_cast<float>(m_swapchain->GetWidth()), static_cast<float>(m_swapchain->GetHeight())));
+		m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
 		m_objects.clear();
 	}
 
-	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const uint32_t width, const uint32_t height)
+	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize)
 	{
+		m_stopRender = (screenSize == glm::ivec2(0));
+		if (m_stopRender) return;
+
 		// デバイスの処理を待つ
 		VK_VALIDATION(vkResetFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence));
 		m_device->GetGraphicsQueue()->WaitIdle();
@@ -284,7 +288,7 @@ namespace MyosotisFW::System::Render
 		m_swapchain->Resize(surface);
 
 		// resources
-		m_resources->Resize(width, height);
+		m_resources->Resize(m_swapchain->GetScreenSize());
 
 		// command buffers
 		{// render
@@ -305,14 +309,14 @@ namespace MyosotisFW::System::Render
 
 		if (m_mainCamera)
 		{
-			m_mainCamera->UpdateScreenSize(glm::vec2(width, height));
+			m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
 		}
 
 		// Render Descriptors
-		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(glm::ivec2(width, height));
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(m_swapchain->GetScreenSize());
 
 		// Render Pass
-		resizeRenderPass(width, height);
+		resizeRenderPass();
 
 		// Render Pipeline
 		resizeRenderPipeline();
@@ -445,13 +449,13 @@ namespace MyosotisFW::System::Render
 		}
 		{// RayTracing
 			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
-			m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+			m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 
 		{// Copy Image To Swapchain Image
 			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
-			//CopyRayTracingRenderTargetToSwapchainImage(currentBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			//CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
 		}
 
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
@@ -475,13 +479,13 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::initializeRenderDescriptors()
 	{
 		m_renderDescriptors = CreateRenderDescriptorsPointer(m_device);
-		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(glm::ivec2(m_swapchain->GetWidth(), m_swapchain->GetHeight()));
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->UpdateScreenSize(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::initializeRenderResources()
 	{
 		m_resources = CreateRenderResourcesPointer(m_device, m_renderDescriptors);
-		m_resources->Initialize(m_swapchain->GetWidth(), m_swapchain->GetHeight());
+		m_resources->Initialize(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::initializeCommandPool()
@@ -595,13 +599,13 @@ namespace MyosotisFW::System::Render
 		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) {m_accelerationStructureManager->OnAddObject(m); });
 	}
 
-	void RenderSubsystem::resizeRenderPass(const uint32_t width, const uint32_t height)
+	void RenderSubsystem::resizeRenderPass()
 	{
-		m_skyboxRenderPass->Resize(width, height);
-		m_visibilityBufferPhase1RenderPass->Resize(width, height);
-		m_visibilityBufferPhase2RenderPass->Resize(width, height);
-		m_lightingRenderPass->Resize(width, height);
-		m_lightmapBakingPass->Resize(width, height);
+		m_skyboxRenderPass->Resize(m_swapchain->GetScreenSize());
+		m_visibilityBufferPhase1RenderPass->Resize(m_swapchain->GetScreenSize());
+		m_visibilityBufferPhase2RenderPass->Resize(m_swapchain->GetScreenSize());
+		m_lightingRenderPass->Resize(m_swapchain->GetScreenSize());
+		m_lightmapBakingPass->Resize(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::resizeRenderPipeline()
@@ -644,11 +648,11 @@ namespace MyosotisFW::System::Render
 		copyRegion.srcSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 		copyRegion.srcSubresource.layerCount = 1;
 		copyRegion.srcOffsets[0] = { 0,0,0 };
-		copyRegion.srcOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		copyRegion.srcOffsets[1] = { m_swapchain->GetScreenSize().x, m_swapchain->GetScreenSize().y, 1 };
 		copyRegion.dstSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 		copyRegion.dstSubresource.layerCount = 1;
 		copyRegion.dstOffsets[0] = { 0,0,0 };
-		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		copyRegion.dstOffsets[1] = { m_swapchain->GetScreenSize().x, m_swapchain->GetScreenSize().y, 1 };
 		vkCmdBlitImage(commandBuffer,
 			mainRenderTarget.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			swapchainImage.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -721,11 +725,11 @@ namespace MyosotisFW::System::Render
 		copyRegion.srcSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 		copyRegion.srcSubresource.layerCount = 1;
 		copyRegion.srcOffsets[0] = { 0,0,0 };
-		copyRegion.srcOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		copyRegion.srcOffsets[1] = { m_swapchain->GetScreenSize().x, m_swapchain->GetScreenSize().y, 1 };
 		copyRegion.dstSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 		copyRegion.dstSubresource.layerCount = 1;
 		copyRegion.dstOffsets[0] = { 0,0,0 };
-		copyRegion.dstOffsets[1] = { static_cast<int32_t>(m_swapchain->GetWidth()), static_cast<int32_t>(m_swapchain->GetHeight()), 1 };
+		copyRegion.dstOffsets[1] = { m_swapchain->GetScreenSize().x, m_swapchain->GetScreenSize().y, 1 };
 		vkCmdBlitImage(commandBuffer,
 			rayTracingRenderTarget.image, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
 			swapchainImage.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,

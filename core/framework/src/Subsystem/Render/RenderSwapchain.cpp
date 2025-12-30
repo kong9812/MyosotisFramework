@@ -10,9 +10,9 @@ namespace MyosotisFW::System::Render
 	RenderSwapchain::RenderSwapchain(const RenderDevice_ptr& renderDevice, const VkSurfaceKHR& vkSurface) :
 		m_device(renderDevice),
 		m_swapchain(VK_NULL_HANDLE),
-		m_width(0),
-		m_height(0),
-		m_swapchainImage({}),
+		m_screenSize(glm::ivec2(0)),
+		m_screenSizeF(glm::vec2(0.0f)),
+		m_swapchainImage(),
 		m_minImageCount(0)
 	{
 		m_device = renderDevice;
@@ -85,8 +85,8 @@ namespace MyosotisFW::System::Render
 			{
 				return ((sf.format == AppInfo::g_surfaceFormat.format) && (sf.colorSpace == AppInfo::g_surfaceFormat.colorSpace));
 			}) != surfaceFormats.end(), "Could not find a matching surface format!");
-		m_width = surfCaps.currentExtent.width;
-		m_height = surfCaps.currentExtent.height;
+		m_screenSize = glm::ivec2(surfCaps.currentExtent.width, surfCaps.currentExtent.height);
+		m_screenSizeF = glm::vec2(static_cast<float>(m_screenSize.x), static_cast<float>(m_screenSize.y));
 
 		m_minImageCount = surfCaps.maxImageCount < AppInfo::g_minImageCount ? surfCaps.maxImageCount : AppInfo::g_minImageCount;
 

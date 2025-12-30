@@ -5,6 +5,7 @@
 #include "VK_Validation.h"
 #include "Structs.h"
 #include "Image.h"
+#include "iglm.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -18,11 +19,8 @@ namespace MyosotisFW::System::Render
 		RenderSwapchain(const RenderDevice_ptr& renderDevice, const VkSurfaceKHR& vkSurface);
 		~RenderSwapchain();
 
-		uint32_t GetWidth() const { return m_width; }
-		uint32_t GetHeight() const { return m_height; }
-		float GetWidthF() const { return static_cast<float>(m_width); }
-		float GetHeightF() const { return static_cast<float>(m_height); }
-		glm::vec2 GetScreenSize() { return glm::vec2(static_cast<float>(m_width), static_cast<float>(m_height)); }
+		const glm::ivec2 GetScreenSize() const { return m_screenSize; }
+		const glm::vec2 GetScreenSizeF() const { return m_screenSizeF; }
 		uint32_t GetImageCount() { return static_cast<uint32_t>(m_swapchainImage.size()); }
 		uint32_t GetMinImageCount() { return m_minImageCount; }
 		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }
@@ -38,8 +36,8 @@ namespace MyosotisFW::System::Render
 		RenderDevice_ptr m_device;
 		VkSwapchainKHR m_swapchain;
 
-		uint32_t m_width;
-		uint32_t m_height;
+		glm::ivec2 m_screenSize;
+		glm::vec2 m_screenSizeF;
 
 		std::vector<Image> m_swapchainImage;
 		uint32_t m_minImageCount;
