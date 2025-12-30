@@ -67,9 +67,9 @@ namespace MyosotisFW::System::Editor
 
 		// Imgui
 #ifdef _WIN32
-		ASSERT(ImGui_ImplWin32_Init(hwnd), "Failed to init imgui win32.");
+		/*ASSERT(ImGui_ImplWin32_Init(hwnd), "Failed to init imgui win32.");
 		ImGui::GetIO().WantCaptureKeyboard = true;
-		ImGui::GetIO().WantCaptureMouse = true;
+		ImGui::GetIO().WantCaptureMouse = true;*/
 #endif
 
 		// create game director
@@ -186,13 +186,13 @@ namespace MyosotisFW::System::Editor
 			QMouseEvent* mouseEvent = dynamic_cast<QMouseEvent*>(event);
 			if ((mouseEvent->button() == Qt::MouseButton::LeftButton) && (m_resizing))
 			{
-				m_renderSubsystem->Resize(m_surface, width(), height());
+				m_renderSubsystem->Resize(m_surface, glm::ivec2(width(), height()));
 				requestUpdate();
 				m_resizing = false;
 			}
 			else if (event->type() == QEvent::Type::WindowStateChange)
 			{
-				m_renderSubsystem->Resize(m_surface, width(), height());
+				m_renderSubsystem->Resize(m_surface, glm::ivec2(width(), height()));
 				requestUpdate();
 				m_resizing = false;
 				return true;
@@ -216,7 +216,7 @@ namespace MyosotisFW::System::Editor
 		if (m_initialized)
 		{
 			MSG* msg = static_cast<MSG*>(message);
-			ImGui_ImplWin32_WndProcHandlerEx(msg->hwnd, msg->message, msg->wParam, msg->lParam, ImGui::GetIO());
+			//ImGui_ImplWin32_WndProcHandlerEx(msg->hwnd, msg->message, msg->wParam, msg->lParam, ImGui::GetIO());
 		}
 		return __super::nativeEvent(eventType, message, result);
 	}

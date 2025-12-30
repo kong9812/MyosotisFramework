@@ -15,7 +15,6 @@
 
 #include "RenderDescriptors.h"
 
-#include "DebugGUI.h"
 #include "StaticMesh.h"
 #include "FpsCamera.h"
 

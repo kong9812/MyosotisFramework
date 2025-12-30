@@ -8,18 +8,15 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		EditorRenderResources(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
-			RenderResources(device, renderDescriptors),
-			m_editorRenderTarget{} {
+			RenderResources(device, renderDescriptors) {
 		}
 		~EditorRenderResources();
 
-		void Initialize(const uint32_t width, const uint32_t height) override;
-		void Resize(const uint32_t width, const uint32_t height) override;
-
-		Image& GetEditorRenderTarget() { return m_editorRenderTarget; }
+		void Initialize(const glm::ivec2& screenSize) override;
+		void Resize(const glm::ivec2& screenSize) override;
 
 	private:
-		Image m_editorRenderTarget;
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderResources);
 }

@@ -164,17 +164,17 @@ namespace MyosotisFW::System::Render::Camera
 
 	void EditorCamera::editorGUI()
 	{
-		ImGui::Begin("MainEditorWindow");
-		if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_::ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			ImGui::Text("CameraPos: %.2f, %.2f, %.2f", m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
-			ImGui::Text("CameraFront: %.2f, %.2f, %.2f", m_cameraFront.x, m_cameraFront.y, m_cameraFront.z);
-			ImGui::Text("CameraRight: %.2f, %.2f, %.2f", m_cameraRight.x, m_cameraRight.y, m_cameraRight.z);
-			ImGui::Text("CameraUp: %.2f, %.2f, %.2f", m_cameraUp.x, m_cameraUp.y, m_cameraUp.z);
-			ImGui::Text("CameraFov: %.2f", m_cameraFov);
-			ImGui::Text("CameraNear: %.2f", m_cameraNear);
-			ImGui::Text("CameraFar: %.2f", m_cameraFar);
-		}
-		ImGui::End();
+		//ImGui::Begin("MainEditorWindow");
+		//if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_::ImGuiTreeNodeFlags_DefaultOpen))
+		//{
+		//	ImGui::Text("CameraPos: %.2f, %.2f, %.2f", m_cameraPos.x, m_cameraPos.y, m_cameraPos.z);
+		//	ImGui::Text("CameraFront: %.2f, %.2f, %.2f", m_cameraFront.x, m_cameraFront.y, m_cameraFront.z);
+		//	ImGui::Text("CameraRight: %.2f, %.2f, %.2f", m_cameraRight.x, m_cameraRight.y, m_cameraRight.z);
+		//	ImGui::Text("CameraUp: %.2f, %.2f, %.2f", m_cameraUp.x, m_cameraUp.y, m_cameraUp.z);
+		//	ImGui::Text("CameraFov: %.2f", m_cameraFov);
+		//	ImGui::Text("CameraNear: %.2f", m_cameraNear);
+		//	ImGui::Text("CameraFar: %.2f", m_cameraFar);
+		//}
+		//ImGui::End();
 	}
 }
