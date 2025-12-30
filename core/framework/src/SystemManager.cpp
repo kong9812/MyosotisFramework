@@ -48,8 +48,8 @@ namespace {
 		case VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT:
 		default:
 		{
-			//ASSERT(false, message);	// Nsightの時邪魔になる
-			Logger::Error(message);
+			ASSERT(false, message);	// Nsightの時邪魔になる
+			//Logger::Error(message);
 		}
 		break;
 		}

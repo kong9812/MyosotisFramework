@@ -619,5 +619,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateFence(*m_device, &fenceCreateInfo, m_device->GetAllocationCallbacks(), &fence));
 		m_device->GetGraphicsQueue()->Submit(submitInfo, fence);
 		VK_VALIDATION(vkWaitForFences(*m_device, 1, &fence, VK_TRUE, UINT64_MAX));
+		m_device->GetGraphicsQueue()->FreeSingleUseCommandBuffer(*m_device, commandBuffer);
+		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 	}
 }

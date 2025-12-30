@@ -71,7 +71,7 @@ namespace MyosotisFW::System::Render
 		}
 
 		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase1);
-		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase1);
+		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.createVBufferPhase2);
 		m_device->GetGraphicsQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.render);
 		m_device->GetGraphicsQueue()->DestroyCommandPool(*m_device, m_device->GetAllocationCallbacks());
 		m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase1);
@@ -275,11 +275,8 @@ namespace MyosotisFW::System::Render
 		if (m_stopRender) return;
 
 		// デバイスの処理を待つ
-		VK_VALIDATION(vkResetFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence));
-		m_device->GetGraphicsQueue()->WaitIdle();
-		m_device->GetComputeQueue()->WaitIdle();
-		m_device->GetTransferQueue()->WaitIdle();
 		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
+		VK_VALIDATION(vkResetFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence));
 
 		m_frameCounter = 0;
 
@@ -301,7 +298,6 @@ namespace MyosotisFW::System::Render
 		{// compute
 			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase1);
 			m_device->GetComputeQueue()->FreeCommandBuffers(*m_device, m_commandBuffers.completeHiZPhase2);
-			m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, static_cast<uint32_t>(m_swapchain->GetImageCount()));
 			m_commandBuffers.completeHiZPhase1 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 			m_commandBuffers.completeHiZPhase2 = m_device->GetComputeQueue()->AllocateCommandBuffers(*m_device, AppInfo::g_maxInFlightFrameCount);
 		}
@@ -320,23 +316,19 @@ namespace MyosotisFW::System::Render
 		// Render Pipeline
 		resizeRenderPipeline();
 
-		VK_VALIDATION(vkDeviceWaitIdle(*m_device));
-
-		// 最初のcompletePreRenderをsingleする
-		const uint32_t previousFrameIndex = (m_frameCounter + 1) % AppInfo::g_maxInFlightFrameCount;
-		VkSubmitInfo signalOnlySubmit{};
-		signalOnlySubmit.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		signalOnlySubmit.signalSemaphoreCount = 1;
-		signalOnlySubmit.pSignalSemaphores = &m_semaphores.completeVBufferPhase2[previousFrameIndex];
-		// 何も実行せずにセマフォだけシグナル状態にする
-		VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, VK_NULL_HANDLE));
-		signalOnlySubmit.signalSemaphoreCount = 0;
-		signalOnlySubmit.pSignalSemaphores = VK_NULL_HANDLE;
+		// semaphores/fences
 		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 		{
-			VK_VALIDATION(vkQueueSubmit(m_device->GetGraphicsQueue()->GetQueue(), 1, &signalOnlySubmit, m_fences.inFlightFrameFence[i]));
+			vkDestroyFence(*m_device, m_fences.inFlightFrameFence[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeHiZPhase1[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeVBufferPhase1[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeHiZPhase2[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeVBufferPhase2[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.completeRender[i], m_device->GetAllocationCallbacks());
+			vkDestroySemaphore(*m_device, m_semaphores.imageAvailable[i], m_device->GetAllocationCallbacks());
 		}
-		VK_VALIDATION(vkWaitForFences(*m_device, AppInfo::g_maxInFlightFrameCount, m_fences.inFlightFrameFence, VK_TRUE, UINT64_MAX));
+		initializeSemaphore();
+		initializeFence();
 	}
 
 	void RenderSubsystem::createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal)
@@ -604,7 +596,7 @@ namespace MyosotisFW::System::Render
 		m_visibilityBufferPhase1RenderPass->Resize(m_swapchain->GetScreenSize());
 		m_visibilityBufferPhase2RenderPass->Resize(m_swapchain->GetScreenSize());
 		m_lightingRenderPass->Resize(m_swapchain->GetScreenSize());
-		m_lightmapBakingPass->Resize(m_swapchain->GetScreenSize());
+		//m_lightmapBakingPass->Resize(m_swapchain->GetScreenSize());
 	}
 
 	void RenderSubsystem::resizeRenderPipeline()
@@ -614,7 +606,7 @@ namespace MyosotisFW::System::Render
 		m_visibilityBufferPhase1Pipeline->Resize(m_resources);
 		m_visibilityBufferPhase2Pipeline->Resize(m_resources);
 		m_lightingPipeline->Resize(m_resources);
-		m_lightmapBakingPipeline->Resize(m_resources);
+		//m_lightmapBakingPipeline->Resize(m_resources);
 		m_rayTracingPipeline->Resize(m_resources);
 	}
 

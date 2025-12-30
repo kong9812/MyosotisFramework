@@ -102,6 +102,10 @@ namespace MyosotisFW::System::Render
 			swapchainCreateInfo.oldSwapchain = m_swapchain;
 		}
 		VK_VALIDATION(vkCreateSwapchainKHR(*m_device, &swapchainCreateInfo, m_device->GetAllocationCallbacks(), &m_swapchain));
+		if (swapchainCreateInfo.oldSwapchain != VK_NULL_HANDLE)
+		{
+			vkDestroySwapchainKHR(*m_device, swapchainCreateInfo.oldSwapchain, m_device->GetAllocationCallbacks());
+		}
 
 		// swapchain image
 		uint32_t imageCount = 0;

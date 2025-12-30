@@ -269,23 +269,21 @@ namespace MyosotisFW::System::Render
 				{// PushConstant Data
 					// Hi-Z Depth
 					const Image& hiZDepthMap = m_resources->GetHiZDepthMap(i);
-					uint32_t hiZMipLevels = static_cast<uint32_t>(hiZDepthMap.mipView.size());
-					uint32_t addImage = 0;
-					uint32_t oldImageCount = m_hiZDepthMipMapImageIndex[i].size();
-					if (m_hiZDepthMipMapImageIndex[i].size() < hiZMipLevels)
+					uint32_t newImageCount = static_cast<uint32_t>(hiZDepthMap.mipView.size());
+					uint32_t oldImageCount = static_cast<uint32_t>(m_hiZDepthMipMapImageIndex[i].size());
+					if (oldImageCount < newImageCount)
 					{
-						addImage = hiZMipLevels - m_hiZDepthMipMapImageIndex[i].size();
-						m_hiZDepthMipMapImageIndex[i].resize(hiZMipLevels);
+						m_hiZDepthMipMapImageIndex[i].resize(newImageCount);
 					}
-					else if (m_hiZDepthMipMapImageIndex[i].size() > hiZMipLevels)
+					else if (oldImageCount > newImageCount)
 					{
-						const uint32_t deleteCount = m_hiZDepthMipMapImageIndex[i].size() - hiZMipLevels;
-						for (uint32_t j = deleteCount; j < static_cast<uint32_t>(m_hiZDepthMipMapImageIndex[i].size()); j++)
+						const uint32_t deleteCount = oldImageCount - newImageCount;
+						for (uint32_t j = newImageCount; j < oldImageCount; j++)
 						{
 							// delete (SetDummy)
 							m_renderDescriptors->GetTextureDescriptorSet()->DeleteImage(m_hiZDepthMipMapImageIndex[i][j], TextureDescriptorSet::DescriptorBindingIndex::StorageImage);
 						}
-						m_hiZDepthMipMapImageIndex[i].resize(hiZMipLevels);
+						m_hiZDepthMipMapImageIndex[i].resize(newImageCount);
 					}
 					for (uint32_t j = 0; j < static_cast<uint32_t>(m_hiZDepthMipMapImageIndex[i].size()); j++)
 					{
@@ -298,16 +296,9 @@ namespace MyosotisFW::System::Render
 						else if (j >= oldImageCount)
 						{
 							// add
-							VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, VK_NULL_HANDLE, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED);
+							VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
 							m_hiZDepthMipMapImageIndex[i][j] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
 						}
-					}
-
-					for (uint32_t j = oldImageCount; j < hiZMipLevels; j++)
-					{
-						// image mips (for write)
-						VkDescriptorImageInfo hiZDepthMapDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(VK_NULL_HANDLE, hiZDepthMap.mipView[j], VkImageLayout::VK_IMAGE_LAYOUT_GENERAL);
-						m_hiZDepthMipMapImageIndex[i][j] = m_renderDescriptors->GetTextureDescriptorSet()->AddImage(TextureDescriptorSet::DescriptorBindingIndex::StorageImage, hiZDepthMapDescriptorImageInfo);
 					}
 					// image (for read)
 					VkDescriptorImageInfo hiZDepthMapSamplerDescriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(hiZDepthMap.sampler, hiZDepthMap.view, VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

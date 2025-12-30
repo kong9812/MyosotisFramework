@@ -51,7 +51,7 @@ namespace MyosotisFW::AppInfo
 	};
 	// 指定Layer
 	const std::vector<const char*> g_layer = {
-		//"VK_LAYER_KHRONOS_validation",	// Nsightの時邪魔になる
+		"VK_LAYER_KHRONOS_validation",	// Nsightの時邪魔になる
 		"VK_LAYER_LUNARG_monitor"
 	};
 	// 指定物理デバイスのIndex
