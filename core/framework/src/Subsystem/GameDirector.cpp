@@ -116,6 +116,18 @@ namespace MyosotisFW::System::GameDirector {
 			newObject->AddComponent(component);
 			m_renderSubsystem->RegisterObject(newObject);
 		}
+		{
+			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
+			newObject->SetPos(glm::vec3(0.0f, 10.0f, -15.0f));
+			newObject->SetRot(glm::vec3(0.0f));
+			newObject->SetScale(glm::vec3(5.0f));
+
+			Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
+				System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
+			component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
+			newObject->AddComponent(component);
+			m_renderSubsystem->RegisterObject(newObject);
+		}
 		// TEST
 	}
 

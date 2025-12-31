@@ -237,14 +237,14 @@ namespace MyosotisFW::System::Render
 		// コマンドバッファ取り出す
 
 		// Compute (Hi-Z Depth)
-		// 前FrameのVBufferPhase2が終わったら、このFreamのHi-ZDepthが作れる
+		// 前FrameのVBufferPhase2が終わったら、このFrameのHi-ZDepthが作れる
 		createHiZDepth(m_commandBuffers.completeHiZPhase1[currentFrameIndex], currentFrameIndex, previousFrameIndex, m_semaphores.completeVBufferPhase2[previousFrameIndex], m_semaphores.completeHiZPhase1[currentFrameIndex]);
 
 		// Graphics VBufferPhase1 (VisibilityBuffer)
 		createVBufferPhase1(currentFrameIndex);
 
 		// Compute (Hi-Z Depth)
-		// このFreamのVBufferPhase1が終わったら、Phase1のHi-ZDepthが作れる
+		// このFrameのVBufferPhase1が終わったら、Phase1のHi-ZDepthが作れる
 		createHiZDepth(m_commandBuffers.completeHiZPhase2[currentFrameIndex], currentFrameIndex, currentFrameIndex, m_semaphores.completeVBufferPhase1[currentFrameIndex], m_semaphores.completeHiZPhase2[currentFrameIndex]);
 
 		// Graphics VBufferPhase2 (VisibilityBuffer)
@@ -353,7 +353,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::createVBufferPhase1(const uint32_t currentFrameIndex)
 	{
-		// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
+		// このFrameのHi-ZDepthが終わったら、このFrameのVisibilityBufferが作れる
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
 			m_semaphores.completeHiZPhase1[currentFrameIndex],		// wait
@@ -376,7 +376,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::createVBufferPhase2(const uint32_t currentFrameIndex)
 	{
-		// このFreamのHi-ZDepthが終わったら、このFreamのVisibilityBufferが作れる
+		// このFrameのHi-ZDepthが終わったら、このFrameのVisibilityBufferが作れる
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TASK_SHADER_BIT_EXT,
 			m_semaphores.completeHiZPhase2[currentFrameIndex],		// wait
@@ -399,7 +399,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex)
 	{
-		// これから書き込むSwapchain Imageの処理が終わったら、このFreamのMainRenderTargetが作れる
+		// これから書き込むSwapchain Imageの処理が終わったら、このFrameのMainRenderTargetが作れる
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 			m_semaphores.imageAvailable[currentFrameIndex],		// wait
@@ -445,8 +445,8 @@ namespace MyosotisFW::System::Render
 		}
 
 		{// Copy Image To Swapchain Image
-			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
-			//CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			//CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
 		}
 
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));

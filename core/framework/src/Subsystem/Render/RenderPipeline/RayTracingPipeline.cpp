@@ -17,9 +17,10 @@ namespace MyosotisFW::System::Render
 {
 	RayTracingPipeline::RayTracingPipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
 		RenderPipelineBase(device, renderDescriptors),
-		m_raygenSBTBuffer({}),
-		m_missSBTBuffer({}),
-		m_hitSBTBuffer({}),
+		pushConstant(),
+		m_raygenSBTBuffer(),
+		m_missSBTBuffer(),
+		m_hitSBTBuffer(),
 		m_vkGetRayTracingShaderGroupHandlesKHR(VK_NULL_HANDLE),
 		m_vkCreateAccelerationStructureKHR(VK_NULL_HANDLE),
 		m_vkCmdBuildAccelerationStructuresKHR(VK_NULL_HANDLE),
@@ -194,13 +195,15 @@ namespace MyosotisFW::System::Render
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR, resources->GetShaderModules("RayTracing.rgen.spv")),
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR, resources->GetShaderModules("RayTracing.rmiss.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR, resources->GetShaderModules("Shadow.rmiss.spv")),
 			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, resources->GetShaderModules("RayTracing.rchit.spv")),
 		};
 		// shader groups
 		std::vector<VkRayTracingShaderGroupCreateInfoKHR> rayTracingShaderGroupCreateInfoKHR{
 			Utility::Vulkan::CreateInfo::rayTracingShaderGroupCreateInfo(VkRayTracingShaderGroupTypeKHR::VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, 0),
 			Utility::Vulkan::CreateInfo::rayTracingShaderGroupCreateInfo(VkRayTracingShaderGroupTypeKHR::VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, 1),
-			Utility::Vulkan::CreateInfo::rayTracingShaderGroupCreateInfo(VkRayTracingShaderGroupTypeKHR::VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR, VK_SHADER_UNUSED_KHR, 2),
+			Utility::Vulkan::CreateInfo::rayTracingShaderGroupCreateInfo(VkRayTracingShaderGroupTypeKHR::VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, 2),
+			Utility::Vulkan::CreateInfo::rayTracingShaderGroupCreateInfo(VkRayTracingShaderGroupTypeKHR::VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR, VK_SHADER_UNUSED_KHR, 3),
 		};
 
 		// Pipeline CI
@@ -228,7 +231,11 @@ namespace MyosotisFW::System::Render
 		const uint32_t handleAlignment = rayTracingProperties.shaderGroupHandleAlignment;
 		const uint32_t handleSizeAligned = (handleSize + handleAlignment - 1) & ~(handleAlignment - 1);
 
-		const uint32_t groupCount = 3; // raygen, miss, chit
+		uint32_t raygenHandleCount = 1;
+		uint32_t missHandleCount = 2;	// 通常用 + 影用
+		uint32_t chitHandleCount = 1;
+
+		const uint32_t groupCount = raygenHandleCount + missHandleCount + chitHandleCount;
 		const uint32_t sbtSize = groupCount * handleSizeAligned;
 
 		// 全シェーダーグループハンドルの取得
@@ -242,28 +249,31 @@ namespace MyosotisFW::System::Render
 			shaderHandleStorage.data()));
 
 		// raygen SBTの作成
-		uint32_t raygenHandleCount = 1;
 		createSBTBuffer(m_raygenSBTBuffer.sbtBuffer, handleSize, raygenHandleCount);
 		m_raygenSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_raygenSBTBuffer.sbtBuffer.buffer);
 		m_raygenSBTBuffer.region.stride = handleSizeAligned;
 		m_raygenSBTBuffer.region.size = handleSizeAligned * raygenHandleCount;
 		// miss SBTの作成
-		uint32_t missHandleCount = 1;
 		createSBTBuffer(m_missSBTBuffer.sbtBuffer, handleSize, missHandleCount);
 		m_missSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_missSBTBuffer.sbtBuffer.buffer);
 		m_missSBTBuffer.region.stride = handleSizeAligned;
 		m_missSBTBuffer.region.size = handleSizeAligned * missHandleCount;
 		// chit SBTの作成
-		uint32_t chitHandleCount = 1;
 		createSBTBuffer(m_hitSBTBuffer.sbtBuffer, handleSize, chitHandleCount);
 		m_hitSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_hitSBTBuffer.sbtBuffer.buffer);
 		m_hitSBTBuffer.region.stride = handleSizeAligned;
 		m_hitSBTBuffer.region.size = handleSizeAligned * chitHandleCount;
 
 		// copy handle
-		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_raygenSBTBuffer.sbtBuffer, shaderHandleStorage.data() + 0, handleSize);
-		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_missSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (raygenHandleCount * handleSizeAligned), handleSize);
-		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_hitSBTBuffer.sbtBuffer, shaderHandleStorage.data() + ((raygenHandleCount + missHandleCount) * handleSizeAligned), handleSize);
+		// RayGen (Group 0)
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_raygenSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (0 * handleSize), handleSize);
+		// Miss (Group 1 & 2)
+		// 1つ目の Miss
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_missSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (1 * handleSize), handleSize, 0);
+		// 2つ目の Miss (影用)
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_missSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (2 * handleSize), handleSize, handleSizeAligned); // オフセットを追加
+		// Hit (Group 3)
+		vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(), m_hitSBTBuffer.sbtBuffer, shaderHandleStorage.data() + (3 * handleSize), handleSize);
 	}
 
 	void RayTracingPipeline::createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount)

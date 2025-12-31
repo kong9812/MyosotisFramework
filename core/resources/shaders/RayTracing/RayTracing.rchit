@@ -9,18 +9,24 @@
 #include "../Descriptors/ObjectInfo.glsl"
 #include "../Descriptors/MeshInfo.glsl"
 #include "../Descriptors/CameraInfo.glsl"
+#include "../Descriptors/TLAS.glsl"
 
 #include "../Descriptors/VertexData.glsl"
 #include "../Descriptors/IndexData.glsl"
 #include "../Descriptors/BasicMaterialInfo.glsl"
 
-struct RayPayload {
+struct InRayPayload {
 	vec3 color;
 	float distance;
 };
 
-layout(location = 0) rayPayloadInEXT RayPayload rayPayload;
+layout(location = 0) rayPayloadInEXT InRayPayload inRayPayload;
 hitAttributeEXT vec2 attribs;
+
+struct RayPayload {
+	bool shadowed;
+};
+layout(location = 1) rayPayloadEXT RayPayload rayPayload;
 
 // 補完済みピクセル頂点情報
 VertexData InterpolateVertexAttributes(VertexData v0, VertexData v1, VertexData v2, vec3 bary) 
@@ -128,8 +134,28 @@ void main()
         vec3 baseColorTextureColor = Sampler2DLoader_GetTexture(basicMaterialInfo.baseColorTexture, interpolateVertex.uv0).rgb;
         interpolateVertex.color = interpolateVertex.color * vec4(baseColorTextureColor, 1.0);
     }
-	
-	rayPayload.color = CalcLighting(interpolateVertex, objectInfo, cameraData).rgb;
-	//rayPayload.color = interpolateVertex.color.rgb;
-	rayPayload.distance = 0;	// todo
+
+    // Lighting計算
+    vec3 color = CalcLighting(interpolateVertex, objectInfo, cameraData).rgb;
+
+    // ShadowRay
+    vec3 lightDir = vec3(0.3, -1.0, 0.2);   // 光の進む向き
+    vec3 L = normalize(-lightDir);          // 光源を見る方向（影レイの方向）
+	float tmin = 0.001;
+	float tmax = 10000.0;
+    // 一次レイ(前の発射)の発射位置(原点) + 発射方向 * 距離(係数)
+    vec3 start = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
+    rayPayload.shadowed = true;
+    // 軽量化のためのフラグをセット! ShadowRay発射!
+    // gl_RayFlagsTerminateOnFirstHitEXT: なんか当たったら即終了
+    // gl_RayFlagsOpaqueEXT: すべてを不透明扱い
+    // gl_RayFlagsSkipClosestHitShaderEXT: 交差してもrchitを実行しない
+    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT | gl_RayFlagsSkipClosestHitShaderEXT, 0xff, 0, 0, 1, start, tmin, L, tmax, 1);
+    if (rayPayload.shadowed)
+    {
+        color *= 0.7;   // todo. 係数をCPU側でセットできるように
+    }
+
+	inRayPayload.color = color;
+	inRayPayload.distance = gl_HitTEXT;
 }
