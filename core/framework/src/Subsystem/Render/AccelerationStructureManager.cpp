@@ -314,7 +314,7 @@ namespace MyosotisFW::System::Render
 				asInstance.transform = ToVkTransformMatrixKHR(instance->model);
 				asInstance.mask = instance->mask;
 				asInstance.instanceShaderBindingTableRecordOffset = instance->hitGroupOffset;
-				asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+				//asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 				asInstance.accelerationStructureReference = m_blas[biasID].blas.deviceAddress;
 
 				TLASInstanceInfo tlasInstanceInfo{};

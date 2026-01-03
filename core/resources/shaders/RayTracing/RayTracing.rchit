@@ -28,6 +28,13 @@ struct RayPayload {
 };
 layout(location = 1) rayPayloadEXT RayPayload rayPayload;
 
+float stepRandomFloat(inout uint seed) 
+{
+	seed = seed * 747796405u + 2891336453u;
+	uint word = ((seed >> ((seed >> 28u) + 4u)) ^ seed) * 277803737u;
+	return float((word >> 22u) ^ word) / 4294967295.0;
+}
+
 // 補完済みピクセル頂点情報
 VertexData InterpolateVertexAttributes(VertexData v0, VertexData v1, VertexData v2, vec3 bary) 
 {
@@ -127,6 +134,10 @@ void main()
 
 	VertexData interpolateVertex = InterpolateVertexAttributes(v0, v1, v2, bary);
 
+	// world normalの計算
+	mat3 normalMatrix = mat3(transpose(inverse(objectInfo.model)));
+	vec3 worldNormal = normalize(normalMatrix * interpolateVertex.normal);
+
     // マテリアル
     interpolateVertex.color = interpolateVertex.color * basicMaterialInfo.baseColor;
     if (BasicMaterialInfo_HasBaseColorTexture(basicMaterialInfo.bitFlags))
@@ -138,23 +149,65 @@ void main()
     // Lighting計算
     vec3 color = CalcLighting(interpolateVertex, objectInfo, cameraData).rgb;
 
-    // ShadowRay
-    vec3 lightDir = vec3(0.3, -1.0, 0.2);   // 光の進む向き
-    vec3 L = normalize(-lightDir);          // 光源を見る方向（影レイの方向）
+	// ShadowRay
+	vec3 lightDir = normalize(vec3(0.3, -1.0, 0.2));
+	vec3 L = -lightDir;
 	float tmin = 0.001;
 	float tmax = 10000.0;
     // 一次レイ(前の発射)の発射位置(原点) + 発射方向 * 距離(係数)
-    vec3 start = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
-    rayPayload.shadowed = true;
-    // 軽量化のためのフラグをセット! ShadowRay発射!
-    // gl_RayFlagsTerminateOnFirstHitEXT: なんか当たったら即終了
-    // gl_RayFlagsOpaqueEXT: すべてを不透明扱い
-    // gl_RayFlagsSkipClosestHitShaderEXT: 交差してもrchitを実行しない
-    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT | gl_RayFlagsSkipClosestHitShaderEXT, 0xff, 0, 0, 1, start, tmin, L, tmax, 1);
-    if (rayPayload.shadowed)
+	// (worldNormal * 0.001) 念のため、少し外に押し出す (自分に当たる時とか…)
+    vec3 start = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT + (worldNormal * 0.001);
+
+	// 最初の乱数Seedの作成
+	uint seed = uint(gl_LaunchIDEXT.x * 1973 + gl_LaunchIDEXT.y * 9277 + gl_PrimitiveID * 26699);
+	
+	float shadowFactor = 0.0;		// 影(係数)
+	float shadowHitCount = 0.0;		// PCF用 (最後の結果を平均化)
+
+	// 面が光に向いてるかどうかの判定
+	float NdotL = dot(worldNormal, L);
+	if (NdotL > 0.0)
     {
-        color *= 0.7;   // todo. 係数をCPU側でセットできるように
-    }
+		const int SAMPLES = 4;		  	// サンプル数 (増やすと綺麗だけど重くなる…)
+		const float spread = 0.05;	  	// 影のボケ具合
+
+		for(int i = 0; i < SAMPLES; i++) 
+		{
+			// 光の方向をランダムに散らす
+			vec3 noiseVec = vec3(stepRandomFloat(seed)-0.5, stepRandomFloat(seed)-0.5, stepRandomFloat(seed)-0.5) * spread;
+			vec3 rayDir = normalize(L + noiseVec);
+
+			rayPayload.shadowed = true;
+			traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsOpaqueEXT | gl_RayFlagsSkipClosestHitShaderEXT | gl_RayFlagsCullBackFacingTrianglesEXT, 0xff, 0, 0, 1, start, tmin, rayDir, tmax, 1);
+
+			if (rayPayload.shadowed) shadowHitCount += 1.0;
+		}
+
+		// 影の平均値 (0.0: 光 1.0: 影)
+		shadowFactor = shadowHitCount / float(SAMPLES);
+	}
+	else
+	{
+		// 光に向いてないので、そのまま100% 影でOK
+		shadowFactor = 1.0;
+	}
+	
+	// Raytrace Shadow Terminator Problem 対策
+	// N.Lが低い境界を滑らかに
+	// dot(N・L)の結果が0.1 (ちょっとだけ光に向いてる状態)で、0.1 * 10.0 = 1.0 になる
+	// 境界線ギリギリまでは影を100%出す、本当にギリギリのところ(0.1以下)で一気に影を消していくよ
+	// 急カーブができる
+	const float terminatorOffset = 10.0;
+	float terminatorFade = clamp(dot(worldNormal, L) * terminatorOffset, 0.0, 1.0);
+
+	// 最終色の計算
+	color *= mix(1.0, 0.7, shadowFactor * terminatorFade);
+
+	// 光に向いてない面に追加の減衰
+	if (NdotL <= 0.0)
+	{
+		color *= 0.5;
+	}
 
 	inRayPayload.color = color;
 	inRayPayload.distance = gl_HitTEXT;

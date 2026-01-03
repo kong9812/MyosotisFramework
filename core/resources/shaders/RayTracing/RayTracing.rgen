@@ -44,7 +44,7 @@ void main()
 	rayPayload.distance = 0.0;
 	// 発射!
 	// gl_RayFlagsOpaqueEXT: すべてを不透明扱い
-    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsOpaqueEXT, 0xff, 0, 0, 0, cameraData.pos.xyz, tmin, direction.xyz, tmax, 0);
+    traceRayEXT(TLAS_GetTLAS(), gl_RayFlagsOpaqueEXT | gl_RayFlagsCullBackFacingTrianglesEXT, 0xff, 0, 0, 0, cameraData.pos.xyz, tmin, direction.xyz, tmax, 0);
 	color = rayPayload.color;
 	imageStore(Image2D[storeImageID], ivec2(gl_LaunchIDEXT.xy), vec4(rayPayload.color, 1.0));
 }
