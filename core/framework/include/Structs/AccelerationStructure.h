@@ -7,8 +7,8 @@ namespace MyosotisFW
 {
 	struct AccelerationStructure
 	{
-		Buffer buffer;
-		VkAccelerationStructureKHR handle;
-		VkDeviceAddress deviceAddress;
+		Buffer buffer{};
+		VkAccelerationStructureKHR handle = VK_NULL_HANDLE;
+		VkDeviceAddress deviceAddress{};
 	};
 }

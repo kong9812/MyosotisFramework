@@ -7,7 +7,7 @@ namespace MyosotisFW
 {
 	struct RawMeshData
 	{
-		std::vector<VertexData> vertex;
-		std::vector<uint32_t> index;
+		std::vector<VertexData> vertex{};
+		std::vector<uint32_t> index{};
 	};
 }

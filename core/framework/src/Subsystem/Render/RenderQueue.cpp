@@ -27,7 +27,7 @@ namespace MyosotisFW::System::Render
 
 	void RenderQueue::Submit(const VkSubmitInfo& submitInfo, const VkFence& fence)
 	{
-		ASSERT(m_queue, "You must call CreateQueueInstance before sumit command to queue.");
+		ASSERT(m_queue, "You must call CreateQueueInstance before submit command to queue.");
 		std::lock_guard<std::mutex> lock(m_mutex);
 		VK_VALIDATION(vkQueueSubmit(m_queue, 1, &submitInfo, fence));
 	}
@@ -43,7 +43,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkCreateCommandPool(device, &cmdPoolInfo, pAllocator, &m_commandPool));
 	}
 
-	std::vector<VkCommandBuffer> RenderQueue::AllocateCommandBuffers(const VkDevice& device, const uint32_t count)
+	std::vector<VkCommandBuffer> RenderQueue::AllocateCommandBuffers(const VkDevice& device, const uint32_t count) const
 	{
 		std::vector<VkCommandBuffer> commandBuffers(count);
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, count);
@@ -51,7 +51,7 @@ namespace MyosotisFW::System::Render
 		return commandBuffers;
 	}
 
-	void RenderQueue::FreeCommandBuffers(const VkDevice& device, std::vector<VkCommandBuffer> commandBuffers)
+	void RenderQueue::FreeCommandBuffers(const VkDevice& device, std::vector<VkCommandBuffer> commandBuffers) const
 	{
 		if (commandBuffers.size() > 0)
 		{
@@ -59,18 +59,18 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void RenderQueue::DestroyCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator)
+	void RenderQueue::DestroyCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator) const
 	{
 		vkDestroyCommandPool(device, m_commandPool, pAllocator);
 	}
 
-	void RenderQueue::FreeSingleUseCommandBuffer(const VkDevice& device, const VkCommandBuffer& commandBuffer)
+	void RenderQueue::FreeSingleUseCommandBuffer(const VkDevice& device, const VkCommandBuffer& commandBuffer) const
 	{
 		// todo. deviceをメンバー変数として持たせる
 		vkFreeCommandBuffers(device, m_commandPool, 1, &commandBuffer);
 	}
 
-	VkCommandBuffer RenderQueue::AllocateSingleUseCommandBuffer(const VkDevice& device)
+	VkCommandBuffer RenderQueue::AllocateSingleUseCommandBuffer(const VkDevice& device) const
 	{
 		VkCommandBuffer commandBuffer;
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
@@ -78,7 +78,7 @@ namespace MyosotisFW::System::Render
 		return commandBuffer;
 	}
 
-	void RenderQueue::WaitIdle()
+	void RenderQueue::WaitIdle() const
 	{
 		VK_VALIDATION(vkQueueWaitIdle(m_queue));
 	}

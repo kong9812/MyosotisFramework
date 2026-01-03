@@ -4,7 +4,6 @@
 #include <string>
 #include <vulkan/vulkan.h>
 #include <functional>
-#include "Structs.h"
 #include "Image.h"
 #include "Mesh.h"
 #include "ClassPointer.h"
@@ -77,7 +76,7 @@ namespace MyosotisFW::System::Render
 		RenderDescriptors_ptr m_renderDescriptors;
 
 	protected:
-		// resoureces
+		// resources
 		std::unordered_map<std::string, VkShaderModule> m_shaderModules;
 		std::unordered_map<std::string, MeshesData> m_meshes;
 		std::unordered_map<std::string, MaterialData> m_materials;

@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-// For include meshoptiomizer
+// For include meshoptimizer
 #pragma once
 #include <meshoptimizer.h>
 #include <vector>
@@ -50,8 +50,8 @@ namespace meshoptimizer
 			}
 
 			// Primitives (LocalIndex)
-			dst.primitives.reserve(src.triangle_count * 3);
-			for (size_t t = 0; t < src.triangle_count * 3; t++)
+			dst.primitives.reserve(static_cast<size_t>(src.triangle_count) * 3);
+			for (size_t t = 0; t < static_cast<size_t>(src.triangle_count) * 3; t++)
 			{
 				uint32_t triangleIndex = static_cast<uint32_t>(meshletTriangles[src.triangle_offset + t]);
 				dst.primitives.push_back(triangleIndex);

@@ -78,8 +78,8 @@ namespace MyosotisFW::System::Render
 
 		struct ScratchBuffer
 		{
-			Buffer buffer;
-			VkDeviceAddress deviceAddress;
+			Buffer buffer{};
+			VkDeviceAddress deviceAddress{};
 		};
 	};
 	TYPEDEF_SHARED_PTR_ARGS(AccelerationStructureManager);

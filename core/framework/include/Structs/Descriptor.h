@@ -7,14 +7,14 @@ namespace MyosotisFW
 {
 	struct Descriptor
 	{
-		VkDescriptorType descriptorType;
-		VkShaderStageFlagBits shaderStageFlagBits;
-		VkDescriptorBindingFlags descriptorBindingFlags;
-		int32_t descriptorCount;
+		VkDescriptorType descriptorType{};
+		VkShaderStageFlagBits shaderStageFlagBits{};
+		VkDescriptorBindingFlags descriptorBindingFlags{};
+		int32_t descriptorCount = 0;
 
-		Buffer buffer;
+		Buffer buffer{};
 
-		bool rebuild;
-		bool update;
+		bool rebuild = false;
+		bool update = false;
 	};
 }

@@ -1,8 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "ClassPointer.h"
-#include "Structs.h"
 #include "ObjectInfo.h"
+#include "UpdateData.h"
 #include "VBDispatchInfo.h"
 #include "Transform.h"
 #include "istduuid.h"

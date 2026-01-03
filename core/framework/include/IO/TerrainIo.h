@@ -106,7 +106,7 @@ namespace Utility::Loader {
 		samplingStep = GetNearestDivisor(samplingStep, chunkSize.x);
 
 		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
-		meshes.resize(chunkCount.x * chunkCount.y);
+		meshes.resize(static_cast<size_t>(chunkCount.x) * static_cast<size_t>(chunkCount.y));
 
 		for (uint32_t cy = 0; cy < chunkCount.y; cy++)
 		{
@@ -165,7 +165,7 @@ namespace Utility::Loader {
 				ComputeNormalsFromGrid(mesh.vertex, localW, localH);
 
 				// index作成
-				mesh.index.reserve((localW - 1) * (localH - 1) * 6);
+				mesh.index.reserve(static_cast<size_t>((localW - 1) * (localH - 1) * 6));
 				for (uint32_t iy = 0; iy < localH - 1; iy++)
 				{
 					for (uint32_t ix = 0; ix < localW - 1; ix++)

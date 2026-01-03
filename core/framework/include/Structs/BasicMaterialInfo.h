@@ -19,12 +19,12 @@ namespace MyosotisFW
 		// bit 8～31
 		// Undefine
 		// ======================================================================================================
-		uint32_t bitFlags;
+		uint32_t bitFlags = 0;
 
-		uint32_t baseColorTexture;
-		uint32_t normalTexture;
-		uint32_t p3;
+		uint32_t baseColorTexture = 0;
+		uint32_t normalTexture = 0;
+		uint32_t p3 = 0;
 
-		glm::vec4 baseColor;
+		glm::vec4 baseColor = glm::vec4(0.0f);
 	};
 }

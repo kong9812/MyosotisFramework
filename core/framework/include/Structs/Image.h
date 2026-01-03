@@ -7,11 +7,11 @@ namespace MyosotisFW
 {
 	struct Image
 	{
-		VkImage image;
-		VkImageView view;
-		std::vector<VkImageView> mipView;
-		VkSampler sampler;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
+		VkImage image = VK_NULL_HANDLE;
+		VkImageView view = VK_NULL_HANDLE;
+		std::vector<VkImageView> mipView{};
+		VkSampler sampler = VK_NULL_HANDLE;
+		VmaAllocation allocation{};
+		VmaAllocationInfo allocationInfo{};
 	};
 }

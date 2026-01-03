@@ -1,7 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "RenderPipelineBase.h"
-#include "Structs.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -9,7 +8,9 @@ namespace MyosotisFW::System::Render
 	{
 	public:
 		VisibilityBufferPhase2Pipeline(const RenderDevice_ptr& device, const RenderDescriptors_ptr& renderDescriptors) :
-			RenderPipelineBase(device, renderDescriptors) {
+			RenderPipelineBase(device, renderDescriptors),
+			pushConstant(),
+			m_vkCmdDrawMeshTasksEXT(VK_NULL_HANDLE) {
 		}
 		~VisibilityBufferPhase2Pipeline();
 

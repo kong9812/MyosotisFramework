@@ -7,12 +7,12 @@ namespace MyosotisFW
 {
 	struct Buffer
 	{
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
-		VkDescriptorBufferInfo descriptor;
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VmaAllocation allocation{};
+		VmaAllocationInfo allocationInfo{};
+		VkDescriptorBufferInfo descriptor{};
 
-		size_t localSize;	// アライメント関係上 実際使うサイズとallocationInfoのサイズが異なる時がある
-		bool needFlush;
+		size_t localSize = 0;	// アライメント関係上 実際使うサイズとallocationInfoのサイズが異なる時がある
+		bool needFlush = false;
 	};
 }

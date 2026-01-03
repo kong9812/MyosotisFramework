@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 
-#include "Structs.h"
+#include "ShaderBase.h"
 #include "ClassPointer.h"
 #include "AppInfo.h"
 
@@ -36,7 +36,9 @@ namespace MyosotisFW::System::Render
 			depthCopyPushConstant(),
 			m_hiZDepthCopyShaderBase(),
 			m_hiZDepthDownsampleShaderBase(),
-			m_renderDescriptors(renderDescriptors) {
+			m_renderDescriptors(renderDescriptors),
+			m_depthBufferSamplerID(),
+			m_hiZDepthMipMapImageIndex() {
 		}
 		~HiZDepthComputePipeline();
 

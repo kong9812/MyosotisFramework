@@ -23,19 +23,19 @@ namespace MyosotisFW::System::Render
 
 	private:
 		struct PushConstant {
-			uint32_t storeImageID;
+			uint32_t storeImageID = 0;
 		}pushConstant[AppInfo::g_maxInFlightFrameCount];
 		struct {
-			Buffer sbtBuffer;
-			VkStridedDeviceAddressRegionKHR region;
+			Buffer sbtBuffer{};
+			VkStridedDeviceAddressRegionKHR region{};
 		} m_raygenSBTBuffer;
 		struct {
-			Buffer sbtBuffer;
-			VkStridedDeviceAddressRegionKHR region;
+			Buffer sbtBuffer{};
+			VkStridedDeviceAddressRegionKHR region{};
 		} m_missSBTBuffer;
 		struct {
-			Buffer sbtBuffer;
-			VkStridedDeviceAddressRegionKHR region;
+			Buffer sbtBuffer{};
+			VkStridedDeviceAddressRegionKHR region{};
 		} m_hitSBTBuffer;
 
 

@@ -48,7 +48,7 @@ void Application::Initialize(const bool& allowHotReload)
 
 	// 画面中央
 	int monitorCount{};
-	GLFWmonitor* monitor = glfwGetMonitors(&monitorCount)[MyosotisFW::AppInfo::g_montorIndex];
+	GLFWmonitor* monitor = glfwGetMonitors(&monitorCount)[MyosotisFW::AppInfo::g_monitorIndex];
 	const GLFWvidmode* vidMode = glfwGetVideoMode(monitor);
 	glfwSetWindowPos(m_glfwWindow,
 		static_cast<int>((vidMode->width - MyosotisFW::AppInfo::g_windowWidth) / 2),

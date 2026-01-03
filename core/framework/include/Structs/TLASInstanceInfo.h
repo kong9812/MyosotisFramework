@@ -8,9 +8,9 @@ namespace MyosotisFW
 {
 	struct TLASInstanceInfo
 	{
-		uint32_t objectID;
-		uint32_t meshID;
-		uint32_t p1;
-		uint32_t p2;
+		uint32_t objectID = 0;
+		uint32_t meshID = 0;
+		uint32_t p1 = 0;
+		uint32_t p2 = 0;
 	};
 }

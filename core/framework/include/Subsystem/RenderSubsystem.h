@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "iglfw.h"
-#include "Structs.h"
 #include "AppInfo.h"
+#include "UpdateData.h"
 
 // 前方宣言
 namespace MyosotisFW

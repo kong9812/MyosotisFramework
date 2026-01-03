@@ -7,10 +7,10 @@ namespace MyosotisFW
 {
 	struct CameraInfo
 	{
-		uint32_t mainCameraIndex;
-		uint32_t _p1;
-		uint32_t _p2;
-		uint32_t _p3;
-		std::vector<CameraData> cameraData;
+		uint32_t mainCameraIndex = 0;
+		uint32_t _p1 = 0;
+		uint32_t _p2 = 0;
+		uint32_t _p3 = 0;
+		std::vector<CameraData> cameraData{};
 	};
 }

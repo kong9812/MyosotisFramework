@@ -5,6 +5,7 @@
 #include "KeyConverter.h"
 #include "ThreadPool.h"
 #include "iimgui.h"
+#include "VK_CreateInfo.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 

@@ -4,7 +4,6 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include "classPointer.h"
-#include "Structs.h"
 #include "VK_Validation.h"
 #include "ivma.h"
 

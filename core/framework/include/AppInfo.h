@@ -20,7 +20,7 @@ namespace MyosotisFW::AppInfo
 	constexpr uint32_t g_windowHeight = 810;
 	//constexpr uint32_t g_windowWidth = 3840;	// 4k
 	//constexpr uint32_t g_windowHeight = 2160;	// 4k
-	constexpr uint32_t g_montorIndex = 0;
+	constexpr uint32_t g_monitorIndex = 0;
 	constexpr const char* g_applicationName = "MyosotisFW";
 	constexpr const char* g_editorName = "MyosotisEditor";
 	constexpr const char* g_engineName = "MyosotisFW";

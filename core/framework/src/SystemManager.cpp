@@ -10,7 +10,6 @@
 #include "VK_Validation.h"
 #include "AppInfo.h"
 #include "Logger.h"
-#include "Structs.h"
 
 #include "ComponentFactory.h"
 
@@ -248,18 +247,18 @@ namespace MyosotisFW::System
 		systemManager->MouseButtonAction(button, action);
 	}
 
-	void SystemManager::cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+	void SystemManager::cursorPosCallback(GLFWwindow* window, double x, double y)
 	{
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));
 		ASSERT(systemManager != nullptr, "Could not find WindowUserPointer!");
-		systemManager->CursorMotion(glm::vec2(static_cast<float>(xpos), static_cast<float>(ypos)));
+		systemManager->CursorMotion(glm::vec2(static_cast<float>(x), static_cast<float>(y)));
 	}
 
 	void SystemManager::dropCallback(GLFWwindow* window, int path_count, const char* paths[])
 	{
 		if (path_count > 1)
 		{
-			Logger::Error("Cant dorp more than one file.");
+			Logger::Error("Cant drop more than one file.");
 			return;
 		}
 		SystemManager* systemManager = static_cast<SystemManager*>(glfwGetWindowUserPointer(window));

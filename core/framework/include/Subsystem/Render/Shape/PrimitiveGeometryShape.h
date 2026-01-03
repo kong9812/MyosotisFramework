@@ -346,7 +346,7 @@ namespace MyosotisFW::System::Render::Shape
 		float radius = size * 0.5f;
 		float height = size;
 
-		mesh.index.reserve(side * 12);
+		mesh.index.reserve(static_cast<size_t>(side * 12));
 
 		// side vertex
 		for (uint32_t i = 0; i <= side; i++)
@@ -478,7 +478,7 @@ namespace MyosotisFW::System::Render::Shape
 		float radius = size * 0.5f;
 		float height = size;
 
-		mesh.index.reserve(side * 12);
+		mesh.index.reserve(static_cast<size_t>(side * 12));
 
 		// side vertex
 		for (uint32_t i = 0; i <= side; i++)
@@ -525,7 +525,7 @@ namespace MyosotisFW::System::Render::Shape
 		uint32_t topStart = (uint32_t)mesh.vertex.size();
 		for (uint32_t iz = 0; iz <= side / 2; iz++)
 		{
-			float vz = (float)iz / (side / 2);
+			float vz = (float)iz / (side / 2.0f);
 			float phi = glm::half_pi<float>() * vz;
 			float y = cosf(phi) * radius + height * 0.5f;
 			float r = sinf(phi) * radius;
@@ -567,7 +567,7 @@ namespace MyosotisFW::System::Render::Shape
 		uint32_t bottomStart = (uint32_t)mesh.vertex.size();
 		for (uint32_t iz = 0; iz <= side / 2; iz++)
 		{
-			float vz = (float)iz / (side / 2);
+			float vz = (float)iz / (side / 2.0f);
 			float phi = glm::half_pi<float>() * vz;
 			float y = -cosf(phi) * radius - height * 0.5f;
 			float r = sinf(phi) * radius;

@@ -22,7 +22,7 @@ namespace Utility::Loader {
 		if (triangleCount <= 0) return 0;
 
 		// tri_indices のサイズを確保
-		tri_indices.reserve(tri_indices.size() + 3 * triangleCount);
+		tri_indices.reserve(tri_indices.size() + 3 * static_cast<size_t>(triangleCount));
 
 		if (polygon.vertex_count == 3) {
 			tri_indices.push_back(static_cast<uint32_t>(polygon.from_vertex));

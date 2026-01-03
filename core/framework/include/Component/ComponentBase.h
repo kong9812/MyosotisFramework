@@ -3,7 +3,6 @@
 #include "ClassPointer.h"
 #include "ComponentType.h"
 #include "Transform.h"
-#include "Structs.h"
 #include "istduuid.h"
 #include "iRapidJson.h"
 #include "ComponentFactory.h"

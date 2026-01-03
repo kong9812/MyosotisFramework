@@ -23,7 +23,7 @@ namespace MyosotisFW::System::Render
 
 		void Update() override;
 		void SetTLAS(const VkAccelerationStructureKHR& tlas);
-		uint32_t AddTLASInstanceInfo(const TLASInstanceInfo tlasInstanceInfo);
+		uint32_t AddTLASInstanceInfo(TLASInstanceInfo tlasInstanceInfo);
 
 	private:
 		VkAccelerationStructureKHR m_tlas;

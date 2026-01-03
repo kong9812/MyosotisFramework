@@ -5,6 +5,7 @@
 #include <vector>
 #include "Logger.h"
 #include "Mesh.h"
+#include "VertexData.h"
 
 namespace xatlas
 {

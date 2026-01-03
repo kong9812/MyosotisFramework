@@ -3,7 +3,6 @@
 #include <vulkan/vulkan.h>
 #include "ClassPointer.h"
 #include "VK_Validation.h"
-#include "Structs.h"
 #include "Image.h"
 #include "iglm.h"
 
@@ -21,8 +20,8 @@ namespace MyosotisFW::System::Render
 
 		const glm::ivec2 GetScreenSize() const { return m_screenSize; }
 		const glm::vec2 GetScreenSizeF() const { return m_screenSizeF; }
-		uint32_t GetImageCount() { return static_cast<uint32_t>(m_swapchainImage.size()); }
-		uint32_t GetMinImageCount() { return m_minImageCount; }
+		uint32_t GetImageCount() const { return static_cast<uint32_t>(m_swapchainImage.size()); }
+		uint32_t GetMinImageCount() const { return m_minImageCount; }
 		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }
 
 		void AcquireNextImage(VkSemaphore& presentCompleteSemaphore, uint32_t& imageIndex);

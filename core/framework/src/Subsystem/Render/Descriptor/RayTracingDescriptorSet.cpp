@@ -55,7 +55,7 @@ namespace MyosotisFW::System::Render
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TLAS)].rebuild = true;
 	}
 
-	uint32_t RayTracingDescriptorSet::AddTLASInstanceInfo(const TLASInstanceInfo tlasInstanceInfo)
+	uint32_t RayTracingDescriptorSet::AddTLASInstanceInfo(TLASInstanceInfo tlasInstanceInfo)
 	{
 		uint32_t index = static_cast<uint32_t>(m_tlasInstanceInfo.size());
 		m_tlasInstanceInfo.push_back(std::move(tlasInstanceInfo));

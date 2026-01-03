@@ -40,9 +40,9 @@ namespace MyosotisFW::System::Render::Camera
 	glm::vec3 CameraBase::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
 		// 画面座標を正規化デバイス座標（NDC）に変換
-		glm::vec2 ndcPos;
-		ndcPos.x = pos.x / m_screenSize.x * 2.0f - 1.0f;
-		ndcPos.y = 1.0f - pos.y / m_screenSize.y * 2.0f;
+		glm::vec2 ndcPos = glm::vec2(
+			pos.x / m_screenSize.x * 2.0f - 1.0f,	// x
+			1.0f - pos.y / m_screenSize.y * 2.0f);	// y
 
 		// 投影・ビュー行列の逆行列を取得
 		glm::mat4 invProjView = glm::inverse(GetProjectionMatrix() * GetViewMatrix());

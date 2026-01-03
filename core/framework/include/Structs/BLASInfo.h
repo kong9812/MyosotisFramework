@@ -8,19 +8,19 @@ namespace MyosotisFW
 {
 	struct BLASInfo
 	{
-		Buffer vertexBuffer;
-		Buffer indexBuffer;
-		//Buffer transformBuffer;
+		Buffer vertexBuffer{};
+		Buffer indexBuffer{};
+		//Buffer transformBuffer{};
 
-		VkDeviceAddress vertexAddress;
-		VkDeviceAddress indexAddress;
-		VkDeviceAddress transformAddress;
+		VkDeviceAddress vertexAddress{};
+		VkDeviceAddress indexAddress{};
+		VkDeviceAddress transformAddress{};
 
-		VkAccelerationStructureGeometryKHR geometry;
-		VkAccelerationStructureBuildRangeInfoKHR buildRange;
-		VkAccelerationStructureBuildSizesInfoKHR buildSize;
+		VkAccelerationStructureGeometryKHR geometry{};
+		VkAccelerationStructureBuildRangeInfoKHR buildRange{};
+		VkAccelerationStructureBuildSizesInfoKHR buildSize{};
 
-		AccelerationStructure blas;	// 本体
-		bool dirty;
+		AccelerationStructure blas{};	// 本体
+		bool dirty = false;
 	};
 }

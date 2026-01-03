@@ -252,17 +252,17 @@ namespace MyosotisFW::System::Render
 		createSBTBuffer(m_raygenSBTBuffer.sbtBuffer, handleSize, raygenHandleCount);
 		m_raygenSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_raygenSBTBuffer.sbtBuffer.buffer);
 		m_raygenSBTBuffer.region.stride = handleSizeAligned;
-		m_raygenSBTBuffer.region.size = handleSizeAligned * raygenHandleCount;
+		m_raygenSBTBuffer.region.size = static_cast<VkDeviceSize>(handleSizeAligned * raygenHandleCount);
 		// miss SBTの作成
 		createSBTBuffer(m_missSBTBuffer.sbtBuffer, handleSize, missHandleCount);
 		m_missSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_missSBTBuffer.sbtBuffer.buffer);
 		m_missSBTBuffer.region.stride = handleSizeAligned;
-		m_missSBTBuffer.region.size = handleSizeAligned * missHandleCount;
+		m_missSBTBuffer.region.size = static_cast<VkDeviceSize>(handleSizeAligned * missHandleCount);
 		// chit SBTの作成
 		createSBTBuffer(m_hitSBTBuffer.sbtBuffer, handleSize, chitHandleCount);
 		m_hitSBTBuffer.region.deviceAddress = m_device->GetBufferDeviceAddress(m_hitSBTBuffer.sbtBuffer.buffer);
 		m_hitSBTBuffer.region.stride = handleSizeAligned;
-		m_hitSBTBuffer.region.size = handleSizeAligned * chitHandleCount;
+		m_hitSBTBuffer.region.size = static_cast<VkDeviceSize>(handleSizeAligned * chitHandleCount);
 
 		// copy handle
 		// RayGen (Group 0)
@@ -278,7 +278,7 @@ namespace MyosotisFW::System::Render
 
 	void RayTracingPipeline::createSBTBuffer(Buffer& buffer, const uint32_t handleSize, const uint32_t handleCount)
 	{
-		const VkDeviceSize sbtSize = handleSize * handleCount;
+		const VkDeviceSize sbtSize = static_cast<VkDeviceSize>(handleSize * handleCount);
 		// SBTバッファの作成
 		buffer = vmaTools::CreateBuffer(
 			m_device->GetVmaAllocator(), sbtSize,

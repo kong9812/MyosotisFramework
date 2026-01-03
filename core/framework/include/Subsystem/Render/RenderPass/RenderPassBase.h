@@ -22,7 +22,7 @@ namespace MyosotisFW::System::Render
 
 		virtual void Initialize() = 0;
 
-		VkRenderPass GetRenderPass() { return m_renderPass; }
+		VkRenderPass GetRenderPass() const { return m_renderPass; }
 
 		virtual void BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t currentBufferIndex) = 0;
 		virtual void EndRender(const VkCommandBuffer& commandBuffer) = 0;

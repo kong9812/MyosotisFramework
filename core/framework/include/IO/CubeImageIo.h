@@ -23,10 +23,10 @@ namespace Utility::Loader {
 		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
 		VK_VALIDATION(vkCreateFence(device, &fenceCreateInfo, pAllocationCallbacks, &fence));
 
-		int textureWidth = -1;
-		int textureHeight = -1;
-		int textureChannels = -1;
-		size_t imageSize = 0;
+		int32_t textureWidth = -1;
+		int32_t textureHeight = -1;
+		int32_t textureChannels = -1;
+		uint32_t imageSize = 0;
 		std::vector<stbi_uc*> pixels{};
 		for (uint32_t i = 0; i < fileNames.size(); i++)
 		{
@@ -62,10 +62,10 @@ namespace Utility::Loader {
 
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(allocator, stagingBuffer.allocation, &data));
-			size_t offset = 0;
+			uint32_t offset = 0;
 			for (size_t i = 0; i < pixels.size(); i++)
 			{
-				memcpy(static_cast<uint8_t*>(data) + offset, pixels[i], textureWidth * textureHeight * textureChannels);
+				memcpy(static_cast<uint8_t*>(data) + offset, pixels[i], static_cast<size_t>(textureWidth * textureHeight * textureChannels));
 				offset += textureWidth * textureHeight * textureChannels;
 				stbi_image_free(pixels[i]);
 			}
@@ -94,10 +94,10 @@ namespace Utility::Loader {
 				0, 0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 
 			std::vector<VkBufferImageCopy> bufferImageCopy(pixels.size());
-			for (size_t i = 0; i < pixels.size(); i++)
+			for (uint32_t i = 0; i < pixels.size(); i++)
 			{
 				bufferImageCopy[i] = Utility::Vulkan::CreateInfo::bufferImageCopy(textureWidth, textureHeight);
-				bufferImageCopy[i].bufferOffset = textureWidth * textureHeight * textureChannels * i;
+				bufferImageCopy[i].bufferOffset = static_cast<VkDeviceSize>(textureWidth * textureHeight * textureChannels * i);
 				bufferImageCopy[i].imageSubresource.baseArrayLayer = static_cast<uint32_t>(i);
 			}
 			vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.buffer, image.image, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(bufferImageCopy.size()), bufferImageCopy.data());

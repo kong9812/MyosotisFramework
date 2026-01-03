@@ -8,17 +8,17 @@ namespace MyosotisFW
 {
 	struct TLASInfo
 	{
-		Buffer instanceBuffer;
-		VkDeviceAddress instanceAddress;
+		Buffer instanceBuffer{};
+		VkDeviceAddress instanceAddress{};
 
-		VkAccelerationStructureGeometryKHR geometry;
-		VkAccelerationStructureBuildRangeInfoKHR buildRange;
-		VkAccelerationStructureBuildSizesInfoKHR buildSize;
+		VkAccelerationStructureGeometryKHR geometry{};
+		VkAccelerationStructureBuildRangeInfoKHR buildRange{};
+		VkAccelerationStructureBuildSizesInfoKHR buildSize{};
 
-		AccelerationStructure tlas;	// 本体
+		AccelerationStructure tlas{};	// 本体
 
-		uint32_t instanceCount;
-		bool allowUpdate;
-		bool dirty;
+		uint32_t instanceCount = 0;
+		bool allowUpdate = false;
+		bool dirty = false;
 	};
 }

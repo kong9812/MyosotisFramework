@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 #include "iimgui.h"
 #include "ClassPointer.h"
-#include "Structs.h"
+#include "UpdateData.h"
 
 namespace MyosotisFW::System::Render
 {

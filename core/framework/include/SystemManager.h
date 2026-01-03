@@ -82,7 +82,7 @@ namespace MyosotisFW::System
 		static void resizedCallback(GLFWwindow* window, int width, int height);
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-		static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+		static void cursorPosCallback(GLFWwindow* window, double x, double y);
 		static void dropCallback(GLFWwindow* window, int path_count, const char* paths[]);
 	};
 	TYPEDEF_SHARED_PTR_ARGS(SystemManager);

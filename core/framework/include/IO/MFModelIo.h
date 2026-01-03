@@ -40,7 +40,7 @@ namespace Utility::Loader
 			meshData.meshlet[i].uniqueIndex.resize(meshData.meshlet[i].meshletInfo.vertexCount);
 			file.read(reinterpret_cast<char*>(meshData.meshlet[i].uniqueIndex.data()), sizeof(uint32_t) * meshData.meshlet[i].meshletInfo.vertexCount);
 			// Primitives読み込み
-			meshData.meshlet[i].primitives.resize(meshData.meshlet[i].meshletInfo.primitiveCount * 3);
+			meshData.meshlet[i].primitives.resize(static_cast<size_t>(meshData.meshlet[i].meshletInfo.primitiveCount) * 3);
 			file.read(reinterpret_cast<char*>(meshData.meshlet[i].primitives.data()), sizeof(uint32_t) * meshData.meshlet[i].meshletInfo.primitiveCount * 3);
 		}
 

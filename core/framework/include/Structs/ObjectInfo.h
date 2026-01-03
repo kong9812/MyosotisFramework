@@ -7,12 +7,12 @@ namespace MyosotisFW
 {
 	struct ObjectInfo
 	{
-		Transform transform;
-		glm::mat4 model;
-		uint32_t objectID;
-		uint32_t meshID;	// 使ってない
-		uint32_t materialID;
-		uint32_t vbDispatchInfoStartIndex;
+		Transform transform{};
+		glm::mat4 model = glm::mat4(0.0f);
+		uint32_t objectID = 0;
+		uint32_t meshID = 0;					// 使ってない
+		uint32_t materialID = 0;
+		uint32_t vbDispatchInfoStartIndex = 0;
 	};
 	TYPEDEF_SHARED_PTR(ObjectInfo);
 }

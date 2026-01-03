@@ -17,15 +17,15 @@ namespace MyosotisFW::System::Render
 		void Submit(const VkSubmitInfo& submitInfo, const VkFence& fence = VK_NULL_HANDLE);
 		void CreateQueueInstance(const VkDevice& device);
 		void CreateCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator);
-		std::vector<VkCommandBuffer> AllocateCommandBuffers(const VkDevice& device, const uint32_t count = 1);
-		void FreeCommandBuffers(const VkDevice& device, std::vector<VkCommandBuffer> commandBuffers);
-		void DestroyCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator);
-		void FreeSingleUseCommandBuffer(const VkDevice& device, const VkCommandBuffer& commandBuffer);
-		VkCommandBuffer AllocateSingleUseCommandBuffer(const VkDevice& device);
+		std::vector<VkCommandBuffer> AllocateCommandBuffers(const VkDevice& device, const uint32_t count = 1) const;
+		void FreeCommandBuffers(const VkDevice& device, std::vector<VkCommandBuffer> commandBuffers) const;
+		void DestroyCommandPool(const VkDevice& device, const VkAllocationCallbacks* pAllocator) const;
+		void FreeSingleUseCommandBuffer(const VkDevice& device, const VkCommandBuffer& commandBuffer)  const;
+		VkCommandBuffer AllocateSingleUseCommandBuffer(const VkDevice& device) const;
 
-		uint32_t GetQueueFamilyIndex() { return m_queueFamilyIndex; }
-		VkQueue GetQueue() { return m_queue; }
-		void WaitIdle();
+		uint32_t GetQueueFamilyIndex() const { return m_queueFamilyIndex; }
+		VkQueue GetQueue() const { return m_queue; }
+		void WaitIdle() const;
 
 	private:
 		uint32_t getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);

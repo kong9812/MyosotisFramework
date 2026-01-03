@@ -12,23 +12,23 @@ namespace MyosotisFW
 	struct Mesh
 	{
 		// Info
-		MeshInfo meshInfo;
+		MeshInfo meshInfo{};
 
-		std::vector<uint32_t> index;
-		std::vector<VertexData> vertex;
-		std::vector<Meshlet> meshlet;
+		std::vector<uint32_t> index{};
+		std::vector<VertexData> vertex{};
+		std::vector<Meshlet> meshlet{};
 
 		// Buffer
-		Buffer vertexBuffer;
-		Buffer indexBuffer;
+		Buffer vertexBuffer{};
+		Buffer indexBuffer{};
 
 		// BLAS
-		mutable uint32_t blasID;
+		mutable uint32_t blasID = 0;
 	};
-	TYPEDEF_SHARED_PTR(Mesh);						// RenderResoureces保持用
+	TYPEDEF_SHARED_PTR(Mesh);						// RenderResources保持用
 	using MeshHandle = std::weak_ptr<const Mesh>;	// 外部参照用
 
 	// 複数メッシュ管理
-	using Meshes = std::vector<Mesh_ptr>;			// RenderResoureces保持用
+	using Meshes = std::vector<Mesh_ptr>;			// RenderResources保持用
 	using MeshesHandle = std::vector<MeshHandle>;	// 外部参照用
 }

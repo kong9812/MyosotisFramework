@@ -2,6 +2,7 @@
 #pragma once
 #include "MObjectRegistry.h"
 #include "MObject.h"
+#include "Logger.h"
 
 namespace MyosotisFW
 {

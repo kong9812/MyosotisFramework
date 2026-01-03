@@ -25,12 +25,12 @@ namespace Utility::Loader {
 		VkFenceCreateInfo fenceCreateInfo = Utility::Vulkan::CreateInfo::fenceCreateInfo();
 		VK_VALIDATION(vkCreateFence(device, &fenceCreateInfo, pAllocationCallbacks, &fence));
 
-		int textureWidth = -1;
-		int textureHeight = -1;
-		int textureChannels = -1;
+		int32_t textureWidth = -1;
+		int32_t textureHeight = -1;
+		int32_t textureChannels = -1;
 		stbi_uc* pixels = stbi_load(absolutePath.string().c_str(), &textureWidth, &textureHeight, &textureChannels, STBI_rgb_alpha);
 		ASSERT(pixels, "Failed to load image: " + absolutePath.string());
-		size_t imageSize = textureWidth * textureHeight * textureChannels;
+		uint32_t imageSize = textureWidth * textureHeight * textureChannels;
 
 		{// GPU image
 			VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfo(VkFormat::VK_FORMAT_R8G8B8A8_SRGB, textureWidth, textureHeight);
@@ -54,7 +54,10 @@ namespace Utility::Loader {
 
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(allocator, stagingBuffer.allocation, &data));
-			memcpy(data, pixels, imageSize);
+			if (pixels > 0)
+			{
+				memcpy(data, pixels, imageSize);
+			}
 			vmaUnmapMemory(allocator, stagingBuffer.allocation);
 			stbi_image_free(pixels);
 

@@ -7,7 +7,7 @@
 #include "ComponentBase.h"
 #include "ClassPointer.h"
 #include "CameraData.h"
-#include "Structs.h"
+#include "UpdateData.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -32,11 +32,11 @@ namespace MyosotisFW::System::Render::Camera
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 
 		void SetMainCamera(bool isMainCamera) { m_isMainCamera = isMainCamera; }
-		bool IsMainCamera() { return m_isMainCamera; }
+		bool IsMainCamera() const { return m_isMainCamera; }
 
 		virtual void Update(const UpdateData& updateData) {}
 
-		bool IsMoved() { return m_isMoved; }
+		bool IsMoved() const { return m_isMoved; }
 
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;

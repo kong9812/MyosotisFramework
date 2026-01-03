@@ -27,9 +27,9 @@ namespace MyosotisFW::System::Render
 			vkDestroyImageView(*m_device, m_dummyImages.storage2D.view, m_device->GetAllocationCallbacks());
 		}
 
-		for (std::pair<std::string, VkShaderModule> shaderMoudle : m_shaderModules)
+		for (std::pair<std::string, VkShaderModule> shaderModule : m_shaderModules)
 		{
-			vkDestroyShaderModule(*m_device, shaderMoudle.second, m_device->GetAllocationCallbacks());
+			vkDestroyShaderModule(*m_device, shaderModule.second, m_device->GetAllocationCallbacks());
 		}
 		m_shaderModules.clear();
 

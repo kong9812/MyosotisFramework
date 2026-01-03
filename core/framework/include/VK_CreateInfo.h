@@ -811,7 +811,7 @@ namespace Utility::Vulkan::CreateInfo
 		ci.depthTestEnable = depthTestEnable;				// 深度テストの有効化
 		ci.depthWriteEnable = depthWriteEnable;				// 深度値の書き込みの有効化 (通常:VK_TRUE 透明オブジェクト:VK_FALSE)
 		ci.depthCompareOp = depthCompareOp;					// 深度値を比較する条件
-		ci.depthBoundsTestEnable = depthBoundsTestEnable;	// 深度境界テストを有効化 (minDepthBoundstとmaxDepthBoundsの間に深度値がある場合のみ描画)
+		ci.depthBoundsTestEnable = depthBoundsTestEnable;	// 深度境界テストを有効化 (minDepthBoundsとmaxDepthBoundsの間に深度値がある場合のみ描画)
 		ci.stencilTestEnable = stencilTestEnable;			// ステンシルテストの有効化
 		ci.front = front;									// ステンシルテストの設定 (表)
 		ci.back = back;										// ステンシルテストの設定 (裏)

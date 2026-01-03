@@ -10,7 +10,7 @@ namespace MyosotisFW
 {
 	struct BasicMaterial
 	{
-		bool isDefault()
+		const bool isDefault() const
 		{
 			return (
 				(basicMaterialInfo.baseColor == glm::vec4(1.0f)) &&
@@ -20,16 +20,16 @@ namespace MyosotisFW
 		}
 
 		// GPU Data
-		BasicMaterialInfo basicMaterialInfo;
+		BasicMaterialInfo basicMaterialInfo{};
 
 		// Image
-		std::string baseColorTexturePath;
-		std::string normalTexturePath;
+		std::string baseColorTexturePath{};
+		std::string normalTexturePath{};
 	};
-	TYPEDEF_SHARED_PTR(BasicMaterial);								// RenderResoureces保持用
+	TYPEDEF_SHARED_PTR(BasicMaterial);								// RenderResources保持用
 	using BasicMaterialHandle = std::weak_ptr<const BasicMaterial>;	// 外部参照用
 
 	// 複数メッシュ管理
-	using BasicMaterials = std::vector<BasicMaterial_ptr>;			// RenderResoureces保持用
+	using BasicMaterials = std::vector<BasicMaterial_ptr>;			// RenderResources保持用
 	using BasicMaterialsHandle = std::vector<BasicMaterialHandle>;	// 外部参照用
 }

@@ -28,23 +28,23 @@ namespace MyosotisFW::System::Render
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // キーボード操作を有効化
 		io.Fonts->AddFontFromFileTTF((std::string(AppInfo::g_fontFolder) + AppInfo::g_imguiFontFileName).c_str(), AppInfo::g_imguiFontSize);
 		RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-		ImGui_ImplVulkan_InitInfo initinfo{};
-		initinfo.Instance = instance;
-		initinfo.PhysicalDevice = m_device->GetPhysicalDevice();
-		initinfo.Device = *m_device;
-		initinfo.QueueFamily = graphicsQueue->GetQueueFamilyIndex();
-		initinfo.Queue = graphicsQueue->GetQueue();
-		initinfo.DescriptorPoolSize = AppInfo::g_imguiDescriptorPoolSize;       // Set to create internal descriptor pool instead of using DescriptorPool
-		initinfo.RenderPass = renderPass;                                       // Ignored if using dynamic rendering
-		initinfo.MinImageCount = renderSwapchain->GetMinImageCount();           // >= 2
-		initinfo.ImageCount = renderSwapchain->GetImageCount();                 // >= MinImageCount
-		initinfo.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;    // 0 defaults to VK_SAMPLE_COUNT_1_BIT
-		initinfo.PipelineCache = VK_NULL_HANDLE;
-		initinfo.UseDynamicRendering = false;
-		initinfo.Allocator = m_device->GetAllocationCallbacks();
-		//initinfo.CheckVkResultFn =  // todo.
+		ImGui_ImplVulkan_InitInfo initInfo{};
+		initInfo.Instance = instance;
+		initInfo.PhysicalDevice = m_device->GetPhysicalDevice();
+		initInfo.Device = *m_device;
+		initInfo.QueueFamily = graphicsQueue->GetQueueFamilyIndex();
+		initInfo.Queue = graphicsQueue->GetQueue();
+		initInfo.DescriptorPoolSize = AppInfo::g_imguiDescriptorPoolSize;       // Set to create internal descriptor pool instead of using DescriptorPool
+		initInfo.RenderPass = renderPass;                                       // Ignored if using dynamic rendering
+		initInfo.MinImageCount = renderSwapchain->GetMinImageCount();           // >= 2
+		initInfo.ImageCount = renderSwapchain->GetImageCount();                 // >= MinImageCount
+		initInfo.MSAASamples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;    // 0 defaults to VK_SAMPLE_COUNT_1_BIT
+		initInfo.PipelineCache = VK_NULL_HANDLE;
+		initInfo.UseDynamicRendering = false;
+		initInfo.Allocator = m_device->GetAllocationCallbacks();
+		//initInfo.CheckVkResultFn =  // todo.
 
-		ImGui_ImplVulkan_Init(&initinfo);
+		ImGui_ImplVulkan_Init(&initInfo);
 	}
 
 	void EditorGUI::Update(const UpdateData& updateData)

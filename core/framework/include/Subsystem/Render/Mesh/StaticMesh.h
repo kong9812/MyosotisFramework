@@ -4,10 +4,11 @@
 #include <vulkan/vulkan.h>
 #include "iglm.h"
 
+#include "UpdateData.h"
+
 #include "ComponentCast.h"
 #include "ComponentBase.h"
 #include "ClassPointer.h"
-#include "Structs.h"
 #include "VBDispatchInfo.h"
 
 namespace MyosotisFW::System::Render
@@ -34,7 +35,7 @@ namespace MyosotisFW::System::Render
 	class StaticMesh : public ComponentBase
 	{
 	public:
-		//  todo.初期化でrenderpipelineとdescriptorをとってくるのがいいかも
+		//  todo.初期化でRenderPipelineとdescriptorをとってくるのがいいかも
 		StaticMesh(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback);
 		~StaticMesh();
 
