@@ -13,6 +13,43 @@ namespace MyosotisFW
 {
 	using namespace System::Render;
 
+	void MObject::AddChild(MObject_ptr child)
+	{
+		if (!child || child.get() == this) return;
+
+		// すでに別の親がいる場合は、古い親から切り離す
+		if (MObject_ptr oldParent = child->GetParent())
+		{
+			oldParent->RemoveChild(child);
+		}
+
+		// 自分の子リストに追加
+		m_children.push_back(child);
+
+		// 子に対して自分を親としてセット
+		// enable_shared_from_thisで自分のSharedPtr発行
+		child->SetParent(shared_from_this());
+	}
+
+	void MObject::RemoveChild(MObject_ptr child)
+	{
+		if (!child) return;
+
+		// リストから削除
+		auto it = std::remove(m_children.begin(), m_children.end(), child);
+		if (it != m_children.end())
+		{
+			m_children.erase(it, m_children.end());
+			// 絶縁
+			child->SetParent(nullptr);
+		}
+	}
+
+	void MObject::SetParent(MObject_ptr parent)
+	{
+		m_parent = parent;
+	}
+
 	const uint32_t MObject::GetMeshCount() const
 	{
 		auto it = std::find_if(m_components.begin(), m_components.end(),

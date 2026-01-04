@@ -10,6 +10,7 @@
 
 class ContentBrowserTopWidget : public QWidget
 {
+	Q_OBJECT
 public:
 	ContentBrowserTopWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
@@ -22,4 +23,8 @@ private:
 	ContentBrowserTopWidgetImportButton* m_importButton;
 	ContentBrowserTopWidgetSaveAllButton* m_saveAllButton;
 	ContentBrowserTopWidgetSettingButton* m_settingButton;
+
+Q_SIGNALS:
+	void addMObject();
+
 };

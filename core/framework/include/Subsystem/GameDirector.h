@@ -22,12 +22,12 @@ namespace MyosotisFW::System::GameDirector {
 	{
 	public:
 		GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem);
-		~GameDirector() {};
+		~GameDirector() {}
 
 		void LoadGameStageFile(const std::string& fileName);
 		void SaveGameStageFile(const std::string& fileName, const std::vector<ComponentBase_ptr>& objects);
 
-	private:
+	protected:
 		Render::RenderSubsystem_ptr m_renderSubsystem;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(GameDirector);

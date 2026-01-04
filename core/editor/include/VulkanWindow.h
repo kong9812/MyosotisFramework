@@ -2,7 +2,7 @@
 #pragma once
 #include "iqt.h"
 #include "EditorRenderSubsystem.h"
-#include "GameDirector.h"
+#include "EditorGameDirector.h"
 
 namespace MyosotisFW::System::Editor
 {
@@ -24,6 +24,9 @@ namespace MyosotisFW::System::Editor
 		void mouseMoveEvent(QMouseEvent* event) override;
 		void OpenFile(std::string filePath);
 
+		Render::EditorRenderSubsystem_ptr GetEditorRenderSubsystem() const { return m_renderSubsystem; }
+		GameDirector::EditorGameDirector_ptr GetEditorGameDirector() const { return m_gameDirector; }
+
 	protected:
 		bool eventFilter(QObject* watched, QEvent* event) override;
 		bool event(QEvent* event) override;
@@ -37,7 +40,7 @@ namespace MyosotisFW::System::Editor
 		VkSurfaceKHR m_surface;
 
 		Render::EditorRenderSubsystem_ptr m_renderSubsystem;
-		GameDirector::GameDirector_ptr m_gameDirector;
+		GameDirector::EditorGameDirector_ptr m_gameDirector;
 
 		bool m_initialized;
 		bool m_resizing;
@@ -50,7 +53,9 @@ namespace MyosotisFW::System::Editor
 		bool m_mouseDragging;
 		bool m_selectedObject;
 
-	signals:
+	Q_SIGNALS:
 		void closeWindow();
+		void initFinished();
+
 	};
 }

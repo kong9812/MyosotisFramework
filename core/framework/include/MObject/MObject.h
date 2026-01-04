@@ -27,7 +27,7 @@ namespace MyosotisFW
 	class MObject;
 	TYPEDEF_SHARED_PTR(MObject);
 
-	class MObject
+	class MObject : public std::enable_shared_from_this<MObject>
 	{
 	public:
 		MObject() :
@@ -44,9 +44,17 @@ namespace MyosotisFW
 		virtual ~MObject() = default;
 
 		const std::string GetName() const { return m_name; }
+		void SetName(std::string name) { m_name = name; }
 
 		const uuids::uuid GetHashObjectID() const { return m_objectID; }
 		const uint32_t GetObjectID() const { return m_objectInfo->objectID; }
+
+		MObject_ptr GetParent() const { return m_parent; }
+		std::vector<MObject_ptr> GetChildren() const { return m_children; }
+
+		void AddChild(MObject_ptr child);
+		void RemoveChild(MObject_ptr child);
+		void SetParent(MObject_ptr parent);
 
 		const glm::vec4 GetPos() const { return m_objectInfo->transform.pos; }
 		const glm::vec4 GetRot() const { return m_objectInfo->transform.rot; }
@@ -94,6 +102,7 @@ namespace MyosotisFW
 		ObjectInfo_ptr m_objectInfo;
 		TLASInstance_ptr m_tlasInstance;
 
+		MObject_ptr m_parent;
 		std::vector<MObject_ptr> m_children;
 		std::vector<ComponentBase_ptr> m_components;
 	};

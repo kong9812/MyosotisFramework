@@ -74,12 +74,14 @@ namespace MyosotisFW::System::Editor
 #endif
 
 		// create game director
-		m_gameDirector = GameDirector::CreateGameDirectorPointer(m_renderSubsystem);
+		m_gameDirector = GameDirector::CreateEditorGameDirectorPointer(m_renderSubsystem);
 
 		m_timer.start();
 		m_lastTime = static_cast<float>(m_timer.elapsed()) / 1000.0f;
 
 		m_resizing = false;
+
+		emit initFinished();
 	}
 
 	void VulkanWindow::resizeEvent(QResizeEvent* event)
@@ -274,7 +276,6 @@ namespace MyosotisFW::System::Editor
 
 	void VulkanWindow::objectSelect()
 	{
-		Logger::Debug("[VulkanWindow] objectSelect!!");
 		QPoint globalPos = QCursor::pos();
 		QPointF localPos = mapFromGlobal(globalPos);
 		m_renderSubsystem->ObjectSelect(static_cast<int32_t>(localPos.x()), static_cast<int32_t>(localPos.y()));

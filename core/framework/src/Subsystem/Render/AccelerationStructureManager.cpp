@@ -462,6 +462,9 @@ namespace MyosotisFW::System::Render
 
 	void AccelerationStructureManager::destroyTLAS()
 	{
+		// デバイスが静止状態まで待つ
+		vkDeviceWaitIdle(*m_device);
+
 		if (m_tlas.tlas.handle != VK_NULL_HANDLE)
 		{
 			m_vkDestroyAccelerationStructureKHR(*m_device, m_tlas.tlas.handle, m_device->GetAllocationCallbacks());

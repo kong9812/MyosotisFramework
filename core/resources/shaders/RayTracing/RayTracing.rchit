@@ -197,7 +197,7 @@ void main()
 	// dot(N・L)の結果が0.1 (ちょっとだけ光に向いてる状態)で、0.1 * 10.0 = 1.0 になる
 	// 境界線ギリギリまでは影を100%出す、本当にギリギリのところ(0.1以下)で一気に影を消していくよ
 	// 急カーブができる
-	const float terminatorOffset = 10.0;
+	const float terminatorOffset = 5.0;
 	float terminatorFade = clamp(dot(worldNormal, L) * terminatorOffset, 0.0, 1.0);
 
 	// 最終色の計算

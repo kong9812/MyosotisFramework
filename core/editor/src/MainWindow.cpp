@@ -10,7 +10,9 @@ namespace MyosotisFW::System::Editor
 		QMainWindow(parent, flags),
 		m_vulkanWindow(new VulkanWindow()),
 		m_contentBrowser(new ContentBrowserDockWidget(this)),
-		m_logger(new LoggerDockWidget(this))
+		m_logger(new LoggerDockWidget(this)),
+		m_overview(new OverviewDockWidget(this)),
+		m_propertyViewer(new PropertyViewerDockWidget(this))
 	{
 		// KeyConverterインスタンス作成
 		KeyConverter::Instance();
@@ -22,15 +24,19 @@ namespace MyosotisFW::System::Editor
 		setAccessibleName(AppInfo::g_applicationName);
 		resize(QSize(AppInfo::g_windowWidth, AppInfo::g_windowHeight));
 
-		connect(m_vulkanWindow, &VulkanWindow::closeWindow, this, &MainWindow::closeWindow);
 		setCentralWidget(QWidget::createWindowContainer(m_vulkanWindow));
-
-		connect(m_contentBrowser, &ContentBrowserDockWidget::openFile, this, &MainWindow::openFile);
 
 		addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_contentBrowser);
 		addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_logger);
+		addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_overview);
+		addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_propertyViewer);
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
+		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
+		resizeDocks({ m_overview, m_propertyViewer }, { 300, 300 }, Qt::Orientation::Horizontal);
+
+		// VKの初期化が終わったらシグナルを接続
+		connect(m_vulkanWindow, &VulkanWindow::initFinished, this, [this] { connectDockWidgetsSignals(); });
 	}
 
 	void MainWindow::closeEvent(QCloseEvent* event)
@@ -69,6 +75,27 @@ namespace MyosotisFW::System::Editor
 		__super::mouseReleaseEvent(event);
 	}
 
+	void MainWindow::connectDockWidgetsSignals()
+	{
+		// VKの初期化が終わったらシグナルを接続
+
+		// エディタ閉じる
+		connect(m_vulkanWindow, &VulkanWindow::closeWindow, this, &MainWindow::closeWindow);
+
+		// GameStageファイル開く
+		connect(m_contentBrowser, &ContentBrowserDockWidget::openFile, this, &MainWindow::openFile);
+
+		// MObject追加
+		connect(m_contentBrowser, &ContentBrowserDockWidget::addMObject, this, [this]
+			{
+				MObject_ptr newObject = m_vulkanWindow->GetEditorGameDirector()->AddNewMObject();	// GameDirectorでオブジェクト作成
+				m_overview->AddTopLevelObject(newObject);
+			});
+
+		// Overviewの選択オブジェクト変更
+		connect(m_overview, &OverviewDockWidget::changeSelection, m_propertyViewer, &PropertyViewerDockWidget::setObject);
+	}
+
 	void MainWindow::closeWindow()
 	{
 		close();
@@ -84,9 +111,15 @@ namespace MyosotisFW::System::Editor
 	{
 		if (m_contentBrowser->isHidden()) m_contentBrowser->show();
 		if (m_logger->isHidden()) m_logger->show();
+		if (m_overview->isHidden()) m_overview->show();
+		if (m_propertyViewer->isHidden()) m_propertyViewer->show();
 		m_contentBrowser->setFloating(false);
 		m_logger->setFloating(false);
+		m_overview->setFloating(false);
+		m_propertyViewer->setFloating(false);
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
+		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
+		resizeDocks({ m_overview, m_propertyViewer }, { 300, 300 }, Qt::Orientation::Horizontal);
 	}
 }

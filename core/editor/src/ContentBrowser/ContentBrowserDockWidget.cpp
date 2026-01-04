@@ -12,7 +12,7 @@ ContentBrowserDockWidget::ContentBrowserDockWidget(QWidget* parent, Qt::WindowFl
 	m_treeView(new QTreeView(m_mainWidget)),
 	m_listView(new QListView(m_mainWidget)),
 	m_splitter(new QSplitter(m_mainWidget)),
-	m_vLayout(new QVBoxLayout()),
+	m_vBoxLayout(new QVBoxLayout()),
 	m_hLayout(new QHBoxLayout())
 {
 	std::filesystem::path resourcesFolderPath = std::filesystem::absolute(MyosotisFW::AppInfo::g_resourcesFolder);
@@ -34,11 +34,11 @@ ContentBrowserDockWidget::ContentBrowserDockWidget(QWidget* parent, Qt::WindowFl
 	m_listView->setRootIndex(m_fileSystemModel->index(resourcesFolderPath.string().c_str()));
 
 	// QTreeViewの選択が変更されたときにQListViewを更新
-	QObject::connect(m_treeView, &QTreeView::clicked, [&](const QModelIndex& index) {
+	connect(m_treeView, &QTreeView::clicked, [&](const QModelIndex& index) {
 		QModelIndex sourceModelIndex = m_sortFilterProxyModel->mapToSource(index);
 		m_listView->setRootIndex(sourceModelIndex);
 		});
-	QObject::connect(m_listView, &QListView::doubleClicked, [&](const QModelIndex& index) {
+	connect(m_listView, &QListView::doubleClicked, [&](const QModelIndex& index) {
 		if (m_fileSystemModel->fileInfo(index).isDir())
 		{
 			m_listView->setRootIndex(index);
@@ -48,6 +48,7 @@ ContentBrowserDockWidget::ContentBrowserDockWidget(QWidget* parent, Qt::WindowFl
 			emit openFile(m_fileSystemModel->fileInfo(index).absoluteFilePath().toStdString());
 		}
 		});
+	connect(m_topWidget, &ContentBrowserTopWidget::addMObject, this, &ContentBrowserDockWidget::addMObject);
 
 	m_splitter->setContentsMargins(0, 0, 0, 0);
 	m_splitter->addWidget(m_treeView);
@@ -55,12 +56,12 @@ ContentBrowserDockWidget::ContentBrowserDockWidget(QWidget* parent, Qt::WindowFl
 	m_splitter->setSizes({ 200, 500 });
 	m_hLayout->addWidget(m_splitter);
 
-	m_vLayout->setContentsMargins(0, 0, 0, 0);
-	m_vLayout->addWidget(m_topWidget);
-	m_vLayout->addLayout(m_hLayout);
+	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
+	m_vBoxLayout->addWidget(m_topWidget);
+	m_vBoxLayout->addLayout(m_hLayout);
 
 	m_mainWidget->setContentsMargins(0, 0, 0, 0);
-	m_mainWidget->setLayout(m_vLayout);
+	m_mainWidget->setLayout(m_vBoxLayout);
 
 	setContentsMargins(0, 0, 0, 0);
 	setWindowTitle("Content Browser");

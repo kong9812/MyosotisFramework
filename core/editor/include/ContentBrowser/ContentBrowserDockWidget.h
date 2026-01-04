@@ -24,9 +24,10 @@ private:
 	QListView* m_listView;
 
 	QSplitter* m_splitter;
-	QVBoxLayout* m_vLayout;
+	QVBoxLayout* m_vBoxLayout;
 	QHBoxLayout* m_hLayout;
 
 Q_SIGNALS:
+	void addMObject();
 	void openFile(std::string filePath);
 };

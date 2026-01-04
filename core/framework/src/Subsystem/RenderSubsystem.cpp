@@ -219,8 +219,6 @@ namespace MyosotisFW::System::Render
 	void RenderSubsystem::Render()
 	{
 		if (m_stopRender) return;
-		if (m_mainCamera == nullptr) return;
-		if (m_objects.empty()) return;
 
 		const uint32_t currentFrameIndex = m_frameCounter % AppInfo::g_maxInFlightFrameCount;
 		const uint32_t previousFrameIndex = (m_frameCounter + 1) % AppInfo::g_maxInFlightFrameCount;

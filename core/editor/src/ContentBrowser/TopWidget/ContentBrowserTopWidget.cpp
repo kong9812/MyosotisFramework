@@ -23,4 +23,6 @@ ContentBrowserTopWidget::ContentBrowserTopWidget(QWidget* parent, Qt::WindowFlag
 	m_hLayout->addWidget(m_settingButton);
 
 	setLayout(m_hLayout);
+
+	connect(m_addButton, &ContentBrowserTopWidgetAddButton::addMObject, this, &ContentBrowserTopWidget::addMObject);
 }

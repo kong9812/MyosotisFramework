@@ -4,6 +4,8 @@
 #include "VulkanWindow.h"
 #include "ContentBrowserDockWidget.h"
 #include "LoggerDockWidget.h"
+#include "OverviewDockWidget.h"
+#include "PropertyViewerDockWidget.h"
 
 namespace MyosotisFW::System::Editor
 {
@@ -16,6 +18,8 @@ namespace MyosotisFW::System::Editor
 		VulkanWindow* m_vulkanWindow;
 		ContentBrowserDockWidget* m_contentBrowser;
 		LoggerDockWidget* m_logger;
+		OverviewDockWidget* m_overview;
+		PropertyViewerDockWidget* m_propertyViewer;
 
 		void closeEvent(QCloseEvent* event) override;
 		void paintEvent(QPaintEvent* event) override;
@@ -23,6 +27,8 @@ namespace MyosotisFW::System::Editor
 		void keyReleaseEvent(QKeyEvent* event) override;
 		void mousePressEvent(QMouseEvent* event) override;
 		void mouseReleaseEvent(QMouseEvent* event) override;
+
+		void connectDockWidgetsSignals();
 
 	private:
 		void closeWindow();
