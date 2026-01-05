@@ -11,14 +11,14 @@
 namespace MyosotisFW::System::Render
 {
 	PrimitiveGeometry::PrimitiveGeometry(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
-		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::Quad)
+		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::UNDEFINED)
 	{
 		m_name = "PrimitiveGeometry";
 	}
 
-	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
+	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources, meshInfoDescriptorSet);
+		__super::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -50,6 +50,8 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::loadAssets()
 	{
+		if (m_primitiveGeometryShape == Shape::PrimitiveGeometryShape::UNDEFINED) return;
+
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
 		MeshHandle meshHandle = m_resources->GetPrimitiveGeometryMesh(m_primitiveGeometryShape);
 		std::shared_ptr<const Mesh> mesh = meshHandle.lock();

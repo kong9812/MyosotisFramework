@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <vector>
 #include "ClassPointer.h"
 #include "ObjectInfo.h"
 #include "UpdateData.h"
@@ -26,6 +27,8 @@ namespace MyosotisFW
 
 	class MObject;
 	TYPEDEF_SHARED_PTR(MObject);
+	using MObjectList = std::vector<MObject_ptr>;
+	using MObjectListPtr = std::shared_ptr<MObjectList>;
 
 	class MObject : public std::enable_shared_from_this<MObject>
 	{
@@ -33,20 +36,20 @@ namespace MyosotisFW
 		MObject() :
 			m_isReady(false),
 			m_name("MObject"),
-			m_objectID(),
+			m_uuid(),
 			m_renderID(0),
 			m_children(),
 			m_components(),
 			m_dirty(true)
 		{
-			m_objectID = hashMaker();
+			m_uuid = uuids::hashMaker();
 		}
 		virtual ~MObject() = default;
 
 		const std::string GetName() const { return m_name; }
 		void SetName(std::string name) { m_name = name; }
 
-		const uuids::uuid GetHashObjectID() const { return m_objectID; }
+		const uuids::uuid GetUUID() const { return m_uuid; }
 		const uint32_t GetObjectID() const { return m_objectInfo->objectID; }
 
 		MObject_ptr GetParent() const { return m_parent; }
@@ -92,7 +95,7 @@ namespace MyosotisFW
 	protected:
 		bool m_isReady;
 		std::string m_name;
-		uuids::uuid m_objectID;
+		uuids::uuid m_uuid;
 		uint32_t m_renderID;
 
 		bool m_dirty;

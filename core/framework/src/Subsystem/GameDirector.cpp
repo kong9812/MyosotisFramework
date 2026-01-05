@@ -19,14 +19,12 @@ namespace MyosotisFW::System::GameDirector {
 	GameDirector::GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem) :
 		m_renderSubsystem(renderSubsystem)
 	{
-		//// TEST
-		//{
-		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-		//	Render::Camera::FPSCamera_ptr component = Object_Cast<Render::Camera::FPSCamera>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::FPSCamera, newObject->GetMeshChangedCallback()));
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
-		//}
+		// TEST
+		{
+			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
+			Render::Camera::FPSCamera_ptr component = Render::Camera::Object_CastToFPSCamera(
+				m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::FPSCamera));
+		}
 
 		//{
 		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
@@ -34,13 +32,11 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f));
 		//	newObject->SetScale(glm::vec3(1.0f));
 
-		//	Render::Terrain_ptr component = Object_Cast<Render::Terrain>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::Terrain, newObject->GetMeshChangedCallback()));
+		//	Render::Terrain_ptr component = Render::Object_CastToTerrain(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::Terrain));
 		//	Render::Terrain::MeshComponentInfo meshComponentInfo{};
 		//	meshComponentInfo.terrainHeightmapName = "smallTerrain.png";
 		//	component->SetMeshComponentInfo(meshComponentInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
 		//{
@@ -49,13 +45,11 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f, 180.0f, 0.0f));
 		//	newObject->SetScale(glm::vec3(10.0f));
 
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
+		//	Render::CustomMesh_ptr component = Render::Object_CastToCustomMesh(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::CustomMesh));
 		//	Render::CustomMesh::MeshComponentInfo meshComponentInfo{};
 		//	meshComponentInfo.meshName = "Suzanne/Suzanne.mfmodel";
 		//	component->SetMeshComponentInfo(meshComponentInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
 		//{
@@ -64,13 +58,11 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f, 180.0f, 0.0f));
 		//	newObject->SetScale(glm::vec3(10.0f));
 
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
+		//	Render::CustomMesh_ptr component = Render::Object_CastToCustomMesh(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::CustomMesh));
 		//	Render::CustomMesh::MeshComponentInfo meshComponentInfo{};
 		//	meshComponentInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
 		//	component->SetMeshComponentInfo(meshComponentInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
 		//{
@@ -79,13 +71,11 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(-90.0f, 0.0f, 90.0f));
 		//	newObject->SetScale(glm::vec3(10.0f));
 
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
+		//	Render::CustomMesh_ptr component = Render::Object_CastToCustomMesh(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::CustomMesh));
 		//	Render::CustomMesh::MeshComponentInfo meshComponentInfo{};
 		//	meshComponentInfo.meshName = "BarramundiFish/BarramundiFish.fbx";
 		//	component->SetMeshComponentInfo(meshComponentInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 
 		//{
@@ -94,15 +84,12 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f, 180.0f, 0.0f));
 		//	newObject->SetScale(glm::vec3(10.0f));
 
-		//	Render::CustomMesh_ptr component = Object_Cast<Render::CustomMesh>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::CustomMesh, newObject->GetMeshChangedCallback()));
+		//	Render::CustomMesh_ptr component = Render::Object_CastToCustomMesh(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::CustomMesh));
 		//	Render::CustomMesh::MeshComponentInfo meshComponentInfo{};
 		//	meshComponentInfo.meshName = "Suzanne/Suzanne.gltf";
 		//	component->SetMeshComponentInfo(meshComponentInfo);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
-
 
 		//{
 		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
@@ -110,11 +97,9 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f));
 		//	newObject->SetScale(glm::vec3(5.0f));
 
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
+		//	Render::PrimitiveGeometry_ptr component = Render::Object_CastToPrimitiveGeometry(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Capsule);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 		//{
 		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
@@ -122,11 +107,9 @@ namespace MyosotisFW::System::GameDirector {
 		//	newObject->SetRot(glm::vec3(0.0f));
 		//	newObject->SetScale(glm::vec3(5.0f));
 
-		//	Render::PrimitiveGeometry_ptr component = Object_Cast<Render::PrimitiveGeometry>(
-		//		System::ComponentFactory::CreateComponent(newObject->GetObjectID(), ComponentType::PrimitiveGeometryMesh, newObject->GetMeshChangedCallback()));
+		//	Render::PrimitiveGeometry_ptr component = Render::Object_CastToPrimitiveGeometry(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::PrimitiveGeometryMesh));
 		//	component->SetPrimitiveGeometryShape(Render::Shape::PrimitiveGeometryShape::Quad);
-		//	newObject->AddComponent(component);
-		//	m_renderSubsystem->RegisterObject(newObject);
 		//}
 		//// TEST
 	}
@@ -146,7 +129,7 @@ namespace MyosotisFW::System::GameDirector {
 				{
 					MObject_ptr newObject = CreateMObjectPointer();
 					newObject->Deserialize(obj);
-					m_renderSubsystem->RegisterObject(newObject);
+					//m_renderSubsystem->RegisterObject(newObject);
 				}
 			}
 		}

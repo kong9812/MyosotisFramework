@@ -29,6 +29,8 @@ namespace MyosotisFW::System::Render
 		// EditorCameraの初期化
 		m_mainCamera = Camera::CreateEditorCameraPointer(0);
 		m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
+		m_mainCamera->SetMainCamera(true);
+		m_renderDescriptors->GetSceneInfoDescriptorSet()->AddCamera(m_mainCamera);
 	}
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)

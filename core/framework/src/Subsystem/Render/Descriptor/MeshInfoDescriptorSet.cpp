@@ -23,8 +23,8 @@ namespace MyosotisFW::System::Render
 			descriptor.shaderStageFlagBits = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
 			descriptor.descriptorBindingFlags = VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 			descriptor.descriptorCount = 1;
-			descriptor.rebuild = true;
-			descriptor.update = true;
+			descriptor.rebuild = false;
+			descriptor.update = false;
 			m_descriptors.push_back(descriptor);
 		}
 		createDescriptorSet();

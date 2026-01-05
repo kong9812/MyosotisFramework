@@ -87,39 +87,8 @@ namespace MyosotisFW::System::Render
 		Object_Cast<Camera::FPSCamera>(m_mainCamera)->ResetMousePos(mousePos);
 	}
 
-	void RenderSubsystem::RegisterObject(const MObject_ptr& object)
-	{
-		if (object->IsCamera(true))
-		{
-			if (!m_mainCamera)
-			{
-				m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
-				m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
-				m_mainCamera->SetMainCamera(true);
-			}
-			m_renderDescriptors->GetSceneInfoDescriptorSet()->AddCamera(m_mainCamera);
-		}
-
-		{// StaticMesh
-			for (ComponentBase_ptr& component : object->GetAllComponents())
-			{
-				if (component->IsStaticMesh())
-				{
-					StaticMesh_ptr customMesh = Object_CastToStaticMesh(component);
-					customMesh->PrepareForRender(m_device, m_resources, m_renderDescriptors->GetMeshInfoDescriptorSet());
-				}
-			}
-		}
-
-		//m_accelerationStructureManager->OnAddObject(object);
-		m_objects.push_back(object);
-	}
-
 	void RenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
-		// MObject Registry
-		m_objectRegistry = CreateMObjectRegistryPointer();
-
 		// Vulkan Instance
 		initializeRenderDevice(instance, surface);
 
@@ -134,6 +103,9 @@ namespace MyosotisFW::System::Render
 
 		// Resources
 		initializeRenderResources();
+
+		// ObjectRegistry
+		initializeObjectRegistry();
 
 		// Semaphore
 		initializeSemaphore();
@@ -163,6 +135,19 @@ namespace MyosotisFW::System::Render
 		{
 			m_mainCamera->Update(updateData);
 		}
+		else
+		{
+			for (const MObject_ptr& object : *m_objects)
+			{
+				if (object->IsCamera())
+				{
+					m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
+					m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
+					m_mainCamera->SetMainCamera(true);
+					break;
+				}
+			}
+		}
 
 		const bool meshChanged = m_objectRegistry->IsMeshChanged();
 		const bool transformChanged = m_objectRegistry->IsTransformChanged();
@@ -175,7 +160,7 @@ namespace MyosotisFW::System::Render
 				m_vbDispatchInfoCount = 0;
 			}
 
-			for (MObject_ptr& object : m_objects)
+			for (const MObject_ptr& object : *m_objects)
 			{
 				if (!object->Update(updateData, m_mainCamera))
 				{
@@ -264,7 +249,7 @@ namespace MyosotisFW::System::Render
 	{
 		m_mainCamera->ResetCamera();
 		m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
-		m_objects.clear();
+		m_objectRegistry->Clear();
 	}
 
 	void RenderSubsystem::Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize)
@@ -339,7 +324,10 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
-		m_hiZDepthComputePipeline->Dispatch(commandBuffer, dstFrameIndex, srcFrameIndex, m_swapchain->GetScreenSize());
+		if (m_vbDispatchInfoCount > 0)
+		{
+			m_hiZDepthComputePipeline->Dispatch(commandBuffer, dstFrameIndex, srcFrameIndex, m_swapchain->GetScreenSize());
+		}
 		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
 
@@ -362,7 +350,10 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase1"));
 		m_visibilityBufferPhase1RenderPass->BeginRender(commandBuffer, currentFrameIndex);
-		m_visibilityBufferPhase1Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
+		if (m_vbDispatchInfoCount > 0)
+		{
+			m_visibilityBufferPhase1Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
+		}
 		m_visibilityBufferPhase1RenderPass->EndRender(commandBuffer);
 		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
@@ -385,7 +376,10 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase2"));
 		m_visibilityBufferPhase2RenderPass->BeginRender(commandBuffer, currentFrameIndex);
-		m_visibilityBufferPhase2Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+		if (m_vbDispatchInfoCount > 0)
+		{
+			m_visibilityBufferPhase2Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+		}
 		m_visibilityBufferPhase2RenderPass->EndRender(commandBuffer);
 		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
@@ -416,35 +410,38 @@ namespace MyosotisFW::System::Render
 		{// Lighting
 			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
 			m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-			m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+			if (m_vbDispatchInfoCount > 0)
+			{
+				m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
+			}
 			m_lightingRenderPass->EndRender(commandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
-		{// LightMap
-			if (m_lightmapBakingPipeline->IsBaking())
-			{
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
-				m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
-				for (MObject_ptr& object : m_objects)
-				{
-					if (m_lightmapBakingPipeline->NextObject(m_resources, object))
-					{
-						m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
-					}
-				}
-				m_lightmapBakingPass->EndRender(commandBuffer);
-				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-			}
-		}
-		{// RayTracing
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
-			m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
-			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-		}
+		//{// LightMap
+		//	if (m_lightmapBakingPipeline->IsBaking())
+		//	{
+		//		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+		//		m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
+		//		for (const MObject_ptr& object : *m_objects)
+		//		{
+		//			if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+		//			{
+		//				m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
+		//			}
+		//		}
+		//		m_lightmapBakingPass->EndRender(commandBuffer);
+		//		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		//	}
+		//}
+		//{// RayTracing
+		//	m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+		//	m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
+		//	m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		//}
 
 		{// Copy Image To Swapchain Image
-			//CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
-			CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
+			//CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
 		}
 
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
@@ -475,6 +472,12 @@ namespace MyosotisFW::System::Render
 	{
 		m_resources = CreateRenderResourcesPointer(m_device, m_renderDescriptors);
 		m_resources->Initialize(m_swapchain->GetScreenSize());
+	}
+
+	void RenderSubsystem::initializeObjectRegistry()
+	{
+		m_objectRegistry = CreateMObjectRegistryPointer(m_device, m_resources, m_renderDescriptors);
+		m_objects = m_objectRegistry->GetMObjectList();
 	}
 
 	void RenderSubsystem::initializeCommandPool()

@@ -14,9 +14,9 @@ namespace MyosotisFW::System::Render
 		m_name = "CustomMesh";
 	}
 
-	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
+	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources, meshInfoDescriptorSet);
+		__super::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -49,6 +49,8 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::loadAssets()
 	{
+		if (m_meshComponentInfo.meshName.empty()) return;
+
 		m_vbDispatchInfo.clear();
 		m_meshID.clear();
 		MeshesHandle meshesHandle = m_resources->GetMesh(m_meshComponentInfo.meshName);

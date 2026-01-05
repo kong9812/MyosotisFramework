@@ -112,7 +112,7 @@ public:
 			return m_objectIcon;
 
 		case Qt::ToolTipRole:
-			return QString::fromStdString(uuids::to_string(obj->GetHashObjectID()));
+			return QString::fromStdString(uuids::to_string(obj->GetUUID()));
 		}
 		return QVariant();
 	}

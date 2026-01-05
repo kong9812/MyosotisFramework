@@ -15,19 +15,25 @@ namespace MyosotisFW
 		FPSCamera,
 		PrimitiveGeometryMesh,
 		CustomMesh,
-		Skybox,
-		InteriorObjectMesh,
 		Terrain,
-		Max
+
+		Max,
+		Begin = FPSCamera,
 	}ComponentType;
+
+	constexpr const char* ComponentTypeName[static_cast<uint32_t>(ComponentType::Max)] =
+	{
+		"FPSCamera",
+		"PrimitiveGeometryMesh",
+		"CustomMesh",
+		"Terrain",
+	};
 
 	const std::unordered_map<ComponentType, std::optional<uuids::uuid>> g_objectTypeUUID = {
 		{ ComponentType::Undefined,					uuids::uuid::from_string("") },
 		{ ComponentType::FPSCamera,					uuids::uuid::from_string("e1bbd200-e5ee-4587-8ef8-39b3cc343984") },
 		{ ComponentType::PrimitiveGeometryMesh,		uuids::uuid::from_string("7f3512b5-4cc9-4caa-a8a9-76d05723e415") },
 		{ ComponentType::CustomMesh,				uuids::uuid::from_string("6eeb286b-2352-4a66-92f6-6c8b75736337") },
-		{ ComponentType::Skybox,					uuids::uuid::from_string("80173349-494e-42fc-9142-1f9a4f550d3c") },
-		{ ComponentType::InteriorObjectMesh,		uuids::uuid::from_string("f3b3b3b4-3b3b-4b3b-8b3b-3b3b3b3b3b3b") },
 		{ ComponentType::Terrain,					uuids::uuid::from_string("8017334a-494e-4b3b-92f6-we1e4536451w") },
 		{ ComponentType::Max,						uuids::uuid::from_string("") },
 	};

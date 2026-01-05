@@ -18,10 +18,10 @@ namespace MyosotisFW::System::Render
 	public:
 		const ComponentType GetType() const override { return ComponentType::CustomMesh; }
 
-		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& MeshInfoDescriptorSet) override;
+		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 
-		void SetMeshComponentInfo(const MeshComponentInfo& MeshComponentInfo) { m_meshComponentInfo = MeshComponentInfo; }
+		void SetMeshComponentInfo(const MeshComponentInfo& MeshComponentInfo) { m_meshComponentInfo = MeshComponentInfo; loadAssets(); }
 		const MeshComponentInfo& GetMeshComponentInfo() const { return m_meshComponentInfo; }
 
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;

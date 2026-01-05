@@ -28,11 +28,10 @@ namespace MyosotisFW::System::Render
 	{
 	}
 
-	void StaticMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
+	void StaticMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
 		m_device = device;
 		m_resources = resources;
-		m_meshInfoDescriptorSet = meshInfoDescriptorSet;
 	}
 
 	void StaticMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)

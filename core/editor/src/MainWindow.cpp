@@ -3,6 +3,7 @@
 #include "Appinfo.h"
 #include "KeyConverter.h"
 #include "ThreadPool.h"
+#include "istduuid.h"
 
 namespace MyosotisFW::System::Editor
 {
@@ -94,6 +95,12 @@ namespace MyosotisFW::System::Editor
 
 		// Overviewの選択オブジェクト変更
 		connect(m_overview, &OverviewDockWidget::changeSelection, m_propertyViewer, &PropertyViewerDockWidget::setObject);
+
+		// PropertyViewerで Component追加
+		connect(m_propertyViewer, &PropertyViewerDockWidget::addComponent, this, [this](const uuids::uuid& uuid, const ComponentType type)
+			{
+				m_vulkanWindow->GetEditorGameDirector()->RegisterComponent(uuid, type);
+			});
 	}
 
 	void MainWindow::closeWindow()

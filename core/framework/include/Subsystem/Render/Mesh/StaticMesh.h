@@ -49,7 +49,7 @@ namespace MyosotisFW::System::Render
 
 		const ComponentType GetType() const override { return ComponentType::Undefined; }
 
-		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet);
+		virtual void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources);
 		virtual void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera);
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		std::vector<VBDispatchInfo>& GetVBDispatchInfo() { return m_vbDispatchInfo; }
@@ -68,7 +68,6 @@ namespace MyosotisFW::System::Render
 		RenderResources_ptr m_resources;
 
 		uint32_t m_meshCount;
-		MeshInfoDescriptorSet_ptr m_meshInfoDescriptorSet;
 
 		std::vector<VBDispatchInfo> m_vbDispatchInfo;
 

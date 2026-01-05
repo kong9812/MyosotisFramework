@@ -221,7 +221,7 @@ namespace MyosotisFW
 	rapidjson::Value MObject::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value json(rapidjson::Type::kObjectType);
-		json.AddMember("id", rapidjson::Value(uuids::to_string(m_objectID).c_str(), allocator), allocator);
+		json.AddMember("id", rapidjson::Value(uuids::to_string(m_uuid).c_str(), allocator), allocator);
 		json.AddMember("name", rapidjson::Value(m_name.c_str(), allocator), allocator);
 
 		SerializeVec3ToJson<glm::vec4>("pos", m_objectInfo->transform.pos, json, allocator);
@@ -242,7 +242,7 @@ namespace MyosotisFW
 	// デシリアルライズ
 	MObject* MObject::Deserialize(const rapidjson::Value& doc)
 	{
-		m_objectID = uuids::uuid::from_string(doc["id"].GetString()).value();
+		m_uuid = uuids::uuid::from_string(doc["id"].GetString()).value();
 		m_name = doc["name"].GetString();
 
 		DeserializeVec3FromJson<glm::vec4>("pos", m_objectInfo->transform.pos, doc);

@@ -15,9 +15,9 @@ namespace MyosotisFW::System::Render
 		m_name = "Terrain";
 	}
 
-	void Terrain::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const MeshInfoDescriptorSet_ptr& meshInfoDescriptorSet)
+	void Terrain::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources, meshInfoDescriptorSet);
+		__super::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -50,6 +50,8 @@ namespace MyosotisFW::System::Render
 
 	void Terrain::loadAssets()
 	{
+		if (m_meshComponentInfo.terrainHeightmapName.empty()) return;
+
 		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
 		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
 		// VBDispatchInfoの作成

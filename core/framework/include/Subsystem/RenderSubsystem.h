@@ -13,6 +13,9 @@ namespace MyosotisFW
 {
 	class MObject;
 	TYPEDEF_SHARED_PTR_FWD(MObject);
+	using MObjectList = std::vector<MObject_ptr>;
+	using MObjectListConstPtr = std::shared_ptr<const MObjectList>;
+
 	class MObjectRegistry;
 	TYPEDEF_SHARED_PTR_FWD(MObjectRegistry);
 
@@ -106,7 +109,6 @@ namespace MyosotisFW::System::Render
 
 		void ResetMousePos(const glm::vec2& mousePos);
 
-		void RegisterObject(const MObject_ptr& object);
 		RenderResources_ptr GetRenderResources() { return m_resources; }
 		Camera::CameraBase_ptr GetMainCamera() { return m_mainCamera; }
 		MObjectRegistry_ptr GetMObjectRegistry() { return m_objectRegistry; }
@@ -117,7 +119,7 @@ namespace MyosotisFW::System::Render
 		void ResetGameStage();
 		void Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize);
 
-		std::vector<MObject_ptr> GetObjects() { return m_objects; }
+		MObjectListConstPtr GetObjects() { return m_objects; }
 
 	protected:
 		void createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal);
@@ -130,6 +132,7 @@ namespace MyosotisFW::System::Render
 		void initializeRenderSwapchain(const VkSurfaceKHR& surface);
 		void initializeRenderDescriptors();
 		virtual void initializeRenderResources();
+		void initializeObjectRegistry();
 		void initializeCommandPool();
 		void initializeSemaphore();
 		void initializeFence();
@@ -178,7 +181,7 @@ namespace MyosotisFW::System::Render
 
 		Camera::CameraBase_ptr m_mainCamera;
 
-		std::vector<MObject_ptr> m_objects;
+		MObjectListConstPtr m_objects;
 
 		PFN_vkCmdBeginDebugUtilsLabelEXT m_vkCmdBeginDebugUtilsLabelEXT;
 		PFN_vkCmdEndDebugUtilsLabelEXT m_vkCmdEndDebugUtilsLabelEXT;
