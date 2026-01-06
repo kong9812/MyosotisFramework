@@ -324,7 +324,7 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
-		if (m_vbDispatchInfoCount > 0)
+		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
 			m_hiZDepthComputePipeline->Dispatch(commandBuffer, dstFrameIndex, srcFrameIndex, m_swapchain->GetScreenSize());
 		}
@@ -350,7 +350,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase1"));
 		m_visibilityBufferPhase1RenderPass->BeginRender(commandBuffer, currentFrameIndex);
-		if (m_vbDispatchInfoCount > 0)
+		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
 			m_visibilityBufferPhase1Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_vbDispatchInfoCount);
 		}
@@ -376,7 +376,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase2"));
 		m_visibilityBufferPhase2RenderPass->BeginRender(commandBuffer, currentFrameIndex);
-		if (m_vbDispatchInfoCount > 0)
+		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
 			m_visibilityBufferPhase2Pipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
 		}
@@ -403,41 +403,48 @@ namespace MyosotisFW::System::Render
 		{// Skybox Render Pass
 			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
 			m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-			m_skyboxPipeline->BindCommandBuffer(commandBuffer);
+			if (m_mainCamera)
+			{
+				m_skyboxPipeline->BindCommandBuffer(commandBuffer);
+			}
 			m_skyboxRenderPass->EndRender(commandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 		{// Lighting
 			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
 			m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
-			if (m_vbDispatchInfoCount > 0)
+			if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 			{
 				m_lightingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
 			}
 			m_lightingRenderPass->EndRender(commandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
-		//{// LightMap
-		//	if (m_lightmapBakingPipeline->IsBaking())
-		//	{
-		//		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
-		//		m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
-		//		for (const MObject_ptr& object : *m_objects)
-		//		{
-		//			if (m_lightmapBakingPipeline->NextObject(m_resources, object))
-		//			{
-		//				m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
-		//			}
-		//		}
-		//		m_lightmapBakingPass->EndRender(commandBuffer);
-		//		m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-		//	}
-		//}
-		//{// RayTracing
-		//	m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
-		//	m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
-		//	m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-		//}
+		{// LightMap
+			if (m_lightmapBakingPipeline->IsBaking())
+			{
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+				m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
+				for (const MObject_ptr& object : *m_objects)
+				{
+					if (m_lightmapBakingPipeline->NextObject(m_resources, object))
+					{
+						m_lightmapBakingPipeline->BindCommandBuffer(commandBuffer);
+					}
+				}
+				m_lightmapBakingPass->EndRender(commandBuffer);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+		}
+		{// RayTracing
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+			bool hasMesh = m_vbDispatchInfoCount > 0;	// todo. もっといい判定方法を考える必要がある
+			if (hasMesh && m_mainCamera)
+			{
+				m_rayTracingPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex, m_swapchain->GetScreenSize());
+			}
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
 
 		{// Copy Image To Swapchain Image
 			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);

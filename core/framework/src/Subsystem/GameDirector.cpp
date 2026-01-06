@@ -20,11 +20,11 @@ namespace MyosotisFW::System::GameDirector {
 		m_renderSubsystem(renderSubsystem)
 	{
 		// TEST
-		{
-			MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
-			Render::Camera::FPSCamera_ptr component = Render::Camera::Object_CastToFPSCamera(
-				m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::FPSCamera));
-		}
+		//{
+		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();
+		//	Render::Camera::FPSCamera_ptr component = Render::Camera::Object_CastToFPSCamera(
+		//		m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(newObject->GetUUID(), ComponentType::FPSCamera));
+		//}
 
 		//{
 		//	MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject();

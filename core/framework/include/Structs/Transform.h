@@ -8,6 +8,6 @@ namespace MyosotisFW
 	{
 		glm::vec4 pos = glm::vec4(0.0f);
 		glm::vec4 rot = glm::vec4(0.0f);
-		glm::vec4 scale = glm::vec4(0.0f);
+		glm::vec4 scale = glm::vec4(1.0f);
 	};
 }

@@ -65,6 +65,10 @@ namespace MyosotisFW::System::Render
 	{
 		m_screenInfo.screenSize = screenSize;
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].update = true;
+
+		// BufferがないならRebuild
+		bool rebuild = (m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].buffer.buffer == VK_NULL_HANDLE);
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::ScreenInfo)].rebuild = rebuild;
 	}
 
 	void SceneInfoDescriptorSet::AddCamera(const Camera::CameraBase_ptr& camera)
@@ -73,6 +77,7 @@ namespace MyosotisFW::System::Render
 		m_cameras.push_back(camera);
 		// UpdateCameraInfoで更新
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].rebuild = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::CameraInfo)].update = true;
 		// cameraDataサイズ
 		m_cameraInfo.cameraData.resize(m_cameras.size());
 	}
@@ -81,6 +86,7 @@ namespace MyosotisFW::System::Render
 	{
 		m_terrainVBDispatchInfo.insert(m_terrainVBDispatchInfo.end(), vbDispatchInfo.begin(), vbDispatchInfo.end());
 		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].update = true;
+		m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::TerrainVBDispatchInfo)].rebuild = true;
 	}
 
 	void SceneInfoDescriptorSet::updateScreenInfo()
@@ -109,6 +115,8 @@ namespace MyosotisFW::System::Render
 
 	void SceneInfoDescriptorSet::updateCameraInfo()
 	{
+		if (m_cameras.size() <= 0) return;
+
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_cameras.size()); i++)
 		{
 			const Camera::CameraBase_ptr& camera = m_cameras[i];

@@ -49,6 +49,12 @@ namespace MyosotisFW::System::Render
 		if (dataSize > 0)
 		{
 			Descriptor& descriptor = m_descriptors[index];
+
+			if (descriptor.buffer.buffer != VK_NULL_HANDLE)
+			{
+				vmaDestroyBuffer(m_device->GetVmaAllocator(), descriptor.buffer.buffer, descriptor.buffer.allocation);
+			}
+
 			// SSBOの作成
 			descriptor.buffer = vmaTools::CreateShaderStorageBuffer(m_device->GetVmaAllocator(), dataSize);
 

@@ -328,6 +328,9 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
+		// 空白TLASだとRenderDocのキャプチャがクラッシュするので、避ける
+		if (asInstances.size() <= 0) return;
+
 		VkDeviceOrHostAddressConstKHR instanceDataAddress{};
 		if (asInstances.size() > 0)
 		{
