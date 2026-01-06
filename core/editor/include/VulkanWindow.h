@@ -54,8 +54,8 @@ namespace MyosotisFW::System::Editor
 		bool m_selectedObject;
 
 	Q_SIGNALS:
-		void closeWindow();
-		void initFinished();
+		void sigCloseWindow();
+		void sigInitFinished();
 
 	};
 }

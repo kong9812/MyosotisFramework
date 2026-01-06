@@ -28,7 +28,7 @@ OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 			}
 
 			MObject* obj = static_cast<MObject*>(current.internalPointer());
-			emit changeSelection(obj);
+			emit sigChangeSelection(obj);
 		});
 
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);

@@ -28,6 +28,6 @@ private:
 	QHBoxLayout* m_hLayout;
 
 Q_SIGNALS:
-	void addMObject();
-	void openFile(std::string filePath);
+	void sigAddMObject();
+	void sigOpenFile(std::string filePath);
 };

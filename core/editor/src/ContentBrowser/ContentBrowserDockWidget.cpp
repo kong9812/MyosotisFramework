@@ -45,10 +45,10 @@ ContentBrowserDockWidget::ContentBrowserDockWidget(QWidget* parent, Qt::WindowFl
 		}
 		else
 		{
-			emit openFile(m_fileSystemModel->fileInfo(index).absoluteFilePath().toStdString());
+			emit sigOpenFile(m_fileSystemModel->fileInfo(index).absoluteFilePath().toStdString());
 		}
 		});
-	connect(m_topWidget, &ContentBrowserTopWidget::addMObject, this, &ContentBrowserDockWidget::addMObject);
+	connect(m_topWidget, &ContentBrowserTopWidget::addMObject, this, &ContentBrowserDockWidget::sigAddMObject);
 
 	m_splitter->setContentsMargins(0, 0, 0, 0);
 	m_splitter->addWidget(m_treeView);

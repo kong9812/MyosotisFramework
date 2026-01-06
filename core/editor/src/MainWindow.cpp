@@ -37,7 +37,7 @@ namespace MyosotisFW::System::Editor
 		resizeDocks({ m_overview, m_propertyViewer }, { 300, 300 }, Qt::Orientation::Horizontal);
 
 		// VKの初期化が終わったらシグナルを接続
-		connect(m_vulkanWindow, &VulkanWindow::initFinished, this, [this] { connectDockWidgetsSignals(); });
+		connect(m_vulkanWindow, &VulkanWindow::sigInitFinished, this, [this] { connectDockWidgetsSignals(); });
 	}
 
 	void MainWindow::closeEvent(QCloseEvent* event)
@@ -81,23 +81,23 @@ namespace MyosotisFW::System::Editor
 		// VKの初期化が終わったらシグナルを接続
 
 		// エディタ閉じる
-		connect(m_vulkanWindow, &VulkanWindow::closeWindow, this, &MainWindow::closeWindow);
+		connect(m_vulkanWindow, &VulkanWindow::sigCloseWindow, this, &MainWindow::closeWindow);
 
 		// GameStageファイル開く
-		connect(m_contentBrowser, &ContentBrowserDockWidget::openFile, this, &MainWindow::openFile);
+		connect(m_contentBrowser, &ContentBrowserDockWidget::sigOpenFile, this, &MainWindow::openFile);
 
 		// MObject追加
-		connect(m_contentBrowser, &ContentBrowserDockWidget::addMObject, this, [this]
+		connect(m_contentBrowser, &ContentBrowserDockWidget::sigAddMObject, this, [this]
 			{
 				MObject_ptr newObject = m_vulkanWindow->GetEditorGameDirector()->AddNewMObject();	// GameDirectorでオブジェクト作成
 				m_overview->AddTopLevelObject(newObject);
 			});
 
 		// Overviewの選択オブジェクト変更
-		connect(m_overview, &OverviewDockWidget::changeSelection, m_propertyViewer, &PropertyViewerDockWidget::setObject);
+		connect(m_overview, &OverviewDockWidget::sigChangeSelection, m_propertyViewer, &PropertyViewerDockWidget::setObject);
 
 		// PropertyViewerで Component追加
-		connect(m_propertyViewer, &PropertyViewerDockWidget::addComponent, this, [this](const uuids::uuid& uuid, const ComponentType type)
+		connect(m_propertyViewer, &PropertyViewerDockWidget::sigAddComponent, this, [this](const uuids::uuid& uuid, const ComponentType type)
 			{
 				m_vulkanWindow->GetEditorGameDirector()->RegisterComponent(uuid, type);
 			});

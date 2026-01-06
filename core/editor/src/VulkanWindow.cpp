@@ -81,7 +81,7 @@ namespace MyosotisFW::System::Editor
 
 		m_resizing = false;
 
-		emit initFinished();
+		emit sigInitFinished();
 	}
 
 	void VulkanWindow::resizeEvent(QResizeEvent* event)
@@ -103,7 +103,7 @@ namespace MyosotisFW::System::Editor
 		// 終了
 		if (event->key() == Qt::Key_Escape)
 		{
-			emit closeWindow();
+			emit sigCloseWindow();
 		}
 		int glfwKey = KeyConverter::Instance().QtToGlfw(event->key());
 		auto key = m_keyActions.find(glfwKey);

@@ -21,6 +21,6 @@ private:
 	QVBoxLayout* m_vBoxLayout;
 
 Q_SIGNALS:
-	void changeSelection(MObject* object);
+	void sigChangeSelection(MObject* object);
 
 };
