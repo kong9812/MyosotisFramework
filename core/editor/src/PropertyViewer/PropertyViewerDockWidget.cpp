@@ -22,6 +22,7 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	}
 	m_addComponentButton->setText(" + ");
 	m_addComponentButton->setMenu(m_addComponentMenu);
+	m_addComponentButton->setDisabled(true);
 
 	m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
@@ -37,6 +38,11 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 void PropertyViewerDockWidget::setObject(MObject* object)
 {
 	m_currentObject = object;
-	m_name->setText(object->GetName().c_str());
-	m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
+	m_addComponentButton->setDisabled(m_currentObject == nullptr);
+
+	if (m_currentObject)
+	{
+		m_name->setText(object->GetName().c_str());
+		m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
+	}
 }
