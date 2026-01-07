@@ -135,12 +135,12 @@ namespace MyosotisFW::System::GameDirector {
 		}
 	}
 
-	void GameDirector::SaveGameStageFile(const std::string& fileName, const std::vector<ComponentBase_ptr>& components)
+	void GameDirector::SaveGameStageFile(const std::string& fileName, const ComponentBaseListPtr& components)
 	{
 		rapidjson::Document doc{};
 		doc.SetArray();
 		auto& allocator = doc.GetAllocator();
-		for (const auto& component : components)
+		for (const ComponentBase_ptr& component : *components)
 		{
 			doc.PushBack(component->Serialize(allocator), allocator);
 		}

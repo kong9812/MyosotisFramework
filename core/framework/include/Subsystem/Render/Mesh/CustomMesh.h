@@ -21,7 +21,7 @@ namespace MyosotisFW::System::Render
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
 
-		void SetMeshComponentInfo(const MeshComponentInfo& MeshComponentInfo) { m_meshComponentInfo = MeshComponentInfo; loadAssets(); }
+		void SetMeshComponentInfo(const MeshComponentInfo MeshComponentInfo) { m_meshComponentInfo = MeshComponentInfo; loadAssets(); }
 		const MeshComponentInfo& GetMeshComponentInfo() const { return m_meshComponentInfo; }
 
 		rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;

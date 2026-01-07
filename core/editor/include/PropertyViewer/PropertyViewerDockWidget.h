@@ -21,6 +21,7 @@ public:
 
 private:
 	QWidget* m_mainWidget;
+	QScrollArea* m_scrollArea;
 
 	QLabel* m_name;
 	QLabel* m_uuid;
@@ -28,7 +29,6 @@ private:
 
 	QPushButton* m_addComponentButton;
 	QMenu* m_addComponentMenu;
-
 	QVBoxLayout* m_vBoxLayout;
 	MyosotisFW::MObject* m_currentObject;
 

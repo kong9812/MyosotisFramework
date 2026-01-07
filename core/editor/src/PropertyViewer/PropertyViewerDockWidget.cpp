@@ -11,6 +11,7 @@ using namespace MyosotisFW;
 PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	QDockWidget(parent, flags),
 	m_mainWidget(new QWidget(this)),
+	m_scrollArea(new QScrollArea(this)),
 	m_vBoxLayout(new QVBoxLayout(m_mainWidget)),
 	m_name(new QLabel("", m_mainWidget)),
 	m_uuid(new QLabel("", m_mainWidget)),
@@ -19,6 +20,9 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_addComponentMenu(new QMenu(m_mainWidget)),
 	m_currentObject(nullptr)
 {
+	m_scrollArea->setWidgetResizable(true);
+	m_scrollArea->setFrameShape(QFrame::NoFrame);
+
 	for (uint32_t i = static_cast<uint32_t>(ComponentType::Begin); i < static_cast<uint32_t>(ComponentType::Max); i++)
 	{
 		ComponentType componentType = static_cast<ComponentType>(i);
@@ -35,9 +39,11 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_vBoxLayout->addWidget(m_dummy);
 	m_vBoxLayout->addWidget(m_addComponentButton);
 
+	m_scrollArea->setWidget(m_mainWidget);
+
 	setContentsMargins(0, 0, 0, 0);
 	setWindowTitle("Property Viewer");
-	setWidget(m_mainWidget);
+	setWidget(m_scrollArea);
 }
 
 void PropertyViewerDockWidget::UpdateView()
@@ -62,9 +68,22 @@ void PropertyViewerDockWidget::setObject(MObject* object)
 		m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
 
 		std::string components = "Components:\n";
-		for (ComponentBase_ptr component : object->GetAllComponents())
+		for (ComponentBase_ptr component : *object->GetAllComponents())
 		{
 			components += ComponentTypeName[static_cast<uint32_t>(component->GetType())] + std::string("\n");
+			components += "Property:\n";
+
+			// property 表示
+			PropertyTable propertyTable = component->GetPropertyTable();
+			propertyTable.ForEach([&](const PropertyDesc& desc)
+				{
+					components += std::string("ID: ") + uuids::to_string(desc.id) + "\n";
+					components += std::string("type: ") + desc.type.name + "(" + uuids::to_string(desc.type.id) + ")" + "\n";
+					components += std::string("category: ") + desc.category + "\n";
+					components += std::string("name: ") + desc.name + "\n";
+					components += "\n";
+				});
+
 		}
 		m_dummy->setText(components.c_str());
 	}

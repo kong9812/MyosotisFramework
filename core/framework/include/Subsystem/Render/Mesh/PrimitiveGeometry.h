@@ -16,7 +16,7 @@ namespace MyosotisFW::System::Render
 
 		void PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources) override;
 		void Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera) override;
-		void SetPrimitiveGeometryShape(const Shape::PrimitiveGeometryShape& shape) { m_primitiveGeometryShape = shape; loadAssets(); }
+		void SetPrimitiveGeometryShape(const Shape::PrimitiveGeometryShape shape) { m_primitiveGeometryShape = shape; loadAssets(); }
 		const Shape::PrimitiveGeometryShape& GetPrimitiveGeometryShape() const { return m_primitiveGeometryShape; }
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const override;
 		virtual void Deserialize(const rapidjson::Value& doc) override;

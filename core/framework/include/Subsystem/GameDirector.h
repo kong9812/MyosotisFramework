@@ -9,6 +9,8 @@ namespace MyosotisFW
 {
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+	using ComponentBaseList = std::vector<ComponentBase_ptr>;
+	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
 
 	namespace System::Render
 	{
@@ -25,7 +27,7 @@ namespace MyosotisFW::System::GameDirector {
 		~GameDirector() {}
 
 		void LoadGameStageFile(const std::string& fileName);
-		void SaveGameStageFile(const std::string& fileName, const std::vector<ComponentBase_ptr>& objects);
+		void SaveGameStageFile(const std::string& fileName, const ComponentBaseListPtr& objects);
 
 	protected:
 		Render::RenderSubsystem_ptr m_renderSubsystem;

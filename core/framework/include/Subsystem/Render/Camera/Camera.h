@@ -44,6 +44,7 @@ namespace MyosotisFW::System::Render::Camera
 		virtual void initialize();
 
 		bool m_isMainCamera;
+		bool m_isMoved;
 
 		// カメラ位置
 		glm::vec3 m_cameraPos;
@@ -66,7 +67,30 @@ namespace MyosotisFW::System::Render::Camera
 		// 画面サイズ
 		glm::vec2 m_screenSize;
 
-		bool m_isMoved;
+	public:
+		// ComponentProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyDesc props[] = {
+				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraPos>(uuids::hashMaker(), "Position", "Camera"),
+				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraLookAt>(uuids::hashMaker(), "LookAt", "Camera"),
+				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraFront>(uuids::hashMaker(), "Front", "Camera"),
+				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraUp>(uuids::hashMaker(), "Up", "Camera"),
+				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraRight>(uuids::hashMaker(), "Right", "Camera"),
+				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraFov>(uuids::hashMaker(), "FOV", "Camera"),
+				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraFar>(uuids::hashMaker(), "Far", "Camera"),
+				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraNear>(uuids::hashMaker(), "Near", "Camera"),
+				MakeMemberProp<CameraBase, float, &CameraBase::m_aspectRadio>(uuids::hashMaker(), "Radio", "Camera"),
+				MakeMemberProp<CameraBase, glm::vec2, &CameraBase::m_screenSize>(uuids::hashMaker(), "ScreenSize", "Camera"),
+			};
+			static const PropertyTable table{ &ComponentBase::StaticPropertyTable(), props, std::size(props) };
+			return table;
+		}
+		const PropertyTable& GetPropertyTable() const override { return StaticPropertyTable(); }
+
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(CameraBase);
 	OBJECT_CAST_FUNCTION(CameraBase);

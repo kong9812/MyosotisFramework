@@ -7,11 +7,14 @@
 #include "iRapidJson.h"
 #include "ComponentFactory.h"
 #include "TLASInstance.h"
+#include "ComponentProperty.h"
 
 namespace MyosotisFW
 {
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_ARGS(ComponentBase);
+	using ComponentBaseList = std::vector<ComponentBase_ptr>;
+	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
 
 	class ComponentBase
 	{
@@ -31,30 +34,6 @@ namespace MyosotisFW
 		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
 		const uint32_t GetHashObjectID() const { return m_objectID; }
 		void SetTLASInstance(TLASInstance_ptr tlasInstance) { m_tlasInstance = tlasInstance; }
-
-		// todo. Objectに移動する
-		//OBBData GetWorldOBBData()
-		//{
-		//	OBBData obbData{};
-
-		//	glm::vec3 localExtent = (m_aabbMax - m_aabbMin) * 0.5f;		// ローカルAABBの半径
-		//	glm::vec3 centerLocal = (m_aabbMax + m_aabbMin) * 0.5f;		// ローカルAABBの中心
-		//	glm::vec3 scaleExtent = localExtent * m_transform.scale;	// スケール適用
-
-		//	// 回転を適用
-		//	glm::mat3 rotMat = glm::mat3_cast(glm::quat(glm::radians(m_transform.rot)));
-		//	auto testX = rotMat * glm::vec3(1.0f, 0.0f, 0.0f);
-		//	auto testY = rotMat * glm::vec3(0.0f, 1.0f, 0.0f);
-		//	auto testZ = rotMat * glm::vec3(0.0f, 0.0f, 1.0f);
-		//	obbData.axisX = glm::vec4(rotMat * glm::vec3(1.0f, 0.0f, 0.0f), scaleExtent.x);
-		//	obbData.axisY = glm::vec4(rotMat * glm::vec3(0.0f, 1.0f, 0.0f), scaleExtent.y);
-		//	obbData.axisZ = glm::vec4(rotMat * glm::vec3(0.0f, 0.0f, 1.0f), scaleExtent.z);
-
-		//	// OBBの中心 (ワールド空間)
-		//	obbData.center = glm::vec4(m_transform.pos + rotMat * (centerLocal * m_transform.scale), 0.0f);
-
-		//	return obbData;
-		//}
 
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
@@ -91,5 +70,42 @@ namespace MyosotisFW
 		uint32_t m_objectID;
 
 		TLASInstance_ptr m_tlasInstance;
+
+	public:
+		// ComponentProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyTable table{ nullptr, nullptr, 0 };
+			return table;
+		}
+		virtual const PropertyTable& GetPropertyTable() const
+		{
+			return GetPropertyTable();
+		}
+
+		bool TryGet(uuids::uuid id, PropertyValue& v) const
+		{
+			if (const PropertyDesc* p = GetPropertyTable().Find(id))
+			{
+				v = p->get(this);
+				return true;
+			}
+			return false;
+		}
+
+		bool TrySet(uuids::uuid id, PropertyValue& v)
+		{
+			if (const PropertyDesc* p = GetPropertyTable().Find(id))
+			{
+				if (HasPropertyFlag(p->flags, PropertyFlags::ReadOnly)) return false;
+				p->set(this, v);
+				OnPropertyChanged(id);
+				return true;
+			}
+			return false;
+		}
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
+
 	};
 };

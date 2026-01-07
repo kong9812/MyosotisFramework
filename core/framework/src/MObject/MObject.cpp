@@ -13,6 +13,16 @@ namespace MyosotisFW
 {
 	using namespace System::Render;
 
+	MObject::MObject() :
+		m_isReady(false),
+		m_name("MObject"),
+		m_uuid(uuids::hashMaker()),
+		m_renderID(0),
+		m_children(),
+		m_components(std::make_shared<ComponentBaseList>()),
+		m_dirty(true) {
+	}
+
 	void MObject::AddChild(MObject_ptr child)
 	{
 		if (!child || child.get() == this) return;
@@ -52,12 +62,12 @@ namespace MyosotisFW
 
 	const uint32_t MObject::GetMeshCount() const
 	{
-		auto it = std::find_if(m_components.begin(), m_components.end(),
+		auto it = std::find_if(m_components->begin(), m_components->end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components.end())
+		if (it != m_components->end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetMeshCount();
@@ -67,12 +77,12 @@ namespace MyosotisFW
 
 	const std::vector<uint32_t> MObject::GetMeshID() const
 	{
-		auto it = std::find_if(m_components.begin(), m_components.end(),
+		auto it = std::find_if(m_components->begin(), m_components->end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components.end())
+		if (it != m_components->end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetMeshID();
@@ -82,12 +92,12 @@ namespace MyosotisFW
 
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
 	{
-		auto it = std::find_if(m_components.begin(), m_components.end(),
+		auto it = std::find_if(m_components->begin(), m_components->end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components.end())
+		if (it != m_components->end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetVBDispatchInfo();
@@ -98,7 +108,7 @@ namespace MyosotisFW
 
 	bool MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
-		for (ComponentBase_ptr& component : m_components)
+		for (ComponentBase_ptr& component : *m_components)
 		{
 			if (component->IsStaticMesh())
 			{
@@ -130,7 +140,7 @@ namespace MyosotisFW
 	// カメラ持つ？
 	const bool MObject::IsCamera(bool findChildComponent) const
 	{
-		for (const auto& component : m_components)
+		for (const auto& component : *m_components)
 		{
 			if (component->IsCamera())
 				return true;
@@ -149,7 +159,7 @@ namespace MyosotisFW
 
 	ComponentBase_ptr MObject::FindComponent(const ComponentType& type, const bool findChildComponent)
 	{
-		for (ComponentBase_ptr& component : m_components)
+		for (ComponentBase_ptr& component : *m_components)
 		{
 			if (component->GetType() == type)
 			{
@@ -168,14 +178,14 @@ namespace MyosotisFW
 		return nullptr;
 	}
 
-	std::vector<ComponentBase_ptr> MObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
+	ComponentBaseListPtr MObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
 	{
-		std::vector<ComponentBase_ptr> foundComponents{};
-		for (ComponentBase_ptr& component : m_components)
+		ComponentBaseListPtr foundComponents{};
+		for (ComponentBase_ptr& component : *m_components)
 		{
 			if (component->GetType() == type)
 			{
-				foundComponents.push_back(component);
+				foundComponents->push_back(component);
 			}
 		}
 		if (findChildComponent)
@@ -183,21 +193,21 @@ namespace MyosotisFW
 			for (MObject_ptr& child : m_children)
 			{
 				auto childComponents = child->FindAllComponents(type, findChildComponent);
-				foundComponents.insert(foundComponents.end(), childComponents.begin(), childComponents.end());
+				foundComponents->insert(foundComponents->end(), childComponents->begin(), childComponents->end());
 			}
 		}
 		return foundComponents;
 	}
 
-	std::vector<ComponentBase_ptr> MObject::GetAllComponents(bool findChildComponent)
+	ComponentBaseListPtr MObject::GetAllComponents(bool findChildComponent)
 	{
-		std::vector<ComponentBase_ptr> allComponents = m_components;
+		ComponentBaseListPtr allComponents = m_components;
 		if (findChildComponent)
 		{
 			for (const MObject_ptr& child : m_children)
 			{
 				auto childComponents = child->GetAllComponents(findChildComponent);
-				allComponents.insert(allComponents.end(), childComponents.begin(), childComponents.end());
+				allComponents->insert(allComponents->end(), childComponents->begin(), childComponents->end());
 			}
 		}
 		return allComponents;
@@ -206,15 +216,15 @@ namespace MyosotisFW
 	void MObject::AddComponent(const ComponentBase_ptr& component)
 	{
 		// 複数StaticMeshを許可しない
-		auto it = std::find_if(m_components.begin(), m_components.end(),
+		auto it = std::find_if(m_components->begin(), m_components->end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		ASSERT(it == m_components.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
+		ASSERT(it == m_components->end(), "ERROR!! Unable to add more than one static mesh component to an object.");
 
 		component->SetTLASInstance(m_tlasInstance);
-		m_components.push_back(component);
+		m_components->push_back(component);
 	}
 
 	// シリアルライズ
@@ -270,7 +280,7 @@ namespace MyosotisFW
 				ComponentType type = findComponentTypeFromTypeID(optType.value());
 				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type, m_meshChangedCallback);
 				component->Deserialize(comp);
-				m_components.push_back(component);
+				m_components->push_back(component);
 			}
 		}
 		return this;

@@ -19,6 +19,9 @@ namespace MyosotisFW
 	// 前方宣言
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+	using ComponentBaseList = std::vector<ComponentBase_ptr>;
+	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
+
 	namespace System::Render::Camera
 	{
 		class CameraBase;
@@ -33,17 +36,7 @@ namespace MyosotisFW
 	class MObject : public std::enable_shared_from_this<MObject>
 	{
 	public:
-		MObject() :
-			m_isReady(false),
-			m_name("MObject"),
-			m_uuid(),
-			m_renderID(0),
-			m_children(),
-			m_components(),
-			m_dirty(true)
-		{
-			m_uuid = uuids::hashMaker();
-		}
+		MObject();
 		virtual ~MObject() = default;
 
 		const std::string GetName() const { return m_name; }
@@ -83,8 +76,8 @@ namespace MyosotisFW
 		const bool IsCamera(bool findChildComponent = false) const;
 
 		ComponentBase_ptr FindComponent(const ComponentType& type, const bool findChildComponent = false);
-		std::vector<ComponentBase_ptr> FindAllComponents(const ComponentType& type, const bool findChildComponent = false);
-		std::vector<ComponentBase_ptr> GetAllComponents(bool findChildComponent = false);
+		ComponentBaseListPtr FindAllComponents(const ComponentType& type, const bool findChildComponent = false);
+		ComponentBaseListPtr GetAllComponents(bool findChildComponent = false);
 		void AddComponent(const ComponentBase_ptr& component);
 
 		// シリアルライズ
@@ -107,6 +100,6 @@ namespace MyosotisFW
 
 		MObject_ptr m_parent;
 		std::vector<MObject_ptr> m_children;
-		std::vector<ComponentBase_ptr> m_components;
+		ComponentBaseListPtr m_components;
 	};
 };
