@@ -4,6 +4,7 @@
 #include "ClassPointer.h"
 #include "ComponentType.h"
 #include "istduuid.h"
+#include "PropertyEditorFactory.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -26,14 +27,19 @@ private:
 	QLabel* m_name;
 	QLabel* m_uuid;
 	QLabel* m_dummy;
+	QFormLayout* m_formLayout;
 
 	QPushButton* m_addComponentButton;
 	QMenu* m_addComponentMenu;
 	QVBoxLayout* m_vBoxLayout;
 	MyosotisFW::MObject* m_currentObject;
 
+	std::unique_ptr<PropertyEditorFactory> m_propertyEditorFactory;
+	std::vector<std::unique_ptr<PropertyEditorBase>> m_activeEditors;
+
 private:
 	void addComponent(const MyosotisFW::ComponentType type);
+	void ClearFormLayout();
 
 public slots:
 	void setObject(MyosotisFW::MObject* object);

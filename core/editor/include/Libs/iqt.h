@@ -1,34 +1,42 @@
 // Copyright (c) 2025 kong9812
 // For include QT
 #pragma once
+
+// 共通
 #include <QObject>
+#include <QPointer>
+#include <QSharedPointer>
+#include <QScopedPointer>
 
-#include <QtWidgets/qapplication.h>
-#include <QtWidgets/qmainwindow.h>
-#include <QtWidgets/qlabel.h>
-#include <QtWidgets/qboxlayout.h>
-#include <QtWidgets/qpushbutton.h>
-#include <QtWidgets/qdockwidget.h>
-#include <QtWidgets/qstyle.h>
-#include <QtWidgets/qmenu.h>
-#include <QtWidgets/qtreeview.h>
-#include <QtWidgets/qlistview.h>
-#include <QtWidgets/qtreewidgetitemiterator.h>
-#include <QtWidgets/qfilesystemmodel.h>
-#include <QtWidgets/qstyleditemdelegate.h>
-#include <QtWidgets/qsplitter.h>
-#include <QtWidgets/qmenubar.h>
-#include <QtWidgets/qscrollarea.h>
-#include <QtWidgets/qlineedit.h>
+// Widgets (UIパーツ)
+#include <QApplication>
+#include <QMainWindow>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QDockWidget>
+#include <QStyle>
+#include <QMenu>
+#include <QTreeView>
+#include <QListView>
+#include <QTreeWidget>
+#include <QFileSystemModel>
+#include <QStyledItemDelegate>
+#include <QSplitter>
+#include <QMenuBar>
+#include <QScrollArea>
+#include <QLineEdit>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
 
-#include <QtGui/qwindow.h>
-#include <QtGui/qevent.h>
-#include <QtGui/qpainter.h>
+// Gui (描画・イベント)
+#include <QWindow>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QPainter>
 
-
-#include <QtCore/qpointer.h>
-#include <QtCore/qsharedpointer.h>
-#include <QtCore/qscopedpointer.h>
-#include <QtCore/qdir.h>
-#include <QtCore/qsortfilterproxymodel.h>
-#include <QtCore/qfilesystemwatcher.h>
+// Core (システム系)
+#include <QDir>
+#include <QSortFilterProxyModel>
+#include <QFileSystemWatcher>

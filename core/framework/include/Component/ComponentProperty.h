@@ -37,24 +37,6 @@ namespace MyosotisFW
 			{ typeid(glm::ivec3), PropertyTypeData{"ivec3", uuids::uuid::from_string("c8572c8a-86c3-4f04-89fc-310e897b3b1d").value()} },
 			{ typeid(glm::ivec4), PropertyTypeData{"ivec4", uuids::uuid::from_string("01bf6008-681b-47da-8e6d-601d1eff7f55").value()} },
 		};
-
-		//// 文字列
-		//inline const uuids::uuid String = uuids::uuid::from_string("4186d7b6-3e2d-473a-aadf-ee356ace76b7").value();
-		//// 整数
-		//inline const uuids::uuid Uint32 = uuids::uuid::from_string("5c0a265b-dd66-40e5-987b-4334c63ea91c").value();
-		//inline const uuids::uuid Int32 = uuids::uuid::from_string("f1f2420a-2418-453f-9d03-3514783bf9d9").value();
-		//inline const uuids::uuid Uint64 = uuids::uuid::from_string("db91a6d7-746b-4d69-8061-7aef76c9b008").value();
-		//inline const uuids::uuid Int64 = uuids::uuid::from_string("4b39437c-3cd5-41be-8923-d44b6d14dcd6").value();
-		//// 小数
-		//inline const uuids::uuid Float = uuids::uuid::from_string("61133c48-c857-4d2e-815e-a8c74df02473").value();
-		//inline const uuids::uuid Double = uuids::uuid::from_string("cfbe0656-4833-4957-ae27-263bce01d39c").value();
-		//// ベクトル型
-		//inline const uuids::uuid Vec2 = uuids::uuid::from_string("63c759b0-42f1-4993-b9f7-b7148855afea").value();
-		//inline const uuids::uuid Vec3 = uuids::uuid::from_string("827b890d-ec60-4edc-8fe4-75667cf50c2a").value();
-		//inline const uuids::uuid Vec4 = uuids::uuid::from_string("fd418f41-f082-4f30-8199-4f565d3681c2").value();
-		//inline const uuids::uuid Ivec2 = uuids::uuid::from_string("8bb7b5a9-00e4-4a8a-871f-29a59fe536bd").value();
-		//inline const uuids::uuid Ivec3 = uuids::uuid::from_string("c8572c8a-86c3-4f04-89fc-310e897b3b1d").value();
-		//inline const uuids::uuid Ivec4 = uuids::uuid::from_string("01bf6008-681b-47da-8e6d-601d1eff7f55").value();
 	}
 
 	using PropertyValue = std::variant<
@@ -74,16 +56,29 @@ namespace MyosotisFW
 		ReadOnly = 1 << 0,
 	};
 
+	enum class ChangeReason
+	{
+		UI_Preview,
+		UI_Commit,
+		UndoRedo,
+		Deserialize
+	};
+
+	using GetterFunction = PropertyValue(*)(const void* obj);
+	using SetterFunction = void(*)(void* obj, const PropertyValue& v);
+	using ApplyFunction = void(*)(void*, const PropertyValue& v, ChangeReason c);
+
 	struct PropertyDesc
 	{
-		uuids::uuid id;
-		PropertyType::PropertyTypeData type;
-		PropertyFlags flags;
-		const char* name;
-		const char* category;
+		uuids::uuid id{};
+		PropertyType::PropertyTypeData type{};
+		PropertyFlags flags = PropertyFlags::None;
+		const char* name = "";
+		const char* category = "";
 
-		PropertyValue(*get)(const void* obj);
-		void (*set)(void* obj, const PropertyValue& v);
+		GetterFunction get{};
+		SetterFunction set{};
+		ApplyFunction apply{};
 	};
 
 	struct PropertyTable
@@ -136,8 +131,15 @@ namespace MyosotisFW
 		return (static_cast<uint32_t>(target) & static_cast<uint32_t>(find)) != 0;
 	}
 	template<class C, class T, T C::* Member>
-	PropertyDesc MakeMemberProp(uuids::uuid id, const char* name, const char* category, PropertyFlags flags = PropertyFlags::None)
+	PropertyDesc MakeMemberProp(uuids::uuid id, const char* name, const char* category, PropertyFlags flags = PropertyFlags::None, ApplyFunction applyFunc = nullptr)
 	{
+		ApplyFunction apply = applyFunc ? applyFunc :
+			[](void* obj, const PropertyValue& v, ChangeReason cr)
+			{
+				auto* c = static_cast<C*>(obj);
+				c->*Member = std::get<T>(v);
+			};
+
 		return PropertyDesc{
 			id,
 			PropertyType::g_propertyTypeMap.at(typeid(T)),
@@ -154,7 +156,8 @@ namespace MyosotisFW
 			{
 				auto* c = static_cast<C*>(obj);
 				c->*Member = std::get<T>(v);
-			}
+			},
+			apply
 		};
 	}
 };
