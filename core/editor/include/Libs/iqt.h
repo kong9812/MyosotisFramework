@@ -29,6 +29,7 @@
 #include <QLineEdit>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
+#include <QGroupBox>
 
 // Gui (描画・イベント)
 #include <QWindow>

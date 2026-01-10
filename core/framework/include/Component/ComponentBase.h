@@ -80,7 +80,7 @@ namespace MyosotisFW
 		}
 		virtual const PropertyTable& GetPropertyTable() const
 		{
-			return GetPropertyTable();
+			return StaticPropertyTable();
 		}
 
 		bool TryGet(uuids::uuid id, PropertyValue& v) const

@@ -28,6 +28,7 @@ private:
 	QLabel* m_uuid;
 	QLabel* m_dummy;
 	QFormLayout* m_formLayout;
+	QGroupBox* m_groupBox;
 
 	QPushButton* m_addComponentButton;
 	QMenu* m_addComponentMenu;

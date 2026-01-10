@@ -17,6 +17,7 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_uuid(new QLabel("", m_mainWidget)),
 	m_dummy(new QLabel("", m_mainWidget)),
 	m_formLayout(new QFormLayout(this)),
+	m_groupBox(new QGroupBox(this)),
 	m_addComponentButton(new QPushButton(m_mainWidget)),
 	m_addComponentMenu(new QMenu(m_mainWidget)),
 	m_currentObject(nullptr),
@@ -39,6 +40,8 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_formLayout->setSpacing(0);
 	m_formLayout->setContentsMargins(0, 0, 0, 0);
 
+	m_groupBox->setWindowIconText("TEST");
+
 	m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
 	m_vBoxLayout->addWidget(m_name);
@@ -46,6 +49,7 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_vBoxLayout->addWidget(m_dummy);
 	m_vBoxLayout->addLayout(m_formLayout);
 	m_vBoxLayout->addWidget(m_addComponentButton);
+	m_vBoxLayout->addWidget(m_groupBox);
 
 	m_scrollArea->setWidget(m_mainWidget);
 
