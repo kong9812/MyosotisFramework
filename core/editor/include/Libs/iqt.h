@@ -30,6 +30,7 @@
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QToolButton>
 
 // Gui (描画・イベント)
 #include <QWindow>
@@ -41,3 +42,5 @@
 #include <QDir>
 #include <QSortFilterProxyModel>
 #include <QFileSystemWatcher>
+#include <QAbstractAnimation>
+#include <QPropertyAnimation>

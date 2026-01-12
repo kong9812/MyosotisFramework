@@ -6,6 +6,8 @@
 #include "ComponentType.h"
 #include "ComponentBase.h"
 
+#include "PropertyViewerComponentWidget.h"
+
 using namespace MyosotisFW;
 
 PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFlags flags) :
@@ -16,12 +18,10 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_name(new QLabel("", m_mainWidget)),
 	m_uuid(new QLabel("", m_mainWidget)),
 	m_dummy(new QLabel("", m_mainWidget)),
-	m_formLayout(new QFormLayout(this)),
-	m_groupBox(new QGroupBox(this)),
 	m_addComponentButton(new QPushButton(m_mainWidget)),
 	m_addComponentMenu(new QMenu(m_mainWidget)),
 	m_currentObject(nullptr),
-	m_propertyEditorFactory(std::make_unique<PropertyEditorFactory>())
+	m_componentWidgets()
 {
 	m_scrollArea->setWidgetResizable(true);
 	m_scrollArea->setFrameShape(QFrame::NoFrame);
@@ -35,21 +35,12 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_addComponentButton->setMenu(m_addComponentMenu);
 	m_addComponentButton->setDisabled(true);
 
-	m_formLayout->setLabelAlignment(Qt::AlignmentFlag::AlignLeft);
-	m_formLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-	m_formLayout->setSpacing(0);
-	m_formLayout->setContentsMargins(0, 0, 0, 0);
-
-	m_groupBox->setWindowIconText("TEST");
-
 	m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
 	m_vBoxLayout->addWidget(m_name);
 	m_vBoxLayout->addWidget(m_uuid);
 	m_vBoxLayout->addWidget(m_dummy);
-	m_vBoxLayout->addLayout(m_formLayout);
 	m_vBoxLayout->addWidget(m_addComponentButton);
-	m_vBoxLayout->addWidget(m_groupBox);
 
 	m_scrollArea->setWidget(m_mainWidget);
 
@@ -71,21 +62,15 @@ void PropertyViewerDockWidget::addComponent(const MyosotisFW::ComponentType type
 
 void PropertyViewerDockWidget::ClearFormLayout()
 {
-	if (!m_formLayout) return;
-	while (m_formLayout->count() > 0)
+	for (QWidget* widget : m_componentWidgets)
 	{
-		QLayoutItem* item = m_formLayout->takeAt(0);
-		if (QWidget* widget = item->widget())
-		{
-			widget->deleteLater();
-		}
-		delete item;
+		widget->deleteLater();
 	}
+	m_componentWidgets.clear();
 }
 
 void PropertyViewerDockWidget::setObject(MObject* object)
 {
-	m_activeEditors.clear();
 	ClearFormLayout();
 
 	m_currentObject = object;
@@ -97,28 +82,14 @@ void PropertyViewerDockWidget::setObject(MObject* object)
 		m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
 
 		std::string components = "Components:\n";
+
+
 		for (ComponentBase_ptr component : *object->GetAllComponents())
 		{
-			components += ComponentTypeName[static_cast<uint32_t>(component->GetType())] + std::string("\n");
-
-			// property 表示
-			PropertyTable propertyTable = component->GetPropertyTable();
-			propertyTable.ForEach([&](const PropertyDesc& desc)
-				{
-					//components += std::string("ID: ") + uuids::to_string(desc.id) + "\n";
-					//components += std::string("type: ") + desc.type.name + "(" + uuids::to_string(desc.type.id) + ")" + "\n";
-					//components += std::string("category: ") + desc.category + "\n";
-					//components += std::string("name: ") + desc.name + "\n";
-					//components += "\n";
-					std::unique_ptr<PropertyEditorBase> editorWidget = m_propertyEditorFactory->CreateEditor(component.get(), desc, m_mainWidget);
-					if (editorWidget)
-					{
-						PropertyEditorBase* ptr = editorWidget.get();
-						m_activeEditors.emplace_back(std::move(editorWidget));
-						m_formLayout->addRow(desc.name, ptr);
-					}
-				});
-
+			PropertyViewerComponentWidget* componentWidget = new PropertyViewerComponentWidget(ComponentTypeName[static_cast<uint32_t>(component->GetType())]);
+			componentWidget->SetComponent(component);
+			m_componentWidgets.push_back(componentWidget);
+			m_vBoxLayout->addWidget(componentWidget);
 		}
 		m_dummy->setText(components.c_str());
 	}
