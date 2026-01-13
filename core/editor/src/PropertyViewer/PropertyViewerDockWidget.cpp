@@ -17,11 +17,14 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_vBoxLayout(new QVBoxLayout(m_mainWidget)),
 	m_name(new QLabel("", m_mainWidget)),
 	m_uuid(new QLabel("", m_mainWidget)),
-	m_dummy(new QLabel("", m_mainWidget)),
 	m_addComponentButton(new QPushButton(m_mainWidget)),
 	m_addComponentMenu(new QMenu(m_mainWidget)),
 	m_currentObject(nullptr),
-	m_componentWidgets()
+	m_componentWidgets(),
+	m_container(new QWidget(m_mainWidget)),
+	m_formLayout(new QFormLayout(m_container)),
+	m_propertyEditorFactory(std::make_unique<PropertyEditorFactory>()),
+	m_activeEditors()
 {
 	m_scrollArea->setWidgetResizable(true);
 	m_scrollArea->setFrameShape(QFrame::NoFrame);
@@ -39,7 +42,8 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
 	m_vBoxLayout->addWidget(m_name);
 	m_vBoxLayout->addWidget(m_uuid);
-	m_vBoxLayout->addWidget(m_dummy);
+	m_vBoxLayout->addWidget(m_container);
+	m_vBoxLayout->addLayout(m_formLayout);
 	m_vBoxLayout->addWidget(m_addComponentButton);
 
 	m_scrollArea->setWidget(m_mainWidget);
@@ -81,17 +85,26 @@ void PropertyViewerDockWidget::setObject(MObject* object)
 		m_name->setText(object->GetName().c_str());
 		m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
 
-		std::string components = "Components:\n";
 
+		MyosotisFW::PropertyTable propertyTable = object->GetPropertyTable();
+		propertyTable.ForEach([&](const MyosotisFW::PropertyDesc& desc)
+			{
+				std::unique_ptr<PropertyEditorBase> editorWidget = m_propertyEditorFactory->CreateEditor(object, desc, m_container);
+				if (editorWidget)
+				{
+					PropertyEditorBase* ptr = editorWidget.get();
+					m_activeEditors.emplace_back(std::move(editorWidget));
+					m_formLayout->addRow(desc.name, ptr);
+				}
+			});
 
 		for (ComponentBase_ptr component : *object->GetAllComponents())
 		{
-			PropertyViewerComponentWidget* componentWidget = new PropertyViewerComponentWidget(ComponentTypeName[static_cast<uint32_t>(component->GetType())]);
+			PropertyViewerComponentWidget* componentWidget = new PropertyViewerComponentWidget(ComponentTypeName[static_cast<uint32_t>(component->GetType())], m_container);
 			componentWidget->SetComponent(component);
 			m_componentWidgets.push_back(componentWidget);
 			m_vBoxLayout->addWidget(componentWidget);
 		}
-		m_dummy->setText(components.c_str());
 	}
 }
 

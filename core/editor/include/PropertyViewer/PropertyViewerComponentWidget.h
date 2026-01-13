@@ -7,12 +7,11 @@
 class PropertyViewerComponentWidget : public QWidget {
 	Q_OBJECT
 public:
-	PropertyViewerComponentWidget(const QString& title, int animationDuration = 300, QWidget* parent = nullptr)
+	PropertyViewerComponentWidget(const QString& title, QWidget* parent = nullptr, int animationDuration = 300)
 		: QWidget(parent),
 		m_mainWidget(new QWidget(this)),
 		m_container(new QWidget(this)),
 		m_toolButton(new QToolButton(m_mainWidget)),
-		m_scrollArea(new QScrollArea(m_mainWidget)),
 		m_vBoxLayout(new QVBoxLayout(this)),
 		m_formLayout(new QFormLayout(m_container)),
 		m_propertyAnimation(new QPropertyAnimation(this)),
@@ -26,20 +25,14 @@ public:
 		m_toolButton->setCheckable(true);
 		m_toolButton->setChecked(true);
 
-		m_scrollArea->setStyleSheet("QScrollArea { border: none; }");
-		m_scrollArea->setMaximumHeight(0);
-		m_scrollArea->setMinimumHeight(0);
-		m_scrollArea->setWidgetResizable(true);
-
 		m_propertyAnimation->setPropertyName("maximumHeight");
-		m_propertyAnimation->setTargetObject(m_scrollArea);
+		m_propertyAnimation->setTargetObject(m_container);
 		m_propertyAnimation->setDuration(animationDuration);
 
 		m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 		m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
 		m_vBoxLayout->setSpacing(0);
 		m_vBoxLayout->addWidget(m_toolButton);
-		m_vBoxLayout->addWidget(m_scrollArea);
 		m_vBoxLayout->addWidget(m_container);
 
 		connect(m_toolButton, &QToolButton::toggled, this, &PropertyViewerComponentWidget::toggle);
@@ -79,7 +72,6 @@ private:
 	QWidget* m_mainWidget;
 	QWidget* m_container;
 	QToolButton* m_toolButton;
-	QScrollArea* m_scrollArea;
 	QVBoxLayout* m_vBoxLayout;
 	QPropertyAnimation* m_propertyAnimation;
 

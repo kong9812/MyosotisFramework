@@ -10,6 +10,7 @@
 #include "iRapidJson.h"
 #include "ComponentType.h"
 #include "TLASInstance.h"
+#include "ComponentProperty.h"
 
 namespace MyosotisFW
 {
@@ -101,5 +102,31 @@ namespace MyosotisFW
 		MObject_ptr m_parent;
 		std::vector<MObject_ptr> m_children;
 		ComponentBaseListPtr m_components;
+
+	public:
+		// ObjectProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyDesc props[] = {
+				MakeProp<glm::vec4>(uuids::hashMaker(), "Transform", "Position", PropertyFlags::None,
+					+[](const void* obj)->PropertyValue
+					{
+						auto* o = static_cast<const MObject*>(obj);
+						return o->m_objectInfo->transform.pos;
+					},
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					{
+						auto* o = static_cast<const MObject*>(obj);
+						o->m_objectInfo->transform.pos = std::get<glm::vec4>(v);
+					}),
+			};
+			static const PropertyTable baseTable{ nullptr, nullptr, 0 };
+			static const PropertyTable table{ &baseTable, props, std::size(props) };
+			return table;
+		}
+		const PropertyTable& GetPropertyTable() const { return StaticPropertyTable(); }
+
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
 	};
 };

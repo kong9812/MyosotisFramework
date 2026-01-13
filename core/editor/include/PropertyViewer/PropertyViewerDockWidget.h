@@ -26,7 +26,6 @@ private:
 
 	QLabel* m_name;
 	QLabel* m_uuid;
-	QLabel* m_dummy;
 
 	QPushButton* m_addComponentButton;
 	QMenu* m_addComponentMenu;
@@ -34,6 +33,11 @@ private:
 	MyosotisFW::MObject* m_currentObject;
 
 	std::vector<QWidget*> m_componentWidgets;
+
+	QWidget* m_container;
+	QFormLayout* m_formLayout;
+	std::unique_ptr<PropertyEditorFactory> m_propertyEditorFactory;
+	std::vector<std::unique_ptr<PropertyEditorBase>> m_activeEditors;
 
 private:
 	void addComponent(const MyosotisFW::ComponentType type);

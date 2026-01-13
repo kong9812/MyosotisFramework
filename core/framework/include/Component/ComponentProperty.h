@@ -160,4 +160,22 @@ namespace MyosotisFW
 			apply
 		};
 	}
+	template<class T>
+	PropertyDesc MakeProp(uuids::uuid id, const char* name, const char* category,
+		PropertyFlags flags = PropertyFlags::None,
+		GetterFunction getFunc = nullptr,
+		ApplyFunction applyFunc = nullptr)
+	{
+		return PropertyDesc{
+			id,
+			PropertyType::g_propertyTypeMap.at(typeid(T)),
+			flags,
+			name,
+			category,
+
+			getFunc,	// todo.
+			nullptr,	// todo.
+			applyFunc	// todo.
+		};
+	}
 };
