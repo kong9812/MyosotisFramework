@@ -71,6 +71,15 @@ void PropertyViewerDockWidget::ClearFormLayout()
 		widget->deleteLater();
 	}
 	m_componentWidgets.clear();
+	for (uint32_t i = 0; i < static_cast<uint32_t>(m_activeEditors.size()); i++)
+	{
+		m_activeEditors[i]->deleteLater();
+	}
+	m_activeEditors.clear();
+	while (m_formLayout->rowCount() > 0)
+	{
+		m_formLayout->removeRow(0);
+	}
 }
 
 void PropertyViewerDockWidget::setObject(MObject* object)

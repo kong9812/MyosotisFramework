@@ -53,6 +53,7 @@ namespace MyosotisFW::System::Render
 			if (descriptor.buffer.buffer != VK_NULL_HANDLE)
 			{
 				vmaDestroyBuffer(m_device->GetVmaAllocator(), descriptor.buffer.buffer, descriptor.buffer.allocation);
+				descriptor.buffer.buffer = VK_NULL_HANDLE;
 			}
 
 			// SSBOの作成

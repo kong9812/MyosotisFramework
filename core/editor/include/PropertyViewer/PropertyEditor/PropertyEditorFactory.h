@@ -5,18 +5,29 @@
 #include "PropertyEditorBase.h"
 
 #include "FloatPropertyEditor.h"
+#include "Vec3PropertyEditor.h"
+#include "Vec4PropertyEditor.h"
 
 class PropertyEditorFactory
 {
 public:
 	PropertyEditorFactory()
 	{
-		// float型のエディタを登録
+		// float
 		Register<float>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
 			{
 				return std::make_unique<FloatPropertyEditor>(o, d, p);
 			});
-		// todo. 他の型を追加していくぞ！
+		// vec3
+		Register<glm::vec3>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
+			{
+				return std::make_unique<Vec3PropertyEditor>(o, d, p);
+			});
+		// vec4
+		Register<glm::vec4>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
+			{
+				return std::make_unique<Vec4PropertyEditor>(o, d, p);
+			});
 	}
 
 	// エディタを生成するメイン関数

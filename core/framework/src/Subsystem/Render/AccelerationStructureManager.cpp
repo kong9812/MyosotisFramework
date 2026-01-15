@@ -476,10 +476,12 @@ namespace MyosotisFW::System::Render
 		if (m_tlas.tlas.buffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_tlas.tlas.buffer.buffer, m_tlas.tlas.buffer.allocation);
+			m_tlas.tlas.buffer.buffer = VK_NULL_HANDLE;
 		}
 		if (m_tlas.instanceBuffer.buffer != VK_NULL_HANDLE)
 		{
 			vmaDestroyBuffer(m_device->GetVmaAllocator(), m_tlas.instanceBuffer.buffer, m_tlas.instanceBuffer.allocation);
+			m_tlas.instanceBuffer.buffer = VK_NULL_HANDLE;
 		}
 		m_tlas.tlas.deviceAddress = 0;
 	}

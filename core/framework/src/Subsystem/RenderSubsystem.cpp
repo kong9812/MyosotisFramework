@@ -154,23 +154,12 @@ namespace MyosotisFW::System::Render
 
 		if (meshChanged || transformChanged)
 		{
-			if (meshChanged)
-			{
-				// Reset mesh count
-				m_vbDispatchInfoCount = 0;
-			}
+			// Reset mesh count
+			m_vbDispatchInfoCount = 0;
 
 			for (const MObject_ptr& object : *m_objects)
 			{
-				if (!object->Update(updateData, m_mainCamera))
-				{
-					continue;
-				}
-
-				if (!meshChanged)
-				{
-					continue;
-				}
+				object->Update(updateData, m_mainCamera);
 
 				std::vector<VBDispatchInfo> vbDispatchInfo = object->GetVBDispatchInfo();
 				m_renderDescriptors->GetObjectInfoDescriptorSet()->AddObjectInfo(object->GetObjectInfo(), vbDispatchInfo);

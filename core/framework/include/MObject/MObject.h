@@ -108,7 +108,7 @@ namespace MyosotisFW
 		static const PropertyTable& StaticPropertyTable()
 		{
 			static const PropertyDesc props[] = {
-				MakeProp<glm::vec4>(uuids::hashMaker(), "Transform", "Position", PropertyFlags::None,
+				MakeProp<glm::vec4>(uuids::hashMaker(), "Position", "Transform", PropertyFlags::None,
 					+[](const void* obj)->PropertyValue
 					{
 						auto* o = static_cast<const MObject*>(obj);
@@ -116,8 +116,8 @@ namespace MyosotisFW
 					},
 					+[](void* obj, const PropertyValue& v, ChangeReason cr)
 					{
-						auto* o = static_cast<const MObject*>(obj);
-						o->m_objectInfo->transform.pos = std::get<glm::vec4>(v);
+						auto* o = static_cast<MObject*>(obj);
+						o->SetPos(std::get<glm::vec4>(v));
 					}),
 			};
 			static const PropertyTable baseTable{ nullptr, nullptr, 0 };
