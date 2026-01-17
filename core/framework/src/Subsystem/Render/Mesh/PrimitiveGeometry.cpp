@@ -50,6 +50,13 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::loadAssets()
 	{
+		__super::loadAssets();
+
+		m_meshCount = 0;
+		m_meshID.clear();
+		m_vbDispatchInfo.clear();
+		m_tlasInstance->active = false;
+
 		if (m_primitiveGeometryShape == Shape::PrimitiveGeometryShape::UNDEFINED) return;
 
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!

@@ -82,7 +82,7 @@ namespace MyosotisFW::System::Render::Camera
 				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraNear>(uuids::hashMaker(), "Near", "Camera"),
 				MakeMemberProp<CameraBase, float, &CameraBase::m_aspectRadio>(uuids::hashMaker(), "Radio", "Camera", PropertyFlags::ReadOnly),
 				MakeMemberProp<CameraBase, glm::vec2, &CameraBase::m_screenSize>(uuids::hashMaker(), "ScreenSize", "Camera", PropertyFlags::None,
-					[](void* obj, const PropertyValue& v, ChangeReason cr)
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
 					{
 						static_cast<CameraBase*>(obj)->UpdateScreenSize(std::get<glm::vec2>(v));
 					}),

@@ -61,12 +61,18 @@ namespace MyosotisFW
 		UI_Preview,
 		UI_Commit,
 		UndoRedo,
-		Deserialize
+		Deserialize,
+		TrySet
 	};
 
 	using GetterFunction = PropertyValue(*)(const void* obj);
-	using SetterFunction = void(*)(void* obj, const PropertyValue& v);
 	using ApplyFunction = void(*)(void*, const PropertyValue& v, ChangeReason c);
+
+	struct EnumItem
+	{
+		const char* name;
+		int32_t value;	// todo.今後はcharとか他の型にも対応する必要がある
+	};
 
 	struct PropertyDesc
 	{
@@ -77,8 +83,11 @@ namespace MyosotisFW
 		const char* category = "";
 
 		GetterFunction get{};
-		SetterFunction set{};
 		ApplyFunction apply{};
+
+		// enum
+		const EnumItem* enumItems = nullptr;
+		size_t enumCount = 0;
 	};
 
 	struct PropertyTable
@@ -130,6 +139,7 @@ namespace MyosotisFW
 	{
 		return (static_cast<uint32_t>(target) & static_cast<uint32_t>(find)) != 0;
 	}
+
 	template<class C, class T, T C::* Member>
 	PropertyDesc MakeMemberProp(uuids::uuid id, const char* name, const char* category, PropertyFlags flags = PropertyFlags::None, ApplyFunction applyFunc = nullptr)
 	{
@@ -152,14 +162,10 @@ namespace MyosotisFW
 				auto* c = static_cast<const C*>(obj);
 				return c->*Member;
 			},
-			[](void* obj, const PropertyValue& v)
-			{
-				auto* c = static_cast<C*>(obj);
-				c->*Member = std::get<T>(v);
-			},
 			apply
 		};
 	}
+
 	template<class T>
 	PropertyDesc MakeProp(uuids::uuid id, const char* name, const char* category,
 		PropertyFlags flags = PropertyFlags::None,
@@ -173,9 +179,40 @@ namespace MyosotisFW
 			name,
 			category,
 
-			getFunc,	// todo.
-			nullptr,	// todo.
-			applyFunc	// todo.
+			getFunc,
+			applyFunc
 		};
+	}
+
+	template<class C, class T, T C::* Member>
+	PropertyDesc MakeEnumProp(uuids::uuid id, const char* name, const char* category,
+		const EnumItem* items, size_t itemCount,
+		PropertyFlags flags = PropertyFlags::None, ApplyFunction applyFunc = nullptr)
+	{
+		ApplyFunction apply = applyFunc ? applyFunc :
+			[](void* obj, const PropertyValue& v, ChangeReason cr)
+			{
+				auto* c = static_cast<C*>(obj);
+				c->*Member = static_cast<T>(std::get<int32_t>(v));	// 仮: int32_t 固定
+			};
+
+		PropertyDesc desc = PropertyDesc{
+			id,
+			PropertyType::g_propertyTypeMap.at(typeid(int32_t)),	// 仮: int32_t 固定
+			flags,
+			name,
+			category,
+
+			[](const void* obj) -> PropertyValue
+			{
+				auto* c = static_cast<const C*>(obj);
+				return static_cast<int32_t>(c->*Member);		// 仮: int32_t 固定
+			},
+			apply
+		};
+
+		desc.enumItems = items;
+		desc.enumCount = itemCount;
+		return desc;
 	}
 };

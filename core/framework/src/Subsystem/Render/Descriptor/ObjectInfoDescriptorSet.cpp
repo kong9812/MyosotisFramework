@@ -63,6 +63,14 @@ namespace MyosotisFW::System::Render
 			uint32_t size = static_cast<uint32_t>(sizeof(uint32_t)) + static_cast<uint32_t>(sizeof(uint32_t)) * static_cast<uint32_t>(m_vbDispatchInfo.size());
 			buildSSBODescriptor(static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex), size);
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].rebuild = false;
+
+			// 一時データをセット
+			uint32_t tmp = 0;
+			vmaTools::MemcpyBufferData(m_device->GetVmaAllocator(),
+				m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].buffer,
+				&tmp,
+				static_cast<uint32_t>(sizeof(uint32_t)));
+			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].update = false;
 		}
 
 		// SSBO/UBO更新

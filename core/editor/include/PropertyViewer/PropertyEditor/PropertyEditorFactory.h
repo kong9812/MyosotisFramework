@@ -1,12 +1,13 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "iqt.h"
-#include "ComponentProperty.h"
+#include "PropertyBase.h"
 #include "PropertyEditorBase.h"
 
 #include "FloatPropertyEditor.h"
 #include "Vec3PropertyEditor.h"
 #include "Vec4PropertyEditor.h"
+#include "EnumPropertyEditor.h"
 
 class PropertyEditorFactory
 {
@@ -33,6 +34,12 @@ public:
 	// エディタを生成するメイン関数
 	std::unique_ptr<PropertyEditorBase> CreateEditor(void* obj, const MyosotisFW::PropertyDesc& desc, QWidget* parent)
 	{
+		// enum
+		if (desc.enumItems != nullptr && desc.enumCount > 0)
+		{
+			return std::make_unique<EnumPropertyEditor>(obj, desc, parent);
+		}
+
 		auto it = m_creators.find(desc.type.id);
 		if (it != m_creators.end()) {
 			return it->second(obj, desc, parent);

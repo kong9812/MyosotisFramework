@@ -50,6 +50,13 @@ namespace MyosotisFW::System::Render
 
 	void Terrain::loadAssets()
 	{
+		__super::loadAssets();
+
+		m_meshCount = 0;
+		m_meshID.clear();
+		m_vbDispatchInfo.clear();
+		m_tlasInstance->active = false;
+
 		if (m_meshComponentInfo.terrainHeightmapName.empty()) return;
 
 		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);

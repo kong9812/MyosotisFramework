@@ -31,6 +31,7 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QToolButton>
+#include <QComboBox>
 
 // Gui (描画・イベント)
 #include <QWindow>

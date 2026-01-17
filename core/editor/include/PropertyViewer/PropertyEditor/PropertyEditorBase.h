@@ -1,7 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "iqt.h"
-#include "ComponentProperty.h"
+#include "PropertyBase.h"
 
 class PropertyEditorBase : public QWidget
 {

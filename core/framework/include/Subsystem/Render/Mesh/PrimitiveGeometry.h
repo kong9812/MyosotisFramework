@@ -3,6 +3,7 @@
 #include "StaticMesh.h"
 #include "ComponentCast.h"
 #include "PrimitiveGeometryShape.h"
+#include "istduuid.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -24,6 +25,40 @@ namespace MyosotisFW::System::Render
 		void loadAssets() override;
 
 		Shape::PrimitiveGeometryShape m_primitiveGeometryShape;
+
+	public:
+		static constexpr EnumItem PrimitiveGeometryShapeEnumItem[] = {
+			{"UNDEFINED", static_cast<int32_t>(Shape::PrimitiveGeometryShape::UNDEFINED)},
+			{"Quad", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Quad)},
+			{"Plane", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Plane)},
+			{"Circle", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Circle)},
+			{"Sphere", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Sphere)},
+			{"PlaneWithHole", static_cast<int32_t>(Shape::PrimitiveGeometryShape::PlaneWithHole)},
+			{"Cylinder", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Cylinder)},
+			{"Capsule", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Capsule)}
+		};
+
+		// ComponentProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyDesc props[] = {
+				MakeEnumProp<PrimitiveGeometry, Shape::PrimitiveGeometryShape, &PrimitiveGeometry::m_primitiveGeometryShape>(
+					uuids::hashMaker(), "Shape", "PrimitiveGeometry",
+					PrimitiveGeometryShapeEnumItem,
+					std::size(PrimitiveGeometryShapeEnumItem), PropertyFlags::None,
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					{
+						static_cast<PrimitiveGeometry*>(obj)->SetPrimitiveGeometryShape(static_cast<Shape::PrimitiveGeometryShape>(std::get<int32_t>(v)));
+					}),
+			};
+			static const PropertyTable table{ &ComponentBase::StaticPropertyTable(), props, std::size(props) };
+			return table;
+		}
+		const PropertyTable& GetPropertyTable() const override { return StaticPropertyTable(); }
+
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(PrimitiveGeometry);
 	OBJECT_CAST_FUNCTION(PrimitiveGeometry);

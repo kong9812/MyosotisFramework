@@ -7,7 +7,7 @@
 #include "iRapidJson.h"
 #include "ComponentFactory.h"
 #include "TLASInstance.h"
-#include "ComponentProperty.h"
+#include "PropertyBase.h"
 
 namespace MyosotisFW
 {
@@ -98,7 +98,7 @@ namespace MyosotisFW
 			if (const PropertyDesc* p = GetPropertyTable().Find(id))
 			{
 				if (HasPropertyFlag(p->flags, PropertyFlags::ReadOnly)) return false;
-				p->set(this, v);
+				p->apply(this, v, ChangeReason::TrySet);
 				OnPropertyChanged(id);
 				return true;
 			}

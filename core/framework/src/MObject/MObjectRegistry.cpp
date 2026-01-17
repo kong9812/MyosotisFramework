@@ -51,6 +51,8 @@ namespace MyosotisFW
 	{
 		MObject_ptr object = m_objectMap[uuid];
 		ComponentBase_ptr component = System::ComponentFactory::CreateComponent(object->GetObjectID(), type, object->GetMeshChangedCallback());
+		object->AddComponent(component);
+
 		switch (type)
 		{
 		case ComponentType::FPSCamera:
@@ -71,8 +73,6 @@ namespace MyosotisFW
 		default:
 			break;
 		}
-
-		object->AddComponent(component);
 
 		// 実験
 		if (type == ComponentType::Terrain)

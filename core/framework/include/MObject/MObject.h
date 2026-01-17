@@ -10,7 +10,7 @@
 #include "iRapidJson.h"
 #include "ComponentType.h"
 #include "TLASInstance.h"
-#include "ComponentProperty.h"
+#include "PropertyBase.h"
 
 namespace MyosotisFW
 {
@@ -108,16 +108,38 @@ namespace MyosotisFW
 		static const PropertyTable& StaticPropertyTable()
 		{
 			static const PropertyDesc props[] = {
-				MakeProp<glm::vec4>(uuids::hashMaker(), "Position", "Transform", PropertyFlags::None,
+				MakeProp<glm::vec3>(uuids::hashMaker(), "Position", "Transform", PropertyFlags::None,
 					+[](const void* obj)->PropertyValue
 					{
 						auto* o = static_cast<const MObject*>(obj);
-						return o->m_objectInfo->transform.pos;
+						return static_cast<glm::vec3>(o->m_objectInfo->transform.pos);
 					},
 					+[](void* obj, const PropertyValue& v, ChangeReason cr)
 					{
 						auto* o = static_cast<MObject*>(obj);
-						o->SetPos(std::get<glm::vec4>(v));
+						o->SetPos(std::get<glm::vec3>(v));
+					}),
+				MakeProp<glm::vec3>(uuids::hashMaker(), "Rotation", "Transform", PropertyFlags::None,
+					+[](const void* obj)->PropertyValue
+					{
+						auto* o = static_cast<const MObject*>(obj);
+						return static_cast<glm::vec3>(o->m_objectInfo->transform.rot);
+					},
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					{
+						auto* o = static_cast<MObject*>(obj);
+						o->SetRot(std::get<glm::vec3>(v));
+					}),
+				MakeProp<glm::vec3>(uuids::hashMaker(), "Scale", "Transform", PropertyFlags::None,
+					+[](const void* obj)->PropertyValue
+					{
+						auto* o = static_cast<const MObject*>(obj);
+						return static_cast<glm::vec3>(o->m_objectInfo->transform.scale);
+					},
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					{
+						auto* o = static_cast<MObject*>(obj);
+						o->SetScale(std::get<glm::vec3>(v));
 					}),
 			};
 			static const PropertyTable baseTable{ nullptr, nullptr, 0 };
