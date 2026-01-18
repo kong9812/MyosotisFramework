@@ -83,9 +83,11 @@ endfunction()
 
 # GLFW
 FetchContent_Declare(
-    glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 3.4
+  glfw
+  GIT_REPOSITORY https://github.com/glfw/glfw.git
+  GIT_TAG 3.4
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -100,6 +102,8 @@ FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG        1.0.1
+    SYSTEM
+    EXCLUDE_FROM_ALL
 )
 set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
@@ -108,29 +112,28 @@ set_target_properties(glm PROPERTIES FOLDER "external")
 
 # ofbx
 FetchContent_Declare(
-   ofbx
-   GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
-   GIT_TAG 82a43d9191f2250145fddc219b4083667c33f2a5
+  ofbx
+  GIT_REPOSITORY https://github.com/nem0/OpenFBX.git
+  GIT_TAG 82a43d9191f2250145fddc219b4083667c33f2a5
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
-FetchContent_MakeAvailable(ofbx)
-set(ofbx_SOURCES_DIR ${FETCHCONTENT_BASE_DIR}/ofbx-src)
+FetchContent_Populate(ofbx)
+set(ofbx_SOURCES_DIR ${ofbx_SOURCE_DIR})
 set(OFBX_SOURCES
   ${ofbx_SOURCES_DIR}/src/libdeflate.c
   ${ofbx_SOURCES_DIR}/src/libdeflate.h
   ${ofbx_SOURCES_DIR}/src/ofbx.h
   ${ofbx_SOURCES_DIR}/src/ofbx.cpp
 )
-set_target_properties(libdeflate_prog_utils PROPERTIES FOLDER "external")
-set_target_properties(libdeflate_shared PROPERTIES FOLDER "external")
-set_target_properties(libdeflate-gzip PROPERTIES FOLDER "external")
-set_target_properties(libdeflate_static PROPERTIES FOLDER "external")
-set_target_properties(OpenFBX PROPERTIES FOLDER "external")
 
 # imgui
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
   GIT_TAG v1.91.7
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(imgui)
 set(imgui_SOURCES_DIR "${FETCHCONTENT_BASE_DIR}/imgui-src")
@@ -163,6 +166,8 @@ FetchContent_Declare(
   vma
   GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
   GIT_TAG v3.2.0
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 set(VMA_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
@@ -182,6 +187,8 @@ FetchContent_Declare(
   RapidJSON
   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
   GIT_TAG d621dc9e9c77f81e5c8a35b8dcc16dcd63351321
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "" FORCE)
 set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -191,9 +198,11 @@ set_target_properties(travis_doc PROPERTIES FOLDER "external")
 
 # stduuid
 FetchContent_Declare(
-    stduuid
-    GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
-    GIT_TAG v1.2.3
+  stduuid
+  GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
+  GIT_TAG v1.2.3
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(UUID_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(UUID_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
@@ -201,9 +210,11 @@ FetchContent_MakeAvailable(stduuid)
 
 # stb
 FetchContent_Declare(
-    stb
-    GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG f58f558c120e9b32c217290b80bad1a0729fbb2c
+  stb
+  GIT_REPOSITORY https://github.com/nothings/stb.git
+  GIT_TAG f58f558c120e9b32c217290b80bad1a0729fbb2c
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(stb)
 set(STB_SOURCES
@@ -212,9 +223,11 @@ set(STB_SOURCES
 
 # tinygltf
 FetchContent_Declare(
-    tinygltf
-    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG 37250b3470b517fd6823ee82d6e0495695bb7924
+  tinygltf
+  GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+  GIT_TAG 37250b3470b517fd6823ee82d6e0495695bb7924
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(TINYGLTF_HEADER_ONLY ON CACHE BOOL "" FORCE)
 set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE BOOL "" FORCE)
@@ -224,9 +237,11 @@ FetchContent_MakeAvailable(tinygltf)
 
 # meshoptimizer
 FetchContent_Declare(
-    meshoptimizer
-    GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
-    GIT_TAG        v0.25
+  meshoptimizer
+  GIT_REPOSITORY https://github.com/zeux/meshoptimizer.git
+  GIT_TAG        v0.25
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 set(MESHOPT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(meshoptimizer)
@@ -235,9 +250,11 @@ FILE(GLOB meshoptimizer_SOURCES "${meshoptimizer_SOURCE_DIR}/src/*cpp")
 
 # xatlas
 FetchContent_Declare(
-    xatlas
-    GIT_REPOSITORY https://github.com/cpp-pm/xatlas.git
-    GIT_TAG        v0.0.0-4077f0e-p0
+  xatlas
+  GIT_REPOSITORY https://github.com/cpp-pm/xatlas.git
+  GIT_TAG        v0.0.0-4077f0e-p0
+  SYSTEM
+  EXCLUDE_FROM_ALL
 )
 FetchContent_GetProperties(xatlas)
 if (NOT xatlas_POPULATED)

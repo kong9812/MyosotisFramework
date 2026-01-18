@@ -71,10 +71,12 @@ namespace MyosotisFW::System::Render
 				vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 				// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
 				m_vbDispatchInfo.push_back(vbDispatchInfo);
+
+
+				m_tlasInstance->meshID.push_back(meshInfo.meshID);
 			}
 			m_meshID.push_back(meshInfo.meshID);
 		}
-
 		m_tlasInstance->active = true;
 	}
 }

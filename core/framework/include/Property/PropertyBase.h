@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "iglm.h"
 #include "istduuid.h"
+#include "FilePath.h"
 
 namespace MyosotisFW
 {
@@ -21,6 +22,7 @@ namespace MyosotisFW
 		{
 			// 文字列
 			{ typeid(std::string), PropertyTypeData{"string", uuids::uuid::from_string("4186d7b6-3e2d-473a-aadf-ee356ace76b7").value()} },
+			{ typeid(FilePath), PropertyTypeData{"FilePath", uuids::uuid::from_string("1765e450-8079-4a5c-9f23-ccf2c57f63f2").value()} },
 			// 整数
 			{ typeid(uint32_t), PropertyTypeData{"uint32_t", uuids::uuid::from_string("5c0a265b-dd66-40e5-987b-4334c63ea91c").value()} },
 			{ typeid(int32_t), PropertyTypeData{"int32_t", uuids::uuid::from_string("f1f2420a-2418-453f-9d03-3514783bf9d9").value()} },

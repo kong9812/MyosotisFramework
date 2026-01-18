@@ -79,7 +79,7 @@ namespace MyosotisFW
 		{
 			System::Render::Terrain_ptr terrain = System::Render::Object_CastToTerrain(component);
 			System::Render::Terrain::MeshComponentInfo meshComponentInfo{};
-			meshComponentInfo.terrainHeightmapName = "smallTerrain.png";
+			meshComponentInfo.terrainHeightmapName.path = "smallTerrain.png";
 			terrain->SetMeshComponentInfo(meshComponentInfo);
 			m_meshChanged = true;
 		}

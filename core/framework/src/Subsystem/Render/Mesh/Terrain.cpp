@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
 
-		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.terrainHeightmapName.c_str(), allocator), allocator);
+		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.terrainHeightmapName.path.c_str(), allocator), allocator);
 
 		return obj;
 	}
@@ -45,7 +45,7 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 
-		m_meshComponentInfo.terrainHeightmapName = doc["meshName"].GetString();
+		m_meshComponentInfo.terrainHeightmapName.path = doc["meshName"].GetString();
 	}
 
 	void Terrain::loadAssets()
@@ -59,7 +59,7 @@ namespace MyosotisFW::System::Render
 
 		if (m_meshComponentInfo.terrainHeightmapName.empty()) return;
 
-		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
+		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName.path);
 		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
 		// VBDispatchInfoの作成
 		for (uint32_t i = 0; i < m_meshCount; i++)

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "StaticMesh.h"
+#include "FilePath.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -12,7 +13,7 @@ namespace MyosotisFW::System::Render
 
 		struct MeshComponentInfo
 		{
-			std::string terrainHeightmapName;
+			FilePath terrainHeightmapName{};
 		};
 	public:
 
