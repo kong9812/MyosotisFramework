@@ -59,25 +59,31 @@ namespace MyosotisFW::System::Render
 
 		if (m_meshComponentInfo.terrainHeightmapName.empty()) return;
 
-		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName.path);
+		MeshesHandle meshesHandle = m_resources->GetTerrainMesh(m_meshComponentInfo.terrainHeightmapName);
 		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
-		// VBDispatchInfoの作成
-		for (uint32_t i = 0; i < m_meshCount; i++)
-		{
-			std::shared_ptr<const Mesh> mesh = meshesHandle[i].lock();
-			const MeshInfo meshInfo = mesh->meshInfo;
-			m_meshID.push_back(meshInfo.meshID);
-			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
-			{
-				VBDispatchInfo vbDispatchInfo{};
-				vbDispatchInfo.objectID = m_objectID;		// MObjectRegistryでセットされたobjectIDを使う
-				vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
-				vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
-				// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
-				m_vbDispatchInfo.push_back(vbDispatchInfo);
-			}
-		}
 
-		m_tlasInstance->active = true;
+		if (m_meshCount > 0)
+		{
+			// VBDispatchInfoの作成
+			for (uint32_t i = 0; i < m_meshCount; i++)
+			{
+				std::shared_ptr<const Mesh> mesh = meshesHandle[i].lock();
+				const MeshInfo meshInfo = mesh->meshInfo;
+				m_meshID.push_back(meshInfo.meshID);
+				for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
+				{
+					VBDispatchInfo vbDispatchInfo{};
+					vbDispatchInfo.objectID = m_objectID;		// MObjectRegistryでセットされたobjectIDを使う
+					vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
+					vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+					// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
+					m_vbDispatchInfo.push_back(vbDispatchInfo);
+
+					m_tlasInstance->meshID.push_back(meshInfo.meshID);
+				}
+			}
+
+			m_tlasInstance->active = true;
+		}
 	}
 }

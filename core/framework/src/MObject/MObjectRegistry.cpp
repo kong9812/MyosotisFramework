@@ -74,17 +74,6 @@ namespace MyosotisFW
 			break;
 		}
 
-		// 実験
-		if (type == ComponentType::Terrain)
-		{
-			System::Render::Terrain_ptr terrain = System::Render::Object_CastToTerrain(component);
-			System::Render::Terrain::MeshComponentInfo meshComponentInfo{};
-			meshComponentInfo.terrainHeightmapName.path = "smallTerrain.png";
-			terrain->SetMeshComponentInfo(meshComponentInfo);
-			m_meshChanged = true;
-		}
-		// 実験
-
 		return component;
 	}
 

@@ -85,14 +85,12 @@ namespace Utility::Loader {
 		return best;
 	}
 
-	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadTerrainMesh(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadTerrainMesh(const std::filesystem::path& path)
 	{
-		const std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_terrainFolder + fileName);
-
 		int32_t textureWidth = -1;
 		int32_t textureHeight = -1;
 		int32_t textureChannels = -1;
-		stbi_uc* pixels = LoadGrayImage(absolutePath, textureWidth, textureHeight, textureChannels);
+		stbi_uc* pixels = LoadGrayImage(path, textureWidth, textureHeight, textureChannels);
 		size_t imageSize = static_cast<size_t>(textureWidth) * static_cast<size_t>(textureHeight) * static_cast<size_t>(textureChannels);
 
 		// チャンク設定

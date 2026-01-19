@@ -43,7 +43,7 @@ namespace MyosotisFW
 
 	using PropertyValue = std::variant<
 		// 文字列
-		std::string,
+		std::string, FilePath,
 		// 整数
 		uint32_t, int32_t, uint64_t, int64_t,
 		// 小数

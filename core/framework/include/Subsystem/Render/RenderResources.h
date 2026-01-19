@@ -10,6 +10,7 @@
 #include "PrimitiveGeometryShape.h"
 #include "BasicMaterial.h"
 #include "AppInfo.h"
+#include "FilePath.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -41,7 +42,7 @@ namespace MyosotisFW::System::Render
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
 		MeshesHandle GetMesh(const std::string& fileName);
-		MeshesHandle GetTerrainMesh(const std::string& fileName);
+		MeshesHandle GetTerrainMesh(const FilePath& fileName);
 		MeshHandle GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
 		Image GetImage(const std::string& fileName);
 		Image GetCubeImage(const std::vector<std::string>& fileNames);

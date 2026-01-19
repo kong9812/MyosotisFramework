@@ -9,7 +9,7 @@ namespace MyosotisFW
 	{
 		std::string path = "";
 
-		std::filesystem::path GetFilesystemPath()
+		std::filesystem::path GetFilesystemPath() const
 		{
 			return std::filesystem::path(path);
 		}

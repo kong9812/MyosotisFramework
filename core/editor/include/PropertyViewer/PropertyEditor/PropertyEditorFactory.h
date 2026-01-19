@@ -4,7 +4,9 @@
 #include "PropertyBase.h"
 #include "PropertyEditorBase.h"
 
+#include "FilePathPropertyEditor.h"
 #include "FloatPropertyEditor.h"
+#include "Vec2PropertyEditor.h"
 #include "Vec3PropertyEditor.h"
 #include "Vec4PropertyEditor.h"
 #include "EnumPropertyEditor.h"
@@ -14,10 +16,20 @@ class PropertyEditorFactory
 public:
 	PropertyEditorFactory()
 	{
+		// FilePath
+		Register<MyosotisFW::FilePath>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
+			{
+				return std::make_unique<FilePathPropertyEditor>(o, d, p);
+			});
 		// float
 		Register<float>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
 			{
 				return std::make_unique<FloatPropertyEditor>(o, d, p);
+			});
+		// vec2
+		Register<glm::vec2>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
+			{
+				return std::make_unique<Vec2PropertyEditor>(o, d, p);
 			});
 		// vec3
 		Register<glm::vec3>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)

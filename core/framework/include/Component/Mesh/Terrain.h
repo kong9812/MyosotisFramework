@@ -31,6 +31,32 @@ namespace MyosotisFW::System::Render
 		void loadAssets() override;
 
 		MeshComponentInfo m_meshComponentInfo;
+
+	public:
+		// ComponentProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyDesc props[] = {
+				MakeProp<FilePath>(uuids::hashMaker(), "Heightmap", "Terrain", PropertyFlags::None,
+					+[](const void* obj)->PropertyValue
+					{
+						auto* o = static_cast<const Terrain*>(obj);
+						return static_cast<FilePath>(o->m_meshComponentInfo.terrainHeightmapName);
+					},
+					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					{
+						auto* o = static_cast<Terrain*>(obj);
+						o->m_meshComponentInfo.terrainHeightmapName = std::get<FilePath>(v);
+						o->SetMeshComponentInfo(o->m_meshComponentInfo);
+					}),
+			};
+			static const PropertyTable table{ &ComponentBase::StaticPropertyTable(), props, std::size(props) };
+			return table;
+		}
+		const PropertyTable& GetPropertyTable() const override { return StaticPropertyTable(); }
+
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
 	};
 	TYPEDEF_SHARED_PTR_ARGS(Terrain);
 	OBJECT_CAST_FUNCTION(Terrain);
