@@ -9,6 +9,7 @@ class OverviewDockWidget : public QDockWidget
 public:
 	OverviewDockWidget(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
 
+	void Reload();
 	void AddTopLevelObject(MObject_ptr topObject);
 	void SetTopLevelObjects(std::vector<MObject_ptr> topObjects);
 

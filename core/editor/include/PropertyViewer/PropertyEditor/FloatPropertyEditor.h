@@ -22,7 +22,7 @@ public:
 			{
 				if (m_desc.apply)
 				{
-					m_desc.apply(m_object, static_cast<float>(val), MyosotisFW::ChangeReason::UI_Preview);
+					m_desc.apply(m_object, static_cast<float>(val), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 				}
 			});
 

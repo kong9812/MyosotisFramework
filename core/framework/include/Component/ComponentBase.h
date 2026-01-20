@@ -83,7 +83,7 @@ namespace MyosotisFW
 			return StaticPropertyTable();
 		}
 
-		bool TryGet(uuids::uuid id, PropertyValue& v) const
+		bool TryGet(uuids::uuid id, PropertyDesc::PropertyValue& v) const
 		{
 			if (const PropertyDesc* p = GetPropertyTable().Find(id))
 			{
@@ -93,12 +93,12 @@ namespace MyosotisFW
 			return false;
 		}
 
-		bool TrySet(uuids::uuid id, PropertyValue& v)
+		bool TrySet(uuids::uuid id, PropertyDesc::PropertyValue& v)
 		{
 			if (const PropertyDesc* p = GetPropertyTable().Find(id))
 			{
-				if (HasPropertyFlag(p->flags, PropertyFlags::ReadOnly)) return false;
-				p->apply(this, v, ChangeReason::TrySet);
+				if (HasPropertyFlag(p->flags, PropertyDesc::PropertyFlags::ReadOnly)) return false;
+				p->apply(this, v, PropertyDesc::ChangeReason::TrySet);
 				OnPropertyChanged(id);
 				return true;
 			}

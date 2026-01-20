@@ -106,16 +106,16 @@ namespace Utility::Loader
 		file.close();
 	}
 
-	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadMFModel(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadMFModel(std::filesystem::path& filePath)
 	{
+		std::string fileName = filePath.filename().string();
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
 		auto start = std::chrono::high_resolution_clock::now();
 #endif
-		std::string fullPath = std::string(MyosotisFW::AppInfo::g_mfModelFolder) + fileName;
 		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};
 
-		meshes.push_back(DesterilizeMFModel(fullPath.c_str()));
+		meshes.push_back(DesterilizeMFModel(filePath.string().c_str()));
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] End load: " + fileName +
 			"(" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms)");

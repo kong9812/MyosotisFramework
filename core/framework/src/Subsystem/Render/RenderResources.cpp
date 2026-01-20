@@ -91,30 +91,36 @@ namespace MyosotisFW::System::Render
 		return m_shaderModules[fileName];
 	}
 
-	MeshesHandle RenderResources::GetMesh(const std::string& fileName)
+	MeshesHandle RenderResources::GetMesh(const FilePath& filePath)
 	{
-		auto vertexData = m_meshes.find(fileName);
+		// 絶対パス
+		std::filesystem::path path = filePath.GetFilesystemPath();
+		if (!path.is_absolute())
+		{
+			path = std::filesystem::absolute(std::filesystem::path(MyosotisFW::AppInfo::g_terrainFolder) / path);
+		}
+
+		auto vertexData = m_meshes.find(path.string());
 		if (vertexData == m_meshes.end())
 		{
 			// 拡張子判定
-			std::filesystem::path path(fileName);
 			std::string extension = path.extension().string();
 			std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> rawMeshes{};
 			if ((extension == ".fbx") || (extension == ".FBX"))
 			{
-				rawMeshes = Utility::Loader::loadFbx(fileName);
+				rawMeshes = Utility::Loader::loadFbx(path);
 			}
 			else if ((extension == ".gltf") || (extension == ".GLTF"))
 			{
-				rawMeshes = Utility::Loader::loadGltf(fileName);
+				rawMeshes = Utility::Loader::loadGltf(path);
 			}
 			else if ((extension == ".mfmodel") || (extension == ".MFMODEL"))
 			{
-				rawMeshes = Utility::Loader::loadMFModel(fileName);
+				rawMeshes = Utility::Loader::loadMFModel(path);
 			}
 			else
 			{
-				ASSERT(false, "Unsupported mesh file format: " + fileName);
+				ASSERT(false, "Unsupported mesh file format: " + path.filename().string());
 			}
 
 			if (rawMeshes.size() <= 0) return {};	// 何もロードできない
@@ -160,16 +166,16 @@ namespace MyosotisFW::System::Render
 			createVertexIndexBuffer(meshes.mesh);
 			m_onLoadedMesh(meshes.meshHandle);
 
-			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(fileName, meshes.meshHandle);
-			m_meshes.emplace(fileName, std::move(meshes));
+			m_renderDescriptors->GetMeshInfoDescriptorSet()->AddCustomGeometry(path.string(), meshes.meshHandle);
+			m_meshes.emplace(path.string(), std::move(meshes));
 
 			if (materials.material.size() > 0)
 			{
 				m_renderDescriptors->GetMaterialDescriptorSet()->AddBasicMaterial(materials.materialHandle);
-				m_materials.emplace(fileName, std::move(materials));
+				m_materials.emplace(path.string(), std::move(materials));
 			}
 		}
-		return m_meshes[fileName].meshHandle;
+		return m_meshes[path.string()].meshHandle;
 	}
 
 	MeshesHandle RenderResources::GetTerrainMesh(const FilePath& fileName)

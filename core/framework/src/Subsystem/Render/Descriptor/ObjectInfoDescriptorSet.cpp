@@ -41,10 +41,6 @@ namespace MyosotisFW::System::Render
 	{
 		uint32_t count = 0;
 		memcpy(&count, m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::FalseNegativeVBDispatchInfoIndex)].buffer.allocationInfo.pMappedData, sizeof(uint32_t));
-		if (count > 10)
-		{
-			uint32_t test = 0;
-		}
 		return count;
 	}
 

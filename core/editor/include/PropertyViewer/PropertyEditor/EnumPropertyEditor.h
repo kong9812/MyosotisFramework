@@ -20,7 +20,7 @@ public:
 		{
 			for (size_t i = 0; i < m_desc.enumCount; ++i)
 			{
-				const MyosotisFW::EnumItem& item = m_desc.enumItems[i];
+				const MyosotisFW::PropertyDesc::EnumItem& item = m_desc.enumItems[i];
 				m_comboBox->addItem(item.name, item.value);
 			}
 		}
@@ -37,7 +37,7 @@ public:
 				// applyを実行
 				if (m_desc.apply)
 				{
-					m_desc.apply(m_object, val, MyosotisFW::ChangeReason::UI_Preview);
+					m_desc.apply(m_object, val, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 				}
 			});
 
@@ -50,7 +50,7 @@ public:
 		if (!m_desc.get) return;
 
 		// 現在の値
-		MyosotisFW::PropertyValue currentVal = m_desc.get(m_object);
+		MyosotisFW::PropertyDesc::PropertyValue currentVal = m_desc.get(m_object);
 		int32_t val = std::get<int32_t>(currentVal);
 
 		// ComboBoxから該当する値を持つインデックスを探す

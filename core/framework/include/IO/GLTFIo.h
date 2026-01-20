@@ -94,8 +94,10 @@ namespace Utility::Loader {
 		currentMeshletData.primitives.push_back(index3);
 	}
 
-	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadGltf(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadGltf(const std::filesystem::path& filePath)
 	{
+		std::string fileName = filePath.filename().string();
+
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
 		auto start = std::chrono::high_resolution_clock::now();
@@ -105,7 +107,7 @@ namespace Utility::Loader {
 		std::string error{};
 		std::string warning{};
 
-		bool fileLoaded = glTFLoader.LoadASCIIFromFile(&glTFModel, &error, &warning, std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
+		bool fileLoaded = glTFLoader.LoadASCIIFromFile(&glTFModel, &error, &warning, filePath.string());
 		ASSERT(fileLoaded, "Failed to open gltf file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName + "\nerror: " + error);
 
 		std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> meshes{};

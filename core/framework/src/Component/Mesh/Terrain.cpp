@@ -54,6 +54,7 @@ namespace MyosotisFW::System::Render
 
 		m_meshCount = 0;
 		m_meshID.clear();
+		m_tlasInstance->meshID.clear();
 		m_vbDispatchInfo.clear();
 		m_tlasInstance->active = false;
 

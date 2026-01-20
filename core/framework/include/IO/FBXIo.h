@@ -50,14 +50,14 @@ namespace Utility::Loader {
 		return 3 * triangleCount;
 	}
 
-	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadFbx(std::string fileName)
+	inline std::vector<std::pair<MyosotisFW::Mesh, MyosotisFW::BasicMaterial>> loadFbx(const std::filesystem::path& filePath)
 	{
+		std::string fileName = filePath.filename().string();
 #ifdef DEBUG
 		Logger::Debug("[VK_Loader] Start load: " + fileName);
 		auto start = std::chrono::high_resolution_clock::now();
 #endif
-
-		std::ifstream file(MyosotisFW::AppInfo::g_modelFolder + fileName, std::ios::ate | std::ios::binary);
+		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 		ASSERT(file.is_open(), "Failed to open fbx file: " + std::string(MyosotisFW::AppInfo::g_modelFolder) + fileName);
 		size_t fileSize = static_cast<size_t>(file.tellg());
 		std::vector<char> buf(fileSize);

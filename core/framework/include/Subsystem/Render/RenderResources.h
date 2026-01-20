@@ -41,7 +41,7 @@ namespace MyosotisFW::System::Render
 		virtual void Initialize(const glm::ivec2& screenSize);
 
 		VkShaderModule GetShaderModules(const std::string& fileName);
-		MeshesHandle GetMesh(const std::string& fileName);
+		MeshesHandle GetMesh(const FilePath& fileName);
 		MeshesHandle GetTerrainMesh(const FilePath& fileName);
 		MeshHandle GetPrimitiveGeometryMesh(const Shape::PrimitiveGeometryShape shape);
 		Image GetImage(const std::string& fileName);

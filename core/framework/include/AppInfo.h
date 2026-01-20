@@ -16,8 +16,8 @@
 namespace MyosotisFW::AppInfo
 {
 	// アプリケーション情報
-	constexpr uint32_t g_windowWidth = 1440;
-	constexpr uint32_t g_windowHeight = 810;
+	constexpr uint32_t g_windowWidth = 1600;
+	constexpr uint32_t g_windowHeight = 900;
 	//constexpr uint32_t g_windowWidth = 3840;	// 4k
 	//constexpr uint32_t g_windowHeight = 2160;	// 4k
 	constexpr uint32_t g_monitorIndex = 0;
@@ -118,6 +118,8 @@ namespace MyosotisFW::AppInfo
 	// [デフォルト]カメラ Near
 	constexpr float g_cameraNear = 0.01f;
 
+	// [フォルダ]ルート
+	constexpr const char* g_assetRootFolder = ".\\";
 	// [フォルダ]リソース
 	constexpr const char* g_resourcesFolder = ".\\resources\\";
 	// [フォルダ]シェーダー

@@ -72,17 +72,17 @@ namespace MyosotisFW::System::Render::Camera
 		static const PropertyTable& StaticPropertyTable()
 		{
 			static const PropertyDesc props[] = {
-				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraPos>(uuids::hashMaker(), "Position", "Camera"),
-				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraLookAt>(uuids::hashMaker(), "LookAt", "Camera", PropertyFlags::ReadOnly),
-				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraFront>(uuids::hashMaker(), "Front", "Camera", PropertyFlags::ReadOnly),
-				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraUp>(uuids::hashMaker(), "Up", "Camera", PropertyFlags::ReadOnly),
-				MakeMemberProp<CameraBase, glm::vec3, &CameraBase::m_cameraRight>(uuids::hashMaker(), "Right", "Camera", PropertyFlags::ReadOnly),
-				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraFov>(uuids::hashMaker(), "FOV", "Camera"),
-				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraFar>(uuids::hashMaker(), "Far", "Camera"),
-				MakeMemberProp<CameraBase, float, &CameraBase::m_cameraNear>(uuids::hashMaker(), "Near", "Camera"),
-				MakeMemberProp<CameraBase, float, &CameraBase::m_aspectRadio>(uuids::hashMaker(), "Radio", "Camera", PropertyFlags::ReadOnly),
-				MakeMemberProp<CameraBase, glm::vec2, &CameraBase::m_screenSize>(uuids::hashMaker(), "ScreenSize", "Camera", PropertyFlags::None,
-					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+				MakeProperty<CameraBase, glm::vec3, &CameraBase::m_cameraPos>(uuids::hashMaker(), "Position", "Camera"),
+				MakeProperty<CameraBase, glm::vec3, &CameraBase::m_cameraLookAt>(uuids::hashMaker(), "LookAt", "Camera", PropertyDesc::PropertyFlags::ReadOnly),
+				MakeProperty<CameraBase, glm::vec3, &CameraBase::m_cameraFront>(uuids::hashMaker(), "Front", "Camera", PropertyDesc::PropertyFlags::ReadOnly),
+				MakeProperty<CameraBase, glm::vec3, &CameraBase::m_cameraUp>(uuids::hashMaker(), "Up", "Camera", PropertyDesc::PropertyFlags::ReadOnly),
+				MakeProperty<CameraBase, glm::vec3, &CameraBase::m_cameraRight>(uuids::hashMaker(), "Right", "Camera", PropertyDesc::PropertyFlags::ReadOnly),
+				MakeProperty<CameraBase, float, &CameraBase::m_cameraFov>(uuids::hashMaker(), "FOV", "Camera"),
+				MakeProperty<CameraBase, float, &CameraBase::m_cameraFar>(uuids::hashMaker(), "Far", "Camera"),
+				MakeProperty<CameraBase, float, &CameraBase::m_cameraNear>(uuids::hashMaker(), "Near", "Camera"),
+				MakeProperty<CameraBase, float, &CameraBase::m_aspectRadio>(uuids::hashMaker(), "Radio", "Camera", PropertyDesc::PropertyFlags::ReadOnly),
+				MakeProperty<CameraBase, glm::vec2, &CameraBase::m_screenSize>(uuids::hashMaker(), "ScreenSize", "Camera", PropertyDesc::PropertyFlags::None,
+					+[](void* obj, const PropertyDesc::PropertyValue& v, PropertyDesc::ChangeReason cr)
 					{
 						static_cast<CameraBase*>(obj)->UpdateScreenSize(std::get<glm::vec2>(v));
 					}),

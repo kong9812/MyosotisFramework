@@ -24,9 +24,6 @@ private:
 	QWidget* m_mainWidget;
 	QScrollArea* m_scrollArea;
 
-	QLabel* m_name;
-	QLabel* m_uuid;
-
 	QPushButton* m_addComponentButton;
 	QMenu* m_addComponentMenu;
 	QVBoxLayout* m_vBoxLayout;
@@ -48,5 +45,5 @@ public slots:
 
 Q_SIGNALS:
 	void sigAddComponent(const uuids::uuid& uuid, const MyosotisFW::ComponentType type);
-
+	void sigEditedMObject(void* object, const MyosotisFW::PropertyDesc& desc, MyosotisFW::PropertyDesc::ChangeReason changeReason);
 };

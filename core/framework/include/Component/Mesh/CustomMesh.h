@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #pragma once
 #include "StaticMesh.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -12,7 +13,7 @@ namespace MyosotisFW::System::Render
 
 		struct MeshComponentInfo
 		{
-			std::string meshName;
+			FilePath meshName;
 		};
 
 	public:
@@ -30,6 +31,40 @@ namespace MyosotisFW::System::Render
 		void loadAssets() override;
 
 		MeshComponentInfo m_meshComponentInfo;
+	public:
+		static constexpr PropertyDesc::FilePathItem Mesh = {
+			AppInfo::g_assetRootFolder,		// basePass
+			"*.fbx *.gltf *.mfmodel",		// filter
+			AppInfo::g_modelFolder			// defaultDir
+		};
+
+		// ComponentProperty
+		static const PropertyTable& StaticPropertyTable()
+		{
+			static const PropertyDesc props[] = {
+				MakeProperty(uuids::hashMaker(), "Mesh", "CustomMesh",
+					&Mesh,
+					PropertyDesc::PropertyFlags::None,
+					+[](const void* obj)->PropertyDesc::PropertyValue
+					{
+						auto* o = static_cast<const CustomMesh*>(obj);
+						return static_cast<FilePath>(o->m_meshComponentInfo.meshName);
+					},
+					+[](void* obj, const PropertyDesc::PropertyValue& v, PropertyDesc::ChangeReason cr)
+					{
+						auto* o = static_cast<CustomMesh*>(obj);
+						o->m_meshComponentInfo.meshName = std::get<FilePath>(v);
+						o->SetMeshComponentInfo(o->m_meshComponentInfo);
+					}),
+			};
+			static const PropertyTable table{ &ComponentBase::StaticPropertyTable(), props, std::size(props) };
+			return table;
+		}
+		const PropertyTable& GetPropertyTable() const override { return StaticPropertyTable(); }
+
+	protected:
+		virtual void OnPropertyChanged(uuids::uuid propertyID) {}
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(CustomMesh);
 	OBJECT_CAST_FUNCTION(CustomMesh);

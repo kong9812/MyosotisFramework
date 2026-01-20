@@ -15,8 +15,6 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 	m_mainWidget(new QWidget(this)),
 	m_scrollArea(new QScrollArea(this)),
 	m_vBoxLayout(new QVBoxLayout(m_mainWidget)),
-	m_name(new QLabel("", m_mainWidget)),
-	m_uuid(new QLabel("", m_mainWidget)),
 	m_addComponentButton(new QPushButton(m_mainWidget)),
 	m_addComponentMenu(new QMenu(m_mainWidget)),
 	m_currentObject(nullptr),
@@ -40,8 +38,6 @@ PropertyViewerDockWidget::PropertyViewerDockWidget(QWidget* parent, Qt::WindowFl
 
 	m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
-	m_vBoxLayout->addWidget(m_name);
-	m_vBoxLayout->addWidget(m_uuid);
 	m_vBoxLayout->addWidget(m_container);
 	m_vBoxLayout->addLayout(m_formLayout);
 	m_vBoxLayout->addWidget(m_addComponentButton);
@@ -91,14 +87,14 @@ void PropertyViewerDockWidget::setObject(MObject* object)
 
 	if (m_currentObject)
 	{
-		m_name->setText(object->GetName().c_str());
-		m_uuid->setText(uuids::to_string(object->GetUUID()).c_str());
-
-
 		MyosotisFW::PropertyTable propertyTable = object->GetPropertyTable();
 		propertyTable.ForEach([&](const MyosotisFW::PropertyDesc& desc)
 			{
-				std::unique_ptr<PropertyEditorBase> editorWidget = m_propertyEditorFactory->CreateEditor(object, desc, m_container);
+				std::unique_ptr<PropertyEditorBase> editorWidget = m_propertyEditorFactory->CreateEditor(object, desc, m_container,
+					[this](void* o, const MyosotisFW::PropertyDesc& d, MyosotisFW::PropertyDesc::ChangeReason cr)
+					{
+						emit sigEditedMObject(o, d, cr);
+					});
 				if (editorWidget)
 				{
 					PropertyEditorBase* ptr = editorWidget.get();

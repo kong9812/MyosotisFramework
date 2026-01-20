@@ -11,7 +11,7 @@
 namespace MyosotisFW::System::Render
 {
 	PrimitiveGeometry::PrimitiveGeometry(const uint32_t objectID, const std::function<void(void)>& meshChangedCallback) : StaticMesh(objectID, meshChangedCallback),
-		m_primitiveGeometryShape(Shape::PrimitiveGeometryShape::UNDEFINED)
+		m_meshComponentInfo()
 	{
 		m_name = "PrimitiveGeometry";
 	}
@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
 		__super::Update(updateData, camera);
-		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_primitiveGeometryShape);
+		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_meshComponentInfo.primitiveGeometryShape);
 
 		if (!m_isReady) return;
 	}
@@ -38,14 +38,14 @@ namespace MyosotisFW::System::Render
 	rapidjson::Value PrimitiveGeometry::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value json = __super::Serialize(allocator);
-		json.AddMember("primitiveGeometryShape", static_cast<uint32_t>(m_primitiveGeometryShape), allocator);
+		json.AddMember("primitiveGeometryShape", static_cast<uint32_t>(m_meshComponentInfo.primitiveGeometryShape), allocator);
 		return json;
 	}
 
 	void PrimitiveGeometry::Deserialize(const rapidjson::Value& doc)
 	{
 		__super::Deserialize(doc);
-		m_primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
+		m_meshComponentInfo.primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
 	}
 
 	void PrimitiveGeometry::loadAssets()
@@ -57,10 +57,10 @@ namespace MyosotisFW::System::Render
 		m_vbDispatchInfo.clear();
 		m_tlasInstance->active = false;
 
-		if (m_primitiveGeometryShape == Shape::PrimitiveGeometryShape::UNDEFINED) return;
+		if (m_meshComponentInfo.primitiveGeometryShape == Shape::PrimitiveGeometryShape::UNDEFINED) return;
 
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
-		MeshHandle meshHandle = m_resources->GetPrimitiveGeometryMesh(m_primitiveGeometryShape);
+		MeshHandle meshHandle = m_resources->GetPrimitiveGeometryMesh(m_meshComponentInfo.primitiveGeometryShape);
 		std::shared_ptr<const Mesh> mesh = meshHandle.lock();
 		m_meshCount = 1;
 		m_meshID.push_back(mesh->meshInfo.meshID);

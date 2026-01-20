@@ -1,9 +1,12 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <functional>
+
 #include "iqt.h"
 #include "PropertyBase.h"
 #include "PropertyEditorBase.h"
 
+#include "StringPropertyEditor.h"
 #include "FilePathPropertyEditor.h"
 #include "FloatPropertyEditor.h"
 #include "Vec2PropertyEditor.h"
@@ -14,12 +17,22 @@
 class PropertyEditorFactory
 {
 public:
+	using PropertyChangedCallback = std::function<void(void*, const MyosotisFW::PropertyDesc&, MyosotisFW::PropertyDesc::ChangeReason)>;
+
 	PropertyEditorFactory()
 	{
+		// string
+		Register<std::string>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
+			{
+				return std::make_unique<StringPropertyEditor>(o, d, p);
+			});
 		// FilePath
 		Register<MyosotisFW::FilePath>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
 			{
-				return std::make_unique<FilePathPropertyEditor>(o, d, p);
+				QString base = d.filePathItem ? d.filePathItem->basePass : "";
+				QString filter = d.filePathItem ? d.filePathItem->filter : "";
+				QString def = d.filePathItem ? d.filePathItem->defaultDir : "";
+				return std::make_unique<FilePathPropertyEditor>(o, d, p, base, filter, def);
 			});
 		// float
 		Register<float>([](void* o, const MyosotisFW::PropertyDesc& d, QWidget* p)
@@ -44,19 +57,34 @@ public:
 	}
 
 	// エディタを生成するメイン関数
-	std::unique_ptr<PropertyEditorBase> CreateEditor(void* obj, const MyosotisFW::PropertyDesc& desc, QWidget* parent)
+	std::unique_ptr<PropertyEditorBase> CreateEditor(void* obj,
+		const MyosotisFW::PropertyDesc& desc,
+		QWidget* parent,
+		PropertyChangedCallback callback = nullptr)
 	{
+		std::unique_ptr<PropertyEditorBase> editor = nullptr;
+
 		// enum
 		if (desc.enumItems != nullptr && desc.enumCount > 0)
 		{
-			return std::make_unique<EnumPropertyEditor>(obj, desc, parent);
+			editor = std::make_unique<EnumPropertyEditor>(obj, desc, parent);
+		}
+		else
+		{
+			auto it = m_creators.find(desc.type.id);
+			if (it != m_creators.end()) {
+				editor = it->second(obj, desc, parent);
+			}
 		}
 
-		auto it = m_creators.find(desc.type.id);
-		if (it != m_creators.end()) {
-			return it->second(obj, desc, parent);
+		// Callback登録
+		if (editor && callback)
+		{
+			// PropertyEditorBase::valueChanged シグナルを外部のコールバックに接続
+			QObject::connect(editor.get(), &PropertyEditorBase::valueChanged, callback);
 		}
-		return nullptr;
+
+		return editor;
 	}
 
 private:

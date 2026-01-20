@@ -34,7 +34,7 @@ namespace MyosotisFW::System::Editor
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
-		resizeDocks({ m_overview, m_propertyViewer }, { 300, 300 }, Qt::Orientation::Horizontal);
+		resizeDocks({ m_overview, m_propertyViewer }, { 360, 360 }, Qt::Orientation::Horizontal);
 
 		// VKの初期化が終わったらシグナルを接続
 		connect(m_vulkanWindow, &VulkanWindow::sigInitFinished, this, [this] { connectDockWidgetsSignals(); });
@@ -101,6 +101,12 @@ namespace MyosotisFW::System::Editor
 			{
 				m_vulkanWindow->GetEditorGameDirector()->RegisterComponent(uuid, type);
 			});
+
+		// PropertyViewerで MObject更新した
+		connect(m_propertyViewer, &PropertyViewerDockWidget::sigEditedMObject, this, [this](void* object, const MyosotisFW::PropertyDesc& desc, MyosotisFW::PropertyDesc::ChangeReason changeReason)
+			{
+				m_overview->Reload();
+			});
 	}
 
 	void MainWindow::closeWindow()
@@ -127,6 +133,6 @@ namespace MyosotisFW::System::Editor
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
-		resizeDocks({ m_overview, m_propertyViewer }, { 300, 300 }, Qt::Orientation::Horizontal);
+		resizeDocks({ m_overview, m_propertyViewer }, { 360, 360 }, Qt::Orientation::Horizontal);
 	}
 }

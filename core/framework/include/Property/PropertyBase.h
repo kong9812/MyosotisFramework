@@ -41,43 +41,50 @@ namespace MyosotisFW
 		};
 	}
 
-	using PropertyValue = std::variant<
-		// 文字列
-		std::string, FilePath,
-		// 整数
-		uint32_t, int32_t, uint64_t, int64_t,
-		// 小数
-		float, double,
-		// ベクトル型
-		glm::vec2, glm::vec3, glm::vec4,
-		glm::ivec2, glm::ivec3, glm::ivec4>;
-
-	enum class PropertyFlags : uint32_t
-	{
-		None = 0,
-		ReadOnly = 1 << 0,
-	};
-
-	enum class ChangeReason
-	{
-		UI_Preview,
-		UI_Commit,
-		UndoRedo,
-		Deserialize,
-		TrySet
-	};
-
-	using GetterFunction = PropertyValue(*)(const void* obj);
-	using ApplyFunction = void(*)(void*, const PropertyValue& v, ChangeReason c);
-
-	struct EnumItem
-	{
-		const char* name;
-		int32_t value;	// todo.今後はcharとか他の型にも対応する必要がある
-	};
-
 	struct PropertyDesc
 	{
+		using PropertyValue = std::variant<
+			// 文字列
+			std::string, FilePath,
+			// 整数
+			uint32_t, int32_t, uint64_t, int64_t,
+			// 小数
+			float, double,
+			// ベクトル型
+			glm::vec2, glm::vec3, glm::vec4,
+			glm::ivec2, glm::ivec3, glm::ivec4>;
+
+		enum class PropertyFlags : uint32_t
+		{
+			None = 0,
+			ReadOnly = 1 << 0,
+		};
+
+		enum class ChangeReason
+		{
+			UI_Preview,
+			UI_Commit,
+			UndoRedo,
+			Deserialize,
+			TrySet
+		};
+
+		using GetterFunction = PropertyValue(*)(const void* obj);
+		using ApplyFunction = void(*)(void*, const PropertyValue& v, ChangeReason c);
+
+		struct EnumItem
+		{
+			const char* name;
+			int32_t value;	// todo.今後はcharとか他の型にも対応する必要がある
+		};
+
+		struct FilePathItem
+		{
+			const char* basePass = "";
+			const char* filter = "";
+			const char* defaultDir = "";
+		};
+
 		uuids::uuid id{};
 		PropertyType::PropertyTypeData type{};
 		PropertyFlags flags = PropertyFlags::None;
@@ -90,6 +97,9 @@ namespace MyosotisFW
 		// enum
 		const EnumItem* enumItems = nullptr;
 		size_t enumCount = 0;
+
+		// file path
+		const FilePathItem* filePathItem = nullptr;
 	};
 
 	struct PropertyTable
@@ -133,20 +143,23 @@ namespace MyosotisFW
 	};
 
 	// 便利関数
-	inline PropertyFlags operator|(PropertyFlags a, PropertyFlags b)
+	inline PropertyDesc::PropertyFlags operator|(PropertyDesc::PropertyFlags a, PropertyDesc::PropertyFlags b)
 	{
-		return static_cast<PropertyFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+		return static_cast<PropertyDesc::PropertyFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 	}
-	inline bool HasPropertyFlag(PropertyFlags target, PropertyFlags find)
+	inline bool HasPropertyFlag(PropertyDesc::PropertyFlags target, PropertyDesc::PropertyFlags find)
 	{
 		return (static_cast<uint32_t>(target) & static_cast<uint32_t>(find)) != 0;
 	}
 
+	// Standard
 	template<class C, class T, T C::* Member>
-	PropertyDesc MakeMemberProp(uuids::uuid id, const char* name, const char* category, PropertyFlags flags = PropertyFlags::None, ApplyFunction applyFunc = nullptr)
+	inline PropertyDesc MakeProperty(uuids::uuid id, const char* name, const char* category,
+		PropertyDesc::PropertyFlags flags = PropertyDesc::PropertyFlags::None,
+		PropertyDesc::ApplyFunction applyFunc = nullptr)
 	{
-		ApplyFunction apply = applyFunc ? applyFunc :
-			[](void* obj, const PropertyValue& v, ChangeReason cr)
+		PropertyDesc::ApplyFunction apply = applyFunc ? applyFunc :
+			[](void* obj, const PropertyDesc::PropertyValue& v, PropertyDesc::ChangeReason cr)
 			{
 				auto* c = static_cast<C*>(obj);
 				c->*Member = std::get<T>(v);
@@ -159,7 +172,7 @@ namespace MyosotisFW
 			name,
 			category,
 
-			[](const void* obj) -> PropertyValue
+			[](const void* obj) -> PropertyDesc::PropertyValue
 			{
 				auto* c = static_cast<const C*>(obj);
 				return c->*Member;
@@ -167,12 +180,11 @@ namespace MyosotisFW
 			apply
 		};
 	}
-
 	template<class T>
-	PropertyDesc MakeProp(uuids::uuid id, const char* name, const char* category,
-		PropertyFlags flags = PropertyFlags::None,
-		GetterFunction getFunc = nullptr,
-		ApplyFunction applyFunc = nullptr)
+	inline PropertyDesc MakeProperty(uuids::uuid id, const char* name, const char* category,
+		PropertyDesc::PropertyFlags flags = PropertyDesc::PropertyFlags::None,
+		PropertyDesc::GetterFunction getFunc = nullptr,
+		PropertyDesc::ApplyFunction applyFunc = nullptr)
 	{
 		return PropertyDesc{
 			id,
@@ -186,35 +198,73 @@ namespace MyosotisFW
 		};
 	}
 
-	template<class C, class T, T C::* Member>
-	PropertyDesc MakeEnumProp(uuids::uuid id, const char* name, const char* category,
-		const EnumItem* items, size_t itemCount,
-		PropertyFlags flags = PropertyFlags::None, ApplyFunction applyFunc = nullptr)
+	// Enum
+	inline PropertyDesc MakeProperty(uuids::uuid id, const char* name, const char* category,
+		const PropertyDesc::EnumItem* items, size_t itemCount,
+		PropertyDesc::PropertyFlags flags = PropertyDesc::PropertyFlags::None,
+		PropertyDesc::GetterFunction getFunc = nullptr,
+		PropertyDesc::ApplyFunction applyFunc = nullptr)
 	{
-		ApplyFunction apply = applyFunc ? applyFunc :
-			[](void* obj, const PropertyValue& v, ChangeReason cr)
-			{
-				auto* c = static_cast<C*>(obj);
-				c->*Member = static_cast<T>(std::get<int32_t>(v));	// 仮: int32_t 固定
-			};
+		return PropertyDesc{
+			id,
+			PropertyType::g_propertyTypeMap.at(typeid(int32_t)),
+			flags,
+			name,
+			category,
 
-		PropertyDesc desc = PropertyDesc{
+			getFunc,
+			applyFunc,
+
+			items,
+			itemCount
+		};
+	}
+	template<class C, class T, T C::* Member>
+	inline PropertyDesc MakeProperty(uuids::uuid id, const char* name, const char* category,
+		const PropertyDesc::EnumItem* items, size_t itemCount,
+		PropertyDesc::ApplyFunction applyFunc,
+		PropertyDesc::PropertyFlags flags = PropertyDesc::PropertyFlags::None)
+	{
+		return PropertyDesc{
 			id,
 			PropertyType::g_propertyTypeMap.at(typeid(int32_t)),	// 仮: int32_t 固定
 			flags,
 			name,
 			category,
 
-			[](const void* obj) -> PropertyValue
+			[](const void* obj) -> PropertyDesc::PropertyValue
 			{
 				auto* c = static_cast<const C*>(obj);
-				return static_cast<int32_t>(c->*Member);		// 仮: int32_t 固定
+				return static_cast<int32_t>(c->*Member);			// 仮: int32_t 固定
 			},
-			apply
-		};
+			applyFunc,
 
-		desc.enumItems = items;
-		desc.enumCount = itemCount;
-		return desc;
+			items,
+			itemCount
+		};;
+	}
+
+	// FilePath
+	inline PropertyDesc MakeProperty(uuids::uuid id, const char* name, const char* category,
+		const PropertyDesc::FilePathItem* items,
+		PropertyDesc::PropertyFlags flags = PropertyDesc::PropertyFlags::None,
+		PropertyDesc::GetterFunction getFunc = nullptr,
+		PropertyDesc::ApplyFunction applyFunc = nullptr)
+	{
+		return PropertyDesc{
+			id,
+			PropertyType::g_propertyTypeMap.at(typeid(FilePath)),
+			flags,
+			name,
+			category,
+
+			getFunc,
+			applyFunc,
+
+			nullptr,
+			0,
+
+			items
+		};
 	}
 };

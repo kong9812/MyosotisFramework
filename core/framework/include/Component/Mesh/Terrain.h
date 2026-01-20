@@ -2,6 +2,7 @@
 #pragma once
 #include "StaticMesh.h"
 #include "FilePath.h"
+#include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -33,17 +34,25 @@ namespace MyosotisFW::System::Render
 		MeshComponentInfo m_meshComponentInfo;
 
 	public:
+		static constexpr PropertyDesc::FilePathItem HeightMap = {
+			AppInfo::g_assetRootFolder,		// basePass
+			"*.png",						// filter
+			AppInfo::g_terrainFolder		// defaultDir
+		};
+
 		// ComponentProperty
 		static const PropertyTable& StaticPropertyTable()
 		{
 			static const PropertyDesc props[] = {
-				MakeProp<FilePath>(uuids::hashMaker(), "Heightmap", "Terrain", PropertyFlags::None,
-					+[](const void* obj)->PropertyValue
+				MakeProperty(uuids::hashMaker(), "Heightmap", "Terrain",
+					&HeightMap,
+					PropertyDesc::PropertyFlags::None,
+					+[](const void* obj)->PropertyDesc::PropertyValue
 					{
 						auto* o = static_cast<const Terrain*>(obj);
 						return static_cast<FilePath>(o->m_meshComponentInfo.terrainHeightmapName);
 					},
-					+[](void* obj, const PropertyValue& v, ChangeReason cr)
+					+[](void* obj, const PropertyDesc::PropertyValue& v, PropertyDesc::ChangeReason cr)
 					{
 						auto* o = static_cast<Terrain*>(obj);
 						o->m_meshComponentInfo.terrainHeightmapName = std::get<FilePath>(v);

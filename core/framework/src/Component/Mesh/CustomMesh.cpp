@@ -5,6 +5,7 @@
 #include "VK_CreateInfo.h"
 #include "Camera.h"
 #include "MeshInfoDescriptorSet.h"
+#include "Mesh.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -35,7 +36,7 @@ namespace MyosotisFW::System::Render
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
 
-		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.meshName.c_str(), allocator), allocator);
+		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.meshName.path.c_str(), allocator), allocator);
 
 		return obj;
 	}
@@ -44,39 +45,43 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 
-		m_meshComponentInfo.meshName = doc["meshName"].GetString();
+		m_meshComponentInfo.meshName.path = doc["meshName"].GetString();
 	}
 
 	void CustomMesh::loadAssets()
 	{
+		__super::loadAssets();
+
 		if (m_meshComponentInfo.meshName.empty()) return;
 
-		m_vbDispatchInfo.clear();
-		m_meshID.clear();
 		MeshesHandle meshesHandle = m_resources->GetMesh(m_meshComponentInfo.meshName);
-		m_vbDispatchInfo.reserve(meshesHandle.size());
-		m_meshID.reserve(meshesHandle.size());
 		m_meshCount = static_cast<uint32_t>(meshesHandle.size());
+		m_meshID.clear();
+		m_tlasInstance->meshID.clear();
+		m_vbDispatchInfo.clear();
+		m_tlasInstance->active = false;
 
-		// VBDispatchInfoの作成
-		for (uint32_t i = 0; i < m_meshCount; i++)
-		{
-			std::shared_ptr<const Mesh> mesh = meshesHandle[i].lock();
-			const MeshInfo meshInfo = mesh->meshInfo;
-			for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
+		if (m_meshCount > 0)
+		{// VBDispatchInfoの作成
+			for (uint32_t i = 0; i < m_meshCount; i++)
 			{
-				VBDispatchInfo vbDispatchInfo{};
-				vbDispatchInfo.objectID = m_objectID;		// MObjectRegistryでセットされたobjectIDを使う
-				vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
-				vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
-				// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
-				m_vbDispatchInfo.push_back(vbDispatchInfo);
+				std::shared_ptr<const MyosotisFW::Mesh> mesh = meshesHandle[i].lock();
+				const MeshInfo meshInfo = mesh->meshInfo;
+				for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
+				{
+					VBDispatchInfo vbDispatchInfo{};
+					vbDispatchInfo.objectID = m_objectID;		// MObjectRegistryでセットされたobjectIDを使う
+					vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
+					vbDispatchInfo.meshletID = j;				// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
+					// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
+					m_vbDispatchInfo.push_back(vbDispatchInfo);
 
 
-				m_tlasInstance->meshID.push_back(meshInfo.meshID);
+					m_tlasInstance->meshID.push_back(meshInfo.meshID);
+				}
+				m_meshID.push_back(meshInfo.meshID);
 			}
-			m_meshID.push_back(meshInfo.meshID);
+			m_tlasInstance->active = true;
 		}
-		m_tlasInstance->active = true;
 	}
 }

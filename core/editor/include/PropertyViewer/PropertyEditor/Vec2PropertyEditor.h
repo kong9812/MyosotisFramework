@@ -22,12 +22,12 @@ public:
 		connect(m_doubleSpinBoxX, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec2(val, m_doubleSpinBoxY->value()), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec2(val, m_doubleSpinBoxY->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxY, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec2(m_doubleSpinBoxX->value(), val), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec2(m_doubleSpinBoxX->value(), val), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 
 		layout->addWidget(m_doubleSpinBoxX);

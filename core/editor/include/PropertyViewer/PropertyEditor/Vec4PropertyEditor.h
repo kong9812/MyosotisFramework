@@ -26,22 +26,22 @@ public:
 		connect(m_doubleSpinBoxX, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec4(val, m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec4(val, m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxY, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), val, m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), val, m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxZ, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), val, m_doubleSpinBoxW->value()), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), val, m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxW, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
-				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), val), MyosotisFW::ChangeReason::UI_Preview);
+				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), val), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 
 		layout->addWidget(m_doubleSpinBoxX);

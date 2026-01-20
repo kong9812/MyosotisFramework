@@ -39,6 +39,12 @@ OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	setWidget(m_mainWidget);
 }
 
+void OverviewDockWidget::Reload()
+{
+	m_MObjectModel->layoutChanged();
+	m_treeView->viewport()->update();
+}
+
 void OverviewDockWidget::AddTopLevelObject(MObject_ptr topObject)
 {
 	QModelIndex newIndex = m_MObjectModel->addObject(QModelIndex(), topObject);
