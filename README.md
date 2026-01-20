@@ -1,6 +1,6 @@
-# <img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">MyosotisFramework (WIP - RayTracing)<img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kong9812/MyosotisFramework)
-A framework created with Vulkan
-![DEMO](https://github.com/user-attachments/assets/22d7281d-df50-4254-947b-23ce1eb5126f)
+# <img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">MyosotisFramework<img src="https://github.com/user-attachments/assets/a8c13339-e5bf-4402-951f-7e1998412b93" width="30">[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kong9812/MyosotisFramework)
+Game engine created with Vulkan
+![DEMO](https://github.com/user-attachments/assets/34a402d3-1eaf-4821-88a4-c50afca886a3)
 
 > [!IMPORTANT]
 > This software is still under development and contains many unimplemented or partially implemented features.  
