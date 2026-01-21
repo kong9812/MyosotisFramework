@@ -14,6 +14,14 @@ public:
 		QHBoxLayout* layout = new QHBoxLayout(this);
 		layout->setContentsMargins(0, 0, 0, 0);
 
+		// 読み取り専用の対応
+		if (MyosotisFW::HasPropertyFlag(desc.flags, MyosotisFW::PropertyDesc::PropertyFlags::ReadOnly))
+		{
+			m_doubleSpinBox->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
+			m_doubleSpinBox->setReadOnly(true);
+			m_doubleSpinBox->setStyleSheet("QDoubleSpinBox { background: transparent; border: none; padding: 2px; }");
+		}
+
 		m_doubleSpinBox->setRange(-999999.0, 999999.0);
 
 		// UIが変更されたら Apply を呼ぶ
@@ -23,6 +31,7 @@ public:
 				if (m_desc.apply)
 				{
 					m_desc.apply(m_object, static_cast<float>(val), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+					emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 				}
 			});
 

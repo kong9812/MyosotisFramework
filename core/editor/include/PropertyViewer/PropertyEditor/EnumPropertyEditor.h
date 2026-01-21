@@ -15,6 +15,12 @@ public:
 		QHBoxLayout* layout = new QHBoxLayout(this);
 		layout->setContentsMargins(0, 0, 0, 0);
 
+		// 読み取り専用の対応
+		if (MyosotisFW::HasPropertyFlag(desc.flags, MyosotisFW::PropertyDesc::PropertyFlags::ReadOnly))
+		{
+			m_comboBox->SetReadOnly(true);
+		}
+
 		// EnumItemをComboBoxに追加
 		if (m_desc.enumItems)
 		{
@@ -38,6 +44,7 @@ public:
 				if (m_desc.apply)
 				{
 					m_desc.apply(m_object, val, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+					emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 				}
 			});
 

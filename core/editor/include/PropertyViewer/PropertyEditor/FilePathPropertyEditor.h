@@ -28,6 +28,20 @@ public:
 		layout->setContentsMargins(0, 0, 0, 0);
 		layout->setSpacing(2);
 
+		// 読み取り専用の対応
+		if (MyosotisFW::HasPropertyFlag(desc.flags, MyosotisFW::PropertyDesc::PropertyFlags::ReadOnly))
+		{
+			m_lineEdit->setReadOnly(true);
+			m_lineEdit->setStyleSheet(
+				"QLineEdit {"
+				"  background: transparent;"
+				"  border: none;"
+				"  padding: 2px;"
+				"}"
+			);
+			m_lineEdit->setDisabled(true);
+		}
+
 		m_lineEdit->setPlaceholderText("No file selected...");
 		m_browseButton->setFixedWidth(30);
 
@@ -93,6 +107,7 @@ private:
 		fp.path = QDir::toNativeSeparators(fi.absoluteFilePath()).toStdString();
 
 		m_desc.apply(m_object, fp, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+		emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 	}
 
 	QString toDisplayPath(const QString& fullPath) const

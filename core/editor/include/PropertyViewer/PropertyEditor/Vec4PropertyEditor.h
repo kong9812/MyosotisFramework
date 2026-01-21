@@ -17,6 +17,26 @@ public:
 		QHBoxLayout* layout = new QHBoxLayout(this);
 		layout->setContentsMargins(0, 0, 0, 0);
 
+		// 読み取り専用の対応
+		if (MyosotisFW::HasPropertyFlag(desc.flags, MyosotisFW::PropertyDesc::PropertyFlags::ReadOnly))
+		{
+			m_doubleSpinBoxX->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
+			m_doubleSpinBoxX->setReadOnly(true);
+			m_doubleSpinBoxX->setStyleSheet("QDoubleSpinBox { background: transparent; border: none; padding: 2px; }");
+
+			m_doubleSpinBoxY->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
+			m_doubleSpinBoxY->setReadOnly(true);
+			m_doubleSpinBoxY->setStyleSheet("QDoubleSpinBox { background: transparent; border: none; padding: 2px; }");
+
+			m_doubleSpinBoxZ->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
+			m_doubleSpinBoxZ->setReadOnly(true);
+			m_doubleSpinBoxZ->setStyleSheet("QDoubleSpinBox { background: transparent; border: none; padding: 2px; }");
+
+			m_doubleSpinBoxW->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
+			m_doubleSpinBoxW->setReadOnly(true);
+			m_doubleSpinBoxW->setStyleSheet("QDoubleSpinBox { background: transparent; border: none; padding: 2px; }");
+		}
+
 		m_doubleSpinBoxX->setRange(-999999.0, 999999.0);
 		m_doubleSpinBoxY->setRange(-999999.0, 999999.0);
 		m_doubleSpinBoxZ->setRange(-999999.0, 999999.0);
@@ -27,21 +47,25 @@ public:
 			[this](double val)
 			{
 				m_desc.apply(m_object, glm::vec4(val, m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+				emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxY, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
 				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), val, m_doubleSpinBoxZ->value(), m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+				emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxZ, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
 				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), val, m_doubleSpinBoxW->value()), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+				emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 		connect(m_doubleSpinBoxW, QOverload<double>::of(&StrictWheelDoubleSpinBox::valueChanged),
 			[this](double val)
 			{
 				m_desc.apply(m_object, glm::vec4(m_doubleSpinBoxX->value(), m_doubleSpinBoxY->value(), m_doubleSpinBoxZ->value(), val), MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
+				emit valueChanged(m_object, m_desc, MyosotisFW::PropertyDesc::ChangeReason::UI_Preview);
 			});
 
 		layout->addWidget(m_doubleSpinBoxX);
