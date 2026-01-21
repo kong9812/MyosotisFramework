@@ -23,6 +23,8 @@ namespace MyosotisFW::System::Render
 			Count
 		};
 
+		const VBDispatchInfo* GetVBDispatchInfo(const uint32_t index) const { return m_vbDispatchInfo.size() > index ? &m_vbDispatchInfo[index] : nullptr; }
+		void ResetVBDispatchInfo() { m_vbDispatchInfo.clear(); }
 		void AddObjectInfo(const ObjectInfo& objectInfo, std::vector<VBDispatchInfo> vbDispatchInfo);
 		uint32_t GetFalseNegativeVBDispatchInfoIndexCount();
 		void Update() override;

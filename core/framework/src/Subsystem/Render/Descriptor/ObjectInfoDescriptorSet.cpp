@@ -103,9 +103,6 @@ namespace MyosotisFW::System::Render
 				m_vbDispatchInfo.data(),
 				sizeof(VBDispatchInfo) * m_vbDispatchInfo.size());
 
-			// 一時データクリア
-			m_vbDispatchInfo.clear();
-
 			m_descriptors[static_cast<uint32_t>(DescriptorBindingIndex::VBDispatchInfo)].update = false;
 		}
 	}

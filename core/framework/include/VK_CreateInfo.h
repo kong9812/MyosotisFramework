@@ -117,9 +117,9 @@ namespace Utility::Vulkan::CreateInfo
 		VkSubmitInfo si{};
 		si.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		si.pWaitDstStageMask = &submitPipelineStages;
-		si.waitSemaphoreCount = 1;
+		si.waitSemaphoreCount = pWaitSemaphores != VK_NULL_HANDLE ? 1 : 0;
 		si.pWaitSemaphores = &pWaitSemaphores;
-		si.signalSemaphoreCount = 1;
+		si.signalSemaphoreCount = pSignalSemaphores != VK_NULL_HANDLE ? 1 : 0;
 		si.pSignalSemaphores = &pSignalSemaphores;
 		return si;
 	}
@@ -1072,13 +1072,16 @@ namespace Utility::Vulkan::CreateInfo
 		return label;
 	}
 
-	inline VkBufferImageCopy bufferImageCopy(const uint32_t
-		width, const uint32_t height)
+	inline VkBufferImageCopy bufferImageCopy(const uint32_t width, const uint32_t height, const glm::ivec3 offset = glm::ivec3(0))
 	{
 		VkBufferImageCopy imageCopy{};
 		imageCopy.bufferOffset = 0;
 		imageCopy.bufferRowLength = 0;
 		imageCopy.bufferImageHeight = 0;
+
+		imageCopy.imageOffset.x = static_cast<int32_t>(offset.x);
+		imageCopy.imageOffset.y = static_cast<int32_t>(offset.y);
+		imageCopy.imageOffset.z = static_cast<int32_t>(offset.z);
 
 		imageCopy.imageSubresource.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 		imageCopy.imageSubresource.mipLevel = 0;

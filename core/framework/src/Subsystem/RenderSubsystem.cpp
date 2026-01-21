@@ -154,6 +154,9 @@ namespace MyosotisFW::System::Render
 
 		if (meshChanged || transformChanged)
 		{
+			// Reset VBDispatchInfo
+			m_renderDescriptors->GetObjectInfoDescriptorSet()->ResetVBDispatchInfo();
+
 			// Reset mesh count
 			m_vbDispatchInfoCount = 0;
 
