@@ -27,6 +27,10 @@ namespace MyosotisFW::System::Render
 		VkQueue GetQueue() const { return m_queue; }
 		void WaitIdle() const;
 
+		std::mutex& GetQueueMutex() const { return m_mutex; }
+
+		void QueuePresent(const VkSwapchainKHR& swapchain, const uint32_t imageIndex, const VkSemaphore& pWaitSemaphores);
+
 	private:
 		uint32_t getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties);
 

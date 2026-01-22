@@ -25,9 +25,10 @@ namespace MyosotisFW::System::Render
 		EditorRenderSubsystem() : RenderSubsystem(),
 			m_editorGUI(nullptr),
 			m_editorRenderPass(nullptr),
-			m_selectedObject(nullptr) {
+			m_selectedObject(nullptr),
+			m_objectSelectCommandPool(VK_NULL_HANDLE) {
 		}
-		~EditorRenderSubsystem() {}
+		~EditorRenderSubsystem();
 
 		void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface) override;
 		void Update(const UpdateData& updateData) override;
@@ -38,11 +39,16 @@ namespace MyosotisFW::System::Render
 		void initializeRenderResources() override;
 		void initializeRenderPass() override;
 		void initializeRenderPipeline() override;
+		void initializeObjectSelectCommandPool();
 
 	private:
 		EditorGUI_ptr m_editorGUI;
 		EditorRenderPass_ptr m_editorRenderPass;
 		ThreadSaveValue<ComponentBase_ptr> m_selectedObject;
+
+	private:
+		VkCommandPool m_objectSelectCommandPool;
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem);
 }

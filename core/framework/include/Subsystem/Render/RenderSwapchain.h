@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <mutex>
 #include <vulkan/vulkan.h>
 #include "ClassPointer.h"
 #include "VK_Validation.h"
@@ -20,12 +21,12 @@ namespace MyosotisFW::System::Render
 
 		const glm::ivec2 GetScreenSize() const { return m_screenSize; }
 		const glm::vec2 GetScreenSizeF() const { return m_screenSizeF; }
-		uint32_t GetImageCount() const { return static_cast<uint32_t>(m_swapchainImage.size()); }
-		uint32_t GetMinImageCount() const { return m_minImageCount; }
-		std::vector<Image>& GetSwapchainImage() { return m_swapchainImage; }
+		const uint32_t GetImageCount() const { return static_cast<uint32_t>(m_swapchainImage.size()); }
+		const uint32_t GetMinImageCount() const { return m_minImageCount; }
+		const std::vector<Image>& GetSwapchainImage() const { return m_swapchainImage; }
+		const VkSwapchainKHR& GetSwapchain() const { return m_swapchain; }
 
 		void AcquireNextImage(VkSemaphore& presentCompleteSemaphore, uint32_t& imageIndex);
-		void QueuePresent(const VkQueue& queue, const uint32_t imageIndex, const VkSemaphore& pWaitSemaphores);
 
 		void Resize(const VkSurfaceKHR& vkSurface);
 

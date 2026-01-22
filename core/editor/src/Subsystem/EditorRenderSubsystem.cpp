@@ -22,6 +22,11 @@
 
 namespace MyosotisFW::System::Render
 {
+	EditorRenderSubsystem::~EditorRenderSubsystem()
+	{
+		vkDestroyCommandPool(*m_device, m_objectSelectCommandPool, m_device->GetAllocationCallbacks());
+	}
+
 	void EditorRenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
 		__super::Initialize(instance, surface);
@@ -31,6 +36,9 @@ namespace MyosotisFW::System::Render
 		m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
 		m_mainCamera->SetMainCamera(true);
 		m_renderDescriptors->GetSceneInfoDescriptorSet()->AddCamera(m_mainCamera);
+
+		// ObjectSelectCommandPool
+		initializeObjectSelectCommandPool();
 	}
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
@@ -47,7 +55,7 @@ namespace MyosotisFW::System::Render
 	{
 		// todo. std::mutexを追加してスレッドセーフにする
 
-		if (m_vbDispatchInfoCount <= 0 || !m_mainCamera) return;
+		if ((m_vbDispatchInfoCount <= 0) || (!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
 
 		const uint32_t currentFrameIndex = m_frameCounter % AppInfo::g_maxInFlightFrameCount;
 		const Image& targetVBImage = m_resources->GetVisibilityBuffer(currentFrameIndex);
@@ -68,7 +76,9 @@ namespace MyosotisFW::System::Render
 			VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_MAPPED_BIT
 		);
 
-		VkCommandBuffer commandBuffer = m_device->GetGraphicsQueue()->AllocateSingleUseCommandBuffer(*m_device);
+		VkCommandBuffer commandBuffer{};
+		VkCommandBufferAllocateInfo cmdBufAllocateInfo = Utility::Vulkan::CreateInfo::commandBufferAllocateInfo(m_objectSelectCommandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+		VK_VALIDATION(vkAllocateCommandBuffers(*m_device, &cmdBufAllocateInfo, &commandBuffer));
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
@@ -169,7 +179,7 @@ namespace MyosotisFW::System::Render
 
 		// 後片付け
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), buffer.buffer, buffer.allocation);
-		m_device->GetGraphicsQueue()->FreeSingleUseCommandBuffer(*m_device, commandBuffer);
+		vkFreeCommandBuffers(*m_device, m_objectSelectCommandPool, 1, &commandBuffer);
 		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
 	}
 
@@ -187,5 +197,11 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
 		__super::initializeRenderPipeline();
+	}
+
+	void EditorRenderSubsystem::initializeObjectSelectCommandPool()
+	{
+		VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsQueue()->GetQueueFamilyIndex());
+		VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_objectSelectCommandPool));
 	}
 }

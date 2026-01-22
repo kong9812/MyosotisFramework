@@ -80,7 +80,31 @@ namespace MyosotisFW::System::Render
 
 	void RenderQueue::WaitIdle() const
 	{
+		std::lock_guard<std::mutex> lock(m_mutex);
 		VK_VALIDATION(vkQueueWaitIdle(m_queue));
+	}
+
+	void RenderQueue::QueuePresent(const VkSwapchainKHR& swapchain, const uint32_t imageIndex, const VkSemaphore& pWaitSemaphores)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = NULL;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &swapchain;
+		presentInfo.pImageIndices = &imageIndex;
+		// Check if a wait semaphore has been specified to wait for before presenting the image
+		if (pWaitSemaphores != nullptr)
+		{
+			presentInfo.pWaitSemaphores = &pWaitSemaphores;
+			presentInfo.waitSemaphoreCount = 1;
+		}
+		VkResult result = vkQueuePresentKHR(m_queue, &presentInfo);
+		if (result != VkResult::VK_ERROR_OUT_OF_DATE_KHR)	// resize
+		{
+			VK_VALIDATION(result);
+		}
 	}
 
 	uint32_t RenderQueue::getQueueFamilyIndex(const VkQueueFlags& queueFlags, const std::vector<VkQueueFamilyProperties>& queueFamilyProperties)

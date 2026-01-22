@@ -41,6 +41,8 @@ namespace MyosotisFW::System::Render::Shape
 		PlaneWithHole,
 		Cylinder,
 		Capsule,
+		Cone,
+		Arrow,
 		Max
 	};
 
@@ -626,6 +628,218 @@ namespace MyosotisFW::System::Render::Shape
 		return mesh;
 	}
 
+	inline Mesh createCone(const float size = 1.0f, const glm::vec4& color = { 1,1,1,1 }, const glm::vec3& center = { 0,0,0 }, const uint32_t side = 24)
+	{
+		float radius = size * 0.5f;
+		Mesh mesh = {};
+		ASSERT(side > 2, "circle's side must be more than 2");
+
+		// down vertex
+		float a = glm::two_pi<float>() / static_cast<float>(side);
+		mesh.vertex.insert(mesh.vertex.end(), {
+			glm::vec3(center.x, center.y, center.z),
+			glm::vec3(0.0f, -1.0f, 0.0f),
+			glm::vec2(0.5f, 0.5f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec4(color) });
+		for (uint32_t i = 0; i < side; i++)
+		{
+			float angle = a * static_cast<float>(i);
+			mesh.vertex.insert(mesh.vertex.end(), {
+				glm::vec3(center.x + radius * cosf(angle), center.y, center.z + radius * sinf(angle)),
+				glm::vec3(0.0f, -1.0f, 0.0f),
+				glm::vec2(0.0f, 0.0f),
+				glm::vec2(0.0f, 0.0f),
+				glm::vec4(color) });
+		}
+		// down index
+		for (uint32_t i = 1; i <= side; i++)
+		{
+			uint32_t next = (i % side) + 1;
+			mesh.index.insert(mesh.index.end(), { 0, i, next });
+		}
+
+		// side(top) vertex
+		uint32_t apexIndex = static_cast<uint32_t>(mesh.vertex.size());
+		mesh.vertex.insert(mesh.vertex.end(), {
+			glm::vec3(center.x, center.y + size, center.z),
+			glm::vec3(0.0f, 1.0f, 0.0f),
+			glm::vec2(0.5f, 1.0f),
+			glm::vec2(0.0f, 0.0f),
+			glm::vec4(color) });
+
+		// side index
+		for (uint32_t i = 1; i <= side; i++)
+		{
+			uint32_t current = i;
+			uint32_t next = (i % side) + 1;
+			mesh.index.insert(mesh.index.end(), { apexIndex, next, current });
+		}
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
+		{
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
+		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
+
+		return mesh;
+	}
+
+	inline Mesh createCylinderRaw(const float height = 1.0f, const float radius = 0.1f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0,0,0 }, const uint32_t side = 24)
+	{
+		Mesh mesh = {};
+		mesh.index.reserve(static_cast<size_t>(side * 12));
+
+		// side vertex
+		for (uint32_t i = 0; i <= side; i++)
+		{
+			float t = glm::two_pi<float>() * (float)i / (float)side;
+			float x = cosf(t);
+			float z = sinf(t);
+			glm::vec3 normal = { x, 0.0f, z };
+
+			// up
+			mesh.vertex.push_back({
+				glm::vec3(center.x + x * radius, center.y + height * 0.5f, center.z + z * radius),
+				normal, glm::vec2((float)i / side, 0.0f), glm::vec2(0.0f), color
+				});
+			// down
+			mesh.vertex.push_back({
+				glm::vec3(center.x + x * radius, center.y - height * 0.5f, center.z + z * radius),
+				normal, glm::vec2((float)i / side, 1.0f), glm::vec2(0.0f), color
+				});
+		}
+		// side index
+		for (uint32_t i = 0; i < side; i++)
+		{
+			uint32_t top0 = i * 2;
+			uint32_t bot0 = top0 + 1;
+			uint32_t top1 = top0 + 2;
+			uint32_t bot1 = top0 + 3;
+			mesh.index.insert(mesh.index.end(), { top0, top1, bot0, top1, bot1, bot0 });
+		}
+
+		// up cap
+		uint32_t topCenterIdx = (uint32_t)mesh.vertex.size();
+		mesh.vertex.push_back({ glm::vec3(center.x, center.y + height * 0.5f, center.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.5f), glm::vec2(0.0f), color });
+		uint32_t topStart = topCenterIdx + 1;
+		for (uint32_t i = 0; i <= side; i++)
+		{
+			float t = glm::two_pi<float>() * (float)i / (float)side;
+			mesh.vertex.push_back({
+				glm::vec3(center.x + cosf(t) * radius, center.y + height * 0.5f, center.z + sinf(t) * radius),
+				glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(cosf(t) * 0.5f + 0.5f, sinf(t) * 0.5f + 0.5f), glm::vec2(0.0f), color
+				});
+		}
+		for (uint32_t i = 0; i < side; i++) mesh.index.insert(mesh.index.end(), { topCenterIdx, topStart + i + 1, topStart + i });
+
+		// down cap
+		uint32_t bottomCenterIdx = (uint32_t)mesh.vertex.size();
+		mesh.vertex.push_back({ glm::vec3(center.x, center.y - height * 0.5f, center.z), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.5f), glm::vec2(0.0f), color });
+		uint32_t bottomStart = bottomCenterIdx + 1;
+		for (uint32_t i = 0; i <= side; i++)
+		{
+			float t = glm::two_pi<float>() * (float)i / (float)side;
+			mesh.vertex.push_back({
+				glm::vec3(center.x + cosf(t) * radius, center.y - height * 0.5f, center.z + sinf(t) * radius),
+				glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(cosf(t) * 0.5f + 0.5f, sinf(t) * 0.5f + 0.5f), glm::vec2(0.0f), color
+				});
+		}
+		for (uint32_t i = 0; i < side; i++) mesh.index.insert(mesh.index.end(), { bottomCenterIdx, bottomStart + i, bottomStart + i + 1 });
+
+		return mesh;
+	}
+
+	inline Mesh createConeRaw(const float height = 1.0f, const float radius = 0.2f, const glm::vec4& color = { 1,1,1,1 }, const glm::vec3& center = { 0,0,0 }, const uint32_t side = 24)
+	{
+		Mesh mesh = {};
+		float a = glm::two_pi<float>() / static_cast<float>(side);
+
+		// bottom vertex
+		mesh.vertex.push_back({ glm::vec3(center.x, center.y, center.z), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.5f), glm::vec2(0.0f), color });
+		for (uint32_t i = 0; i < side; i++)
+		{
+			float angle = a * (float)i;
+			mesh.vertex.push_back({
+				glm::vec3(center.x + radius * cosf(angle), center.y, center.z + radius * sinf(angle)),
+				glm::vec3(0.0f, -1.0f, 0.0f), glm::vec2(0.0f), glm::vec2(0.0f), color
+				});
+		}
+		// bottom index
+		for (uint32_t i = 1; i <= side; i++)
+		{
+			mesh.index.insert(mesh.index.end(), { 0, i, (i % side) + 1 });
+		}
+
+		// side(top) vertex
+		uint32_t apexIdx = (uint32_t)mesh.vertex.size();
+		mesh.vertex.push_back({ glm::vec3(center.x, center.y + height, center.z), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.5f, 1.0f), glm::vec2(0.0f), color });
+
+		// side index
+		for (uint32_t i = 1; i <= side; i++)
+		{
+			mesh.index.insert(mesh.index.end(), { apexIdx, (i % side) + 1, i });
+		}
+
+		return mesh;
+	}
+
+	inline Mesh createArrow(const float totalSize = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0,0,0 }, const uint32_t side = 24)
+	{
+		// 割合と太さの調整
+		float cylH = totalSize * 0.75f;
+		float coneH = totalSize * 0.25f;
+		float cylR = totalSize * 0.05f; // 軸を細く(5%)
+		float coneR = totalSize * 0.15f; // 頭を太く(15%)
+
+		// cylinder
+		glm::vec3 cylCenter = { center.x, center.y + cylH * 0.5f, center.z };
+		Mesh mesh = createCylinderRaw(cylH, cylR, color, cylCenter, side);
+
+		// cone
+		glm::vec3 coneBottom = { center.x, center.y + cylH, center.z };
+		Mesh cone = createConeRaw(coneH, coneR, color, coneBottom, side);
+
+		// merge
+		uint32_t vOffset = static_cast<uint32_t>(mesh.vertex.size());
+		mesh.vertex.insert(mesh.vertex.end(), cone.vertex.begin(), cone.vertex.end());
+		for (const uint32_t idx : cone.index) mesh.index.push_back(idx + vOffset);
+
+		// UV1
+		mesh.meshInfo.atlasSize = xatlas::BuildLightmapUV(mesh.vertex, mesh.index);
+
+		// Meshlet
+		meshoptimizer::BuildMeshletData(mesh, mesh.index,
+			MyosotisFW::AppInfo::g_maxMeshletVertices,
+			MyosotisFW::AppInfo::g_maxMeshletPrimitives);
+
+		// AABB
+		mesh.meshInfo.AABBMin = glm::vec4(FLT_MAX);
+		mesh.meshInfo.AABBMax = glm::vec4(-FLT_MAX);
+		for (const Meshlet& meshlet : mesh.meshlet)
+		{
+			mesh.meshInfo.AABBMin = glm::min(mesh.meshInfo.AABBMin, meshlet.meshletInfo.AABBMin);
+			mesh.meshInfo.AABBMax = glm::max(mesh.meshInfo.AABBMax, meshlet.meshletInfo.AABBMax);
+		}
+		// meshInfo
+		mesh.meshInfo.indexCount = static_cast<uint32_t>(mesh.index.size());
+
+		return mesh;
+	}
+
 	inline Mesh createShape(const PrimitiveGeometryShape& shape,
 		const float size = 1.0f,
 		const glm::vec4& color = { 1.0f, 1.0f, 1.0f, 1.0f },
@@ -647,6 +861,10 @@ namespace MyosotisFW::System::Render::Shape
 			return createCylinder(size, color, center);
 		case PrimitiveGeometryShape::Capsule:
 			return createCapsule(size, color, center);
+		case PrimitiveGeometryShape::Cone:
+			return createCone(size, color, center);
+		case PrimitiveGeometryShape::Arrow:
+			return createArrow(size, color, center);
 		default:
 			ASSERT(false, "Invalid shape");
 			return {};

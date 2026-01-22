@@ -39,7 +39,9 @@ namespace MyosotisFW::System::Render
 			{"Sphere", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Sphere)},
 			{"PlaneWithHole", static_cast<int32_t>(Shape::PrimitiveGeometryShape::PlaneWithHole)},
 			{"Cylinder", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Cylinder)},
-			{"Capsule", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Capsule)}
+			{"Capsule", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Capsule)},
+			{"Cone", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Cone) },
+			{"Arrow", static_cast<int32_t>(Shape::PrimitiveGeometryShape::Arrow) }
 		};
 
 		// ComponentProperty

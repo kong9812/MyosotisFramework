@@ -230,7 +230,7 @@ namespace MyosotisFW::System::Render
 
 		{// Present
 			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
-			m_swapchain->QueuePresent(graphicsQueue->GetQueue(), currentSwapchainImageIndex, m_semaphores.completeRender[currentFrameIndex]);
+			m_device->GetGraphicsQueue()->QueuePresent(m_swapchain->GetSwapchain(), currentSwapchainImageIndex, m_semaphores.completeRender[currentFrameIndex]);
 			m_lightmapBakingPipeline->OutputLightmap(m_resources, currentFrameIndex);
 		}
 
