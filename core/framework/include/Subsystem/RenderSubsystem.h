@@ -125,7 +125,10 @@ namespace MyosotisFW::System::Render
 		void createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal);
 		void createVBufferPhase1(const uint32_t currentFrameIndex);
 		void createVBufferPhase2(const uint32_t currentFrameIndex);
-		void render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex);
+		void beginRender(const uint32_t currentFrameIndex);
+		virtual void render(const uint32_t currentFrameIndex);
+		void copyToSwapchain(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex);
+		void endRender(const uint32_t currentFrameIndex);
 
 	protected:
 		void initializeRenderDevice(const VkInstance& instance, const VkSurfaceKHR& surface);

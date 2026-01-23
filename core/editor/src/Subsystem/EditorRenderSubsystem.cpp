@@ -1,6 +1,7 @@
 // Copyright (c) 2025 kong9812
 #include "EditorRenderSubsystem.h"
 
+#include "iglm.h"
 #include "MObject.h"
 
 #include "EditorRenderResources.h"
@@ -8,16 +9,14 @@
 #include "RenderDevice.h"
 #include "RenderQueue.h"
 
-#include "EditorGUI.h"
 #include "EditorCamera.h"
 #include "StaticMesh.h"
 
-#include "VisibilityBufferPhase1RenderPass.h"
-#include "VisibilityBufferPhase2RenderPass.h"
+#include "Gizmo.h"
+#include "GizmoRenderPass.h"
+#include "GizmoPipeline.h"
 
-#include "VisibilityBufferPhase1Pipeline.h"
-#include "VisibilityBufferPhase2Pipeline.h"
-
+#include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
@@ -39,11 +38,19 @@ namespace MyosotisFW::System::Render
 
 		// ObjectSelectCommandPool
 		initializeObjectSelectCommandPool();
+
+		// Gizmo
+		initializeGizmo();
 	}
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
 	{
 		__super::Update(updateData);
+		m_gizmo->Update(updateData);
+		if (m_gizmo->IsEnable())
+		{
+			m_gizmoPipeline->UpdateModel(m_gizmo->GetGizmoTransform());
+		}
 	}
 
 	void EditorRenderSubsystem::EditorRender()
@@ -53,9 +60,9 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
-		// todo. std::mutexを追加してスレッドセーフにする
-
 		if ((m_vbDispatchInfoCount <= 0) || (!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
+
+		m_gizmo->SetSelectObject(nullptr);
 
 		const uint32_t currentFrameIndex = m_frameCounter % AppInfo::g_maxInFlightFrameCount;
 		const Image& targetVBImage = m_resources->GetVisibilityBuffer(currentFrameIndex);
@@ -173,6 +180,7 @@ namespace MyosotisFW::System::Render
 			const VBDispatchInfo* vbDispatchInfo = m_renderDescriptors->GetObjectInfoDescriptorSet()->GetVBDispatchInfo(vbIndex);
 			if (vbDispatchInfo)
 			{
+				m_gizmo->SetSelectObject((*m_objects)[vbDispatchInfo->objectID]);
 				Logger::Debug("Selected object: " + std::to_string(vbDispatchInfo->objectID));
 			}
 		}
@@ -181,6 +189,32 @@ namespace MyosotisFW::System::Render
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), buffer.buffer, buffer.allocation);
 		vkFreeCommandBuffers(*m_device, m_objectSelectCommandPool, 1, &commandBuffer);
 		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
+	}
+
+	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)
+	{
+		__super::render(currentFrameIndex);
+
+		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
+		{// Gizmo Render Pass
+			if (m_gizmo->IsEnable())
+			{
+				VkDebugUtilsLabelEXT gizmoLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Gizmo Render");
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gizmoLabel);
+				m_gizmoRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+				if (m_mainCamera)
+				{
+					m_gizmoPipeline->BindCommandBuffer(commandBuffer);
+				}
+				m_gizmoRenderPass->EndRender(commandBuffer);
+				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+			}
+		}
+	}
+
+	void EditorRenderSubsystem::initializeGizmo()
+	{
+		m_gizmo = CreateGizmoPointer();
 	}
 
 	void EditorRenderSubsystem::initializeRenderResources()
@@ -192,11 +226,15 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::initializeRenderPass()
 	{
 		__super::initializeRenderPass();
+		m_gizmoRenderPass = CreateGizmoRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_gizmoRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
 		__super::initializeRenderPipeline();
+		m_gizmoPipeline = CreateGizmoPipelinePointer(m_device, m_renderDescriptors);
+		m_gizmoPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::initializeObjectSelectCommandPool()

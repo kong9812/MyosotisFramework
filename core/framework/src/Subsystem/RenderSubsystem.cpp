@@ -226,7 +226,10 @@ namespace MyosotisFW::System::Render
 		createVBufferPhase2(currentFrameIndex);
 
 		// Graphics Render (Skybox,Lighting,LightMap,RayTracing...)
-		render(currentFrameIndex, currentSwapchainImageIndex);
+		beginRender(currentFrameIndex);
+		render(currentFrameIndex);
+		copyToSwapchain(currentFrameIndex, currentSwapchainImageIndex);
+		endRender(currentFrameIndex);
 
 		{// Present
 			RenderQueue_ptr graphicsQueue = m_device->GetGraphicsQueue();
@@ -381,17 +384,17 @@ namespace MyosotisFW::System::Render
 		graphicsQueue->Submit(submitInfo);
 	}
 
-	void RenderSubsystem::render(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex)
+	void RenderSubsystem::beginRender(const uint32_t currentFrameIndex)
 	{
-		// これから書き込むSwapchain Imageの処理が終わったら、このFrameのMainRenderTargetが作れる
-		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			m_semaphores.imageAvailable[currentFrameIndex],		// wait
-			m_semaphores.completeRender[currentFrameIndex]);	// signal
-
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+	}
+
+	void RenderSubsystem::render(const uint32_t currentFrameIndex)
+	{
+		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
+
 		{// Skybox Render Pass
 			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
 			m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
@@ -437,13 +440,27 @@ namespace MyosotisFW::System::Render
 			}
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
+	}
 
+	void RenderSubsystem::copyToSwapchain(const uint32_t currentFrameIndex, const uint32_t currentSwapchainImageIndex)
+	{
+		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
 		{// Copy Image To Swapchain Image
 			CopyMainRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
 			//CopyRayTracingRenderTargetToSwapchainImage(commandBuffer, currentFrameIndex, currentSwapchainImageIndex);
 		}
+	}
 
+	void RenderSubsystem::endRender(const uint32_t currentFrameIndex)
+	{
+		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
 		VK_VALIDATION(vkEndCommandBuffer(commandBuffer));
+
+		// これから書き込むSwapchain Imageの処理が終わったら、このFrameのMainRenderTargetが作れる
+		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			m_semaphores.imageAvailable[currentFrameIndex],		// wait
+			m_semaphores.completeRender[currentFrameIndex]);	// signal
 
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
