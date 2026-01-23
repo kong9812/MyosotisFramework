@@ -2,6 +2,16 @@
 #include "GizmoPipeline.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
+#include "Camera.h"
+
+namespace {
+	constexpr std::array<MyosotisFW::System::Render::GizmoPipeline::AxisConfig, 3> g_axesConfig = { {
+		{ glm::vec3(0.0f, 0.0f, -90.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) }, // X軸: 赤
+		{ glm::vec3(0.0f, 0.0f, 0.0f),   glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) }, // Y軸: 緑
+		{ glm::vec3(90.0f, 0.0f, 0.0f),  glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f) }  // Z軸: 青
+	} };
+	constexpr float g_axesOffsetDistance = 0.1f;
+}
 
 namespace MyosotisFW::System::Render
 {
@@ -29,23 +39,49 @@ namespace MyosotisFW::System::Render
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-			0,
-			static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
+
 		const VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-		vkCmdDrawIndexed(commandBuffer, m_indexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
+
+		for (const AxisDrawCommand& axes : m_sortedAxes)
+		{
+			pushConstant.model = axes.model;
+			pushConstant.color = axes.color;
+			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+				0,
+				static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
+			vkCmdDrawIndexed(commandBuffer, m_indexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
+		}
 	}
 
-	void GizmoPipeline::UpdateModel(const Transform& transform)
+	void GizmoPipeline::Update(const Transform& transform, const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
-		pushConstant.model = glm::translate(glm::mat4(1.0f), glm::vec3(transform.pos));
-		pushConstant.model = glm::rotate(pushConstant.model, glm::radians(transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		pushConstant.model = glm::rotate(pushConstant.model, glm::radians(transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		pushConstant.model = glm::rotate(pushConstant.model, glm::radians(transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		pushConstant.model = glm::scale(pushConstant.model, glm::vec3(transform.scale));
+		m_baseModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(transform.pos));
+		m_baseModelMatrix = glm::rotate(m_baseModelMatrix, glm::radians(transform.rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		m_baseModelMatrix = glm::rotate(m_baseModelMatrix, glm::radians(transform.rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_baseModelMatrix = glm::rotate(m_baseModelMatrix, glm::radians(transform.rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_baseModelMatrix = glm::scale(m_baseModelMatrix, glm::vec3(transform.scale));
+
+		glm::vec3 cameraPos = mainCamera->GetCameraPos();
+		m_sortedAxes.clear();
+
+		for (const MyosotisFW::System::Render::GizmoPipeline::AxisConfig& config : g_axesConfig)
+		{
+			glm::mat4 model = m_baseModelMatrix;
+			model = glm::translate(model, config.direction * g_axesOffsetDistance);
+			model = glm::rotate(model, glm::radians(config.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(config.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(config.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			float dist = glm::distance(cameraPos, glm::vec3(model[3]));
+			m_sortedAxes.push_back({ model, config.color, dist });
+		}
+		std::sort(m_sortedAxes.begin(), m_sortedAxes.end(), [](const AxisDrawCommand& a, const AxisDrawCommand& b)
+			{
+				return a.distance > b.distance;
+			});
 	}
 
 	void GizmoPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
@@ -90,7 +126,7 @@ namespace MyosotisFW::System::Render
 		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineViewportStateCreateInfo();
 		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_NEVER);
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_NEVER);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
 			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
 		};

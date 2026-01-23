@@ -47,9 +47,9 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Update(updateData);
 		m_gizmo->Update(updateData);
-		if (m_gizmo->IsEnable())
+		if ((m_gizmo->IsEnable()) && (m_mainCamera != nullptr))
 		{
-			m_gizmoPipeline->UpdateModel(m_gizmo->GetGizmoTransform());
+			m_gizmoPipeline->Update(m_gizmo->GetGizmoTransform(), updateData, m_mainCamera);
 		}
 	}
 

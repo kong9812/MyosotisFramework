@@ -5,6 +5,7 @@
 
 layout(push_constant) uniform PushConstant {
     mat4 model;
+    vec4 color;
 };
 
 layout (location = 0) in vec3 inPosition;
@@ -22,5 +23,5 @@ void main()
 
     gl_Position = cameraData.projection * cameraData.view * model * vec4(inPosition, 1.0);
 
-    outColor = inColor;
+    outColor = color;
 }
