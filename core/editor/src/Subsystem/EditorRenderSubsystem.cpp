@@ -23,6 +23,10 @@ namespace MyosotisFW::System::Render
 {
 	EditorRenderSubsystem::~EditorRenderSubsystem()
 	{
+		m_device->GetGraphicsQueue()->WaitIdle();
+		m_device->GetComputeQueue()->WaitIdle();
+		m_device->GetTransferQueue()->WaitIdle();
+
 		vkDestroyCommandPool(*m_device, m_objectSelectCommandPool, m_device->GetAllocationCallbacks());
 	}
 
@@ -46,11 +50,7 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
 	{
 		__super::Update(updateData);
-		m_gizmo->Update(updateData);
-		if ((m_gizmo->IsEnable()) && (m_mainCamera != nullptr))
-		{
-			m_gizmoPipeline->Update(m_gizmo->GetGizmoTransform(), updateData, m_mainCamera);
-		}
+		m_gizmo->Update(updateData, m_mainCamera);
 	}
 
 	void EditorRenderSubsystem::EditorRender()
@@ -204,7 +204,7 @@ namespace MyosotisFW::System::Render
 				m_gizmoRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 				if (m_mainCamera)
 				{
-					m_gizmoPipeline->BindCommandBuffer(commandBuffer);
+					m_gizmoPipeline->BindCommandBuffer(commandBuffer, m_gizmo->GetGizmoAxisDrawCommand());
 				}
 				m_gizmoRenderPass->EndRender(commandBuffer);
 				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
@@ -241,5 +241,17 @@ namespace MyosotisFW::System::Render
 	{
 		VkCommandPoolCreateInfo cmdPoolInfo = Utility::Vulkan::CreateInfo::commandPoolCreateInfo(m_device->GetGraphicsQueue()->GetQueueFamilyIndex());
 		VK_VALIDATION(vkCreateCommandPool(*m_device, &cmdPoolInfo, m_device->GetAllocationCallbacks(), &m_objectSelectCommandPool));
+	}
+
+	void EditorRenderSubsystem::resizeRenderPass()
+	{
+		__super::resizeRenderPass();
+		m_gizmoRenderPass->Resize(m_swapchain->GetScreenSize());
+	}
+
+	void EditorRenderSubsystem::resizeRenderPipeline()
+	{
+		__super::resizeRenderPipeline();
+		m_gizmoPipeline->Resize(m_resources);
 	}
 }

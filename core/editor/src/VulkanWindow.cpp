@@ -230,16 +230,18 @@ namespace MyosotisFW::System::Editor
 		{
 			float currentTime = static_cast<float>(m_timer.elapsed()) / 1000.0f;
 			float deltaTime = currentTime - m_lastTime;
+			float dpr = static_cast<float>(this->devicePixelRatio());
+
 			m_lastTime = currentTime;
 
 			UpdateData updateData{};
 			updateData.pause = false;
 			updateData.deltaTime = deltaTime;
-			updateData.screenSize = glm::vec2(static_cast<float>(width()), static_cast<float>(height()));
+			updateData.screenSize = glm::vec2(static_cast<float>(width()) * dpr, static_cast<float>(height()) * dpr);
 
 			QPoint globalPos = QCursor::pos();
 			QPointF localPos = mapFromGlobal(globalPos);
-			updateData.mousePos = glm::vec2(static_cast<float>(localPos.x()), static_cast<float>(localPos.y()));
+			updateData.mousePos = glm::vec2(static_cast<float>(localPos.x()) * dpr, static_cast<float>(localPos.y()) * dpr);
 			updateData.mouseButtonActions = m_mouseButtonActions;
 			updateData.keyActions = m_keyActions;
 			m_renderSubsystem->Update(updateData);

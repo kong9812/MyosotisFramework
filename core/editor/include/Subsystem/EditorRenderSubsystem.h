@@ -57,6 +57,9 @@ namespace MyosotisFW::System::Render
 		void initializeRenderPipeline() override;
 		void initializeObjectSelectCommandPool();
 
+		void resizeRenderPass() override;
+		void resizeRenderPipeline() override;
+
 	private:
 		EditorGUI_ptr m_editorGUI;
 		EditorRenderPass_ptr m_editorRenderPass;
