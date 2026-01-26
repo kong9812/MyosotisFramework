@@ -23,7 +23,6 @@ namespace MyosotisFW::System::Editor
 		ThreadPool::Instance();
 
 		// StatusBar
-		m_statusBar->showMessage("Welcome!!", 2000);
 		setStatusBar(m_statusBar);
 		m_vulkanWindow->SetStatusBar(m_statusBar);
 

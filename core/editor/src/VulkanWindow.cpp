@@ -43,7 +43,7 @@ namespace MyosotisFW::System::Editor
 	void VulkanWindow::SetStatusBar(QStatusBar* statusBar)
 	{
 		m_statusBar = statusBar;
-		m_statusBar->addPermanentWidget(m_mousePositionMonitor);
+		m_statusBar->addWidget(m_mousePositionMonitor, 1);
 	}
 
 	void VulkanWindow::Initialize()
