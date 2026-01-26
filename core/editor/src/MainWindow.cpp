@@ -13,13 +13,19 @@ namespace MyosotisFW::System::Editor
 		m_contentBrowser(new ContentBrowserDockWidget(this)),
 		m_logger(new LoggerDockWidget(this)),
 		m_overview(new OverviewDockWidget(this)),
-		m_propertyViewer(new PropertyViewerDockWidget(this))
+		m_propertyViewer(new PropertyViewerDockWidget(this)),
+		m_statusBar(new QStatusBar(this))
 	{
 		// KeyConverterインスタンス作成
 		KeyConverter::Instance();
 
 		// ThreadPoolインスタンス作成
 		ThreadPool::Instance();
+
+		// StatusBar
+		m_statusBar->showMessage("Welcome!!", 2000);
+		setStatusBar(m_statusBar);
+		m_vulkanWindow->SetStatusBar(m_statusBar);
 
 		setWindowIcon(QIcon(AppInfo::g_applicationIcon));
 		setAccessibleName(AppInfo::g_applicationName);

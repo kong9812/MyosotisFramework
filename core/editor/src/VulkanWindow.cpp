@@ -22,7 +22,9 @@ namespace MyosotisFW::System::Editor
 		m_lastTime(0.0f),
 		m_timer(),
 		m_mouseDragging(false),
-		m_selectedObject(nullptr)
+		m_selectedObject(nullptr),
+		m_statusBar(nullptr),
+		m_mousePositionMonitor(new QLabel(""))
 	{
 		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
@@ -36,6 +38,12 @@ namespace MyosotisFW::System::Editor
 
 		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
+	}
+
+	void VulkanWindow::SetStatusBar(QStatusBar* statusBar)
+	{
+		m_statusBar = statusBar;
+		m_statusBar->addPermanentWidget(m_mousePositionMonitor);
 	}
 
 	void VulkanWindow::Initialize()
@@ -246,6 +254,8 @@ namespace MyosotisFW::System::Editor
 			updateData.keyActions = m_keyActions;
 			m_renderSubsystem->Update(updateData);
 
+			updateMousePositionMonitor(updateData.mousePos);
+
 			m_renderSubsystem->Render();
 			//m_renderSubsystem->EditorRender();
 		}
@@ -281,5 +291,11 @@ namespace MyosotisFW::System::Editor
 		QPoint globalPos = QCursor::pos();
 		QPointF localPos = mapFromGlobal(globalPos);
 		m_renderSubsystem->ObjectSelect(static_cast<int32_t>(localPos.x()), static_cast<int32_t>(localPos.y()));
+	}
+
+	void VulkanWindow::updateMousePositionMonitor(const glm::vec2& pos)
+	{
+		const QString text = QString::asprintf("MousePos: %.2f %.2f", pos.x, pos.y);
+		m_mousePositionMonitor->setText(text);
 	}
 }

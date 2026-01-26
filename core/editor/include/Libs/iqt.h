@@ -33,6 +33,7 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QStatusBar>
 
 // Gui (描画・イベント)
 #include <QWindow>

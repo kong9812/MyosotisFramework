@@ -8,6 +8,7 @@
 #include "ClassPointer.h"
 #include "CameraData.h"
 #include "UpdateData.h"
+#include "Ray.h"
 
 namespace MyosotisFW::System::Render::Camera
 {
@@ -28,6 +29,7 @@ namespace MyosotisFW::System::Render::Camera
 
 		float GetDistance(const glm::vec3& pos) const;
 		glm::vec3 GetFrontPos(const float distance) const;
+		Ray GetRay(const glm::vec2& pos) const;
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
 

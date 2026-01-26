@@ -20,6 +20,7 @@ namespace MyosotisFW::System::Editor
 		LoggerDockWidget* m_logger;
 		OverviewDockWidget* m_overview;
 		PropertyViewerDockWidget* m_propertyViewer;
+		QStatusBar* m_statusBar;
 
 		void closeEvent(QCloseEvent* event) override;
 		void paintEvent(QPaintEvent* event) override;

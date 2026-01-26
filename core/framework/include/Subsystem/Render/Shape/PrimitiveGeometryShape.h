@@ -802,8 +802,8 @@ namespace MyosotisFW::System::Render::Shape
 		// 割合と太さの調整
 		float cylH = totalSize * 0.75f;
 		float coneH = totalSize * 0.25f;
-		float cylR = totalSize * 0.05f; // 軸を細く(5%)
-		float coneR = totalSize * 0.15f; // 頭を太く(15%)
+		float cylR = totalSize * 0.05f;		// 軸を細く(5%)
+		float coneR = totalSize * 0.15f;	// 頭を太く(15%)
 
 		// cylinder
 		glm::vec3 cylCenter = { center.x, center.y + cylH * 0.5f, center.z };

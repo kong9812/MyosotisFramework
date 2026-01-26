@@ -15,6 +15,7 @@ namespace MyosotisFW::System::Editor
 
 		void resizeEvent(QResizeEvent* event) override;
 
+		void SetStatusBar(QStatusBar* statusBar);
 		void Initialize();
 
 		void keyPressEvent(QKeyEvent* event) override;
@@ -35,6 +36,10 @@ namespace MyosotisFW::System::Editor
 	private:
 		void updateRender();
 		void objectSelect();
+
+		QStatusBar* m_statusBar;
+		QLabel* m_mousePositionMonitor;
+		void updateMousePositionMonitor(const glm::vec2& pos);
 
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;

@@ -99,6 +99,32 @@ namespace MyosotisFW::System::Render::Camera
 		return m_cameraPos + (m_cameraFront * distance);
 	}
 
+	Ray CameraBase::GetRay(const glm::vec2& pos) const
+	{
+		glm::vec2 ndc{};
+		ndc.x = (pos.x / m_screenSize.x) * 2.0f - 1.0f;
+		ndc.y = (pos.y / m_screenSize.y) * 2.0f - 1.0f;
+
+		constexpr float zNear = 0.0f;
+		constexpr float zFar = 1.0f;
+
+		const glm::mat4 invProjView = glm::inverse(GetProjectionMatrix() * GetViewMatrix());
+
+		glm::vec4 nearClip = glm::vec4(ndc.x, ndc.y, zNear, 1.0f);
+		glm::vec4 farClip = glm::vec4(ndc.x, ndc.y, zFar, 1.0f);
+
+		glm::vec4 nearWorld = invProjView * nearClip;
+		glm::vec4 farWorld = invProjView * farClip;
+
+		nearWorld /= nearWorld.w;
+		farWorld /= farWorld.w;
+
+		Ray ray{};
+		ray.origin = glm::vec3(nearWorld);
+		ray.dir = glm::normalize(glm::vec3(farWorld - nearWorld));
+		return ray;
+	}
+
 	rapidjson::Value CameraBase::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value doc = __super::Serialize(allocator);
