@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "Gizmo.h"
+#include "iglfw.h"
 #include "MObject.h"
 #include "Camera.h"
 #include "AxisConfig.h"
@@ -10,9 +11,27 @@
 namespace {
 	constexpr std::array<MyosotisFW::AxisConfig, 3> g_axesConfig =
 	{ {
-		{ glm::vec3(0.0f, 0.0f, -90.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f) }, // X軸: 赤
-		{ glm::vec3(0.0f, 0.0f, 0.0f),   glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f) }, // Y軸: 緑
-		{ glm::vec3(90.0f, 0.0f, 0.0f),  glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f) }  // Z軸: 青
+		{// X軸: 赤
+			glm::vec3(0.0f, 0.0f, -90.0f),		// rot
+			glm::vec3(1.0f, 0.0f, 0.0f),		// dir
+			glm::vec4(1.0f, 0.2f, 0.2f, 1.0f),	// normal color
+			glm::vec4(1.0f, 0.7f, 0.7f, 1.0f),	// hover color
+			glm::vec4(1.0f, 0.85f, 0.1f, 1.0f)	// pressed color
+		},
+		{// Y軸: 緑
+			glm::vec3(0.0f, 0.0f, 0.0f),		// rot
+			glm::vec3(0.0f, 1.0f, 0.0f),		// dir
+			glm::vec4(0.2f, 1.0f, 0.2f, 1.0f),	// normal color
+			glm::vec4(0.7f, 1.0f, 0.7f, 1.0f),	// hover color
+			glm::vec4(1.0f, 0.85f, 0.1f, 1.0f)	// pressed color
+		},
+		{// Z軸: 青
+			glm::vec3(90.0f, 0.0f, 0.0f),		// rot
+			glm::vec3(0.0f, 0.0f, 1.0f),		// dir
+			glm::vec4(0.2f, 0.55f, 1.0f, 1.0f),	// normal color
+			glm::vec4(0.7f, 0.85f, 1.0f, 1.0f),	// hover color
+			glm::vec4(1.0f, 0.85f, 0.1f, 1.0f)	// pressed color
+		}
 	} };
 	constexpr float g_axesOffsetDistance = 0.1f;
 }
@@ -23,6 +42,17 @@ namespace MyosotisFW::System::Render
 	{
 		m_sortedAxes.clear();
 		m_enable = (m_selectedObject != nullptr);
+		m_hovered = false;
+
+		auto mouseBtn = updateData.mouseButtonActions.find(GLFW_MOUSE_BUTTON_LEFT);
+		if (mouseBtn != updateData.mouseButtonActions.end())
+		{
+			if (mouseBtn->second == GLFW_RELEASE)
+			{
+				m_gizmoAxesData.isUsing = false;
+				m_gizmoAxesData.axes = { false, false, false };
+			}
+		}
 
 		if (m_selectedObject)
 		{
@@ -44,8 +74,16 @@ namespace MyosotisFW::System::Render
 			constexpr float arrowTotalSize = 1.0f;		// 矢印ローカル長さ
 			const glm::vec3 originWorld = glm::vec3(baseModelMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-			for (const AxisConfig& config : g_axesConfig)
+			bool isFirstPress = false;
+			auto mouseBtn = updateData.mouseButtonActions.find(GLFW_MOUSE_BUTTON_LEFT);
+			if (mouseBtn != updateData.mouseButtonActions.end() && mouseBtn->second == GLFW_PRESS)
 			{
+				if (!m_gizmoAxesData.isUsing) isFirstPress = true;
+			}
+
+			for (uint32_t axes = 0; axes < static_cast<uint32_t>(GizmoAxes::Count); axes++)
+			{
+				const AxisConfig& config = g_axesConfig[axes];
 				glm::mat4 model = baseModelMatrix;
 				model = glm::translate(model, config.direction * g_axesOffsetDistance);
 				model = glm::rotate(model, glm::radians(config.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -73,19 +111,65 @@ namespace MyosotisFW::System::Render
 
 				float u = 0.0f;	// 使わないかも...
 				const float rayToSegmentDist = DistanceRayToSegment(ray.origin, ray.dir, p0, p1, u);
-				glm::vec4 color = config.color;
+				glm::vec4 color = config.normalColor;
 				if (rayToSegmentDist < threshold)
 				{
-					color = glm::vec4(1.0f);
+					if (!m_gizmoAxesData.isUsing || m_gizmoAxesData.axes[axes])
+					{
+						color = config.hoverColor;
+						m_hovered = true;
+					}
+
+					if (isFirstPress)
+					{
+						m_gizmoAxesData.axes[axes] = true;
+						m_gizmoAxesData.type = GizmoType::Position;
+
+						m_gizmoAxesData.distance = mainCamera->GetDistance(glm::vec3(m_selectedObject->GetPos()));
+						m_gizmoAxesData.lastPos = mainCamera->GetWorldPos(updateData.mousePos, m_gizmoAxesData.distance);
+
+					}
 				}
 
 				float dist = glm::distance(cameraPos, glm::vec3(model[3]));
 				m_sortedAxes.push_back({ model, color, dist });
 			}
+			if (isFirstPress)
+			{
+				for (bool a : m_gizmoAxesData.axes)
+				{
+					if (a)
+					{
+						m_gizmoAxesData.isUsing = true;
+						break;
+					}
+				}
+			}
+
 			std::sort(m_sortedAxes.begin(), m_sortedAxes.end(), [](const AxisDrawCommand& a, const AxisDrawCommand& b)
 				{
 					return a.distance > b.distance;
 				});
+
+			if (m_gizmoAxesData.isUsing)
+			{
+				glm::vec3 newPos = mainCamera->GetWorldPos(updateData.mousePos, m_gizmoAxesData.distance);
+				glm::vec3 movePos = newPos - m_gizmoAxesData.lastPos;
+				m_gizmoAxesData.lastPos = newPos;
+
+				movePos.x = m_gizmoAxesData.axes[static_cast<uint32_t>(GizmoAxes::X)] ? movePos.x : 0.0f;
+				movePos.y = m_gizmoAxesData.axes[static_cast<uint32_t>(GizmoAxes::Y)] ? movePos.y : 0.0f;
+				movePos.z = m_gizmoAxesData.axes[static_cast<uint32_t>(GizmoAxes::Z)] ? movePos.z : 0.0f;
+
+				glm::vec3 oldPos = m_selectedObject->GetPos();
+				m_selectedObject->SetPos(oldPos + movePos);
+
+				std::string debugText =
+					"OldPos: " + std::to_string(oldPos.x) + " " + std::to_string(oldPos.y) + " " + std::to_string(oldPos.z) + " " +
+					"NewPos: " + std::to_string(newPos.x) + " " + std::to_string(newPos.y) + " " + std::to_string(newPos.z) + " " +
+					"MovePos: " + std::to_string(movePos.x) + " " + std::to_string(movePos.y) + " " + std::to_string(movePos.z) + " ";
+				Logger::Debug(debugText);
+			}
 		}
 	}
 }

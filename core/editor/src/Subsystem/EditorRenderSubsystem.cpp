@@ -61,6 +61,7 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
 		if ((m_vbDispatchInfoCount <= 0) || (!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
+		if (m_gizmo->IsHovered()) return;
 
 		m_gizmo->SetSelectObject(nullptr);
 

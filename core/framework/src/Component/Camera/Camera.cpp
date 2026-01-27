@@ -40,23 +40,8 @@ namespace MyosotisFW::System::Render::Camera
 
 	glm::vec3 CameraBase::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
-		// 画面座標を正規化デバイス座標（NDC）に変換
-		glm::vec2 ndcPos = glm::vec2(
-			pos.x / m_screenSize.x * 2.0f - 1.0f,	// x
-			1.0f - pos.y / m_screenSize.y * 2.0f);	// y
-
-		// 投影・ビュー行列の逆行列を取得
-		glm::mat4 invProjView = glm::inverse(GetProjectionMatrix() * GetViewMatrix());
-
-		// クリップ空間の座標を定義
-		// Z値を調整してカメラからの距離をコントロール (例: 0.5f → カメラの中間距離)
-		glm::vec4 clipPos(ndcPos.x, ndcPos.y, distance, 1.0f);
-
-		// クリップ座標からワールド座標へ変換
-		glm::vec4 worldPos = invProjView * clipPos;
-
-		// wで除算して正規化し、最終的なワールド座標を返す
-		return glm::vec3(worldPos) / worldPos.w;
+		Ray ray = GetRay(pos);
+		return ray.origin + (ray.dir * distance);
 	}
 
 	CameraData CameraBase::GetCameraData() const
