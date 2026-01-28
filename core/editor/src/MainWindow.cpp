@@ -120,7 +120,7 @@ namespace MyosotisFW::System::Editor
 		connect(m_vulkanWindow, &VulkanWindow::sigObjectSelected, this, [this](MObject_ptr object)
 			{
 				m_propertyViewer->setObject(object.get());
-				// todo. overviewの更新
+				m_overview->SetSelection(object.get());
 			});
 
 	}

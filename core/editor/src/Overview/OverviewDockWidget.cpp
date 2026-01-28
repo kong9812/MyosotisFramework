@@ -58,3 +58,18 @@ void OverviewDockWidget::SetTopLevelObjects(std::vector<MObject_ptr> topObjects)
 {
 	m_MObjectModel->setTopLevelObjects(topObjects);
 }
+
+void OverviewDockWidget::SetSelection(MObject* object)
+{
+	if (!object)
+	{
+		m_treeView->clearSelection();
+		return;
+	}
+	QModelIndex targetIndex = m_MObjectModel->indexFromObject(object);
+	if (targetIndex.isValid())
+	{
+		m_treeView->scrollTo(targetIndex);
+		m_treeView->setCurrentIndex(targetIndex);
+	}
+}

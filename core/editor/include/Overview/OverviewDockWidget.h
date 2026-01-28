@@ -12,6 +12,7 @@ public:
 	void Reload();
 	void AddTopLevelObject(MObject_ptr topObject);
 	void SetTopLevelObjects(std::vector<MObject_ptr> topObjects);
+	void SetSelection(MObject* object);
 
 private:
 	QWidget* m_mainWidget;

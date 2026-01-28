@@ -147,6 +147,26 @@ public:
 		return index(newRow, 0, parentIndex);
 	}
 
+	QModelIndex indexFromObject(MObject* object, const QModelIndex& parent = QModelIndex()) const
+	{
+		if (!object) return QModelIndex();
+
+		for (int i = 0; i < rowCount(parent); i++)
+		{
+			QModelIndex idx = index(i, 0, parent);
+			if (idx.internalPointer() == object)
+			{
+				return idx;
+			}
+			if (hasChildren(idx))
+			{
+				QModelIndex childIdx = indexFromObject(object, idx);
+				if (childIdx.isValid()) return childIdx;
+			}
+		}
+		return QModelIndex();
+	}
+
 private:
 	std::vector<MObject_ptr> m_topLevelObjects;
 	QIcon m_cameraIcon;
