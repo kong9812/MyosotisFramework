@@ -72,7 +72,10 @@ namespace MyosotisFW::System::Editor
 
 		// create render subsystem
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
+		m_renderSubsystem->SetObjectMovedCallback([this]() {emit sigObjectMoved(); });
+		m_renderSubsystem->SetObjectSelectedCallback([this](MObject_ptr obj) {emit sigObjectSelected(obj); });
 		m_renderSubsystem->Initialize(m_instance, m_surface);
+
 
 		// Imgui
 #ifdef _WIN32

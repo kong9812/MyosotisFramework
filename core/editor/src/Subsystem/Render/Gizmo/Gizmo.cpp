@@ -49,6 +49,7 @@ namespace MyosotisFW::System::Render
 		{
 			if (mouseBtn->second == GLFW_RELEASE)
 			{
+				if (m_objectMovedCallback) m_objectMovedCallback();
 				m_gizmoAxesData.isUsing = false;
 				m_gizmoAxesData.axes = { false, false, false };
 			}

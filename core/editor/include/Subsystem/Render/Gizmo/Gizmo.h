@@ -1,5 +1,6 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <functional>
 #include <array>
 #include "iglm.h"
 #include "ClassPointer.h"
@@ -17,8 +18,10 @@ namespace MyosotisFW::System::Render
 		Gizmo() :
 			m_enable(false),
 			m_hovered(false),
+			m_selectedObject(nullptr),
 			m_sortedAxes({}),
-			m_selectedObject(nullptr) {
+			m_gizmoAxesData(),
+			m_objectMovedCallback(nullptr) {
 		}
 		~Gizmo() {}
 
@@ -59,6 +62,13 @@ namespace MyosotisFW::System::Render
 			float distance = 0.0f;
 
 		}m_gizmoAxesData;
+
+	private:
+		std::function<void(void)> m_objectMovedCallback;
+
+	public:
+		void SetObjectMovedCallback(const std::function<void(void)>& callback) { m_objectMovedCallback = callback; }
+
 	};
 	TYPEDEF_SHARED_PTR_ARGS(Gizmo);
 }

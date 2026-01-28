@@ -181,7 +181,9 @@ namespace MyosotisFW::System::Render
 			const VBDispatchInfo* vbDispatchInfo = m_renderDescriptors->GetObjectInfoDescriptorSet()->GetVBDispatchInfo(vbIndex);
 			if (vbDispatchInfo)
 			{
-				m_gizmo->SetSelectObject((*m_objects)[vbDispatchInfo->objectID]);
+				const MObject_ptr& obj = (*m_objects)[vbDispatchInfo->objectID];
+				m_gizmo->SetSelectObject(obj);
+				m_objectSelectedCallback(obj);
 				Logger::Debug("Selected object: " + std::to_string(vbDispatchInfo->objectID));
 			}
 		}
@@ -216,6 +218,7 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::initializeGizmo()
 	{
 		m_gizmo = CreateGizmoPointer();
+		m_gizmo->SetObjectMovedCallback(m_objectMovedCallback);
 	}
 
 	void EditorRenderSubsystem::initializeRenderResources()

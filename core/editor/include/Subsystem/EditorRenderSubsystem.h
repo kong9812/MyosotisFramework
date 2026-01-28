@@ -1,11 +1,14 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <functional>
 #include "RenderSubsystem.h"
 #include "ThreadSaveValue.h"
 
 // 前方宣言
 namespace MyosotisFW
 {
+	class MObject;
+	TYPEDEF_SHARED_PTR_FWD(MObject);
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
 	namespace System::Render
@@ -34,11 +37,12 @@ namespace MyosotisFW::System::Render
 		EditorRenderSubsystem() : RenderSubsystem(),
 			m_editorGUI(nullptr),
 			m_editorRenderPass(nullptr),
-			m_selectedObject(nullptr),
 			m_gizmoRenderPass(nullptr),
 			m_gizmoPipeline(nullptr),
 			m_gizmo(nullptr),
-			m_objectSelectCommandPool(VK_NULL_HANDLE) {
+			m_objectSelectCommandPool(VK_NULL_HANDLE),
+			m_objectMovedCallback(nullptr),
+			m_objectSelectedCallback(nullptr) {
 		}
 		~EditorRenderSubsystem();
 
@@ -63,7 +67,6 @@ namespace MyosotisFW::System::Render
 	private:
 		EditorGUI_ptr m_editorGUI;
 		EditorRenderPass_ptr m_editorRenderPass;
-		ThreadSaveValue<ComponentBase_ptr> m_selectedObject;
 
 	private:
 		GizmoRenderPass_ptr m_gizmoRenderPass;
@@ -72,6 +75,14 @@ namespace MyosotisFW::System::Render
 
 	private:
 		VkCommandPool m_objectSelectCommandPool;
+
+	private:
+		std::function<void(void)> m_objectMovedCallback;
+		std::function<void(MObject_ptr)> m_objectSelectedCallback;
+
+	public:
+		void SetObjectMovedCallback(const std::function<void(void)>& callback) { m_objectMovedCallback = callback; }
+		void SetObjectSelectedCallback(const std::function<void(MObject_ptr)>& callback) { m_objectSelectedCallback = callback; }
 
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem);

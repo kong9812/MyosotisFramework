@@ -4,6 +4,13 @@
 #include "EditorRenderSubsystem.h"
 #include "EditorGameDirector.h"
 
+// 前方宣言
+namespace MyosotisFW
+{
+	class MObject;
+	TYPEDEF_SHARED_PTR_FWD(MObject);
+}
+
 namespace MyosotisFW::System::Editor
 {
 	class VulkanWindow : public QWindow
@@ -61,6 +68,8 @@ namespace MyosotisFW::System::Editor
 	Q_SIGNALS:
 		void sigCloseWindow();
 		void sigInitFinished();
+		void sigObjectMoved();
+		void sigObjectSelected(MObject_ptr object);
 
 	};
 }

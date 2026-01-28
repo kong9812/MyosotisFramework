@@ -107,11 +107,22 @@ namespace MyosotisFW::System::Editor
 				m_vulkanWindow->GetEditorGameDirector()->RegisterComponent(uuid, type);
 			});
 
-		// PropertyViewerで MObject更新した
+		// PropertyViewerで MObject更新
 		connect(m_propertyViewer, &PropertyViewerDockWidget::sigEditedMObject, this, [this](void* object, const MyosotisFW::PropertyDesc& desc, MyosotisFW::PropertyDesc::ChangeReason changeReason)
 			{
 				m_overview->Reload();
 			});
+
+		// VulkanWindowで MObject移動
+		connect(m_vulkanWindow, &VulkanWindow::sigObjectMoved, m_propertyViewer, &PropertyViewerDockWidget::UpdateView);
+
+		// VulkanWindowで MObject選択
+		connect(m_vulkanWindow, &VulkanWindow::sigObjectSelected, this, [this](MObject_ptr object)
+			{
+				m_propertyViewer->setObject(object.get());
+				// todo. overviewの更新
+			});
+
 	}
 
 	void MainWindow::closeWindow()
