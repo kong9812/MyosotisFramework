@@ -58,9 +58,15 @@ namespace MyosotisFW::System::Render
 			bool isUsing = false;
 			GizmoType type = GizmoType::Position;
 			std::array<bool, static_cast<uint32_t>(GizmoAxes::Count)> axes = { false, false, false };
-			glm::vec3 lastPos = glm::vec3(0.0f);
-			float distance = 0.0f;
 
+			// mouse drag情報
+			glm::vec3 dragStartObjectPosition = glm::vec3(0.0f);
+			glm::vec3 dragPlaneNormal = glm::vec3(0.0f);
+			glm::vec3 dragPlanePoint = glm::vec3(0.0f);
+			glm::vec3 dragStartHitPosition = glm::vec3(0.0f);
+
+			// 各Gizmoのワールド方向
+			std::array<glm::vec3, static_cast<uint32_t>(GizmoAxes::Count)> dragAxisDirectWorld = { glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f) };
 		}m_gizmoAxesData;
 
 	private:

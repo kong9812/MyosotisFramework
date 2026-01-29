@@ -6,7 +6,7 @@
 namespace MyosotisFW::System::Render
 {
 	// 線分とレイの最短距離
-	inline float DistanceRayToSegment(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& p0, const glm::vec3& p1, float& outU)
+	static inline float DistanceRayToSegment(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& p0, const glm::vec3& p1, float& outU)
 	{
 		glm::vec3 v = p1 - p0;
 		glm::vec3 w = rayOrigin - p0;
@@ -51,12 +51,29 @@ namespace MyosotisFW::System::Render
 
 	// 線分とレイの当たり判定
 	// threshold: 線分の太さ
-	bool RaySegmentCollision(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& p0, const glm::vec3& p1, const float threshold)
+	static inline bool RaySegmentCollision(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& p0, const glm::vec3& p1, const float threshold)
 	{
 		float outU{};
 		float dist = DistanceRayToSegment(rayOrigin, rayDir, p0, p1, outU);
 
 		// 最短距離がしきい値以内なら「当たった」とみなす
 		return dist < threshold;
+	}
+
+	// 平面とレイの交差
+	static inline bool RayPlaneIntersect(
+		const Ray& ray,
+		const glm::vec3& planeNormal,
+		const glm::vec3& planePoint,	// 平面上の任意点
+		glm::vec3& outHit)
+	{
+		const float denom = glm::dot(planeNormal, ray.dir);
+		if (std::abs(denom) < 1e-6f) return false;	// 平行
+
+		const float t = glm::dot(planePoint - ray.origin, planeNormal) / denom;
+		if (t < 0.0f) return false;	// レイの後ろ
+
+		outHit = ray.origin + ray.dir * t;
+		return true;
 	}
 }
