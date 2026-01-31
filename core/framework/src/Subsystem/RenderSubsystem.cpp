@@ -240,7 +240,7 @@ namespace MyosotisFW::System::Render
 		m_frameCounter++;
 	}
 
-	void RenderSubsystem::ResetGameStage()
+	void RenderSubsystem::ResetWorld()
 	{
 		m_mainCamera->ResetCamera();
 		m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());

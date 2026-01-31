@@ -31,6 +31,7 @@ namespace MyosotisFW::System::Editor
 		void mouseReleaseEvent(QMouseEvent* event) override;
 		void mouseMoveEvent(QMouseEvent* event) override;
 		void OpenFile(std::string filePath);
+		const QList<QAction*> GetToolBarActions();
 
 		Render::EditorRenderSubsystem_ptr GetEditorRenderSubsystem() const { return m_renderSubsystem; }
 		GameDirector::EditorGameDirector_ptr GetEditorGameDirector() const { return m_gameDirector; }

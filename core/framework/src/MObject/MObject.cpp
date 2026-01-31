@@ -238,11 +238,19 @@ namespace MyosotisFW
 		SerializeVec3ToJson<glm::vec4>("rot", m_objectInfo->transform.rot, json, allocator);
 		SerializeVec3ToJson<glm::vec4>("scale", m_objectInfo->transform.scale, json, allocator);
 
+		// コンポーネント
+		rapidjson::Value componentArray(rapidjson::Type::kArrayType);
+		for (const auto& component : *m_components)
+		{
+			componentArray.PushBack(component->Serialize(allocator), allocator);
+		}
+		json.AddMember("component", componentArray, allocator);
+
 		// もし子要素があれば
 		rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
 		for (const auto& child : m_children)
 		{
-			childrenArray.PushBack(childrenArray.PushBack(child->Serialize(allocator), allocator), allocator);
+			childrenArray.PushBack(child->Serialize(allocator), allocator);
 		}
 		json.AddMember("children", childrenArray, allocator);
 
@@ -259,17 +267,6 @@ namespace MyosotisFW
 		DeserializeVec3FromJson<glm::vec4>("rot", m_objectInfo->transform.rot, doc);
 		DeserializeVec3FromJson<glm::vec4>("scale", m_objectInfo->transform.scale, doc);
 
-		// 子要素のデシリアル化
-		if (doc.HasMember("children") && doc["children"].IsArray())
-		{
-			for (const auto& child : doc["children"].GetArray())
-			{
-				MObject_ptr childObject = CreateMObjectPointer();
-				childObject->Deserialize(child);
-				m_children.push_back(childObject);
-			}
-		}
-
 		// コンポーネントのデシリアル化
 		if (doc.HasMember("components") && doc["components"].IsArray())
 		{
@@ -281,6 +278,17 @@ namespace MyosotisFW
 				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type, m_meshChangedCallback);
 				component->Deserialize(comp);
 				m_components->push_back(component);
+			}
+		}
+
+		// 子要素のデシリアル化
+		if (doc.HasMember("children") && doc["children"].IsArray())
+		{
+			for (const auto& child : doc["children"].GetArray())
+			{
+				MObject_ptr childObject = CreateMObjectPointer();
+				childObject->Deserialize(child);
+				m_children.push_back(childObject);
 			}
 		}
 		return this;

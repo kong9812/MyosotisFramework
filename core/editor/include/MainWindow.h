@@ -21,6 +21,7 @@ namespace MyosotisFW::System::Editor
 		OverviewDockWidget* m_overview;
 		PropertyViewerDockWidget* m_propertyViewer;
 		QStatusBar* m_statusBar;
+		QToolBar* m_toolBar;
 
 		void closeEvent(QCloseEvent* event) override;
 		void paintEvent(QPaintEvent* event) override;

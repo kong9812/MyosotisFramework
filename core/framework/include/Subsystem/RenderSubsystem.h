@@ -116,7 +116,7 @@ namespace MyosotisFW::System::Render
 		virtual void Initialize(const VkInstance& instance, const VkSurfaceKHR& surface);
 		virtual void Update(const UpdateData& updateData);
 		void Render();
-		void ResetGameStage();
+		void ResetWorld();
 		void Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize);
 
 		MObjectListConstPtr GetObjects() { return m_objects; }

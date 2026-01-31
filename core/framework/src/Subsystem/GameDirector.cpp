@@ -6,7 +6,7 @@
 #include "istduuid.h"
 #include "CustomMesh.h"
 #include "Terrain.h"
-#include "GameStageIo.h"
+#include "MFWorldIo.h"
 #include "MObject.h"
 #include "MObjectRegistry.h"
 
@@ -114,13 +114,13 @@ namespace MyosotisFW::System::GameDirector {
 		//// TEST
 	}
 
-	void GameDirector::LoadGameStageFile(const std::string& fileName)
+	void GameDirector::LoadMFWorld(const std::string& fileName)
 	{
 		// object clear
-		m_renderSubsystem->ResetGameStage();
+		m_renderSubsystem->ResetWorld();
 
 		// todo. load
-		rapidjson::Document doc = Utility::Loader::loadGameStageFile(fileName);
+		rapidjson::Document doc = Utility::Loader::loadMFWorld(fileName);
 		if (doc.IsArray())
 		{
 			for (auto& obj : doc.GetArray())
@@ -135,16 +135,15 @@ namespace MyosotisFW::System::GameDirector {
 		}
 	}
 
-	void GameDirector::SaveGameStageFile(const std::string& fileName, const ComponentBaseListPtr& components)
+	void GameDirector::SaveMFWorld(const std::string& fileName, const MObjectListConstPtr& objects)
 	{
 		rapidjson::Document doc{};
 		doc.SetArray();
 		auto& allocator = doc.GetAllocator();
-		for (const ComponentBase_ptr& component : *components)
+		for (const MObject_ptr& object : *objects)
 		{
-			doc.PushBack(component->Serialize(allocator), allocator);
+			doc.PushBack(object->Serialize(allocator), allocator);
 		}
-
-		Utility::Loader::saveGameStageFile(fileName, doc);
+		Utility::Loader::saveMFWorld(fileName, doc);
 	}
 }

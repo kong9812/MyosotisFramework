@@ -6,6 +6,7 @@
 #include "ThreadPool.h"
 #include "iimgui.h"
 #include "VK_CreateInfo.h"
+#include "MObjectRegistry.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 
@@ -190,7 +191,43 @@ namespace MyosotisFW::System::Editor
 		// ファイル名
 		std::string fileName = std::filesystem::path(filePath).filename().string();
 
-		m_gameDirector->LoadGameStageFile(fileName);
+		m_gameDirector->LoadMFWorld(fileName);
+	}
+
+	const QList<QAction*> VulkanWindow::GetToolBarActions()
+	{
+		QList<QAction*> actions;
+
+		// Save
+		QAction* saveAction = new QAction(tr("Save"), this);
+		saveAction->setShortcut(QKeySequence::Save);
+		saveAction->setStatusTip(tr("Save the current file"));
+		connect(saveAction, &QAction::triggered, this, [this]()
+			{
+				const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+				std::string savePath = AppInfo::g_mfWorldFolder + std::string("test.mfworld");
+				m_gameDirector->SaveMFWorld(savePath, objects);
+			});
+		actions.append(saveAction);
+
+		// Save As
+		QAction* saveAsAction = new QAction(tr("Save As..."), this);
+		saveAsAction->setShortcut(QKeySequence::SaveAs);
+		// connect(saveAsAction, &QAction::triggered, this, &VulkanWindow::saveAsSlot);
+		actions.append(saveAsAction);
+
+		// Separator
+		QAction* separator = new QAction(this);
+		separator->setSeparator(true);
+		actions.append(separator);
+
+		// Load
+		QAction* loadAction = new QAction(tr("Load"), this);
+		loadAction->setShortcut(QKeySequence::Open);
+		// connect(loadAction, &QAction::triggered, this, &VulkanWindow::loadSlot);
+		actions.append(loadAction);
+
+		return actions;
 	}
 
 	bool VulkanWindow::eventFilter(QObject* watched, QEvent* event)

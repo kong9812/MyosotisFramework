@@ -7,10 +7,11 @@
 // 前方宣言
 namespace MyosotisFW
 {
-	class ComponentBase;
-	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
-	using ComponentBaseList = std::vector<ComponentBase_ptr>;
-	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
+	class MObject;
+	TYPEDEF_SHARED_PTR_FWD(MObject);
+	using MObjectList = std::vector<MObject_ptr>;
+	using MObjectListPtr = std::shared_ptr<MObjectList>;
+	using MObjectListConstPtr = std::shared_ptr<const MObjectList>;
 
 	namespace System::Render
 	{
@@ -26,8 +27,8 @@ namespace MyosotisFW::System::GameDirector {
 		GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem);
 		~GameDirector() {}
 
-		void LoadGameStageFile(const std::string& fileName);
-		void SaveGameStageFile(const std::string& fileName, const ComponentBaseListPtr& objects);
+		void LoadMFWorld(const std::string& fileName);
+		void SaveMFWorld(const std::string& fileName, const MObjectListConstPtr& objects);
 
 	protected:
 		Render::RenderSubsystem_ptr m_renderSubsystem;

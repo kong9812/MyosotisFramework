@@ -14,7 +14,8 @@ namespace MyosotisFW::System::Editor
 		m_logger(new LoggerDockWidget(this)),
 		m_overview(new OverviewDockWidget(this)),
 		m_propertyViewer(new PropertyViewerDockWidget(this)),
-		m_statusBar(new QStatusBar(this))
+		m_statusBar(new QStatusBar(this)),
+		m_toolBar(new QToolBar(this))
 	{
 		// KeyConverterインスタンス作成
 		KeyConverter::Instance();
@@ -25,6 +26,10 @@ namespace MyosotisFW::System::Editor
 		// StatusBar
 		setStatusBar(m_statusBar);
 		m_vulkanWindow->SetStatusBar(m_statusBar);
+
+		// ToolBar
+		addToolBar(m_toolBar);
+		m_toolBar->addActions(m_vulkanWindow->GetToolBarActions());
 
 		setWindowIcon(QIcon(AppInfo::g_applicationIcon));
 		setAccessibleName(AppInfo::g_applicationName);
@@ -88,7 +93,7 @@ namespace MyosotisFW::System::Editor
 		// エディタ閉じる
 		connect(m_vulkanWindow, &VulkanWindow::sigCloseWindow, this, &MainWindow::closeWindow);
 
-		// GameStageファイル開く
+		// MFWorldファイル開く
 		connect(m_contentBrowser, &ContentBrowserDockWidget::sigOpenFile, this, &MainWindow::openFile);
 
 		// MObject追加

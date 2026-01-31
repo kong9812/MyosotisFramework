@@ -132,8 +132,8 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_modelFolder = ".\\resources\\models\\";
 	// [フォルダ]モデル (MFModel)
 	constexpr const char* g_mfModelFolder = ".\\resources\\models\\MFModels\\";
-	// [フォルダ]ゲームステージ
-	constexpr const char* g_gameStageFolder = ".\\resources\\gamestage\\";
+	// [フォルダ]ワールド
+	constexpr const char* g_mfWorldFolder = ".\\resources\\world\\";
 	// [フォルダ]地形
 	constexpr const char* g_terrainFolder = ".\\resources\\terrain\\";
 	// [フォルダ]地形 (MFTerrain)
