@@ -7,7 +7,7 @@ FILE(GLOB_RECURSE MFModelConverter_SOURCES
 )
 GroupSourcesByFolder(SOURCES ${MFModelConverter_SOURCES} ROOT "${PROJECT_SOURCE_DIR}/tools/MFModelConverter/")
 
-add_executable(${MFModelConverter_PROJECT_NAME} ${MFModelConverter_SOURCES} ${APP_INFO_RC})
+add_executable(${MFModelConverter_PROJECT_NAME} ${MFModelConverter_SOURCES})
 target_link_libraries(${MFModelConverter_PROJECT_NAME} PRIVATE ${FRAMEWORK_PROJECT_NAME})
 
 AddIncludeDirectories(${MFModelConverter_PROJECT_NAME} ${MFModelConverter_SOURCES})
@@ -45,9 +45,11 @@ find_package(Vulkan REQUIRED)
 target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${MFModelConverter_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
+source_group("external/meshoptimizer" FILES ${meshoptimizer_SOURCES})
 target_sources(${MFModelConverter_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
 target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 # xatlas
+source_group("external/xatlas" FILES ${xatlas_SOURCES})
 target_sources(${MFModelConverter_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
 target_include_directories(${MFModelConverter_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 

@@ -7,7 +7,7 @@ FILE(GLOB_RECURSE DLL_SOURCES
 )
 GroupSourcesByFolder(${DLL_SOURCES})
 
-add_library(${DLL_PROJECT_NAME} SHARED ${DLL_SOURCES} ${APP_INFO_RC})
+add_library(${DLL_PROJECT_NAME} SHARED ${DLL_SOURCES})
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE ${FRAMEWORK_PROJECT_NAME})
 
 AddIncludeDirectories(${DLL_PROJECT_NAME} ${DLL_SOURCES})
@@ -45,9 +45,11 @@ find_package(Vulkan REQUIRED)
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${DLL_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
+source_group("external/meshoptimizer" FILES ${meshoptimizer_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 # xatlas
+source_group("external/xatlas" FILES ${xatlas_SOURCES})
 target_sources(${DLL_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
 target_include_directories(${DLL_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 

@@ -7,7 +7,7 @@ FILE(GLOB_RECURSE GAME_SOURCES
 )
 GroupSourcesByFolder(${GAME_SOURCES})
 
-add_executable(${GAME_PROJECT_NAME} ${GAME_SOURCES} ${APP_INFO_RC})
+add_executable(${GAME_PROJECT_NAME} ${GAME_SOURCES})
 target_link_libraries(${GAME_PROJECT_NAME} PRIVATE ${FRAMEWORK_PROJECT_NAME})
 
 AddIncludeDirectories(${GAME_PROJECT_NAME} ${GAME_SOURCES})
@@ -45,9 +45,11 @@ find_package(Vulkan REQUIRED)
 target_include_directories(${GAME_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${GAME_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
+source_group("external/meshoptimizer" FILES ${meshoptimizer_SOURCES})
 target_sources(${GAME_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
 target_include_directories(${GAME_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 # xatlas
+source_group("external/xatlas" FILES ${xatlas_SOURCES})
 target_sources(${GAME_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
 target_include_directories(${GAME_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 

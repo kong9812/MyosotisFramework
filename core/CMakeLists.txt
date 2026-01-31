@@ -10,7 +10,10 @@ project(MyosotisEngine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CONFIGURATION_TYPES "Debug;FWDLL;Release" CACHE STRING "" FORCE)
-set(APP_INFO_RC ${PROJECT_SOURCE_DIR}/resources/appInfo/appInfo.rc)
+set(resources_SOURCES
+  ${PROJECT_SOURCE_DIR}/resources/appInfo/appInfo.rc
+)
+source_group("external/resources" FILES ${resources_SOURCES})
 set(CMAKE_AUTOMOC ON)
 
 add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
@@ -282,7 +285,7 @@ FILE(GLOB_RECURSE FRAMEWORK_SOURCES
 )
 GroupSourcesByFolder(${FRAMEWORK_SOURCES})
 
-add_library(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES} ${APP_INFO_RC})
+add_library(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES} ${resources_SOURCES})
 AddIncludeDirectories(${FRAMEWORK_PROJECT_NAME} ${FRAMEWORK_SOURCES})
 
 # build switch
@@ -325,9 +328,11 @@ find_package(Vulkan REQUIRED)
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${FRAMEWORK_PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES})
 # meshoptimizer
+source_group("external/meshoptimizer" FILES ${meshoptimizer_SOURCES})
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${meshoptimizer_SOURCE_DIR}/src)
 # xatlas
+source_group("external/xatlas" FILES ${xatlas_SOURCES})
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${xatlas_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${xatlas_SOURCE_DIR})
 
