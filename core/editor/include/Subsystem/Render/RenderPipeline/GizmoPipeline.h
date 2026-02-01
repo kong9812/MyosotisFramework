@@ -6,13 +6,6 @@
 
 namespace MyosotisFW::System::Render
 {
-	// 前方宣言
-	namespace Camera
-	{
-		class CameraBase;
-		TYPEDEF_SHARED_PTR_FWD(CameraBase);
-	}
-
 	class GizmoPipeline : public RenderPipelineBase
 	{
 	public:

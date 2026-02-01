@@ -1,56 +1,47 @@
 // Copyright (c) 2025 kong9812
-#include "GizmoPipeline.h"
+#include "GridPipeline.h"
+#include "camera.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
 namespace MyosotisFW::System::Render
 {
-	GizmoPipeline::~GizmoPipeline()
+	GridPipeline::~GridPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void GizmoPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void GridPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		prepareRenderPipeline(resources, renderPass);
-
-		{
-			MeshHandle meshHandle = resources->GetPrimitiveGeometryMesh(Shape::PrimitiveGeometryShape::Arrow);
-			std::shared_ptr<const Mesh> mesh = meshHandle.lock();
-			m_vertexBuffer = mesh->vertexBuffer;
-			m_indexBuffer = mesh->indexBuffer;
-		}
 	}
 
-	void GizmoPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const std::vector<AxisDrawCommand>& axisDrawCommand)
+	void GridPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
-
-		const VkDeviceSize offsets[1] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-
-		for (const AxisDrawCommand& axes : axisDrawCommand)
-		{
-			pushConstant.model = axes.model;
-			pushConstant.color = axes.color;
-			vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-				VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-				0,
-				static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
-			vkCmdDrawIndexed(commandBuffer, m_indexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
-		}
+		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+			0,
+			static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
+		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
-	void GizmoPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void GridPipeline::Update(const Camera::CameraBase_ptr& camera)
+	{
+		if (!camera) return;
+
+		pushConstant.invVP = glm::inverse(camera->GetProjectionMatrix() * camera->GetViewMatrix());
+	}
+
+	void GridPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
-			// VS
+			// PS
 			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(PushConstant))),
@@ -65,32 +56,18 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Gizmo.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Gizmo.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Grid.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Grid.frag.spv")),
 		};
 
-		// pipelineVertexInputStateCreateInfo
-		Utility::Vulkan::CreateInfo::VertexAttributeBits vertexAttributeBits =
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::POSITION_VEC3 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::NORMAL |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV0 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::UV1 |
-			Utility::Vulkan::CreateInfo::VertexAttributeBit::COLOR_VEC4;
-
-		// pipelineVertexInputStateCreateInfo
-		std::vector<VkVertexInputBindingDescription> vertexInputBindingDescription = {
-			Utility::Vulkan::CreateInfo::vertexInputBindingDescription(0, vertexAttributeBits)
-		};
-		std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions = Utility::Vulkan::CreateInfo::vertexInputAttributeDescriptiones(0, vertexAttributeBits);
-		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo(vertexInputBindingDescription, vertexInputAttributeDescriptions);
-
+		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo();
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineViewportStateCreateInfo();
-		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
+		VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineRasterizationStateCreateInfo(VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_NONE, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE);
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
-		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_NEVER);
+		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
+			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),
 		};
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(colorBlendAttachmentStates);
 		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };

@@ -16,6 +16,9 @@
 #include "GizmoRenderPass.h"
 #include "GizmoPipeline.h"
 
+#include "GridRenderPass.h"
+#include "GridPipeline.h"
+
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 
@@ -199,6 +202,18 @@ namespace MyosotisFW::System::Render
 		__super::render(currentFrameIndex);
 
 		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
+		{// Grid Render Pass
+			VkDebugUtilsLabelEXT gridLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Grid Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gridLabel);
+			m_gridRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+			if (m_mainCamera)
+			{
+				m_gridPipeline->Update(m_mainCamera);
+				m_gridPipeline->BindCommandBuffer(commandBuffer);
+			}
+			m_gridRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
 		{// Gizmo Render Pass
 			if (m_gizmo->IsEnable())
 			{
@@ -232,6 +247,9 @@ namespace MyosotisFW::System::Render
 		__super::initializeRenderPass();
 		m_gizmoRenderPass = CreateGizmoRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_gizmoRenderPass->Initialize();
+
+		m_gridRenderPass = CreateGridRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_gridRenderPass->Initialize();
 	}
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
@@ -239,6 +257,9 @@ namespace MyosotisFW::System::Render
 		__super::initializeRenderPipeline();
 		m_gizmoPipeline = CreateGizmoPipelinePointer(m_device, m_renderDescriptors);
 		m_gizmoPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
+
+		m_gridPipeline = CreateGridPipelinePointer(m_device, m_renderDescriptors);
+		m_gridPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::initializeObjectSelectCommandPool()

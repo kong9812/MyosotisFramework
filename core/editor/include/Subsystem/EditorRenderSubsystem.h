@@ -23,9 +23,13 @@ namespace MyosotisFW
 
 		class GizmoRenderPass;
 		TYPEDEF_SHARED_PTR_FWD(GizmoRenderPass);
+		class GridRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(GridRenderPass);
 
 		class GizmoPipeline;
 		TYPEDEF_SHARED_PTR_FWD(GizmoPipeline);
+		class GridPipeline;
+		TYPEDEF_SHARED_PTR_FWD(GridPipeline);
 	}
 }
 
@@ -37,9 +41,11 @@ namespace MyosotisFW::System::Render
 		EditorRenderSubsystem() : RenderSubsystem(),
 			m_editorGUI(nullptr),
 			m_editorRenderPass(nullptr),
-			m_gizmoRenderPass(nullptr),
-			m_gizmoPipeline(nullptr),
 			m_gizmo(nullptr),
+			m_gizmoRenderPass(nullptr),
+			m_gridRenderPass(nullptr),
+			m_gizmoPipeline(nullptr),
+			m_gridPipeline(nullptr),
 			m_objectSelectCommandPool(VK_NULL_HANDLE),
 			m_objectMovedCallback(nullptr),
 			m_objectSelectedCallback(nullptr) {
@@ -69,9 +75,14 @@ namespace MyosotisFW::System::Render
 		EditorRenderPass_ptr m_editorRenderPass;
 
 	private:
-		GizmoRenderPass_ptr m_gizmoRenderPass;
-		GizmoPipeline_ptr m_gizmoPipeline;
 		Gizmo_ptr m_gizmo;
+
+		GizmoRenderPass_ptr m_gizmoRenderPass;
+		GridRenderPass_ptr m_gridRenderPass;
+
+		GizmoPipeline_ptr m_gizmoPipeline;
+		GridPipeline_ptr m_gridPipeline;
+
 
 	private:
 		VkCommandPool m_objectSelectCommandPool;
