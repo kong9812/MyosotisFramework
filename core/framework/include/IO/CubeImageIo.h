@@ -30,7 +30,7 @@ namespace Utility::Loader {
 		std::vector<stbi_uc*> pixels{};
 		for (uint32_t i = 0; i < fileNames.size(); i++)
 		{
-			std::filesystem::path absolutePath = std::filesystem::absolute(MyosotisFW::AppInfo::g_textureFolder + fileNames[i]);
+			std::filesystem::path absolutePath = std::filesystem::absolute(fileNames[i]);
 			pixels.push_back(stbi_load(absolutePath.string().c_str(), &textureWidth, &textureHeight, &textureChannels, STBI_rgb_alpha));
 			ASSERT(pixels[i], "Failed to load image: " + absolutePath.string());
 			imageSize += textureWidth * textureHeight * textureChannels;

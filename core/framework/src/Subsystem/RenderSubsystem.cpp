@@ -309,6 +309,11 @@ namespace MyosotisFW::System::Render
 		initializeFence();
 	}
 
+	void RenderSubsystem::SetSkyboxCubemap(const std::array<FilePath, 6>& filePath)
+	{
+		m_skyboxPipeline->SetCubemap(m_resources, filePath);
+	}
+
 	void RenderSubsystem::createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal)
 	{
 		VkSubmitInfo submitInfo = Utility::Vulkan::CreateInfo::submitInfo(

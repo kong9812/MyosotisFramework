@@ -3,10 +3,12 @@
 #include "ClassPointer.h"
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <array>
 
 #include "iglfw.h"
 #include "AppInfo.h"
 #include "UpdateData.h"
+#include "FilePath.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -120,6 +122,8 @@ namespace MyosotisFW::System::Render
 		void Resize(const VkSurfaceKHR& surface, const glm::ivec2& screenSize);
 
 		MObjectListConstPtr GetObjects() { return m_objects; }
+
+		void SetSkyboxCubemap(const std::array<FilePath, 6>& filePath);
 
 	protected:
 		void createHiZDepth(const VkCommandBuffer commandBuffer, const uint32_t dstFrameIndex, const uint32_t srcFrameIndex, const VkSemaphore wait, const VkSemaphore signal);

@@ -14,6 +14,7 @@ namespace MyosotisFW::System::Editor
 		m_logger(new LoggerDockWidget(this)),
 		m_overview(new OverviewDockWidget(this)),
 		m_propertyViewer(new PropertyViewerDockWidget(this)),
+		m_worldSettingDockWidget(new WorldSettingDockWidget(this)),
 		m_statusBar(new QStatusBar(this)),
 		m_toolBar(new QToolBar(this))
 	{
@@ -40,11 +41,15 @@ namespace MyosotisFW::System::Editor
 		addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_contentBrowser);
 		addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_logger);
 		addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_overview);
+		addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_worldSettingDockWidget);
 		addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_propertyViewer);
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 360, 360 }, Qt::Orientation::Horizontal);
+
+		tabifyDockWidget(m_overview, m_worldSettingDockWidget);
+		m_overview->raise();
 
 		// VKの初期化が終わったらシグナルを接続
 		connect(m_vulkanWindow, &VulkanWindow::sigInitFinished, this, [this] { connectDockWidgetsSignals(); });
@@ -128,6 +133,11 @@ namespace MyosotisFW::System::Editor
 				m_overview->SetSelection(object.get());
 			});
 
+		// worldSettingDockWidgetで SkyboxCube変更
+		connect(m_worldSettingDockWidget, &WorldSettingDockWidget::sigSkyboxCubemapChanged, this, [this](const std::array<MyosotisFW::FilePath, 6>& filePath)
+			{
+				m_vulkanWindow->GetEditorRenderSubsystem()->SetSkyboxCubemap(filePath);
+			});
 	}
 
 	void MainWindow::closeWindow()
@@ -147,13 +157,18 @@ namespace MyosotisFW::System::Editor
 		if (m_logger->isHidden()) m_logger->show();
 		if (m_overview->isHidden()) m_overview->show();
 		if (m_propertyViewer->isHidden()) m_propertyViewer->show();
+		if (m_worldSettingDockWidget->isHidden()) m_worldSettingDockWidget->show();
 		m_contentBrowser->setFloating(false);
 		m_logger->setFloating(false);
 		m_overview->setFloating(false);
 		m_propertyViewer->setFloating(false);
+		m_worldSettingDockWidget->setFloating(false);
 		resizeDocks({ m_contentBrowser, m_logger }, { 300, 150 }, Qt::Orientation::Horizontal);
 		resizeDocks({ m_contentBrowser, m_logger }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 250, 250 }, Qt::Orientation::Vertical);
 		resizeDocks({ m_overview, m_propertyViewer }, { 360, 360 }, Qt::Orientation::Horizontal);
+
+		tabifyDockWidget(m_overview, m_worldSettingDockWidget);
+		m_overview->raise();
 	}
 }

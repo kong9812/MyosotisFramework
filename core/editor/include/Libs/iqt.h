@@ -35,6 +35,7 @@
 #include <QFileDialog>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QListWidget>
 
 // Gui (描画・イベント)
 #include <QWindow>

@@ -6,6 +6,7 @@
 #include "LoggerDockWidget.h"
 #include "OverviewDockWidget.h"
 #include "PropertyViewerDockWidget.h"
+#include "WorldSettingDockWidget.h"
 
 namespace MyosotisFW::System::Editor
 {
@@ -20,6 +21,7 @@ namespace MyosotisFW::System::Editor
 		LoggerDockWidget* m_logger;
 		OverviewDockWidget* m_overview;
 		PropertyViewerDockWidget* m_propertyViewer;
+		WorldSettingDockWidget* m_worldSettingDockWidget;
 		QStatusBar* m_statusBar;
 		QToolBar* m_toolBar;
 

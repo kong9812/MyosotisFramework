@@ -21,28 +21,12 @@ namespace MyosotisFW::System::Render
 			m_vertexBuffer = mesh->vertexBuffer;
 			m_indexBuffer = mesh->indexBuffer;
 		}
-
-		{// Skybox Image
-			Image skyboxImage = resources->GetCubeImage({
-				"sky\\right.png",
-				"sky\\left.png",
-				"sky\\top.png",
-				"sky\\bottom.png",
-				"sky\\front.png",
-				"sky\\back.png" });
-			// sampler
-			skyboxImage.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
-			// descriptorImageInfo
-			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-				skyboxImage.sampler, skyboxImage.view,
-				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			// add to descriptor set
-			pushConstant.skyboxTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-		}
 	}
 
 	void SkyboxPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer)
 	{
+		if (!m_active) return;
+
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
@@ -55,6 +39,31 @@ namespace MyosotisFW::System::Render
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.buffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.buffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, m_indexBuffer.localSize / sizeof(uint32_t), 1, 0, 0, 0);
+	}
+
+	void SkyboxPipeline::SetCubemap(const RenderResources_ptr& resources, const std::array<FilePath, 6>& filePath)
+	{
+		{// Skybox Image
+			Image skyboxImage = resources->GetCubeImage(
+				{
+					filePath[0].path,
+					filePath[1].path,
+					filePath[2].path,
+					filePath[3].path,
+					filePath[4].path,
+					filePath[5].path
+				});
+			// sampler
+			skyboxImage.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+			// descriptorImageInfo
+			VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
+				skyboxImage.sampler, skyboxImage.view,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			// add to descriptor set
+			pushConstant.skyboxTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+		}
+
+		m_active = true;
 	}
 
 	void SkyboxPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)

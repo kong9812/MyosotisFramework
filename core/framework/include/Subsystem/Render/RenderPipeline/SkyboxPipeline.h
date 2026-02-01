@@ -1,6 +1,8 @@
 // Copyright (c) 2025 kong9812
 #pragma once
+#include <array>
 #include "RenderPipelineBase.h"
+#include "FilePath.h"
 
 namespace MyosotisFW::System::Render
 {
@@ -11,18 +13,21 @@ namespace MyosotisFW::System::Render
 			RenderPipelineBase(device, renderDescriptors),
 			pushConstant({}),
 			m_vertexBuffer({}),
-			m_indexBuffer({}) {
+			m_indexBuffer({}),
+			m_active(false) {
 		}
 		~SkyboxPipeline();
 
 		void Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass) override;
 		void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
+		void SetCubemap(const RenderResources_ptr& resources, const std::array<FilePath, 6>& filePath);
 
 	private:
 		struct PushConstant {
 			uint32_t skyboxTextureID;
 		}pushConstant;
 
+		bool m_active;
 		Buffer m_vertexBuffer;
 		Buffer m_indexBuffer;
 
