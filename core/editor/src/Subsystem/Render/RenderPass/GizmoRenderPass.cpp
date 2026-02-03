@@ -35,9 +35,9 @@ namespace MyosotisFW::System::Render
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
-		// skybox subpass
-		VkAttachmentReference skyboxSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(skyboxSubpassColorAttachmentReferences));
+		// render subpass
+		VkAttachmentReference renderSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(renderSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// 外部 -> Render

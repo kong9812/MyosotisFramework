@@ -15,6 +15,21 @@ namespace MyosotisFW::System::Render
 	class Gizmo
 	{
 	public:
+		enum class GizmoType : uint32_t
+		{
+			Position = 0,
+			Rotation,
+			Scale,
+		};
+		enum class GizmoAxes : uint32_t
+		{
+			X = 0,
+			Y,
+			Z,
+			Count,
+		};
+
+	public:
 		Gizmo() :
 			m_enable(false),
 			m_hovered(false),
@@ -38,21 +53,6 @@ namespace MyosotisFW::System::Render
 		MObject_ptr m_selectedObject;
 
 		std::vector<AxisDrawCommand> m_sortedAxes;
-
-	private:
-		enum class GizmoType : uint32_t
-		{
-			Position = 0,
-			Rotation,
-			Scale,
-		};
-		enum class GizmoAxes : uint32_t
-		{
-			X = 0,
-			Y,
-			Z,
-			Count,
-		};
 
 		struct {
 			bool isUsing = false;

@@ -259,7 +259,7 @@ namespace MyosotisFW::System::Render
 		m_gizmoPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
 
 		m_gridPipeline = CreateGridPipelinePointer(m_device, m_renderDescriptors);
-		m_gridPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
+		m_gridPipeline->Initialize(m_resources, m_gridRenderPass->GetRenderPass());
 	}
 
 	void EditorRenderSubsystem::initializeObjectSelectCommandPool()

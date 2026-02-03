@@ -800,18 +800,18 @@ namespace MyosotisFW::System::Render::Shape
 	inline Mesh createArrow(const float totalSize = 1.0f, const glm::vec4& color = { 1.0f,1.0f,1.0f,1.0f }, const glm::vec3& center = { 0,0,0 }, const uint32_t side = 24)
 	{
 		// 割合と太さの調整
-		float cylH = totalSize * 0.75f;
-		float coneH = totalSize * 0.25f;
-		float cylR = totalSize * 0.05f;		// 軸を細く(5%)
-		float coneR = totalSize * 0.15f;	// 頭を太く(15%)
+		float cylinderHeight = totalSize * 0.75f;		// 軸の高さ			(75%)
+		float cylinderRadius = totalSize * 0.05f;		// 軸の半径			(5%)
+		float coneHeight = totalSize * 0.25f;			// コーンの高さ		(25%)
+		float coneRadius = totalSize * 0.15f;			// コーンの半径		(15%)
 
 		// cylinder
-		glm::vec3 cylCenter = { center.x, center.y + cylH * 0.5f, center.z };
-		Mesh mesh = createCylinderRaw(cylH, cylR, color, cylCenter, side);
+		glm::vec3 cylCenter = { center.x, center.y + cylinderHeight * 0.5f, center.z };
+		Mesh mesh = createCylinderRaw(cylinderHeight, cylinderRadius, color, cylCenter, side);
 
 		// cone
-		glm::vec3 coneBottom = { center.x, center.y + cylH, center.z };
-		Mesh cone = createConeRaw(coneH, coneR, color, coneBottom, side);
+		glm::vec3 coneBottom = { center.x, center.y + cylinderHeight, center.z };
+		Mesh cone = createConeRaw(coneHeight, coneRadius, color, coneBottom, side);
 
 		// merge
 		uint32_t vOffset = static_cast<uint32_t>(mesh.vertex.size());

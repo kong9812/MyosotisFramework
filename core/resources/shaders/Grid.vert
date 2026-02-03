@@ -7,10 +7,6 @@ const vec2 positions[3] = vec2[](
     vec2(-1.0,  3.0)    // 左上
 );
 
-layout(push_constant) uniform PushConstant {
-    mat4 invVP;
-};
-
 void main() 
 {
     outNDC = positions[gl_VertexIndex];    

@@ -24,7 +24,7 @@ namespace MyosotisFW::System::Render
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, NULL);
 		vkCmdPushConstants(commandBuffer, m_pipelineLayout,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
+			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 			0,
 			static_cast<uint32_t>(sizeof(PushConstant)), &pushConstant);
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -42,7 +42,7 @@ namespace MyosotisFW::System::Render
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
 			// PS
-			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT | VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
+			Utility::Vulkan::CreateInfo::pushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				static_cast<uint32_t>(sizeof(PushConstant))),
 		};
