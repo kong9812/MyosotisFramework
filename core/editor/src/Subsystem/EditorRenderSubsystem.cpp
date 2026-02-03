@@ -272,11 +272,13 @@ namespace MyosotisFW::System::Render
 	{
 		__super::resizeRenderPass();
 		m_gizmoRenderPass->Resize(m_swapchain->GetScreenSize());
+		m_gridRenderPass->Resize(m_swapchain->GetScreenSize());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPipeline()
 	{
 		__super::resizeRenderPipeline();
 		m_gizmoPipeline->Resize(m_resources);
+		m_gridPipeline->Resize(m_resources);
 	}
 }
