@@ -24,5 +24,6 @@ private:
 
 Q_SIGNALS:
 	void sigChangeSelection(MObject* object);
+	void sigFocusObject(MObject* object);
 
 };

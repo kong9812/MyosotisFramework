@@ -21,14 +21,18 @@ OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	connect(m_treeView->selectionModel(), &QItemSelectionModel::currentChanged,
 		this, [this](const QModelIndex& current, const QModelIndex& previous)
 		{
-			if (!current.isValid())
-			{
-				Logger::Debug("選択が解除されました");
-				return;
-			}
+			if (!current.isValid()) return;
 
 			MObject* obj = static_cast<MObject*>(current.internalPointer());
 			emit sigChangeSelection(obj);
+		});
+	connect(m_treeView, &QTreeView::doubleClicked,
+		this, [this](const QModelIndex& index)
+		{
+			if (!index.isValid()) return;
+
+			MObject* obj = static_cast<MObject*>(index.internalPointer());
+			emit sigFocusObject(obj);
 		});
 
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);

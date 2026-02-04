@@ -8,6 +8,7 @@
 #include "RenderSwapchain.h"
 #include "RenderDevice.h"
 #include "RenderQueue.h"
+#include "MObjectRegistry.h"
 
 #include "EditorCamera.h"
 #include "StaticMesh.h"
@@ -195,6 +196,23 @@ namespace MyosotisFW::System::Render
 		vmaDestroyBuffer(m_device->GetVmaAllocator(), buffer.buffer, buffer.allocation);
 		vkFreeCommandBuffers(*m_device, m_objectSelectCommandPool, 1, &commandBuffer);
 		vkDestroyFence(*m_device, fence, m_device->GetAllocationCallbacks());
+	}
+
+	const MObject_ptr* EditorRenderSubsystem::GetMObjectPtr(const MObject* raw)
+	{
+		return m_objectRegistry->GetMObjectPtr(raw);
+	}
+
+	void EditorRenderSubsystem::ResetCamera()
+	{
+		if (!m_mainCamera) return;
+		m_mainCamera->ResetCamera();
+	}
+
+	void EditorRenderSubsystem::SetCameraFocusObject(const MObject_ptr& object)
+	{
+		if (!m_mainCamera) return;
+		m_mainCamera->SetFocusPosition(object->GetPos());
 	}
 
 	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)

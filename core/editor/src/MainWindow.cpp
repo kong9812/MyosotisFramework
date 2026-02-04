@@ -138,6 +138,17 @@ namespace MyosotisFW::System::Editor
 			{
 				m_vulkanWindow->GetEditorRenderSubsystem()->SetSkyboxCubemap(filePath);
 			});
+
+		// Overviewで FocusObject
+		connect(m_overview, &OverviewDockWidget::sigFocusObject, this, [this](MObject* object)
+			{
+				const MObject_ptr* ptr = m_vulkanWindow->GetEditorRenderSubsystem()->GetMObjectPtr(object);
+				if (ptr)
+				{
+					m_vulkanWindow->GetEditorRenderSubsystem()->SetCameraFocusObject(*ptr);
+				}
+			});
+
 	}
 
 	void MainWindow::closeWindow()

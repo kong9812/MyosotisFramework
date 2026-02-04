@@ -56,6 +56,10 @@ namespace MyosotisFW::System::Render
 		void Update(const UpdateData& updateData) override;
 		void EditorRender();
 		void ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY);
+		const MObject_ptr* GetMObjectPtr(const MObject* raw);
+
+		void ResetCamera();
+		void SetCameraFocusObject(const MObject_ptr& object);
 
 	private:
 		void render(const uint32_t currentFrameIndex) override;

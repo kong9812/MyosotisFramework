@@ -216,16 +216,32 @@ namespace MyosotisFW::System::Editor
 		// connect(saveAsAction, &QAction::triggered, this, &VulkanWindow::saveAsSlot);
 		actions.append(saveAsAction);
 
-		// Separator
-		QAction* separator = new QAction(this);
-		separator->setSeparator(true);
-		actions.append(separator);
+		{// Separator
+			QAction* separator = new QAction(this);
+			separator->setSeparator(true);
+			actions.append(separator);
+		}
 
 		// Load
 		QAction* loadAction = new QAction(tr("Load"), this);
 		loadAction->setShortcut(QKeySequence::Open);
 		// connect(loadAction, &QAction::triggered, this, &VulkanWindow::loadSlot);
 		actions.append(loadAction);
+
+		{// Separator
+			QAction* separator = new QAction(this);
+			separator->setSeparator(true);
+			actions.append(separator);
+		}
+
+		// ResetCamera
+		QAction* resetCameraAction = new QAction(tr("Reset Camera"), this);
+		resetCameraAction->setShortcut(QKeySequence(tr("F1")));
+		connect(resetCameraAction, &QAction::triggered, this, [this]()
+			{
+				m_renderSubsystem->ResetCamera();
+			});
+		actions.append(resetCameraAction);
 
 		return actions;
 	}

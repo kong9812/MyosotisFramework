@@ -40,6 +40,7 @@ namespace MyosotisFW
 		MObject_ptr CreateNewObject();
 		ComponentBase_ptr RegisterComponent(const uuids::uuid& uuid, const ComponentType type);
 		MObjectListConstPtr GetMObjectList() const { return m_objects; }
+		const MObject_ptr* GetMObjectPtr(const MObject* raw);
 
 		void Clear();
 

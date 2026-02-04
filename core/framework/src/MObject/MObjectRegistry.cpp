@@ -77,6 +77,16 @@ namespace MyosotisFW
 		return component;
 	}
 
+	const MObject_ptr* MObjectRegistry::GetMObjectPtr(const MObject* raw)
+	{
+		auto it = m_objectMap.find(raw->GetUUID());
+		if (it != m_objectMap.end())
+		{
+			return &it->second;
+		}
+		return nullptr;
+	}
+
 	void MObjectRegistry::Clear()
 	{
 		m_objects->clear();

@@ -101,7 +101,7 @@ namespace MyosotisFW::AppInfo
 	constexpr VkClearValue g_vbClearValues = { 0.0f };
 
 	// [デフォルト]カメラ位置
-	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 0.0f, -20.0f);
+	constexpr glm::vec3 g_cameraPos = glm::vec3(0.0f, 1.0f, -1.0f);
 	// [デフォルト]カメラ視点
 	constexpr glm::vec3 g_cameraLookAt = glm::vec3(0.0f, 0.0f, 0.0f);
 	// [デフォルト]カメラ　前ベクトル

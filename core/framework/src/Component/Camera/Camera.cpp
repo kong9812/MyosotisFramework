@@ -110,6 +110,15 @@ namespace MyosotisFW::System::Render::Camera
 		return ray;
 	}
 
+	void CameraBase::SetFocusPosition(const glm::vec3& pos, const float distance)
+	{
+		glm::vec3 v = m_cameraPos - pos;
+		glm::vec3 dir = glm::normalize(v);
+
+		m_cameraPos = pos + (dir * distance);
+		m_cameraFront = -dir;
+	}
+
 	rapidjson::Value CameraBase::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value doc = __super::Serialize(allocator);
