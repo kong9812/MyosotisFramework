@@ -33,6 +33,7 @@ namespace MyosotisFW::System::Render::Camera
 		void SetFocusPosition(const glm::vec3& pos, const float distance = 5);
 
 		glm::vec3 GetCameraPos() const { return m_cameraPos; }
+		void SetCameraPos(const glm::vec3& pos) { m_cameraPos = pos; }
 
 		void SetMainCamera(bool isMainCamera) { m_isMainCamera = isMainCamera; }
 		bool IsMainCamera() const { return m_isMainCamera; }

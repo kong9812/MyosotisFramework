@@ -212,6 +212,12 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::SetCameraFocusObject(const MObject_ptr& object)
 	{
 		if (!m_mainCamera) return;
+		glm::vec3 cameraPos = m_mainCamera->GetCameraPos();
+
+		// todo: aabbでdistanceを計算　最適の距離を決める
+		// todo. aabbの中心点を基準にする
+
+		m_mainCamera->SetCameraPos(glm::vec3(cameraPos.x, object->GetPos().y, cameraPos.z));
 		m_mainCamera->SetFocusPosition(object->GetPos());
 	}
 
