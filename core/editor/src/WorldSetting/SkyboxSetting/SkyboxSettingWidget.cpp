@@ -10,21 +10,23 @@ SkyboxSettingWidget::SkyboxSettingWidget(QWidget* parent) :
 	m_filePath()
 {
 	m_vBoxLayout->setContentsMargins(0, 0, 0, 0);
+	m_vBoxLayout->setSpacing(0);
 	m_vBoxLayout->setAlignment(Qt::AlignmentFlag::AlignTop);
 
-	QLabel* cubemapDirectoryPathLabel = new QLabel(this);
-	cubemapDirectoryPathLabel->setText("Cube map Directory:");
+	QLabel* cubemapDirectoryPathLabel = new QLabel("Cube map Directory:", this);
 	m_vBoxLayout->addWidget(cubemapDirectoryPathLabel);
 
 	DirectoryPathEditor* filePathEditor = new DirectoryPathEditor(this, &m_filePath, MyosotisFW::AppInfo::g_assetRootFolder, MyosotisFW::AppInfo::g_textureFolder);
+	filePathEditor->setContentsMargins(0, 0, 0, 0);
 	m_vBoxLayout->addWidget(filePathEditor);
 
 	QListWidget* imageList = new QListWidget(this);
 	imageList->setViewMode(QListWidget::IconMode);
 	imageList->setIconSize(QSize(64, 64));
 	imageList->setDragDropMode(QAbstractItemView::NoDragDrop);
-	imageList->setFixedHeight(120);
+	imageList->setFixedHeight(150);
 	m_vBoxLayout->addWidget(imageList);
+	m_vBoxLayout->addStretch(1);
 
 	auto emitCurrentOrder = [this, imageList]()
 		{
