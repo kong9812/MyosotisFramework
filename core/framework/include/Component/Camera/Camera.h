@@ -27,6 +27,8 @@ namespace MyosotisFW::System::Render::Camera
 
 		void UpdateScreenSize(const glm::vec2& size);
 
+		const float GetCameraFOV() const { return m_cameraFov; }
+
 		float GetDistance(const glm::vec3& pos) const;
 		glm::vec3 GetFrontPos(const float distance) const;
 		Ray GetRay(const glm::vec2& pos) const;

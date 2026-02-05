@@ -19,7 +19,7 @@ namespace MyosotisFW
 		m_uuid(uuids::hashMaker()),
 		m_children(),
 		m_components(),
-		m_staticMeshHandles(),
+		m_meshHandles(),
 		m_dirty(true) {
 	}
 
@@ -62,48 +62,89 @@ namespace MyosotisFW
 
 	const uint32_t MObject::GetMeshCount() const
 	{
-		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
-			[&](const ComponentBase_ptr& existingComponent)
-			{
-				return existingComponent->IsStaticMesh();
-			});
-		if (it != m_components.raw.end())
+		uint32_t meshCount = 0;
+		if (m_meshHandles.size() > 0)
 		{
-			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
-			return staticMesh->GetMeshCount();
+			for (const ComponentBaseHandle& handle : m_meshHandles)
+			{
+				const StaticMesh_ptr& staticMesh = Object_CastToStaticMesh(handle.lock());
+				if (staticMesh)
+				{
+					meshCount += staticMesh->GetMeshCount();
+				}
+			}
 		}
-		return 0;
+		return meshCount;
 	}
 
 	const std::vector<uint32_t> MObject::GetMeshID() const
 	{
-		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
-			[&](const ComponentBase_ptr& existingComponent)
-			{
-				return existingComponent->IsStaticMesh();
-			});
-		if (it != m_components.raw.end())
+		std::vector<uint32_t> meshID{};
+		if (m_meshHandles.size() > 0)
 		{
-			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
-			return staticMesh->GetMeshID();
+			for (const ComponentBaseHandle& handle : m_meshHandles)
+			{
+				const StaticMesh_ptr& staticMesh = Object_CastToStaticMesh(handle.lock());
+				if (staticMesh)
+				{
+					const std::vector<uint32_t>& tmp = staticMesh->GetMeshID();
+					meshID.insert(meshID.end(), tmp.begin(), tmp.end());
+				}
+			}
 		}
-		return {};
+		return meshID;
+	}
+
+	const glm::vec3 MObject::GetAABBMin() const
+	{
+		glm::vec3 min = glm::vec3(FLT_MAX);
+		if (m_meshHandles.size() > 0)
+		{
+			for (const ComponentBaseHandle& handle : m_meshHandles)
+			{
+				const StaticMesh_ptr& staticMesh = Object_CastToStaticMesh(handle.lock());
+				if (staticMesh)
+				{
+					min = glm::min(min, staticMesh->GetAABBMin());
+				}
+			}
+		}
+		return min;
+	}
+
+	const glm::vec3 MObject::GetAABBMax() const
+	{
+		glm::vec3 max = glm::vec3(-FLT_MAX);
+		if (m_meshHandles.size() > 0)
+		{
+			for (const ComponentBaseHandle& handle : m_meshHandles)
+			{
+				const StaticMesh_ptr& staticMesh = Object_CastToStaticMesh(handle.lock());
+				if (staticMesh)
+				{
+					max = glm::max(max, staticMesh->GetAABBMax());
+				}
+			}
+		}
+		return max;
 	}
 
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
 	{
-		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
-			[&](const ComponentBase_ptr& existingComponent)
-			{
-				return existingComponent->IsStaticMesh();
-			});
-		if (it != m_components.raw.end())
+		std::vector<VBDispatchInfo> vbDispatchInfo{};
+		if (m_meshHandles.size() > 0)
 		{
-			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
-			return staticMesh->GetVBDispatchInfo();
+			for (const ComponentBaseHandle& handle : m_meshHandles)
+			{
+				const StaticMesh_ptr& staticMesh = Object_CastToStaticMesh(handle.lock());
+				if (staticMesh)
+				{
+					const std::vector<VBDispatchInfo>& tmp = staticMesh->GetVBDispatchInfo();
+					vbDispatchInfo.insert(vbDispatchInfo.end(), tmp.begin(), tmp.end());
+				}
+			}
 		}
-
-		return {};
+		return vbDispatchInfo;
 	}
 
 	bool MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
@@ -215,6 +256,8 @@ namespace MyosotisFW
 
 	void MObject::AddComponent(const ComponentBase_ptr& component)
 	{
+		// todo. レイトレーシングでエラーが起きてる
+		// エラーの解消方法がわかれば、↓の制限を解除できる
 		// 複数StaticMeshを許可しない
 		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
 			[&](const ComponentBase_ptr& existingComponent)
@@ -225,6 +268,10 @@ namespace MyosotisFW
 
 		component->SetTLASInstance(m_tlasInstance);
 		m_components.push_back(component);
+		if (component->IsStaticMesh())
+		{
+			m_meshHandles.push_back(component);
+		}
 	}
 
 	// シリアルライズ

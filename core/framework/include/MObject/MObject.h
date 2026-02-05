@@ -69,6 +69,8 @@ namespace MyosotisFW
 
 		const uint32_t GetMeshCount() const;
 		const std::vector<uint32_t> GetMeshID()const;
+		const glm::vec3 GetAABBMin() const;
+		const glm::vec3 GetAABBMax() const;
 
 		const ObjectInfo& GetObjectInfo() const { return *m_objectInfo; }
 		const std::vector<VBDispatchInfo> GetVBDispatchInfo() const;
@@ -111,7 +113,7 @@ namespace MyosotisFW
 				handles.push_back(ptr);
 			}
 		}m_components;
-		ComponentBaseHandleList m_staticMeshHandles;
+		ComponentBaseHandleList m_meshHandles;
 
 	public:
 		// ObjectProperty

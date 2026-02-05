@@ -214,11 +214,21 @@ namespace MyosotisFW::System::Render
 		if (!m_mainCamera) return;
 		glm::vec3 cameraPos = m_mainCamera->GetCameraPos();
 
-		// todo: aabbでdistanceを計算　最適の距離を決める
-		// todo. aabbの中心点を基準にする
+		const glm::vec3 aabbMin = object->GetAABBMin() * glm::vec3(object->GetScale());
+		const glm::vec3 aabbMax = object->GetAABBMax() * glm::vec3(object->GetScale());
 
-		m_mainCamera->SetCameraPos(glm::vec3(cameraPos.x, object->GetPos().y, cameraPos.z));
-		m_mainCamera->SetFocusPosition(object->GetPos());
+		// 距離
+		const glm::vec3 size = aabbMax - aabbMin;
+		const float radius = glm::max(size.x, glm::max(size.y, size.x)) * 0.5f;
+		const float offset = 1.5f;
+		const float fov = glm::radians(m_mainCamera->GetCameraFOV());
+		const float distance = (radius / std::sin(fov * 0.5f)) + offset;
+
+		// 座標
+		const glm::vec3 aabbCenter = (aabbMax + aabbMin) * 0.5f;
+		const glm::vec3 focusTargetPos = glm::vec3(object->GetPos()) + aabbCenter;
+
+		m_mainCamera->SetFocusPosition(focusTargetPos, distance);
 	}
 
 	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)

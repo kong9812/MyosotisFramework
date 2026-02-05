@@ -19,7 +19,9 @@ namespace MyosotisFW::System::Render
 		m_vbDispatchInfo(),
 		m_meshChangedCallback(meshChangedCallback),
 		m_meshCount(0),
-		m_meshID(0)
+		m_meshID(0),
+		m_aabbMin(glm::vec3(FLT_MAX)),
+		m_aabbMax(glm::vec3(-FLT_MAX))
 	{
 		m_name = "StaticMesh";
 	}

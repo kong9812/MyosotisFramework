@@ -60,6 +60,8 @@ namespace MyosotisFW::System::Render
 		m_tlasInstance->meshID.clear();
 		m_vbDispatchInfo.clear();
 		m_tlasInstance->active = false;
+		m_aabbMin = glm::vec3(FLT_MAX);
+		m_aabbMax = glm::vec3(-FLT_MAX);
 
 		if (m_meshCount > 0)
 		{// VBDispatchInfoの作成
@@ -76,10 +78,13 @@ namespace MyosotisFW::System::Render
 					// vbDispatchInfo.bitFlags |= (1u << 0);	// 実験
 					m_vbDispatchInfo.push_back(vbDispatchInfo);
 
-
 					m_tlasInstance->meshID.push_back(meshInfo.meshID);
 				}
 				m_meshID.push_back(meshInfo.meshID);
+
+				// aabb
+				m_aabbMin = glm::min(m_aabbMin, glm::vec3(meshInfo.AABBMin));
+				m_aabbMax = glm::max(m_aabbMax, glm::vec3(meshInfo.AABBMax));
 			}
 			m_tlasInstance->active = true;
 		}

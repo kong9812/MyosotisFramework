@@ -56,24 +56,31 @@ namespace MyosotisFW::System::Render
 		m_meshID.clear();
 		m_vbDispatchInfo.clear();
 		m_tlasInstance->active = false;
+		m_aabbMin = glm::vec3(FLT_MAX);
+		m_aabbMax = glm::vec3(-FLT_MAX);
 
 		if (m_meshComponentInfo.primitiveGeometryShape == Shape::PrimitiveGeometryShape::UNDEFINED) return;
 
 		// ここで何とかしてVBDispatchInfoを作らないといけない!!
 		MeshHandle meshHandle = m_resources->GetPrimitiveGeometryMesh(m_meshComponentInfo.primitiveGeometryShape);
 		std::shared_ptr<const Mesh> mesh = meshHandle.lock();
+		const MeshInfo meshInfo = mesh->meshInfo;
 		m_meshCount = 1;
-		m_meshID.push_back(mesh->meshInfo.meshID);
+		m_meshID.push_back(meshInfo.meshID);
 		// VBDispatchInfoの作成
-		for (uint32_t j = 0; j < mesh->meshInfo.meshletCount; j++)
+		for (uint32_t j = 0; j < meshInfo.meshletCount; j++)
 		{
 			VBDispatchInfo vbDispatchInfo{};
 			vbDispatchInfo.objectID = m_objectID;			// MObjectRegistryでセットされたobjectIDを使う
-			vbDispatchInfo.meshID = mesh->meshInfo.meshID;	// meshIDそのままを使って、iではない！
+			vbDispatchInfo.meshID = meshInfo.meshID;	// meshIDそのままを使って、iではない！
 			vbDispatchInfo.meshletID = j;					// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 			m_vbDispatchInfo.push_back(vbDispatchInfo);
 		}
-		m_tlasInstance->meshID.push_back(mesh->meshInfo.meshID);
+		m_tlasInstance->meshID.push_back(meshInfo.meshID);
 		m_tlasInstance->active = true;
+
+		// aabb
+		m_aabbMin = glm::min(m_aabbMin, glm::vec3(meshInfo.AABBMin));
+		m_aabbMax = glm::max(m_aabbMax, glm::vec3(meshInfo.AABBMax));
 	}
 }

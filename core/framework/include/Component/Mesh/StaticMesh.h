@@ -54,9 +54,11 @@ namespace MyosotisFW::System::Render
 		virtual void BindCommandBuffer(const VkCommandBuffer& commandBuffer);
 		std::vector<VBDispatchInfo>& GetVBDispatchInfo() { return m_vbDispatchInfo; }
 		uint32_t GetMeshCount() const { return m_meshCount; }
+		const glm::vec3& GetAABBMin() const { return m_aabbMin; }
+		const glm::vec3& GetAABBMax() const { return m_aabbMax; }
 
 		virtual bool IsStaticMesh() const override { return true; }
-		const std::vector<uint32_t> GetMeshID() const { return m_meshID; }
+		const std::vector<uint32_t>& GetMeshID() const { return m_meshID; }
 
 	protected:
 		virtual void loadAssets() { m_meshChangedCallback(); }
@@ -74,6 +76,9 @@ namespace MyosotisFW::System::Render
 		std::function<void(void)> m_meshChangedCallback;
 
 		std::vector<uint32_t> m_meshID;
+
+		glm::vec3 m_aabbMin;
+		glm::vec3 m_aabbMax;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(StaticMesh);
 	OBJECT_CAST_FUNCTION(StaticMesh);
