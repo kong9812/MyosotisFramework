@@ -141,10 +141,14 @@ namespace MyosotisFW::System::Render
 			{
 				if (object->IsCamera())
 				{
-					m_mainCamera = Camera::Object_CastToCameraBase(object->FindComponent(ComponentType::FPSCamera, true));
-					m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
-					m_mainCamera->SetMainCamera(true);
-					break;
+					ComponentBaseHandle* handle = object->FindComponent(ComponentType::FPSCamera, true);
+					if (handle)
+					{
+						m_mainCamera = Camera::Object_CastToCameraBase(handle->lock());
+						m_mainCamera->UpdateScreenSize(m_swapchain->GetScreenSizeF());
+						m_mainCamera->SetMainCamera(true);
+						break;
+					}
 				}
 			}
 		}

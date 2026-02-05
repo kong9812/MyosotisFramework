@@ -17,9 +17,9 @@ namespace MyosotisFW
 		m_isReady(false),
 		m_name("MObject"),
 		m_uuid(uuids::hashMaker()),
-		m_renderID(0),
 		m_children(),
-		m_components(std::make_shared<ComponentBaseList>()),
+		m_components(),
+		m_staticMeshHandles(),
 		m_dirty(true) {
 	}
 
@@ -62,12 +62,12 @@ namespace MyosotisFW
 
 	const uint32_t MObject::GetMeshCount() const
 	{
-		auto it = std::find_if(m_components->begin(), m_components->end(),
+		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components->end())
+		if (it != m_components.raw.end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetMeshCount();
@@ -77,12 +77,12 @@ namespace MyosotisFW
 
 	const std::vector<uint32_t> MObject::GetMeshID() const
 	{
-		auto it = std::find_if(m_components->begin(), m_components->end(),
+		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components->end())
+		if (it != m_components.raw.end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetMeshID();
@@ -92,12 +92,12 @@ namespace MyosotisFW
 
 	const std::vector<VBDispatchInfo> MObject::GetVBDispatchInfo() const
 	{
-		auto it = std::find_if(m_components->begin(), m_components->end(),
+		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		if (it != m_components->end())
+		if (it != m_components.raw.end())
 		{
 			StaticMesh_ptr staticMesh = Object_CastToStaticMesh(*it);
 			return staticMesh->GetVBDispatchInfo();
@@ -108,7 +108,7 @@ namespace MyosotisFW
 
 	bool MObject::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& mainCamera)
 	{
-		for (ComponentBase_ptr& component : *m_components)
+		for (ComponentBase_ptr& component : m_components.raw)
 		{
 			if (component->IsStaticMesh())
 			{
@@ -140,14 +140,14 @@ namespace MyosotisFW
 	// カメラ持つ？
 	const bool MObject::IsCamera(bool findChildComponent) const
 	{
-		for (const auto& component : *m_components)
+		for (const ComponentBase_ptr& component : m_components.raw)
 		{
 			if (component->IsCamera())
 				return true;
 		}
 		if (findChildComponent)
 		{
-			for (const auto& child : m_children)
+			for (const MObject_ptr& child : m_children)
 			{
 				if (child->IsCamera())
 					return true;
@@ -157,74 +157,74 @@ namespace MyosotisFW
 		return false;
 	}
 
-	ComponentBase_ptr MObject::FindComponent(const ComponentType& type, const bool findChildComponent)
+	ComponentBaseHandle* MObject::FindComponent(const ComponentType& type, const bool findChildComponent)
 	{
-		for (ComponentBase_ptr& component : *m_components)
+		for (ComponentBaseHandle& handle : m_components.handles)
 		{
-			if (component->GetType() == type)
+			if (handle.lock()->GetType() == type)
 			{
-				return component;
+				return &handle;
 			}
 		}
 		if (findChildComponent)
 		{
 			for (MObject_ptr& child : m_children)
 			{
-				ComponentBase_ptr foundComponent = child->FindComponent(type, findChildComponent);
-				if (foundComponent)
-					return foundComponent;
+				ComponentBaseHandle* foundHandle = child->FindComponent(type, findChildComponent);
+				if (foundHandle)
+					return foundHandle;
 			}
 		}
 		return nullptr;
 	}
 
-	ComponentBaseListPtr MObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
+	ComponentBaseHandleList MObject::FindAllComponents(const ComponentType& type, const bool findChildComponent)
 	{
-		ComponentBaseListPtr foundComponents{};
-		for (ComponentBase_ptr& component : *m_components)
+		ComponentBaseHandleList foundHandle{};
+		for (ComponentBaseHandle& handle : m_components.handles)
 		{
-			if (component->GetType() == type)
+			if (handle.lock()->GetType() == type)
 			{
-				foundComponents->push_back(component);
+				foundHandle.push_back(handle);
 			}
 		}
 		if (findChildComponent)
 		{
 			for (MObject_ptr& child : m_children)
 			{
-				auto childComponents = child->FindAllComponents(type, findChildComponent);
-				foundComponents->insert(foundComponents->end(), childComponents->begin(), childComponents->end());
+				ComponentBaseHandleList childComponents = child->FindAllComponents(type, findChildComponent);
+				foundHandle.insert(foundHandle.end(), childComponents.begin(), childComponents.end());
 			}
 		}
-		return foundComponents;
+		return foundHandle;
 	}
 
-	ComponentBaseListPtr MObject::GetAllComponents(bool findChildComponent)
+	ComponentBaseHandleList MObject::GetAllComponents(bool findChildComponent)
 	{
-		ComponentBaseListPtr allComponents = m_components;
+		ComponentBaseHandleList allHandles = m_components.handles;
 		if (findChildComponent)
 		{
 			for (const MObject_ptr& child : m_children)
 			{
-				auto childComponents = child->GetAllComponents(findChildComponent);
-				allComponents->insert(allComponents->end(), childComponents->begin(), childComponents->end());
+				ComponentBaseHandleList childHandles = child->GetAllComponents(findChildComponent);
+				allHandles.insert(allHandles.end(), childHandles.begin(), childHandles.end());
 			}
 		}
-		return allComponents;
+		return allHandles;
 	}
 
 	void MObject::AddComponent(const ComponentBase_ptr& component)
 	{
 		// 複数StaticMeshを許可しない
-		auto it = std::find_if(m_components->begin(), m_components->end(),
+		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
 			[&](const ComponentBase_ptr& existingComponent)
 			{
 				return existingComponent->IsStaticMesh();
 			});
-		ASSERT(it == m_components->end(), "ERROR!! Unable to add more than one static mesh component to an object.");
+		ASSERT(it == m_components.raw.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
 
 		component->SetTLASInstance(m_tlasInstance);
-		m_components->push_back(component);
+		m_components.push_back(component);
 	}
 
 	// シリアルライズ
@@ -240,7 +240,7 @@ namespace MyosotisFW
 
 		// コンポーネント
 		rapidjson::Value componentArray(rapidjson::Type::kArrayType);
-		for (const auto& component : *m_components)
+		for (const ComponentBase_ptr& component : m_components.raw)
 		{
 			componentArray.PushBack(component->Serialize(allocator), allocator);
 		}
@@ -248,7 +248,7 @@ namespace MyosotisFW
 
 		// もし子要素があれば
 		rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
-		for (const auto& child : m_children)
+		for (const MObject_ptr& child : m_children)
 		{
 			childrenArray.PushBack(child->Serialize(allocator), allocator);
 		}
@@ -270,21 +270,21 @@ namespace MyosotisFW
 		// コンポーネントのデシリアル化
 		if (doc.HasMember("components") && doc["components"].IsArray())
 		{
-			for (const auto& comp : doc["components"].GetArray())
+			for (const rapidjson::Value& comp : doc["components"].GetArray())
 			{
-				auto typeID = comp["typeID"].GetString();
-				auto optType = uuids::uuid::from_string(typeID);
+				const char* typeID = comp["typeID"].GetString();
+				std::optional<uuids::uuid> optType = uuids::uuid::from_string(typeID);
 				ComponentType type = findComponentTypeFromTypeID(optType.value());
 				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type, m_meshChangedCallback);
 				component->Deserialize(comp);
-				m_components->push_back(component);
+				m_components.push_back(component);
 			}
 		}
 
 		// 子要素のデシリアル化
 		if (doc.HasMember("children") && doc["children"].IsArray())
 		{
-			for (const auto& child : doc["children"].GetArray())
+			for (const rapidjson::Value& child : doc["children"].GetArray())
 			{
 				MObject_ptr childObject = CreateMObjectPointer();
 				childObject->Deserialize(child);

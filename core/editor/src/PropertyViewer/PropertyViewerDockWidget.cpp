@@ -103,8 +103,9 @@ void PropertyViewerDockWidget::setObject(MObject* object)
 				}
 			});
 
-		for (ComponentBase_ptr component : *object->GetAllComponents())
+		for (ComponentBaseHandle handle : object->GetAllComponents())
 		{
+			ComponentBase_ptr component = handle.lock();
 			PropertyViewerComponentWidget* componentWidget = new PropertyViewerComponentWidget(ComponentTypeName[static_cast<uint32_t>(component->GetType())], m_container);
 			componentWidget->SetComponent(component);
 			m_componentWidgets.push_back(componentWidget);

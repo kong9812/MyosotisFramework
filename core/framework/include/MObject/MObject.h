@@ -20,8 +20,9 @@ namespace MyosotisFW
 	// 前方宣言
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_FWD(ComponentBase);
+	using ComponentBaseHandle = std::weak_ptr<ComponentBase>;				// 外部参照用
 	using ComponentBaseList = std::vector<ComponentBase_ptr>;
-	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
+	using ComponentBaseHandleList = std::vector<ComponentBaseHandle>;		// 外部参照用
 
 	namespace System::Render::Camera
 	{
@@ -59,7 +60,6 @@ namespace MyosotisFW
 		const void SetPos(const glm::vec3& pos) { m_objectInfo->transform.pos = glm::vec4(pos, 0.0f); m_transformChangedCallback(); m_dirty = true; }
 		const void SetRot(const glm::vec3& rot) { m_objectInfo->transform.rot = glm::vec4(rot, 0.0f); m_transformChangedCallback(); m_dirty = true; }
 		const void SetScale(const glm::vec3& scale) { m_objectInfo->transform.scale = glm::vec4(scale, 0.0f); m_transformChangedCallback(); m_dirty = true; }
-		void SetRenderID(uint32_t id) { m_renderID = id; }
 		void SetObjectInfo(ObjectInfo_ptr objectInfo) { m_objectInfo = objectInfo; }
 		void SetMeshChangedCallback(const std::function<void(void)>& callback) { m_meshChangedCallback = callback; }
 		void SetTransformChangedCallback(const std::function<void(void)>& callback) { m_transformChangedCallback = callback; }
@@ -76,9 +76,9 @@ namespace MyosotisFW
 		bool Update(const UpdateData& updateData, const RenderNS::Camera::CameraBase_ptr& mainCamera);
 		const bool IsCamera(bool findChildComponent = false) const;
 
-		ComponentBase_ptr FindComponent(const ComponentType& type, const bool findChildComponent = false);
-		ComponentBaseListPtr FindAllComponents(const ComponentType& type, const bool findChildComponent = false);
-		ComponentBaseListPtr GetAllComponents(bool findChildComponent = false);
+		ComponentBaseHandle* FindComponent(const ComponentType& type, const bool findChildComponent = false);
+		ComponentBaseHandleList FindAllComponents(const ComponentType& type, const bool findChildComponent = false);
+		ComponentBaseHandleList GetAllComponents(bool findChildComponent = false);
 		void AddComponent(const ComponentBase_ptr& component);
 
 		// シリアルライズ
@@ -90,7 +90,6 @@ namespace MyosotisFW
 		bool m_isReady;
 		std::string m_name;
 		uuids::uuid m_uuid;
-		uint32_t m_renderID;
 
 		bool m_dirty;
 		std::function<void(void)> m_meshChangedCallback;
@@ -101,7 +100,18 @@ namespace MyosotisFW
 
 		MObject_ptr m_parent;
 		std::vector<MObject_ptr> m_children;
-		ComponentBaseListPtr m_components;
+
+		struct {
+			ComponentBaseList raw;
+			ComponentBaseHandleList handles;
+
+			void push_back(ComponentBase_ptr ptr)
+			{
+				raw.push_back(ptr);
+				handles.push_back(ptr);
+			}
+		}m_components;
+		ComponentBaseHandleList m_staticMeshHandles;
 
 	public:
 		// ObjectProperty

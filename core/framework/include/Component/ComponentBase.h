@@ -13,8 +13,9 @@ namespace MyosotisFW
 {
 	class ComponentBase;
 	TYPEDEF_SHARED_PTR_ARGS(ComponentBase);
+	using ComponentBaseHandle = std::weak_ptr<ComponentBase>;				// 外部参照用
 	using ComponentBaseList = std::vector<ComponentBase_ptr>;
-	using ComponentBaseListPtr = std::shared_ptr<ComponentBaseList>;
+	using ComponentBaseHandleList = std::vector<ComponentBaseHandle>;		// 外部参照用
 
 	class ComponentBase
 	{

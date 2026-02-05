@@ -59,10 +59,10 @@ namespace MyosotisFW::System::Render
 		m_atlasSize.clear();
 
 		{// custom mesh
-			ComponentBase_ptr ptr = object->FindComponent(ComponentType::CustomMesh);
-			if (ptr)
+			ComponentBaseHandle* handle = object->FindComponent(ComponentType::CustomMesh);
+			if (handle)
 			{
-				CustomMesh_ptr customMesh = Object_CastToCustomMesh(ptr);
+				CustomMesh_ptr customMesh = Object_CastToCustomMesh(handle->lock());
 
 				// vertex buffer
 				MeshesHandle meshesHandle = resources->GetMesh(customMesh->GetMeshComponentInfo().meshName);
@@ -81,10 +81,10 @@ namespace MyosotisFW::System::Render
 		}
 
 		{// primitive geometry
-			ComponentBase_ptr ptr = object->FindComponent(ComponentType::PrimitiveGeometryMesh);
-			if (ptr)
+			ComponentBaseHandle* handle = object->FindComponent(ComponentType::PrimitiveGeometryMesh);
+			if (handle)
 			{
-				PrimitiveGeometry_ptr primitiveGeom = Object_CastToPrimitiveGeometry(ptr);
+				PrimitiveGeometry_ptr primitiveGeom = Object_CastToPrimitiveGeometry(handle->lock());
 
 				// vertex buffer
 				MeshHandle meshHandle = resources->GetPrimitiveGeometryMesh(primitiveGeom->GetPrimitiveGeometryShape());
