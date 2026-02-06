@@ -31,6 +31,7 @@ namespace MyosotisFW::System::Render::Camera
 	void EditorCamera::Update(const UpdateData& updateData)
 	{
 		if (updateData.pause) return;
+		m_isMoved = false;
 
 		if (!m_isReady)
 		{
@@ -68,6 +69,8 @@ namespace MyosotisFW::System::Render::Camera
 			// Y軸回転
 			m_cameraFront = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(mouseMovement.x), m_cameraUp) * glm::vec4(m_cameraFront, 0.0f));
 			m_cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
+
+			m_isMoved = (mouseMovement != glm::vec2(0.0f));
 		}
 		m_lastMousePos = updateData.mousePos;
 
@@ -151,6 +154,7 @@ namespace MyosotisFW::System::Render::Camera
 				}
 			}
 		}
+		m_isMoved = m_isMoved ? true : (move != glm::vec3(0.0f));
 		m_cameraPos += move;
 
 		editorGUI();

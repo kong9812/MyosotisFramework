@@ -55,6 +55,11 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Update(updateData);
 		m_gizmo->Update(updateData, m_mainCamera);
+
+		if (m_mainCamera->IsMoved())
+		{
+			m_gizmo->SetSelectObject(nullptr);
+		}
 	}
 
 	void EditorRenderSubsystem::EditorRender()
@@ -212,23 +217,33 @@ namespace MyosotisFW::System::Render
 	void EditorRenderSubsystem::SetCameraFocusObject(const MObject_ptr& object)
 	{
 		if (!m_mainCamera) return;
-		glm::vec3 cameraPos = m_mainCamera->GetCameraPos();
 
-		const glm::vec3 aabbMin = object->GetAABBMin() * glm::vec3(object->GetScale());
-		const glm::vec3 aabbMax = object->GetAABBMax() * glm::vec3(object->GetScale());
+		if (object->GetMeshCount() == 0)
+		{
+			glm::vec3 cameraPos = m_mainCamera->GetCameraPos();
+			m_mainCamera->SetFocusPosition(object->GetPos());
+		}
+		else
+		{
+			const glm::vec3 aabbMin = object->GetAABBMin() * glm::vec3(object->GetScale());
+			const glm::vec3 aabbMax = object->GetAABBMax() * glm::vec3(object->GetScale());
 
-		// 距離
-		const glm::vec3 size = aabbMax - aabbMin;
-		const float radius = glm::max(size.x, glm::max(size.y, size.x)) * 0.5f;
-		const float offset = 1.5f;
-		const float fov = glm::radians(m_mainCamera->GetCameraFOV());
-		const float distance = (radius / std::sin(fov * 0.5f)) + offset;
+			// 距離
+			const glm::vec3 size = aabbMax - aabbMin;
+			const float radius = glm::max(size.x, glm::max(size.y, size.x)) * 0.5f;
+			const float offset = 1.5f;
+			const float fov = glm::radians(m_mainCamera->GetCameraFOV());
+			const float distance = (radius / glm::tan(fov * 0.5f)) + offset;
 
-		// 座標
-		const glm::vec3 aabbCenter = (aabbMax + aabbMin) * 0.5f;
-		const glm::vec3 focusTargetPos = glm::vec3(object->GetPos()) + aabbCenter;
+			// 座標
+			const glm::vec3 aabbCenter = (aabbMax + aabbMin) * 0.5f;
+			const glm::vec3 focusTargetPos = glm::vec3(object->GetPos()) + aabbCenter;
 
-		m_mainCamera->SetFocusPosition(focusTargetPos, distance);
+			m_mainCamera->SetFocusPosition(focusTargetPos, distance);
+		}
+
+		m_gizmo->SetSelectObject(object);
+		m_objectSelectedCallback(object);
 	}
 
 	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)

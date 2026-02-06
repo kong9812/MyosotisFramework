@@ -54,10 +54,7 @@ namespace MyosotisFW::System::Render::Camera
 		m_cameraFront = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(mouseMovement.x), m_cameraUp) * glm::vec4(m_cameraFront, 0.0f));
 		m_cameraRight = glm::normalize(glm::cross(m_cameraFront, m_cameraUp));
 		m_lastMousePos = updateData.mousePos;
-		if (mouseMovement != glm::vec2(0.0f))
-		{
-			m_isMoved = true;
-		}
+		m_isMoved = (mouseMovement != glm::vec2(0.0f));
 
 		// 移動
 		float speed = AppInfo::g_moveSpeed;
@@ -139,10 +136,7 @@ namespace MyosotisFW::System::Render::Camera
 				}
 			}
 		}
-		if (move != glm::vec3(0.0f))
-		{
-			m_isMoved = true;
-		}
+		m_isMoved = m_isMoved ? true : (move != glm::vec3(0.0f));
 		m_cameraPos += move;
 	}
 

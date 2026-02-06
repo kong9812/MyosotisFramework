@@ -49,7 +49,7 @@ SkyboxSettingWidget::SkyboxSettingWidget(QWidget* parent) :
 			QFileInfoList fileList = dir.entryInfoList(filters, QDir::Files, QDir::Name);
 
 			QStringList keywords = { "right", "left", "top", "bottom", "front", "back" };
-			QFileInfoList sortedList;
+			QFileInfoList sortedList{};
 			QFileInfoList remainingFiles = fileList;
 
 			for (const QString& key : keywords)

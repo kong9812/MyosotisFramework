@@ -55,6 +55,13 @@ namespace MyosotisFW::System::Render
 		m_enable = (m_selectedObject != nullptr);
 		m_hovered = false;
 
+		if (!m_enable)
+		{
+			m_gizmoAxesData.isUsing = false;						// 全体の利用状態リセット
+			m_gizmoAxesData.axes = { false, false, false };			// 各軸の利用状態解除
+			return;
+		}
+
 		// マウス左ボタン状態
 		auto mouseBtn = updateData.mouseButtonActions.find(GLFW_MOUSE_BUTTON_LEFT);
 		const bool leftPressedThisFrame = (mouseBtn != updateData.mouseButtonActions.end() && (mouseBtn->second == GLFW_PRESS));
