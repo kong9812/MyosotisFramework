@@ -167,6 +167,13 @@ public:
 		return QModelIndex();
 	}
 
+	void ClearAllData()
+	{
+		beginResetModel();
+		m_topLevelObjects.clear();
+		endResetModel();
+	}
+
 private:
 	std::vector<MObject_ptr> m_topLevelObjects;
 	QIcon m_cameraIcon;

@@ -27,8 +27,8 @@ namespace MyosotisFW::System::GameDirector {
 		GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem);
 		~GameDirector() {}
 
-		void LoadMFWorld(const std::string& fileName);
-		void SaveMFWorld(const std::string& fileName, const MObjectListConstPtr& objects);
+		virtual void LoadMFWorld(const std::string& fileName);
+		virtual void SaveMFWorld(const std::string& fileName, const MObjectListConstPtr& objects);
 
 	protected:
 		Render::RenderSubsystem_ptr m_renderSubsystem;

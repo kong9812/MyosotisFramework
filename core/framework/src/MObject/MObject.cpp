@@ -291,7 +291,7 @@ namespace MyosotisFW
 		{
 			componentArray.PushBack(component->Serialize(allocator), allocator);
 		}
-		json.AddMember("component", componentArray, allocator);
+		json.AddMember("components", componentArray, allocator);
 
 		// もし子要素があれば
 		rapidjson::Value childrenArray(rapidjson::Type::kArrayType);
@@ -305,7 +305,9 @@ namespace MyosotisFW
 	}
 
 	// デシリアルライズ
-	MObject* MObject::Deserialize(const rapidjson::Value& doc)
+	MObject* MObject::Deserialize(const rapidjson::Value& doc,
+		const std::function<MObject_ptr(const uuids::uuid*)>& createObjectFunc,
+		const std::function<ComponentBase_ptr(const uuids::uuid&, const ComponentType)>& registerComponentFunc)
 	{
 		m_uuid = uuids::uuid::from_string(doc["id"].GetString()).value();
 		m_name = doc["name"].GetString();
@@ -322,9 +324,8 @@ namespace MyosotisFW
 				const char* typeID = comp["typeID"].GetString();
 				std::optional<uuids::uuid> optType = uuids::uuid::from_string(typeID);
 				ComponentType type = findComponentTypeFromTypeID(optType.value());
-				ComponentBase_ptr component = System::ComponentFactory::CreateComponent(m_objectInfo->objectID, type, m_meshChangedCallback);
+				ComponentBase_ptr component = registerComponentFunc(m_uuid, type);
 				component->Deserialize(comp);
-				m_components.push_back(component);
 			}
 		}
 
@@ -333,8 +334,9 @@ namespace MyosotisFW
 		{
 			for (const rapidjson::Value& child : doc["children"].GetArray())
 			{
-				MObject_ptr childObject = CreateMObjectPointer();
-				childObject->Deserialize(child);
+				uuids::uuid uuid = uuids::uuid::from_string(child["id"].GetString()).value();
+				MObject_ptr childObject = createObjectFunc(&uuid);
+				childObject->Deserialize(child, createObjectFunc, registerComponentFunc);
 				m_children.push_back(childObject);
 			}
 		}

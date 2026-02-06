@@ -149,6 +149,14 @@ namespace MyosotisFW::System::Editor
 				}
 			});
 
+		// VulkanWindowで MFWorld読み込む
+		connect(m_vulkanWindow, &VulkanWindow::sigWorldLoaded, this, [this](std::vector<MObject_ptr> topObjects)
+			{
+				m_overview->Clear();
+				m_overview->SetTopLevelObjects(topObjects);
+
+				m_propertyViewer->setObject(nullptr);
+			});
 	}
 
 	void MainWindow::closeWindow()

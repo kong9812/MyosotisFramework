@@ -35,17 +35,15 @@ namespace MyosotisFW::System::Render
 	rapidjson::Value Terrain::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
-
 		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.terrainHeightmapName.path.c_str(), allocator), allocator);
-
 		return obj;
 	}
 
 	void Terrain::Deserialize(const rapidjson::Value& doc)
 	{
 		__super::Deserialize(doc);
-
 		m_meshComponentInfo.terrainHeightmapName.path = doc["meshName"].GetString();
+		loadAssets();
 	}
 
 	void Terrain::loadAssets()

@@ -46,6 +46,7 @@ namespace MyosotisFW::System::Render
 	{
 		__super::Deserialize(doc);
 		m_meshComponentInfo.primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
+		loadAssets();
 	}
 
 	void PrimitiveGeometry::loadAssets()

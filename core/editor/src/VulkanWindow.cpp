@@ -73,8 +73,8 @@ namespace MyosotisFW::System::Editor
 
 		// create render subsystem
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
-		m_renderSubsystem->SetObjectMovedCallback([this]() {emit sigObjectMoved(); });
-		m_renderSubsystem->SetObjectSelectedCallback([this](MObject_ptr obj) {emit sigObjectSelected(obj); });
+		m_renderSubsystem->SetObjectMovedCallback([this]() { emit sigObjectMoved(); });
+		m_renderSubsystem->SetObjectSelectedCallback([this](MObject_ptr obj) { emit sigObjectSelected(obj); });
 		m_renderSubsystem->Initialize(m_instance, m_surface);
 
 
@@ -87,6 +87,7 @@ namespace MyosotisFW::System::Editor
 
 		// create game director
 		m_gameDirector = GameDirector::CreateEditorGameDirectorPointer(m_renderSubsystem);
+		m_gameDirector->SetMeshChangedCallback([this](std::vector<MObject_ptr> topObjects) { emit sigWorldLoaded(topObjects); });
 
 		m_timer.start();
 		m_lastTime = static_cast<float>(m_timer.elapsed()) / 1000.0f;
@@ -225,7 +226,12 @@ namespace MyosotisFW::System::Editor
 		// Load
 		QAction* loadAction = new QAction(tr("Load"), this);
 		loadAction->setShortcut(QKeySequence::Open);
-		// connect(loadAction, &QAction::triggered, this, &VulkanWindow::loadSlot);
+		connect(loadAction, &QAction::triggered, this, [this]()
+			{
+				const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+				std::string loadPath = AppInfo::g_mfWorldFolder + std::string("test.mfworld");
+				m_gameDirector->LoadMFWorld(loadPath);
+			});
 		actions.append(loadAction);
 
 		{// Separator

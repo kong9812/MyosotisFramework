@@ -37,7 +37,7 @@ namespace MyosotisFW
 		MObjectRegistry(const System::Render::RenderDevice_ptr& device, const System::Render::RenderResources_ptr& resources, const System::Render::RenderDescriptors_ptr& descriptors);
 		~MObjectRegistry() {}
 
-		MObject_ptr CreateNewObject();
+		MObject_ptr CreateNewObject(const uuids::uuid* uuid = nullptr);
 		ComponentBase_ptr RegisterComponent(const uuids::uuid& uuid, const ComponentType type);
 		MObjectListConstPtr GetMObjectList() const { return m_objects; }
 		const MObject_ptr* GetMObjectPtr(const MObject* raw);

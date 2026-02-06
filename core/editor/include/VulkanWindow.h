@@ -71,6 +71,7 @@ namespace MyosotisFW::System::Editor
 		void sigInitFinished();
 		void sigObjectMoved();
 		void sigObjectSelected(MObject_ptr object);
+		void sigWorldLoaded(std::vector<MObject_ptr>);
 
 	};
 }

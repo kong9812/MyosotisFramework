@@ -43,6 +43,11 @@ OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	setWidget(m_mainWidget);
 }
 
+void OverviewDockWidget::Clear()
+{
+	m_MObjectModel->ClearAllData();
+}
+
 void OverviewDockWidget::Reload()
 {
 	m_MObjectModel->layoutChanged();

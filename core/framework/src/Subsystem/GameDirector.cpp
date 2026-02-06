@@ -127,8 +127,17 @@ namespace MyosotisFW::System::GameDirector {
 			{
 				if (obj.IsObject())
 				{
-					MObject_ptr newObject = CreateMObjectPointer();
-					newObject->Deserialize(obj);
+					uuids::uuid uuid = uuids::uuid::from_string(obj["id"].GetString()).value();
+					MObject_ptr newObject = m_renderSubsystem->GetMObjectRegistry()->CreateNewObject(&uuid);
+					newObject->Deserialize(obj,
+						[this](const uuids::uuid* uuid)
+						{
+							return m_renderSubsystem->GetMObjectRegistry()->CreateNewObject(uuid);
+						},
+						[this](const uuids::uuid& uuid, const ComponentType type)
+						{
+							return m_renderSubsystem->GetMObjectRegistry()->RegisterComponent(uuid, type);
+						});
 					//m_renderSubsystem->RegisterObject(newObject);
 				}
 			}

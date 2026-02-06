@@ -30,11 +30,11 @@ namespace MyosotisFW
 		m_transformChanged(true) {
 	}
 
-	MObject_ptr MObjectRegistry::CreateNewObject()
+	MObject_ptr MObjectRegistry::CreateNewObject(const uuids::uuid* uuid)
 	{
 		uint32_t objectIndex = static_cast<uint32_t>(m_objects->size());
 		MObject_ptr newObject = m_objects->emplace_back(CreateMObjectPointer());
-		m_objectMap.emplace(newObject->GetUUID(), newObject);	// 内部操作用
+		m_objectMap.emplace(uuid ? *uuid : newObject->GetUUID(), newObject);	// 内部操作用
 		ObjectInfo_ptr objectInfo = std::make_shared<ObjectInfo>(m_objectInfo.emplace_back());
 		objectInfo->objectID = objectIndex;
 		newObject->SetObjectInfo(objectInfo);

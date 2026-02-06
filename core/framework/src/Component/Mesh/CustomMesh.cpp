@@ -35,17 +35,15 @@ namespace MyosotisFW::System::Render
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
 		rapidjson::Value obj = __super::Serialize(allocator);
-
 		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.meshName.path.c_str(), allocator), allocator);
-
 		return obj;
 	}
 
 	void CustomMesh::Deserialize(const rapidjson::Value& doc)
 	{
 		__super::Deserialize(doc);
-
 		m_meshComponentInfo.meshName.path = doc["meshName"].GetString();
+		loadAssets();
 	}
 
 	void CustomMesh::loadAssets()

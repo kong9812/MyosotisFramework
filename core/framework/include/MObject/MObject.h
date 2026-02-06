@@ -86,7 +86,7 @@ namespace MyosotisFW
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const;
 		// デシリアルライズ
-		virtual MObject* Deserialize(const rapidjson::Value& doc);
+		virtual MObject* Deserialize(const rapidjson::Value& doc, const std::function<MObject_ptr(const uuids::uuid*)>& createObjectFunc, const std::function<ComponentBase_ptr(const uuids::uuid&, const ComponentType)>& registerComponentFunc);
 
 	protected:
 		bool m_isReady;

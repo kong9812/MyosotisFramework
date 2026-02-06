@@ -1,0 +1,30 @@
+[
+    {
+        "id": "99ad19ab-beea-453b-8348-1279a526da45",
+        "name": "MObject",
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "rot": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "scale": [
+            1.0,
+            1.0,
+            1.0
+        ],
+        "components": [
+            {
+                "id": 0,
+                "name": "PrimitiveGeometry",
+                "typeID": "7f3512b5-4cc9-4caa-a8a9-76d05723e415",
+                "primitiveGeometryShape": 0
+            }
+        ],
+        "children": []
+    }
+]
