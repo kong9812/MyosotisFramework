@@ -267,7 +267,6 @@ namespace MyosotisFW
 			return false;
 		}
 
-		component->SetTLASInstance(m_tlasInstance);
 		m_components.push_back(component);
 		if (component->IsStaticMesh())
 		{

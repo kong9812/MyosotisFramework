@@ -34,7 +34,6 @@ namespace MyosotisFW
 		const std::string GetName() const { return m_name; }
 		const uuids::uuid GetTypeID() const { return g_objectTypeUUID.at(GetType()).value(); }
 		const uint32_t GetHashObjectID() const { return m_objectID; }
-		void SetTLASInstance(TLASInstance_ptr tlasInstance) { m_tlasInstance = tlasInstance; }
 
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const
@@ -69,8 +68,6 @@ namespace MyosotisFW
 		bool m_isReady;
 		std::string m_name;
 		uint32_t m_objectID;
-
-		TLASInstance_ptr m_tlasInstance;
 
 	public:
 		// ComponentProperty

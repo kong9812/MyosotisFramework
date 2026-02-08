@@ -34,7 +34,7 @@ namespace MyosotisFW
 		{ ComponentType::FPSCamera,					uuids::uuid::from_string("e1bbd200-e5ee-4587-8ef8-39b3cc343984") },
 		{ ComponentType::PrimitiveGeometryMesh,		uuids::uuid::from_string("7f3512b5-4cc9-4caa-a8a9-76d05723e415") },
 		{ ComponentType::CustomMesh,				uuids::uuid::from_string("6eeb286b-2352-4a66-92f6-6c8b75736337") },
-		{ ComponentType::Terrain,					uuids::uuid::from_string("8017334a-494e-4b3b-92f6-we1e4536451w") },
+		{ ComponentType::Terrain,					uuids::uuid::from_string("fd8d858b-98a4-4479-a548-0e4fed62d577") },
 		{ ComponentType::Max,						uuids::uuid::from_string("") },
 	};
 

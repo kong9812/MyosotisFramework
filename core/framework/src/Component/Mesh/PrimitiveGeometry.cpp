@@ -56,7 +56,6 @@ namespace MyosotisFW::System::Render
 		m_meshCount = 0;
 		m_meshID.clear();
 		m_vbDispatchInfo.clear();
-		m_tlasInstance->active = false;
 		m_aabbMin = glm::vec3(FLT_MAX);
 		m_aabbMax = glm::vec3(-FLT_MAX);
 
@@ -77,8 +76,6 @@ namespace MyosotisFW::System::Render
 			vbDispatchInfo.meshletID = j;					// jでOK! GPUでmeshIDからmeshデータを取り出し、meshletOffsetを使って正しいIndexを取る
 			m_vbDispatchInfo.push_back(vbDispatchInfo);
 		}
-		m_tlasInstance->meshID.push_back(meshInfo.meshID);
-		m_tlasInstance->active = true;
 
 		// aabb
 		m_aabbMin = glm::min(m_aabbMin, glm::vec3(meshInfo.AABBMin));

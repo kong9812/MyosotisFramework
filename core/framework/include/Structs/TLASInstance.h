@@ -10,7 +10,11 @@ namespace MyosotisFW
 	{
 		uint32_t objectID = 0;
 		std::vector<uint32_t> meshID{};
-		bool active = false;
+
+		bool active()
+		{
+			return !meshID.empty();
+		}
 
 		glm::mat4 model = glm::mat4(0.0f);		// 差分比較用
 

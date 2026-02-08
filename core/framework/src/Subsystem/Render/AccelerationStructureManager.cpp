@@ -155,7 +155,6 @@ namespace MyosotisFW::System::Render
 	{
 		TLASInstance_ptr info = std::make_shared<TLASInstance>();
 		info->objectID = object->GetObjectID();
-		info->active = false;
 		//info.blasID = blasID;	//todo
 		//info.transform = { object->GetPos(), object->GetRot(), object->GetScale(), glm::vec4(0.0f) };
 		info->mask = 0xFF;
@@ -303,7 +302,7 @@ namespace MyosotisFW::System::Render
 		std::vector<VkAccelerationStructureInstanceKHR> asInstances{};
 		for (const TLASInstance_ptr instance : m_instances)
 		{
-			if (!instance->active) continue;
+			if (!instance->active()) continue;
 
 			for (const uint32_t meshID : instance->meshID)
 			{
