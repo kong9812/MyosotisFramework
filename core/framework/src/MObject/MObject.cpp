@@ -254,17 +254,18 @@ namespace MyosotisFW
 		return allHandles;
 	}
 
-	void MObject::AddComponent(const ComponentBase_ptr& component)
+	bool MObject::AddComponent(const ComponentBase_ptr& component)
 	{
-		// todo. レイトレーシングでエラーが起きてる
-		// エラーの解消方法がわかれば、↓の制限を解除できる
-		// 複数StaticMeshを許可しない
 		auto it = std::find_if(m_components.raw.begin(), m_components.raw.end(),
-			[&](const ComponentBase_ptr& existingComponent)
+			[this, component](const ComponentBase_ptr& existingComponent)
 			{
-				return existingComponent->IsStaticMesh();
+				return component->GetType() == existingComponent->GetType();
 			});
-		ASSERT(it == m_components.raw.end(), "ERROR!! Unable to add more than one static mesh component to an object.");
+		if (it != m_components.raw.end())
+		{
+			Logger::Error("ERROR!! Unable to add the same component to the object.");
+			return false;
+		}
 
 		component->SetTLASInstance(m_tlasInstance);
 		m_components.push_back(component);
@@ -272,6 +273,8 @@ namespace MyosotisFW
 		{
 			m_meshHandles.push_back(component);
 		}
+
+		return true;
 	}
 
 	// シリアルライズ

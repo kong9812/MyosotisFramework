@@ -81,7 +81,7 @@ namespace MyosotisFW
 		ComponentBaseHandle* FindComponent(const ComponentType& type, const bool findChildComponent = false);
 		ComponentBaseHandleList FindAllComponents(const ComponentType& type, const bool findChildComponent = false);
 		ComponentBaseHandleList GetAllComponents(bool findChildComponent = false);
-		void AddComponent(const ComponentBase_ptr& component);
+		bool AddComponent(const ComponentBase_ptr& component);
 
 		// シリアルライズ
 		virtual rapidjson::Value Serialize(rapidjson::Document::AllocatorType& allocator) const;
