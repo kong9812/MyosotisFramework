@@ -60,6 +60,7 @@ namespace MyosotisFW::System::Render
 
 		void ResetCamera();
 		void SetCameraFocusObject(const MObject_ptr& object);
+		void SelectObject(const MObject_ptr& object);
 
 	private:
 		void render(const uint32_t currentFrameIndex) override;

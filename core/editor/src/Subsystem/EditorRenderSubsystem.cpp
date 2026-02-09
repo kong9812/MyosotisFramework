@@ -69,7 +69,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
-		if ((m_vbDispatchInfoCount <= 0) || (!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
+		if ((!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
 		if (m_gizmo->IsHovered()) return;
 
 		m_gizmo->SetSelectObject(nullptr);
@@ -244,6 +244,11 @@ namespace MyosotisFW::System::Render
 
 		m_gizmo->SetSelectObject(object);
 		m_objectSelectedCallback(object);
+	}
+
+	void EditorRenderSubsystem::SelectObject(const MObject_ptr& object)
+	{
+		m_gizmo->SetSelectObject(object);
 	}
 
 	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)

@@ -109,7 +109,15 @@ namespace MyosotisFW::System::Editor
 			});
 
 		// Overviewの選択オブジェクト変更
-		connect(m_overview, &OverviewDockWidget::sigChangeSelection, m_propertyViewer, &PropertyViewerDockWidget::setObject);
+		connect(m_overview, &OverviewDockWidget::sigChangeSelection, this, [this](MObject* object)
+			{
+				m_propertyViewer->setObject(object);
+				const MObject_ptr* ptr = m_vulkanWindow->GetEditorRenderSubsystem()->GetMObjectPtr(object);
+				if (ptr)
+				{
+					m_vulkanWindow->GetEditorRenderSubsystem()->SelectObject(*ptr);
+				}
+			});
 
 		// PropertyViewerで Component追加
 		connect(m_propertyViewer, &PropertyViewerDockWidget::sigAddComponent, this, [this](const uuids::uuid& uuid, const ComponentType type)
