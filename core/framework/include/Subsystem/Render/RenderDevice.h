@@ -37,6 +37,8 @@ namespace MyosotisFW::System::Render
 		uint32_t GetMaxDescriptorSetStorageImages() const { return m_maxDescriptorSetStorageImages; }
 		uint32_t GetMaxDescriptorSetInputAttachments() const { return m_maxDescriptorSetInputAttachments; }
 
+		const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const { return m_physicalDeviceMemoryProperties; }
+
 	public:
 		// バッファのデバイスアドレスを取得
 		const VkDeviceAddress GetBufferDeviceAddress(const VkBuffer& buffer) const;

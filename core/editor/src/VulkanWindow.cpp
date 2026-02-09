@@ -25,7 +25,8 @@ namespace MyosotisFW::System::Editor
 		m_mouseDragging(false),
 		m_selectedObject(nullptr),
 		m_statusBar(nullptr),
-		m_mousePositionMonitor(new QLabel(""))
+		m_mousePositionMonitor(new QLabel("")),
+		m_memoryUsageMonitor(new QLabel(""))
 	{
 		setTitle("VulkanWindow");
 		setSurfaceType(QWindow::VulkanSurface);
@@ -45,6 +46,7 @@ namespace MyosotisFW::System::Editor
 	{
 		m_statusBar = statusBar;
 		m_statusBar->addWidget(m_mousePositionMonitor, 1);
+		m_statusBar->addWidget(m_memoryUsageMonitor, 1);
 	}
 
 	void VulkanWindow::Initialize()
@@ -317,6 +319,7 @@ namespace MyosotisFW::System::Editor
 			m_renderSubsystem->Update(updateData);
 
 			updateMousePositionMonitor(updateData.mousePos);
+			updateMemoryUsageMonitor(m_renderSubsystem->GetMemoryUsage());
 
 			m_renderSubsystem->Render();
 			//m_renderSubsystem->EditorRender();
@@ -359,5 +362,21 @@ namespace MyosotisFW::System::Editor
 	{
 		const QString text = QString::asprintf("MousePos: %.2f %.2f", pos.x, pos.y);
 		m_mousePositionMonitor->setText(text);
+	}
+
+	void VulkanWindow::updateMemoryUsageMonitor(const MemoryUsage& memoryUsage)
+	{
+		const QString text = QString::asprintf("VRAM(mb): %.2lf / %.2lf", memoryUsage.totalUsageMB, memoryUsage.totalSizeMB);
+		m_memoryUsageMonitor->setText(text);
+
+		QString detailText{};
+		uint32_t idx = 0;
+		for (const MemoryUsage::Detail& detail : memoryUsage.detail)
+		{
+			detailText.append(QString::asprintf("Heap[%d](mb): %.2lf / %.2lf", idx, detail.usageMB, detail.sizeMB));
+			idx++;
+			if (idx < memoryUsage.detail.size()) detailText.append("\n");
+		}
+		m_memoryUsageMonitor->setToolTip(detailText);
 	}
 }

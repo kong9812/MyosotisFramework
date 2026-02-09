@@ -3,6 +3,7 @@
 #include <functional>
 #include "RenderSubsystem.h"
 #include "ThreadSaveValue.h"
+#include "MemoryUsage.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -48,7 +49,8 @@ namespace MyosotisFW::System::Render
 			m_gridPipeline(nullptr),
 			m_objectSelectCommandPool(VK_NULL_HANDLE),
 			m_objectMovedCallback(nullptr),
-			m_objectSelectedCallback(nullptr) {
+			m_objectSelectedCallback(nullptr),
+			m_memoryUsage() {
 		}
 		~EditorRenderSubsystem();
 
@@ -99,6 +101,12 @@ namespace MyosotisFW::System::Render
 	public:
 		void SetObjectMovedCallback(const std::function<void(void)>& callback) { m_objectMovedCallback = callback; }
 		void SetObjectSelectedCallback(const std::function<void(MObject_ptr)>& callback) { m_objectSelectedCallback = callback; }
+
+	public:
+		const MemoryUsage& GetMemoryUsage() const { return m_memoryUsage; }
+
+	private:
+		MemoryUsage m_memoryUsage;
 
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorRenderSubsystem);

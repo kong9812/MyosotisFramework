@@ -60,6 +60,26 @@ namespace MyosotisFW::System::Render
 		{
 			m_gizmo->SetSelectObject(nullptr);
 		}
+
+		// メモリデバッグ情報
+		m_memoryUsage.Reset();
+		const VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties = m_device->GetPhysicalDeviceMemoryProperties();
+		std::vector<VmaBudget> budgets(physicalDeviceMemoryProperties.memoryHeapCount);
+		m_memoryUsage.detail.resize(physicalDeviceMemoryProperties.memoryHeapCount);
+		vmaGetHeapBudgets(m_device->GetVmaAllocator(), budgets.data());
+		for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryHeapCount; i++)
+		{
+			bool isDeviceLocal = (physicalDeviceMemoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0;
+			double usageMB = budgets[i].usage / (1024.0 * 1024.0);
+			double sizeMB = budgets[i].budget / (1024.0 * 1024.0);
+
+			m_memoryUsage.detail[i].isDeviceLocal = isDeviceLocal;
+			m_memoryUsage.detail[i].usageMB = usageMB;
+			m_memoryUsage.detail[i].sizeMB = sizeMB;
+
+			m_memoryUsage.totalUsageMB += usageMB;
+			m_memoryUsage.totalSizeMB += sizeMB;
+		}
 	}
 
 	void EditorRenderSubsystem::EditorRender()

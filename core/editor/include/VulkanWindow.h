@@ -3,6 +3,7 @@
 #include "iqt.h"
 #include "EditorRenderSubsystem.h"
 #include "EditorGameDirector.h"
+#include "MemoryUsage.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -47,7 +48,9 @@ namespace MyosotisFW::System::Editor
 
 		QStatusBar* m_statusBar;
 		QLabel* m_mousePositionMonitor;
+		QLabel* m_memoryUsageMonitor;
 		void updateMousePositionMonitor(const glm::vec2& pos);
+		void updateMemoryUsageMonitor(const MemoryUsage& memoryUsage);
 
 		VkInstance m_instance;
 		VkSurfaceKHR m_surface;
