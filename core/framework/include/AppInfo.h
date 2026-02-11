@@ -60,8 +60,6 @@ namespace MyosotisFW::AppInfo
 	constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_SRGB, VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }; // 表示用に最適化されており、多くのディスプレイがsRGBカラースペースでカラーを直接表示できる
 	// 指定プレゼントモード
 	constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
-	// 指定DepthFormat
-	constexpr VkFormat g_depthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 	// 指定DepthBufferFormat
 	constexpr VkFormat g_depthBufferFormat = VkFormat::VK_FORMAT_D32_SFLOAT;
 	// 指定Hi-Z DepthFormat

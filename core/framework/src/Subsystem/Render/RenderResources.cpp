@@ -483,7 +483,7 @@ namespace MyosotisFW::System::Render
 
 			{// DepthBuffer
 				VkImageCreateInfo imageCreateInfo = Utility::Vulkan::CreateInfo::imageCreateInfoForDepthStencil(AppInfo::g_depthBufferFormat, screenSize.x, screenSize.y);
-				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
+				imageCreateInfo.usage |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 				VmaAllocationCreateInfo allocationCreateInfo{};
 				VK_VALIDATION(vmaCreateImage(m_device->GetVmaAllocator(), &imageCreateInfo, &allocationCreateInfo, &m_depthBuffer[i].image, &m_depthBuffer[i].allocation, &m_depthBuffer[i].allocationInfo));
 				VkImageViewCreateInfo imageViewCreateInfo = Utility::Vulkan::CreateInfo::imageViewCreateInfoForDepth(m_depthBuffer[i].image, AppInfo::g_depthBufferFormat);

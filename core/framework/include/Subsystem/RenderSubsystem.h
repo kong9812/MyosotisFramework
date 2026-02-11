@@ -35,8 +35,6 @@ namespace MyosotisFW
 
 		class StaticMesh;
 		TYPEDEF_SHARED_PTR_FWD(StaticMesh);
-		class DebugGUI;
-		TYPEDEF_SHARED_PTR_FWD(DebugGUI);
 		namespace Camera
 		{
 			class CameraBase;
@@ -53,6 +51,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(LightingRenderPass);
 		class LightmapBakingPass;
 		TYPEDEF_SHARED_PTR_FWD(LightmapBakingPass);
+		class PostProcessRenderPass;
+		TYPEDEF_SHARED_PTR_FWD(PostProcessRenderPass);
 
 		class SkyboxPipeline;
 		TYPEDEF_SHARED_PTR_FWD(SkyboxPipeline);
@@ -95,6 +95,7 @@ namespace MyosotisFW::System::Render
 			m_visibilityBufferPhase2RenderPass(nullptr),
 			m_lightingRenderPass(nullptr),
 			m_lightmapBakingPass(nullptr),
+			m_postProcessRenderPass(nullptr),
 			m_skyboxPipeline(nullptr),
 			m_visibilityBufferPhase1Pipeline(nullptr),
 			m_visibilityBufferPhase2Pipeline(nullptr),
@@ -199,6 +200,7 @@ namespace MyosotisFW::System::Render
 		VisibilityBufferPhase2RenderPass_ptr m_visibilityBufferPhase2RenderPass;
 		LightingRenderPass_ptr m_lightingRenderPass;
 		LightmapBakingPass_ptr m_lightmapBakingPass;
+		PostProcessRenderPass_ptr m_postProcessRenderPass;
 
 	protected:
 		HiZDepthComputePipeline_ptr m_hiZDepthComputePipeline;

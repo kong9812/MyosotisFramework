@@ -1,5 +1,5 @@
 // Copyright (c) 2025 kong9812
-#include "VisibilityBufferPhase2RenderPass.h"
+#include "PostProcessRenderPass.h"
 #include <vector>
 #include <array>
 
@@ -9,11 +9,11 @@
 
 namespace MyosotisFW::System::Render
 {
-	VisibilityBufferPhase2RenderPass::VisibilityBufferPhase2RenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
+	PostProcessRenderPass::PostProcessRenderPass(const RenderDevice_ptr& device, const RenderResources_ptr& resources, const RenderSwapchain_ptr& swapchain) :
 		RenderPassBase(device, resources, swapchain->GetScreenSize()) {
 	}
 
-	VisibilityBufferPhase2RenderPass::~VisibilityBufferPhase2RenderPass()
+	PostProcessRenderPass::~PostProcessRenderPass()
 	{
 		vkDestroyRenderPass(*m_device, m_renderPass, m_device->GetAllocationCallbacks());
 		for (VkFramebuffer& m_framebuffer : m_framebuffers)
@@ -22,75 +22,62 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void VisibilityBufferPhase2RenderPass::Initialize()
+	void PostProcessRenderPass::Initialize()
 	{
 		// attachments
 		std::vector<VkAttachmentDescription> attachments = {
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(
-				AppInfo::g_visibilityBufferFormat,
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),	// [0] main render target
-
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_depthBufferFormat,
+				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),		// [0] main render target (次はRenderSubsystemでSwapchainImageにコピー)
+			Utility::Vulkan::CreateInfo::attachmentDescriptionForInput(AppInfo::g_depthBufferFormat,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
+				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE,
 				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),	// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
-		// Phase2 subpass
-		VkAttachmentReference phase2SubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::VisibilityBuffer), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference phase2SubpassDepthAttachmentReference = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthBuffer), VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_depth(phase2SubpassColorAttachmentReferences, phase2SubpassDepthAttachmentReference));
+		// Fog subpass
+		VkAttachmentReference fogSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkAttachmentReference fogSubpassInputAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthBuffer), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_input(fogSubpassColorAttachmentReferences, fogSubpassInputAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部(Phase1) -> Phase2 (Color)
-			// VisibilityBuffer 追加書き込み
+			// 外部 -> Fog (Color)
+			// Lighting の後に 追加書き込み
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
-				static_cast<uint32_t>(SubPass::Phase2),
+				static_cast<uint32_t>(SubPass::Fog),
 				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// 外部(Compute) -> Phase2 (Depth)
-				// Hi-Z 作成の後に 追加書き込み
+				// 外部 -> Fog (Depth)
+				// Phase2 の後に inputAttachmentとして 参照
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					VK_SUBPASS_EXTERNAL,
-					static_cast<uint32_t>(SubPass::Phase2),
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
-					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-
-				// Phase2 -> 外部 (Color)
-				// 次は Lighting の時 Sampler 経由で参照する
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Phase2),
-					VK_SUBPASS_EXTERNAL,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-
-				// Phase2 -> 外部 (Depth)
-				// 次は PostProcess の時　InputAttachmentとして 参照する
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Phase2),
-					VK_SUBPASS_EXTERNAL,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+					static_cast<uint32_t>(SubPass::Fog),
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
+					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
+
+				// Fog -> 外部 (Color)
+				// SwapchainImageにコピーの準備
+				Utility::Vulkan::CreateInfo::subpassDependency(
+					static_cast<uint32_t>(SubPass::Fog),
+					VK_SUBPASS_EXTERNAL,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+					0)	// Transferはピクセル単位ではない: 0
 		};
 
 
@@ -100,10 +87,10 @@ namespace MyosotisFW::System::Render
 		createFrameBuffers();
 	}
 
-	void VisibilityBufferPhase2RenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
+	void PostProcessRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = AppInfo::g_vbClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
 		clearValues[static_cast<uint32_t>(Attachments::DepthBuffer)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_screenSize.x, m_screenSize.y, clearValues);
@@ -118,19 +105,19 @@ namespace MyosotisFW::System::Render
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
-	void VisibilityBufferPhase2RenderPass::EndRender(const VkCommandBuffer& commandBuffer)
+	void PostProcessRenderPass::EndRender(const VkCommandBuffer& commandBuffer)
 	{
 		vkCmdEndRenderPass(commandBuffer);
 	}
 
-	void VisibilityBufferPhase2RenderPass::createFrameBuffers()
+	void PostProcessRenderPass::createFrameBuffers()
 	{
 		std::array<VkImageView, static_cast<uint32_t>(Attachments::COUNT)> attachments{};
 		m_framebuffers.resize(AppInfo::g_maxInFlightFrameCount);
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{
-			attachments[static_cast<uint32_t>(Attachments::VisibilityBuffer)] = m_resources->GetVisibilityBuffer(i).view;
+			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget(i).view;
 			attachments[static_cast<uint32_t>(Attachments::DepthBuffer)] = m_resources->GetDepthBuffer(i).view;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};

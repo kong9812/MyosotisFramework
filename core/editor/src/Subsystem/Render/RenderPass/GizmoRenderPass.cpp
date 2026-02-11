@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForColor(AppInfo::g_surfaceFormat.format,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
-				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),		// [0] main render target (次はRenderSubsystemでSwapchainImageにコピー)
 		};
 
@@ -45,9 +45,9 @@ namespace MyosotisFW::System::Render
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
 				static_cast<uint32_t>(SubPass::Render),
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
 				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
@@ -58,9 +58,9 @@ namespace MyosotisFW::System::Render
 					VK_SUBPASS_EXTERNAL,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
+					0)	// Transferはピクセル単位ではない: 0
 		};
 
 

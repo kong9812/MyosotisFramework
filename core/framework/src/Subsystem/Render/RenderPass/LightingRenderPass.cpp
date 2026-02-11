@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),		// [0] main render target (次はRenderSubsystemでSwapchainImageにコピー)
+				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),		// [0] main render target
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
@@ -40,8 +40,8 @@ namespace MyosotisFW::System::Render
 		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(lightingSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
-			// 外部 -> Lighting
-			// SwapchainImageにコピーの準備
+			// 外部 -> Lighting (Color)
+			// Skybox の後に 追加書き込み
 			Utility::Vulkan::CreateInfo::subpassDependency(
 				VK_SUBPASS_EXTERNAL,
 				static_cast<uint32_t>(SubPass::Lighting),
@@ -51,15 +51,15 @@ namespace MyosotisFW::System::Render
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// Lighting -> 外部
-				// SwapchainImageにコピーの準備
+				// Lighting -> 外部 (Color)
+				// 次は PostProcess の時 追加書き込み
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					static_cast<uint32_t>(SubPass::Lighting),
 					VK_SUBPASS_EXTERNAL,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
 					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 

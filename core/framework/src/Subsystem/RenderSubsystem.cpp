@@ -23,6 +23,7 @@
 #include "VisibilityBufferPhase2RenderPass.h"
 #include "LightingRenderPass.h"
 #include "LightmapBakingPass.h"
+#include "PostProcessRenderPass.h"
 
 #include "SkyboxPipeline.h"
 #include "VisibilityBufferPhase1Pipeline.h"
@@ -424,6 +425,16 @@ namespace MyosotisFW::System::Render
 			m_lightingRenderPass->EndRender(commandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
+		{// PostProcess
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.5f, 0.0f), "Post Process Render"));
+			m_postProcessRenderPass->BeginRender(commandBuffer, currentFrameIndex);
+			if (m_mainCamera)
+			{
+
+			}
+			m_postProcessRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+		}
 		{// LightMap
 			if (m_lightmapBakingPipeline->IsBaking())
 			{
@@ -577,6 +588,9 @@ namespace MyosotisFW::System::Render
 		// Lighting Render Pass
 		m_lightingRenderPass = CreateLightingRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_lightingRenderPass->Initialize();
+		// PostProcess Render Pass
+		m_postProcessRenderPass = CreatePostProcessRenderPassPointer(m_device, m_resources, m_swapchain);
+		m_postProcessRenderPass->Initialize();
 		// Lightmap Baking Pass
 		m_lightmapBakingPass = CreateLightmapBakingPassPointer(m_device, m_resources, m_swapchain);
 		m_lightmapBakingPass->Initialize();

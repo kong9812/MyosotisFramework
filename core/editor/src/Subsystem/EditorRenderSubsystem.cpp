@@ -82,11 +82,6 @@ namespace MyosotisFW::System::Render
 		}
 	}
 
-	void EditorRenderSubsystem::EditorRender()
-	{
-
-	}
-
 	void EditorRenderSubsystem::ObjectSelect(const int32_t& cursorPosX, const int32_t& cursorPosY)
 	{
 		if ((!m_mainCamera) || (cursorPosX > m_swapchain->GetScreenSize().x) || (cursorPosY > m_swapchain->GetScreenSize().y)) return;
@@ -289,18 +284,18 @@ namespace MyosotisFW::System::Render
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 		{// Gizmo Render Pass
+			VkDebugUtilsLabelEXT gizmoLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Gizmo Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gizmoLabel);
+			m_gizmoRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_gizmo->IsEnable())
 			{
-				VkDebugUtilsLabelEXT gizmoLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Gizmo Render");
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gizmoLabel);
-				m_gizmoRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 				if (m_mainCamera)
 				{
 					m_gizmoPipeline->BindCommandBuffer(commandBuffer, m_gizmo->GetGizmoAxisDrawCommand());
 				}
-				m_gizmoRenderPass->EndRender(commandBuffer);
-				m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 			}
+			m_gizmoRenderPass->EndRender(commandBuffer);
+			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 	}
 

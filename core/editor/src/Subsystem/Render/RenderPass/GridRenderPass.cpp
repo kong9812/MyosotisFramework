@@ -30,7 +30,7 @@ namespace MyosotisFW::System::Render
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),		// [0] main render target (次はRenderSubsystemでSwapchainImageにコピー)
+				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),	// [0] main render target
 
 			Utility::Vulkan::CreateInfo::attachmentDescriptionForDepth(AppInfo::g_depthBufferFormat,
 				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
@@ -48,37 +48,37 @@ namespace MyosotisFW::System::Render
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// 外部 -> Render (Depth)
-			// Depthはphase2が最後に使った (参照するが書き出さない)
-			Utility::Vulkan::CreateInfo::subpassDependency(
-				VK_SUBPASS_EXTERNAL,
-				static_cast<uint32_t>(SubPass::Render),
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-				VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-				VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-
-				// 外部 -> Render (Color)
-				// Lighting後の書き込む
+			// Depthはphase2が最後に書き込んだ (参照するが書き出さない)
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					VK_SUBPASS_EXTERNAL,
 					static_cast<uint32_t>(SubPass::Render),
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
 					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
-				// Render -> 外部 (Color)
-				// SwapchainImageにコピーの準備
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					static_cast<uint32_t>(SubPass::Render),
-					VK_SUBPASS_EXTERNAL,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
+					// 外部 -> Render (Color)
+					// PostProcess の後に 追加書き込み (PostProcessではSwapchainImageにコピーの準備をしたため)
+					Utility::Vulkan::CreateInfo::subpassDependency(
+						VK_SUBPASS_EXTERNAL,
+						static_cast<uint32_t>(SubPass::Render),
+						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
+						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+						VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
+
+					// Render -> 外部 (Color)
+					// Gizmoの描画準備
+					Utility::Vulkan::CreateInfo::subpassDependency(
+						static_cast<uint32_t>(SubPass::Render),
+						VK_SUBPASS_EXTERNAL,
+						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+						VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+						VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+						VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 
 
