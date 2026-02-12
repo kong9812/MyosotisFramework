@@ -56,9 +56,10 @@ namespace MyosotisFW::System::Render
 		__super::Update(updateData);
 		m_gizmo->Update(updateData, m_mainCamera);
 
-		if (m_mainCamera->IsMoved())
+		if ((m_mainCamera->IsMoved()) && (m_gizmo->IsEnable()))
 		{
 			m_gizmo->SetSelectObject(nullptr);
+			m_objectSelectedCallback(nullptr);
 		}
 
 		// メモリデバッグ情報
@@ -210,6 +211,14 @@ namespace MyosotisFW::System::Render
 				m_objectSelectedCallback(obj);
 				Logger::Debug("Selected object: " + std::to_string(vbDispatchInfo->objectID));
 			}
+			else
+			{
+				m_objectSelectedCallback(nullptr);
+			}
+		}
+		else
+		{
+			m_objectSelectedCallback(nullptr);
 		}
 
 		// 後片付け
@@ -220,6 +229,7 @@ namespace MyosotisFW::System::Render
 
 	const MObject_ptr* EditorRenderSubsystem::GetMObjectPtr(const MObject* raw)
 	{
+		if (raw == nullptr) return nullptr;
 		return m_objectRegistry->GetMObjectPtr(raw);
 	}
 

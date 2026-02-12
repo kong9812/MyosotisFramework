@@ -83,6 +83,8 @@ namespace MyosotisFW
 
 	const MObject_ptr* MObjectRegistry::GetMObjectPtr(const MObject* raw)
 	{
+		if (raw == nullptr) return nullptr;
+
 		auto it = m_objectMap.find(raw->GetUUID());
 		if (it != m_objectMap.end())
 		{

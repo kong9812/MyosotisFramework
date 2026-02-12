@@ -2,6 +2,7 @@
 #pragma once
 #include "iqt.h"
 #include "OverviewMObjectModel.h"
+#include "OverviewTreeView.h"
 
 class OverviewDockWidget : public QDockWidget
 {
@@ -18,7 +19,7 @@ public:
 private:
 	QWidget* m_mainWidget;
 
-	QTreeView* m_treeView;
+	OverviewTreeView* m_treeView;
 	OverviewMObjectModel* m_MObjectModel;
 
 	QVBoxLayout* m_vBoxLayout;

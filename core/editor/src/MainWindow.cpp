@@ -113,10 +113,7 @@ namespace MyosotisFW::System::Editor
 			{
 				m_propertyViewer->setObject(object);
 				const MObject_ptr* ptr = m_vulkanWindow->GetEditorRenderSubsystem()->GetMObjectPtr(object);
-				if (ptr)
-				{
-					m_vulkanWindow->GetEditorRenderSubsystem()->SelectObject(*ptr);
-				}
+				m_vulkanWindow->GetEditorRenderSubsystem()->SelectObject(ptr == nullptr ? nullptr : *ptr);
 			});
 
 		// PropertyViewerで Component追加

@@ -8,7 +8,7 @@ using namespace MyosotisFW;
 OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	QDockWidget(parent, flags),
 	m_mainWidget(new QWidget(this)),
-	m_treeView(new QTreeView(m_mainWidget)),
+	m_treeView(new OverviewTreeView(m_mainWidget)),
 	m_MObjectModel(new OverviewMObjectModel(m_treeView)),
 	m_vBoxLayout(new QVBoxLayout(m_mainWidget))
 {
@@ -21,7 +21,11 @@ OverviewDockWidget::OverviewDockWidget(QWidget* parent, Qt::WindowFlags flags) :
 	connect(m_treeView->selectionModel(), &QItemSelectionModel::currentChanged,
 		this, [this](const QModelIndex& current, const QModelIndex& previous)
 		{
-			if (!current.isValid()) return;
+			if (!current.isValid())
+			{
+				emit sigChangeSelection(nullptr);
+				return;
+			}
 
 			MObject* obj = static_cast<MObject*>(current.internalPointer());
 			emit sigChangeSelection(obj);
@@ -73,6 +77,7 @@ void OverviewDockWidget::SetSelection(MObject* object)
 	if (!object)
 	{
 		m_treeView->clearSelection();
+		m_treeView->setCurrentIndex(QModelIndex());
 		return;
 	}
 	QModelIndex targetIndex = m_MObjectModel->indexFromObject(object);
