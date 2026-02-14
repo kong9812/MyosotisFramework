@@ -31,7 +31,9 @@ void main()
     view /= view.w;
 
     float dist = length(view.xyz);
-    float fogFactor = clamp((dist - startDist) / (endDist - startDist), 0.0, 1.0);
+    
+    // 密度: 0.01
+    float fogFactor = 1.0 - exp(-dist * 0.01);
 
     outColor = vec4(fogColor.xyz, fogFactor);
 }
