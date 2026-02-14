@@ -14,7 +14,7 @@ layout(push_constant) uniform PushConstant {
 const float PLANE_Y = 0.0;
 const float SPACING = 1.0;
 const float LINE_WIDTH_PX = 0.5;    // 1がいいかも…悩む
-const vec3 GRID_COLOR = vec3(1.0);
+const vec3 GRID_COLOR = vec3(0.0, 0.0, 0.0);
 const float GRID_ALPHA = 0.8;
 
 // worldXZ: ワールド座標のXZ
@@ -90,7 +90,7 @@ void main()
     // rayOriginはカメラposに変更にいいが nearを使うと値が近く、誤差が小さい
     float dist = length(worldPosition - rayOrigin);
     // 遠くなると薄く (係数: -0.015 0.015から薄く)
-    float fade = exp(-0.015 * dist);
+    float fade = exp(-0.15 * dist);
 
     // a = グリッド強度 * GRID_ALPHA(デフォルト) * 距離フェード
     outColor = vec4(GRID_COLOR, line * GRID_ALPHA * fade);

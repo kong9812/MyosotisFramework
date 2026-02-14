@@ -1,40 +1,43 @@
 // Copyright (c) 2025 kong9812
-#include "LightingPipeline.h"
-#include "VK_CreateInfo.h"
+#include "FogPipeline.h"
 #include "AppInfo.h"
-
-#include "PrimitiveGeometryShape.h"
 
 namespace MyosotisFW::System::Render
 {
-	LightingPipeline::~LightingPipeline()
+	FogPipeline::~FogPipeline()
 	{
 		vkDestroyPipeline(*m_device, m_pipeline, m_device->GetAllocationCallbacks());
 		vkDestroyPipelineLayout(*m_device, m_pipelineLayout, m_device->GetAllocationCallbacks());
 	}
 
-	void LightingPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void FogPipeline::Initialize(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		prepareRenderPipeline(resources, renderPass);
 
 		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
 		{
-			{// Visibility Buffer
-				Image visibilityBuffer = resources->GetVisibilityBuffer(i);
+			pushConstant[i].startDist = AppInfo::g_defaultFogStartDistance;
+			pushConstant[i].endDist = AppInfo::g_defaultFogEndDistance;
+			pushConstant[i].fogColor = glm::vec4(AppInfo::g_defaultFogColor, 1.0f);
+
+			{// Depth Buffer
+				Image depthBuffer = resources->GetDepthBuffer(i);
 				// Sampler
-				visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
+				depthBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
 				// descriptorImageInfo
 				VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-					visibilityBuffer.sampler, visibilityBuffer.view,
+					depthBuffer.sampler, depthBuffer.view,
 					VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 				// add to descriptor set
-				pushConstant[i].visibilityBufferTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
+				pushConstant[i].depthTextureID = m_textureDescriptorSet->AddImage(TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
 			}
 		}
 	}
 
-	void LightingPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
+	void FogPipeline::BindCommandBuffer(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
+		if (!m_active) return;
+
 		vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 		std::vector<VkDescriptorSet> descriptorSets = m_renderDescriptors->GetDescriptorSet();
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
@@ -46,25 +49,7 @@ namespace MyosotisFW::System::Render
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 	}
 
-	void LightingPipeline::Resize(const RenderResources_ptr& resources)
-	{
-		for (uint32_t i = 0; i < AppInfo::g_maxInFlightFrameCount; i++)
-		{
-			{// Visibility Buffer
-				Image visibilityBuffer = resources->GetVisibilityBuffer(i);
-				// Sampler
-				visibilityBuffer.sampler = resources->CreateSampler(Utility::Vulkan::CreateInfo::samplerCreateInfo());
-				// descriptorImageInfo
-				VkDescriptorImageInfo descriptorImageInfo = Utility::Vulkan::CreateInfo::descriptorImageInfo(
-					visibilityBuffer.sampler, visibilityBuffer.view,
-					VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-				// Update
-				m_textureDescriptorSet->UpdateImage(pushConstant[i].visibilityBufferTextureID, TextureDescriptorSet::DescriptorBindingIndex::CombinedImageSampler, descriptorImageInfo);
-			}
-		}
-	}
-
-	void LightingPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
+	void FogPipeline::prepareRenderPipeline(const RenderResources_ptr& resources, const VkRenderPass& renderPass)
 	{
 		// push constant
 		std::vector<VkPushConstantRange> pushConstantRange = {
@@ -83,8 +68,8 @@ namespace MyosotisFW::System::Render
 
 		// pipeline
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo{
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Lighting.vert.spv")),
-			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Lighting.frag.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, resources->GetShaderModules("Fog.vert.spv")),
+			Utility::Vulkan::CreateInfo::pipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, resources->GetShaderModules("Fog.frag.spv")),
 		};
 
 		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineVertexInputStateCreateInfo();
@@ -94,7 +79,7 @@ namespace MyosotisFW::System::Render
 		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineMultisampleStateCreateInfo();
 		VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineDepthStencilStateCreateInfo(VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_NEVER);
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates = {
-			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_FALSE),
+			Utility::Vulkan::CreateInfo::pipelineColorBlendAttachmentState(VK_TRUE),
 		};
 		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = Utility::Vulkan::CreateInfo::pipelineColorBlendStateCreateInfo(colorBlendAttachmentStates);
 		std::vector<VkDynamicState> dynamicStates = { VkDynamicState::VK_DYNAMIC_STATE_VIEWPORT, VkDynamicState::VK_DYNAMIC_STATE_SCISSOR };

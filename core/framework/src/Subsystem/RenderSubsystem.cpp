@@ -31,6 +31,7 @@
 #include "LightingPipeline.h"
 #include "LightmapBakingPipeline.h"
 #include "RayTracingPipeline.h"
+#include "FogPipeline.h"
 
 #include "HiZDepthComputePipeline.h"
 
@@ -430,7 +431,7 @@ namespace MyosotisFW::System::Render
 			m_postProcessRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_mainCamera)
 			{
-
+				m_fogPipeline->BindCommandBuffer(commandBuffer, currentFrameIndex);
 			}
 			m_postProcessRenderPass->EndRender(commandBuffer);
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
@@ -615,6 +616,9 @@ namespace MyosotisFW::System::Render
 		// RayTracing Pipeline
 		m_rayTracingPipeline = CreateRayTracingPipelinePointer(m_device, m_renderDescriptors);
 		m_rayTracingPipeline->Initialize(m_resources);
+		// Fog Pipeline
+		m_fogPipeline = CreateFogPipelinePointer(m_device, m_renderDescriptors);
+		m_fogPipeline->Initialize(m_resources, m_postProcessRenderPass->GetRenderPass());
 	}
 
 	void RenderSubsystem::initializeComputePipeline()
@@ -648,6 +652,7 @@ namespace MyosotisFW::System::Render
 		m_lightingPipeline->Resize(m_resources);
 		//m_lightmapBakingPipeline->Resize(m_resources);
 		m_rayTracingPipeline->Resize(m_resources);
+		m_fogPipeline->Resize(m_resources);
 	}
 
 	void RenderSubsystem::CopyMainRenderTargetToSwapchainImage(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex, const uint32_t swapchainImageIndex)

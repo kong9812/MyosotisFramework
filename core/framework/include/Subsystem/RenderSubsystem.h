@@ -66,6 +66,8 @@ namespace MyosotisFW
 		TYPEDEF_SHARED_PTR_FWD(LightmapBakingPipeline);
 		class RayTracingPipeline;
 		TYPEDEF_SHARED_PTR_FWD(RayTracingPipeline);
+		class FogPipeline;
+		TYPEDEF_SHARED_PTR_FWD(FogPipeline);
 
 		class HiZDepthComputePipeline;
 		TYPEDEF_SHARED_PTR_FWD(HiZDepthComputePipeline);
@@ -102,6 +104,7 @@ namespace MyosotisFW::System::Render
 			m_lightingPipeline(nullptr),
 			m_lightmapBakingPipeline(nullptr),
 			m_rayTracingPipeline(nullptr),
+			m_fogPipeline(nullptr),
 			m_hiZDepthComputePipeline(nullptr),
 			m_fences(),
 			m_vbDispatchInfoCount(0),
@@ -210,6 +213,7 @@ namespace MyosotisFW::System::Render
 		LightingPipeline_ptr m_lightingPipeline;
 		LightmapBakingPipeline_ptr m_lightmapBakingPipeline;
 		RayTracingPipeline_ptr m_rayTracingPipeline;
+		FogPipeline_ptr m_fogPipeline;
 	};
 	TYPEDEF_SHARED_PTR(RenderSubsystem);
 }

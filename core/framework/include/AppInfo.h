@@ -91,6 +91,7 @@ namespace MyosotisFW::AppInfo
 
 	// 背景色
 	constexpr VkClearValue g_colorClearValues = { 0.0f, 0.0f, 0.0f, 0.0f };
+	constexpr VkClearValue g_colorClearValues_white = { 1.0f, 1.0f, 1.0f, 1.0f };
 	// depth/stencil
 	constexpr VkClearValue g_depthStencilClearValues = { 1.0f, 0.0f };
 	// depth
@@ -165,4 +166,9 @@ namespace MyosotisFW::AppInfo
 	// terrain
 	constexpr glm::vec3 g_terrainScale = glm::vec3(0.1f, 10.0f, 0.1f);	// smallTerrain
 	//constexpr glm::vec3 g_terrainScale = glm::vec3(1.0f, 500.0f, 1.0f);	// terrain
+
+	// Fog
+	constexpr float g_defaultFogStartDistance = 5.0f;
+	constexpr float g_defaultFogEndDistance = g_cameraFar;
+	constexpr glm::vec3 g_defaultFogColor = glm::vec3(0.7f, 0.8f, 0.9f);
 }

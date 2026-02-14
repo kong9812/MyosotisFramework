@@ -20,7 +20,6 @@ namespace MyosotisFW::System::Render
 		enum class Attachments : uint32_t
 		{
 			MainRenderTarget,
-			DepthBuffer,
 			COUNT
 		};
 

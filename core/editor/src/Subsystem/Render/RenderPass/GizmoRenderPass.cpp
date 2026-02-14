@@ -73,7 +73,7 @@ namespace MyosotisFW::System::Render
 	void GizmoRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues_white;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_screenSize.x, m_screenSize.y, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[frameIndex];

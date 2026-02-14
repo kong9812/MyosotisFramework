@@ -52,9 +52,9 @@ namespace MyosotisFW::System::Render
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					VK_SUBPASS_EXTERNAL,
 					static_cast<uint32_t>(SubPass::Render),
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
 					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
 					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
@@ -91,7 +91,7 @@ namespace MyosotisFW::System::Render
 	void GridRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues_white;
 		clearValues[static_cast<uint32_t>(Attachments::DepthBuffer)] = AppInfo::g_depthClearValues;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_screenSize.x, m_screenSize.y, clearValues);

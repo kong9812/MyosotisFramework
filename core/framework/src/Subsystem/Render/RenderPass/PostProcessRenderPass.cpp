@@ -31,19 +31,13 @@ namespace MyosotisFW::System::Render
 				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
 				VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 				VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL),		// [0] main render target (次はRenderSubsystemでSwapchainImageにコピー)
-			Utility::Vulkan::CreateInfo::attachmentDescriptionForInput(AppInfo::g_depthBufferFormat,
-				VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD,
-				VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE,
-				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),	// [1] Primary Depth
 		};
 
 		std::vector<VkSubpassDescription> subpassDescriptions{};
 
 		// Fog subpass
 		VkAttachmentReference fogSubpassColorAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::MainRenderTarget), VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkAttachmentReference fogSubpassInputAttachmentReferences = Utility::Vulkan::CreateInfo::attachmentReference(static_cast<uint32_t>(Attachments::DepthBuffer), VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color_input(fogSubpassColorAttachmentReferences, fogSubpassInputAttachmentReferences));
+		subpassDescriptions.push_back(Utility::Vulkan::CreateInfo::subpassDescription_color(fogSubpassColorAttachmentReferences));
 
 		std::vector<VkSubpassDependency> dependencies = {
 			// 外部 -> Fog (Color)
@@ -56,17 +50,6 @@ namespace MyosotisFW::System::Render
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 				VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
-
-				// 外部 -> Fog (Depth)
-				// Phase2 の後に inputAttachmentとして 参照
-				Utility::Vulkan::CreateInfo::subpassDependency(
-					VK_SUBPASS_EXTERNAL,
-					static_cast<uint32_t>(SubPass::Fog),
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
 				// Fog -> 外部 (Color)
 				// SwapchainImageにコピーの準備
@@ -90,8 +73,7 @@ namespace MyosotisFW::System::Render
 	void PostProcessRenderPass::BeginRender(const VkCommandBuffer& commandBuffer, const uint32_t frameIndex)
 	{
 		std::vector<VkClearValue> clearValues(static_cast<uint32_t>(Attachments::COUNT));
-		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues;
-		clearValues[static_cast<uint32_t>(Attachments::DepthBuffer)] = AppInfo::g_depthClearValues;
+		clearValues[static_cast<uint32_t>(Attachments::MainRenderTarget)] = AppInfo::g_colorClearValues_white;
 
 		VkRenderPassBeginInfo renderPassBeginInfo = Utility::Vulkan::CreateInfo::renderPassBeginInfo(m_renderPass, m_screenSize.x, m_screenSize.y, clearValues);
 		renderPassBeginInfo.framebuffer = m_framebuffers[frameIndex];
@@ -118,7 +100,6 @@ namespace MyosotisFW::System::Render
 		for (uint32_t i = 0; i < static_cast<uint32_t>(m_framebuffers.size()); i++)
 		{
 			attachments[static_cast<uint32_t>(Attachments::MainRenderTarget)] = m_resources->GetMainRenderTarget(i).view;
-			attachments[static_cast<uint32_t>(Attachments::DepthBuffer)] = m_resources->GetDepthBuffer(i).view;
 
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

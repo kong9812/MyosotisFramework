@@ -82,14 +82,14 @@ namespace MyosotisFW::System::Render
 					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT),
 
 				// Phase2 -> 外部 (Depth)
-				// 次は PostProcess の時　InputAttachmentとして 参照する
+				// 次は PostProcess の時　Sampler 経由で参照する
 				Utility::Vulkan::CreateInfo::subpassDependency(
 					static_cast<uint32_t>(SubPass::Phase2),
 					VK_SUBPASS_EXTERNAL,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VkPipelineStageFlagBits::VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
 					VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 					VkAccessFlagBits::VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VkAccessFlagBits::VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+					VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
 					VkDependencyFlagBits::VK_DEPENDENCY_BY_REGION_BIT)
 		};
 
