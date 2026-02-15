@@ -9,7 +9,7 @@ if not exist "./bin/vs26" (
 )
 
 :: Build with CMake
-cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -S "./core" -B "./bin/vs26" -G "Visual Studio 18 2026"
+cmake -S core --preset vs2026
 if not %ERRORLEVEL%==0 (
     pause
 )

@@ -1,0 +1,48 @@
+{
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "vs2026",
+			"displayName": "VS2026 Project Gen",
+			"description": "Generate Visual Studio 2026 Solution in bin/vs26",
+			"generator": "Visual Studio 18 2026",
+			"binaryDir": "../bin/vs26",
+			"cacheVariables": {
+				"CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+			}
+		},
+		{
+			"name": "vs2022",
+			"displayName": "VS2022 Project Gen",
+			"description": "Generate Visual Studio 2022 Solution in bin/vs22",
+			"generator": "Visual Studio 17 2022",
+			"binaryDir": "../bin/vs22",
+			"cacheVariables": {
+				"CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+			}
+		},
+		
+		{
+            "name": "ninja-msvc-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "architecture": { "value": "x64", "strategy": "external" },
+            "toolset": { "value": "host=x64", "strategy": "external" },
+            "cacheVariables": { "CMAKE_POLICY_VERSION_MINIMUM": "3.5" }
+        },
+        {
+            "name": "ninja-msvc-release",
+            "inherits": "ninja-msvc-base",
+            "displayName": "Ninja MSVC (Release)",
+			"binaryDir": "../bin/ninja/release",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        },
+        {
+            "name": "ninja-msvc-debug",
+            "inherits": "ninja-msvc-base",
+            "displayName": "Ninja MSVC (Debug)",
+            "binaryDir": "../bin/ninja/debug",
+			"cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        }
+	]
+}

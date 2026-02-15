@@ -7,6 +7,9 @@ for /f "delims=" %%i in ('vswhere -latest -products * -requires Microsoft.Visual
 set VCVARSALL_PATH=%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat
 call "%VCVARSALL_PATH%" amd64
 
-cmake --build ../bin/ninja --target Myosotis --config Release --parallel
+cmake --build ../../bin/ninja/release --target Myosotis --config Release --parallel
+cmake --build ../../bin/ninja/debug --target Myosotis --config Debug --parallel
+cmake --build ../../bin/ninja/release --target MyosotisEngine --config Release --parallel
+cmake --build ../../bin/ninja/debug --target MyosotisEngine --config Debug --parallel
 
 endlocal
