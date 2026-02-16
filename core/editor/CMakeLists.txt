@@ -75,9 +75,20 @@ target_link_options(${EDITOR_PROJECT_NAME} PRIVATE
 )
 
 # QT
-target_compile_options(${EDITOR_PROJECT_NAME} PRIVATE 
-  /Zc:__cplusplus /permissive-
-)
+if(MSVC)
+    # Visual Studio コンパイラ用の設定
+    target_compile_options(${EDITOR_PROJECT_NAME} PRIVATE 
+        /Zc:__cplusplus 
+        /permissive-
+    )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    # Clang または GCC 用の設定
+    target_compile_options(${EDITOR_PROJECT_NAME} PRIVATE 
+        -Wall 
+        -Wextra
+    )
+endif()
+
 set(Qt6_DIR "${PROJECT_SOURCE_DIR}/../qt/qtbase/lib/cmake/Qt6")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 target_link_libraries(${EDITOR_PROJECT_NAME}
