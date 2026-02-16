@@ -25,7 +25,7 @@ namespace MyosotisFW::System::Render::Camera
 
 	glm::vec3 EditorCamera::GetWorldPos(const glm::vec2& pos, const float distance) const
 	{
-		return __super::GetWorldPos(pos, distance);
+		return CameraBase::GetWorldPos(pos, distance);
 	}
 
 	void EditorCamera::Update(const UpdateData& updateData)
@@ -162,7 +162,7 @@ namespace MyosotisFW::System::Render::Camera
 
 	void EditorCamera::initialize()
 	{
-		__super::initialize();
+		CameraBase::initialize();
 		m_lastMousePos = glm::vec3(0.0f);
 	}
 

@@ -18,7 +18,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources);
+		StaticMesh::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -29,7 +29,7 @@ namespace MyosotisFW::System::Render
 
 	void PrimitiveGeometry::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
-		__super::Update(updateData, camera);
+		StaticMesh::Update(updateData, camera);
 		//m_staticMeshShaderObject.SSBO.standardSSBO.meshDataIndex = static_cast<uint32_t>(m_meshComponentInfo.primitiveGeometryShape);
 
 		if (!m_isReady) return;
@@ -37,21 +37,21 @@ namespace MyosotisFW::System::Render
 
 	rapidjson::Value PrimitiveGeometry::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
-		rapidjson::Value json = __super::Serialize(allocator);
+		rapidjson::Value json = StaticMesh::Serialize(allocator);
 		json.AddMember("primitiveGeometryShape", static_cast<uint32_t>(m_meshComponentInfo.primitiveGeometryShape), allocator);
 		return json;
 	}
 
 	void PrimitiveGeometry::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc);
+		StaticMesh::Deserialize(doc);
 		m_meshComponentInfo.primitiveGeometryShape = static_cast<Shape::PrimitiveGeometryShape>(doc["primitiveGeometryShape"].GetUint());
 		loadAssets();
 	}
 
 	void PrimitiveGeometry::loadAssets()
 	{
-		__super::loadAssets();
+		StaticMesh::loadAssets();
 
 		m_meshCount = 0;
 		m_meshID.clear();

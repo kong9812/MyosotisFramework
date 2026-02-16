@@ -22,12 +22,12 @@ source_group("external/ofbx" FILES ${OFBX_SOURCES})
 target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
 # imgui
-source_group("external/imgui" FILES ${IMGUI_SOURCES})
-target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
-target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
+# source_group("external/imgui" FILES ${IMGUI_SOURCES})
+# target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+# target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
 # vma
-source_group("external/vma" FILES ${VMA_SOURCES})
-target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+# source_group("external/vma" FILES ${VMA_SOURCES})
+# target_sources(${EDITOR_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 # RapidJSON
 target_include_directories(${EDITOR_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)

@@ -8,5 +8,5 @@ void OverviewTreeView::mousePressEvent(QMouseEvent* e)
 		clearSelection();
 		setCurrentIndex(QModelIndex());
 	}
-	__super::mousePressEvent(e);
+	QTreeView::mousePressEvent(e);
 }

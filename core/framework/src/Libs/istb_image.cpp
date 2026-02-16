@@ -2,4 +2,3 @@
 // For include stb_image
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "istb_image.h"

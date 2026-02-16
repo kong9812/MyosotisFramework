@@ -54,7 +54,7 @@ namespace Utility::Loader {
 
 			void* data{};
 			VK_VALIDATION(vmaMapMemory(allocator, stagingBuffer.allocation, &data));
-			if (pixels > 0)
+			if (pixels != nullptr)
 			{
 				memcpy(data, pixels, imageSize);
 			}

@@ -17,7 +17,7 @@ namespace MyosotisFW::System::Render
 
 	void Terrain::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources);
+		StaticMesh::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -28,27 +28,27 @@ namespace MyosotisFW::System::Render
 
 	void Terrain::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
-		__super::Update(updateData, camera);
+		StaticMesh::Update(updateData, camera);
 		if (!m_isReady) return;
 	}
 
 	rapidjson::Value Terrain::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
-		rapidjson::Value obj = __super::Serialize(allocator);
+		rapidjson::Value obj = StaticMesh::Serialize(allocator);
 		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.terrainHeightmapName.path.c_str(), allocator), allocator);
 		return obj;
 	}
 
 	void Terrain::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc);
+		StaticMesh::Deserialize(doc);
 		m_meshComponentInfo.terrainHeightmapName.path = doc["meshName"].GetString();
 		loadAssets();
 	}
 
 	void Terrain::loadAssets()
 	{
-		__super::loadAssets();
+		StaticMesh::loadAssets();
 
 		m_meshCount = 0;
 		m_meshID.clear();

@@ -101,7 +101,7 @@ namespace MyosotisFW::System::Editor
 
 	void VulkanWindow::resizeEvent(QResizeEvent* event)
 	{
-		__super::resizeEvent(event);
+		QWindow::resizeEvent(event);
 		m_resizing = true;
 
 		if (!m_initialized)
@@ -132,13 +132,13 @@ namespace MyosotisFW::System::Editor
 			// 新規
 			m_keyActions.insert_or_assign(glfwKey, GLFW_PRESS);
 		}
-		__super::keyPressEvent(event);
+		QWindow::keyPressEvent(event);
 	}
 
 	void VulkanWindow::keyReleaseEvent(QKeyEvent* event)
 	{
 		m_keyActions.insert_or_assign(KeyConverter::Instance().QtToGlfw(event->key()), GLFW_RELEASE);
-		__super::keyReleaseEvent(event);
+		QWindow::keyReleaseEvent(event);
 	}
 
 	void VulkanWindow::mousePressEvent(QMouseEvent* event)
@@ -155,14 +155,14 @@ namespace MyosotisFW::System::Editor
 			// 新規
 			m_mouseButtonActions.insert_or_assign(glfwKey, GLFW_PRESS);
 		}
-		__super::mousePressEvent(event);
+		QWindow::mousePressEvent(event);
 	}
 
 	void VulkanWindow::mouseReleaseEvent(QMouseEvent* event)
 	{
 		int glfwKey = KeyConverter::Instance().QtToGlfwMouse(event->button());
 		m_mouseButtonActions.insert_or_assign(glfwKey, GLFW_RELEASE);
-		__super::mouseReleaseEvent(event);
+		QWindow::mouseReleaseEvent(event);
 
 		// オブジェクト選択
 		if ((glfwKey == GLFW_MOUSE_BUTTON_LEFT) &&	// マウス左クリック
@@ -186,7 +186,7 @@ namespace MyosotisFW::System::Editor
 		{
 			m_mouseDragging = true;
 		}
-		__super::mouseMoveEvent(event);
+		QWindow::mouseMoveEvent(event);
 	}
 
 	void VulkanWindow::OpenFile(std::string filePath)
@@ -273,7 +273,7 @@ namespace MyosotisFW::System::Editor
 				return true;
 			}
 		}
-		return __super::eventFilter(watched, event);
+		return QWindow::eventFilter(watched, event);
 	}
 
 	bool VulkanWindow::event(QEvent* event)
@@ -283,7 +283,7 @@ namespace MyosotisFW::System::Editor
 			updateRender();
 			return true;
 		}
-		return __super::event(event);
+		return QWindow::event(event);
 	}
 
 	bool VulkanWindow::nativeEvent(const QByteArray& eventType, void* message, qintptr* result)
@@ -293,7 +293,7 @@ namespace MyosotisFW::System::Editor
 			MSG* msg = static_cast<MSG*>(message);
 			//ImGui_ImplWin32_WndProcHandlerEx(msg->hwnd, msg->message, msg->wParam, msg->lParam, ImGui::GetIO());
 		}
-		return __super::nativeEvent(eventType, message, result);
+		return QWindow::nativeEvent(eventType, message, result);
 	}
 
 	void VulkanWindow::updateRender()

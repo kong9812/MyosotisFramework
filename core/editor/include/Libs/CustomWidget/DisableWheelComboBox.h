@@ -37,7 +37,7 @@ protected:
 	void showPopup() override
 	{
 		if (m_readOnly) return;
-		__super::showPopup();
+		QComboBox::showPopup();
 	}
 
 	void keyPressEvent(QKeyEvent* event) override
@@ -47,7 +47,7 @@ protected:
 			event->ignore();
 			return;
 		}
-		__super::keyPressEvent(event);
+		QComboBox::keyPressEvent(event);
 	}
 
 private:

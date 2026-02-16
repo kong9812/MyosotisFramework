@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <array>
-#include <backends/imgui_impl_vulkan.h>
+// #include <backends/imgui_impl_vulkan.h>
 
 #include "MObject.h"
 
@@ -329,7 +329,8 @@ namespace MyosotisFW::System::Render
 
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute"));
+		VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.1f, 0.7f, 1.0f), "Hi-Z Depth Compute");
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
 			m_hiZDepthComputePipeline->Dispatch(commandBuffer, dstFrameIndex, srcFrameIndex, m_swapchain->GetScreenSize());
@@ -354,7 +355,8 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer commandBuffer = m_commandBuffers.createVBufferPhase1[currentFrameIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase1"));
+		VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase1");
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 		m_visibilityBufferPhase1RenderPass->BeginRender(commandBuffer, currentFrameIndex);
 		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
@@ -380,7 +382,8 @@ namespace MyosotisFW::System::Render
 		VkCommandBufferBeginInfo commandBufferBeginInfo = Utility::Vulkan::CreateInfo::commandBufferBeginInfo();
 		VkCommandBuffer commandBuffer = m_commandBuffers.createVBufferPhase2[currentFrameIndex];
 		VK_VALIDATION(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase2"));
+		VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 1.0f), "MeshShader Render Phase2");
+		m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 		m_visibilityBufferPhase2RenderPass->BeginRender(commandBuffer, currentFrameIndex);
 		if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 		{
@@ -407,7 +410,8 @@ namespace MyosotisFW::System::Render
 		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
 
 		{// Skybox Render Pass
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render"));
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.5f, 1.0f), "Skybox Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			m_skyboxRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_mainCamera)
 			{
@@ -417,7 +421,8 @@ namespace MyosotisFW::System::Render
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 		{// Lighting
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render"));
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 1.0f, 0.0f), "Lighting Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			m_lightingRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_vbDispatchInfoCount > 0 && m_mainCamera)
 			{
@@ -427,7 +432,8 @@ namespace MyosotisFW::System::Render
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 		{// PostProcess
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.5f, 0.0f), "Post Process Render"));
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.5f, 0.0f), "Post Process Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			m_postProcessRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_mainCamera)
 			{
@@ -439,7 +445,8 @@ namespace MyosotisFW::System::Render
 		{// LightMap
 			if (m_lightmapBakingPipeline->IsBaking())
 			{
-				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass"));
+				VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(1.0f, 0.0f, 0.0f), "Lightmap Baking Pass");
+				m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 				m_lightmapBakingPass->BeginRender(commandBuffer, currentFrameIndex);
 				for (const MObject_ptr& object : *m_objects)
 				{
@@ -453,7 +460,8 @@ namespace MyosotisFW::System::Render
 			}
 		}
 		{// RayTracing
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render"));
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 1.0f, 0.0f), "Ray Tracing Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			bool hasMesh = m_vbDispatchInfoCount > 0;	// todo. もっといい判定方法を考える必要がある
 			if (hasMesh && m_mainCamera)
 			{

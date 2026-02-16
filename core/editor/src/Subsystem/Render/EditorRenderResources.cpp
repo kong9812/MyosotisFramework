@@ -15,11 +15,11 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderResources::Initialize(const glm::ivec2& screenSize)
 	{
-		__super::Initialize(screenSize);
+		RenderResources::Initialize(screenSize);
 	}
 
 	void EditorRenderResources::Resize(const glm::ivec2& screenSize)
 	{
-		__super::Resize(screenSize);
+		RenderResources::Resize(screenSize);
 	}
 }

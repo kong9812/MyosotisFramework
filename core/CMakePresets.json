@@ -56,18 +56,18 @@
 			}
 		},
 		{
-			"name": "mingw-gcc-debug",
-			"displayName": "MinGW GCC 15.2.0",
+			"name": "ninja-clang-debug",
+			"displayName": "Ninja clang (Debug)",
 			"generator": "Ninja",
-			"binaryDir": "../bin/mingw_gcc/debug",
+			"binaryDir": "../bin/ninja_clang/debug",
 			"cacheVariables": {
-				"CMAKE_C_COMPILER": "D:/mingw64/bin/gcc.exe",
-				"CMAKE_CXX_COMPILER": "D:/mingw64/bin/g++.exe",
-				"CMAKE_MAKE_PROGRAM": "D:/mingw64/bin/ninja.exe",
+				"CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/clang.exe",
+				"CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/clang++.exe",
+				"CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe",
 				"CMAKE_BUILD_TYPE": "Debug"
 			},
 			"environment": {
-        		"PATH": "D:/mingw64/bin;$PENVS{PATH}"
+        		"PATH": "C:/msys64/ucrt64/bin;$PENVS{PATH}"
     		}
 		}
 	]

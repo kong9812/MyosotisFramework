@@ -36,7 +36,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::Initialize(const VkInstance& instance, const VkSurfaceKHR& surface)
 	{
-		__super::Initialize(instance, surface);
+		RenderSubsystem::Initialize(instance, surface);
 
 		// EditorCameraの初期化
 		m_mainCamera = Camera::CreateEditorCameraPointer(0);
@@ -53,7 +53,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::Update(const UpdateData& updateData)
 	{
-		__super::Update(updateData);
+		RenderSubsystem::Update(updateData);
 		m_gizmo->Update(updateData, m_mainCamera);
 
 		if ((m_mainCamera->IsMoved()) && (m_gizmo->IsEnable()))
@@ -278,12 +278,12 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::render(const uint32_t currentFrameIndex)
 	{
-		__super::render(currentFrameIndex);
+		RenderSubsystem::render(currentFrameIndex);
 
 		VkCommandBuffer commandBuffer = m_commandBuffers.render[currentFrameIndex];
 		{// Grid Render Pass
-			VkDebugUtilsLabelEXT gridLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Grid Render");
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gridLabel);
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Grid Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			m_gridRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_mainCamera)
 			{
@@ -294,8 +294,8 @@ namespace MyosotisFW::System::Render
 			m_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 		}
 		{// Gizmo Render Pass
-			VkDebugUtilsLabelEXT gizmoLabel = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Gizmo Render");
-			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &gizmoLabel);
+			VkDebugUtilsLabelEXT label = Utility::Vulkan::CreateInfo::debugUtilsLabelEXT(glm::vec3(0.0f, 0.25f, 5.0f), "Gizmo Render");
+			m_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &label);
 			m_gizmoRenderPass->BeginRender(commandBuffer, currentFrameIndex);
 			if (m_gizmo->IsEnable())
 			{
@@ -323,7 +323,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPass()
 	{
-		__super::initializeRenderPass();
+		RenderSubsystem::initializeRenderPass();
 		m_gizmoRenderPass = CreateGizmoRenderPassPointer(m_device, m_resources, m_swapchain);
 		m_gizmoRenderPass->Initialize();
 
@@ -333,7 +333,7 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::initializeRenderPipeline()
 	{
-		__super::initializeRenderPipeline();
+		RenderSubsystem::initializeRenderPipeline();
 		m_gizmoPipeline = CreateGizmoPipelinePointer(m_device, m_renderDescriptors);
 		m_gizmoPipeline->Initialize(m_resources, m_gizmoRenderPass->GetRenderPass());
 
@@ -349,14 +349,14 @@ namespace MyosotisFW::System::Render
 
 	void EditorRenderSubsystem::resizeRenderPass()
 	{
-		__super::resizeRenderPass();
+		RenderSubsystem::resizeRenderPass();
 		m_gizmoRenderPass->Resize(m_swapchain->GetScreenSize());
 		m_gridRenderPass->Resize(m_swapchain->GetScreenSize());
 	}
 
 	void EditorRenderSubsystem::resizeRenderPipeline()
 	{
-		__super::resizeRenderPipeline();
+		RenderSubsystem::resizeRenderPipeline();
 		m_gizmoPipeline->Resize(m_resources);
 		m_gridPipeline->Resize(m_resources);
 	}

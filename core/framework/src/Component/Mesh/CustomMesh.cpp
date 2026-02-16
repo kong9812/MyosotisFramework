@@ -17,7 +17,7 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::PrepareForRender(const RenderDevice_ptr& device, const RenderResources_ptr& resources)
 	{
-		__super::PrepareForRender(device, resources);
+		StaticMesh::PrepareForRender(device, resources);
 
 		// プリミティブジオメトリの作成
 		loadAssets();
@@ -28,27 +28,27 @@ namespace MyosotisFW::System::Render
 
 	void CustomMesh::Update(const UpdateData& updateData, const Camera::CameraBase_ptr& camera)
 	{
-		__super::Update(updateData, camera);
+		StaticMesh::Update(updateData, camera);
 		if (!m_isReady) return;
 	}
 
 	rapidjson::Value CustomMesh::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
-		rapidjson::Value obj = __super::Serialize(allocator);
+		rapidjson::Value obj = StaticMesh::Serialize(allocator);
 		obj.AddMember("meshName", rapidjson::Value(m_meshComponentInfo.meshName.path.c_str(), allocator), allocator);
 		return obj;
 	}
 
 	void CustomMesh::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc);
+		StaticMesh::Deserialize(doc);
 		m_meshComponentInfo.meshName.path = doc["meshName"].GetString();
 		loadAssets();
 	}
 
 	void CustomMesh::loadAssets()
 	{
-		__super::loadAssets();
+		StaticMesh::loadAssets();
 
 		if (m_meshComponentInfo.meshName.empty()) return;
 

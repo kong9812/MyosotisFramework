@@ -1,4 +1,5 @@
 // Copyright (c) 2025 kong9812
+#include <algorithm>
 #include "RenderSwapchain.h"
 #include "RenderDevice.h"
 #include "VK_Validation.h"

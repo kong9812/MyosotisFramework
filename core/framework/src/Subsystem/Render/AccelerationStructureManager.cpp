@@ -306,7 +306,7 @@ namespace MyosotisFW::System::Render
 
 			for (const uint32_t meshID : instance->meshID)
 			{
-				MeshHandle& mesh = m_renderResources->GetMeshFormID(meshID);
+				const MeshHandle& mesh = m_renderResources->GetMeshFormID(meshID);
 				std::shared_ptr<const Mesh> tmp = mesh.lock();
 				uint32_t biasID = tmp->blasID;
 				VkAccelerationStructureInstanceKHR asInstance{};

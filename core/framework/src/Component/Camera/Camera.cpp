@@ -121,7 +121,7 @@ namespace MyosotisFW::System::Render::Camera
 
 	rapidjson::Value CameraBase::Serialize(rapidjson::Document::AllocatorType& allocator) const
 	{
-		rapidjson::Value doc = __super::Serialize(allocator);
+		rapidjson::Value doc = ComponentBase::Serialize(allocator);
 
 		SerializeVec3ToJson<glm::vec3>("cameraPos", m_cameraPos, doc, allocator);
 		SerializeVec3ToJson<glm::vec3>("cameraLookAt", m_cameraLookAt, doc, allocator);
@@ -138,7 +138,7 @@ namespace MyosotisFW::System::Render::Camera
 
 	void CameraBase::Deserialize(const rapidjson::Value& doc)
 	{
-		__super::Deserialize(doc);
+		ComponentBase::Deserialize(doc);
 
 		DeserializeVec3FromJson<glm::vec3>("cameraPos", m_cameraPos, doc);
 		DeserializeVec3FromJson<glm::vec3>("cameraLookAt", m_cameraLookAt, doc);

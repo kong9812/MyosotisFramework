@@ -58,37 +58,37 @@ namespace MyosotisFW::System::Editor
 	void MainWindow::closeEvent(QCloseEvent* event)
 	{
 		m_vulkanWindow->destroy();
-		__super::closeEvent(event);
+		QMainWindow::closeEvent(event);
 	}
 
 	void MainWindow::paintEvent(QPaintEvent* event)
 	{
-		__super::paintEvent(event);
+		QMainWindow::paintEvent(event);
 		if (!m_vulkanWindow) return;
 	}
 
 	void MainWindow::keyPressEvent(QKeyEvent* event)
 	{
 		m_vulkanWindow->keyPressEvent(event);
-		__super::keyPressEvent(event);
+		QMainWindow::keyPressEvent(event);
 	}
 
 	void MainWindow::keyReleaseEvent(QKeyEvent* event)
 	{
 		m_vulkanWindow->keyReleaseEvent(event);
-		__super::keyReleaseEvent(event);
+		QMainWindow::keyReleaseEvent(event);
 	}
 
 	void MainWindow::mousePressEvent(QMouseEvent* event)
 	{
 		m_vulkanWindow->mousePressEvent(event);
-		__super::mousePressEvent(event);
+		QMainWindow::mousePressEvent(event);
 	}
 
 	void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	{
 		m_vulkanWindow->mouseReleaseEvent(event);
-		__super::mouseReleaseEvent(event);
+		QMainWindow::mouseReleaseEvent(event);
 	}
 
 	void MainWindow::connectDockWidgetsSignals()

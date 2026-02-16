@@ -176,14 +176,14 @@ set(VMA_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 set(VMA_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 set(vma_SOURCE_DIR ${FETCHCONTENT_BASE_DIR}/vma-src)
 FetchContent_MakeAvailable(vma)
-set(VMA_SOURCES
-  ${vma_SOURCE_DIR}/include/vk_mem_alloc.h
-  ${vma_SOURCE_DIR}/src/Common.h
-  ${vma_SOURCE_DIR}/src/VmaUsage.h
+# set(VMA_SOURCES
+#   ${vma_SOURCE_DIR}/include/vk_mem_alloc.h
+#   ${vma_SOURCE_DIR}/src/Common.h
+#   ${vma_SOURCE_DIR}/src/VmaUsage.h
 
-  ${vma_SOURCE_DIR}/src/Common.cpp
-  ${vma_SOURCE_DIR}/src/VmaUsage.cpp
-)
+#   ${vma_SOURCE_DIR}/src/Common.cpp
+#   ${vma_SOURCE_DIR}/src/VmaUsage.cpp
+# )
 
 # RapidJSON
 FetchContent_Declare(
@@ -305,12 +305,12 @@ source_group("external/ofbx" FILES ${OFBX_SOURCES})
 target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${OFBX_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${ofbx_SOURCES_DIR}/src)
 # imgui
-source_group("external/imgui" FILES ${IMGUI_SOURCES})
-target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
-target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
+# source_group("external/imgui" FILES ${IMGUI_SOURCES})
+# target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${IMGUI_SOURCES})
+# target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${imgui_SOURCES_DIR})
 # vma
-source_group("external/vma" FILES ${VMA_SOURCES})
-target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
+# source_group("external/vma" FILES ${VMA_SOURCES})
+# target_sources(${FRAMEWORK_PROJECT_NAME} PRIVATE ${VMA_SOURCES})
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${vma_SOURCE_DIR}/include/)
 # RapidJSON
 target_include_directories(${FRAMEWORK_PROJECT_NAME} PRIVATE ${RapidJSON_SOURCE_DIR}/include)
