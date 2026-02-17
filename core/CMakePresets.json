@@ -56,19 +56,35 @@
 			}
 		},
 		{
-			"name": "ninja-clang-debug",
-			"displayName": "Ninja clang (Debug)",
+			"name": "ninja-clang-base",
+			"hidden": true,
 			"generator": "Ninja",
-			"binaryDir": "../bin/ninja_clang/debug",
 			"cacheVariables": {
 				"CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/clang.exe",
 				"CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/clang++.exe",
-				"CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe",
-				"CMAKE_BUILD_TYPE": "Debug"
+				"CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe"
 			},
 			"environment": {
-        		"PATH": "C:/msys64/ucrt64/bin;$PENVS{PATH}"
-    		}
+				"PATH": "C:/msys64/ucrt64/bin;$PENVS{PATH}"
+			}
+		},
+		{
+			"name": "ninja-clang-debug",
+			"displayName": "Ninja clang (Debug)",
+			"inherits": "ninja-clang-base",
+			"binaryDir": "../bin/ninja_clang/debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "ninja-clang-release",
+			"displayName": "Ninja clang (Release)",
+			"inherits": "ninja-clang-base",
+			"binaryDir": "../bin/ninja_clang/release",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
 		}
 	]
 }

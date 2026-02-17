@@ -48,7 +48,7 @@ set SKIP_PAUSE=1
 call "buildAllShaders.bat"
 
 :: QT
-call "setupQT.bat"
+call "setupQT_MSVC.bat"
 
 :: build ninja project
 call "buildNinjaProject.bat"
