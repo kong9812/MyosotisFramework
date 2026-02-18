@@ -5,7 +5,7 @@ setlocal
 
 :: Define source and build directories
 set QT_SRC_DIR=.qt
-set QT_BUILD_DIR=qt
+set QT_BUILD_DIR=qt_msvc
 
 :: Check if Qt is already built
 if not exist "%QT_BUILD_DIR%" (
@@ -34,8 +34,11 @@ if not exist "%QT_BUILD_DIR%" (
 
     :: Run Qt's configure script with only qtbase module
     echo Configuring Qt
-    call "..\%QT_SRC_DIR%\configure.bat" -init-submodules -submodules qtbase -debug-and-release
-
+    if exist "..\%QT_SRC_DIR%\qtbase\.git" (
+        call "..\%QT_SRC_DIR%\configure.bat" -submodules qtbase -debug-and-release
+    ) else (
+        call "..\%QT_SRC_DIR%\configure.bat" -init-submodules -submodules qtbase -debug-and-release
+    )
     :: Build qtbase
     ninja qtbase
 

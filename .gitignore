@@ -404,7 +404,8 @@ build
 
 # qt
 .qt
-qt
+qt_msvc
+qt_clang
 
 # shader
 *.spv

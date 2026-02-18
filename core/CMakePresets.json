@@ -8,7 +8,8 @@
 			"generator": "Visual Studio 18 2026",
 			"binaryDir": "../bin/vs26",
 			"cacheVariables": {
-				"CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+				"CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+				"QT_ENV": "qt_msvc"
 			}
 		},
 		{
@@ -18,7 +19,8 @@
 			"generator": "Visual Studio 17 2022",
 			"binaryDir": "../bin/vs22",
 			"cacheVariables": {
-				"CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+				"CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+				"QT_ENV": "qt_msvc"
 			}
 		},
 		{
@@ -34,7 +36,8 @@
 				"strategy": "external"
 			},
 			"cacheVariables": {
-				"CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+				"CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+				"QT_ENV": "qt_msvc"
 			}
 		},
 		{
@@ -65,7 +68,8 @@
 				"CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe"
 			},
 			"environment": {
-				"PATH": "C:/msys64/ucrt64/bin;$PENVS{PATH}"
+				"PATH": "C:/msys64/ucrt64/bin;$PENVS{PATH}",
+				"QT_ENV": "qt_clang"
 			}
 		},
 		{

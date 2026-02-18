@@ -89,7 +89,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     )
 endif()
 
-set(Qt6_DIR "${PROJECT_SOURCE_DIR}/../qt/qtbase/lib/cmake/Qt6")
+set(Qt6_DIR "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/lib/cmake/Qt6")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 target_link_libraries(${EDITOR_PROJECT_NAME}
     PRIVATE
@@ -99,7 +99,7 @@ target_link_libraries(${EDITOR_PROJECT_NAME}
 )
 target_include_directories(${EDITOR_PROJECT_NAME}
     PRIVATE
-    "${PROJECT_SOURCE_DIR}/../qt/qtbase/include"
+    "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/include"
 )
 add_custom_command(TARGET ${EDITOR_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -113,7 +113,7 @@ add_custom_command(TARGET ${EDITOR_PROJECT_NAME} POST_BUILD
         $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/../qt/qtbase/plugins/platforms/qwindows.dll"
-        "${PROJECT_SOURCE_DIR}/../qt/qtbase/plugins/platforms/qwindowsd.dll"
+        "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindows.dll"
+        "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindowsd.dll"
         $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
 )
