@@ -50,21 +50,8 @@ call "buildAllShaders.bat"
 :: QT
 call "setupQT_MSVC.bat"
 
-:: build ninja project
-call "buildNinjaProject.bat"
-
-:: test build (ninja: build Myosotis release)
-pushd ".\core"
-call "tools\ninjaBuildMyosotis_release.bat"
-popd
-
-:: build vs22 project
-call "buildVS22Project.bat"
-
-:: test build (ninja: build Myosotis release)
-pushd ".\core"
-call "tools\vs22BuildMyosotis_release.bat"
-popd
+:: generate vs22 project
+call "generateVS22Project.bat"
 
 echo welcome!!
 if not defined SKIP_PAUSE pause 

@@ -31,12 +31,12 @@ install:
       git config --global advice.detachedHead false
 
 before_build:
-  - cmd: echo Creating qt folder and linking to Qt 6.9...
-  - cmd: if not exist qt mkdir qt
-  - cmd: if not exist qt\qtbase mklink /J qt\qtbase "C:\Qt\6.9\msvc2022_64"
-  - cmd: echo Done setting up qt/qtbase link.
-  - cmd: echo Running buildVS22Project.bat...
-  - cmd: .\buildVS22Project.bat
+  - cmd: echo Creating qt_msvc folder and linking to Qt 6.9...
+  - cmd: if not exist qt_msvc mkdir qt_msvc
+  - cmd: if not exist qt_msvc\qtbase mklink /J qt_msvc\qtbase "C:\Qt\6.9\msvc2022_64"
+  - cmd: echo Done setting up qt_msvc/qtbase link.
+  - cmd: echo Running generateVS22Project.bat...
+  - cmd: .\generateVS22Project.bat
 
 after_build:
   # ビルド後の処理（例：テストや成果物の作成）
