@@ -201,21 +201,21 @@ namespace MyosotisFW::System::Render
 		physicalDeviceMaintenance4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
 		physicalDeviceMaintenance4Features.maintenance4 = VK_TRUE;
 
-		// Mesh Shader 機能
-		VkPhysicalDeviceMeshShaderFeaturesEXT physicalDeviceMeshShaderFeaturesEXT{};
-		physicalDeviceMeshShaderFeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
-		physicalDeviceMeshShaderFeaturesEXT.taskShader = VK_TRUE;
-		physicalDeviceMeshShaderFeaturesEXT.meshShader = VK_TRUE;
+		// // Mesh Shader 機能
+		// VkPhysicalDeviceMeshShaderFeaturesEXT physicalDeviceMeshShaderFeaturesEXT{};
+		// physicalDeviceMeshShaderFeaturesEXT.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+		// physicalDeviceMeshShaderFeaturesEXT.taskShader = VK_TRUE;
+		// physicalDeviceMeshShaderFeaturesEXT.meshShader = VK_TRUE;
 
-		// Ray Tracing Pipeline 機能
-		VkPhysicalDeviceRayTracingPipelineFeaturesKHR physicalDeviceRayTracingPipelineFeaturesKHR{};
-		physicalDeviceRayTracingPipelineFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-		physicalDeviceRayTracingPipelineFeaturesKHR.rayTracingPipeline = VK_TRUE;
+		// // Ray Tracing Pipeline 機能
+		// VkPhysicalDeviceRayTracingPipelineFeaturesKHR physicalDeviceRayTracingPipelineFeaturesKHR{};
+		// physicalDeviceRayTracingPipelineFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+		// physicalDeviceRayTracingPipelineFeaturesKHR.rayTracingPipeline = VK_TRUE;
 
-		// Acceleration Structure 機能
-		VkPhysicalDeviceAccelerationStructureFeaturesKHR physicalDeviceAccelerationStructureFeaturesKHR{};
-		physicalDeviceAccelerationStructureFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-		physicalDeviceAccelerationStructureFeaturesKHR.accelerationStructure = VK_TRUE;
+		// // Acceleration Structure 機能
+		// VkPhysicalDeviceAccelerationStructureFeaturesKHR physicalDeviceAccelerationStructureFeaturesKHR{};
+		// physicalDeviceAccelerationStructureFeaturesKHR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+		// physicalDeviceAccelerationStructureFeaturesKHR.accelerationStructure = VK_TRUE;
 
 		// Device Address 機能
 		VkPhysicalDeviceBufferDeviceAddressFeatures physicalDeviceBufferDeviceAddressFeatures{};
@@ -225,10 +225,11 @@ namespace MyosotisFW::System::Render
 		// pNextチェーン
 		physicalDeviceDescriptorIndexingFeatures.pNext = &separateDepthStencilFeatures;
 		separateDepthStencilFeatures.pNext = &physicalDeviceMaintenance4Features;
-		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
-		physicalDeviceMeshShaderFeaturesEXT.pNext = &physicalDeviceRayTracingPipelineFeaturesKHR;
-		physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR;
-		physicalDeviceAccelerationStructureFeaturesKHR.pNext = &physicalDeviceBufferDeviceAddressFeatures;
+		// physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
+		// physicalDeviceMeshShaderFeaturesEXT.pNext = &physicalDeviceRayTracingPipelineFeaturesKHR;
+		// physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR;
+		// physicalDeviceAccelerationStructureFeaturesKHR.pNext = &physicalDeviceBufferDeviceAddressFeatures;
+		physicalDeviceMaintenance4Features.pNext = &physicalDeviceBufferDeviceAddressFeatures;
 
 		// create device
 		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
