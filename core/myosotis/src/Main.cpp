@@ -1,8 +1,7 @@
 // Copyright (c) 2025 kong9812
+#ifdef _WIN32
 #include <crtdbg.h>
-#include <Windows.h>
-#include <libloaderapi.h>
-#include <errhandlingapi.h>
+#endif
 #include <iostream>
 #include <filesystem>
 
@@ -49,8 +48,10 @@ int main()
 {
 	std::cout << std::filesystem::current_path() << std::endl;
 
+#ifdef _WIN32
 	// メモリリークチェッカ
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
 	// DLLの準備
 	if (!BuildDLL()) return 1;

@@ -3,7 +3,11 @@
 #include "iglfw.h"
 #include "ApplicationInterface.h"
 
-#define DLL_CLASS __declspec(dllexport)
+#if defined(_WIN32) || defined(_WIN64)
+    #define DLL_CLASS __declspec(dllexport)
+#else
+    #define DLL_CLASS __attribute__((visibility("default")))
+#endif
 
 class DLL_CLASS Application : public IApplication
 {

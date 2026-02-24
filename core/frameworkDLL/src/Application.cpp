@@ -1,7 +1,9 @@
 // Copyright (c) 2025 kong9812
 #include "Application.h"
 
+#ifdef _WIN32
 #include <crtdbg.h>
+#endif
 
 #include "istb_image.h"
 
@@ -20,8 +22,11 @@ void Application::Initialize(const bool& allowHotReload)
 #ifdef DEBUG
 	Logger::ClearLog();
 #endif
+
+#ifdef _WIN32
 	// メモリリークチェッカ
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
 	// GLFW初期化
 	glfwInit();
@@ -81,7 +86,7 @@ int Application::Run()
 	return 0;
 }
 
-extern "C" __declspec(dllexport) IApplication* GetInstance()
+extern "C" DLL_CLASS IApplication* GetInstance()
 {
-	return new Application();
+    return new Application();
 }

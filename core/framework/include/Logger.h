@@ -104,7 +104,9 @@ namespace {
 				"\nFile: " + file + ", Line: " + std::to_string(line);
 			std::cerr << errorMessage << std::endl;
 			CustomLog(LogLevel::LOG_ASSERT, errorMessage);
+#ifdef _WIN32
 			MessageBoxA(NULL, errorMessage.c_str(), "Assertion Failed", MB_ICONERROR | MB_OK);
+#endif
 			std::exit(EXIT_FAILURE);
 		}
 	}

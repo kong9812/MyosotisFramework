@@ -108,12 +108,14 @@ add_custom_command(TARGET ${EDITOR_PROJECT_NAME} POST_BUILD
         $<TARGET_FILE:Qt6::Widgets>
         $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>
 )
-add_custom_command(TARGET ${EDITOR_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-        $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindows.dll"
-        "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindowsd.dll"
-        $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
-)
+if(WIN32)
+    add_custom_command(TARGET ${EDITOR_PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
+    
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindows.dll"
+            "${PROJECT_SOURCE_DIR}/../${QT_ENV}/qtbase/plugins/platforms/qwindowsd.dll"
+            $<TARGET_FILE_DIR:${EDITOR_PROJECT_NAME}>/platforms
+    )
+endif()

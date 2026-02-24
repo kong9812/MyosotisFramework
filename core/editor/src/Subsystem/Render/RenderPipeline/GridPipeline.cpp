@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "GridPipeline.h"
-#include "camera.h"
+#include "Camera.h"
 #include "VK_CreateInfo.h"
 #include "AppInfo.h"
 

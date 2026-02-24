@@ -10,10 +10,10 @@
 #include "MObject.h"
 #include "MObjectRegistry.h"
 
-// TEST
-#include "PrimitiveGeometry.h"
-#include "FPSCamera.h"
-// TEST
+// // TEST
+// #include "PrimitiveGeometry.h"
+// #include "FPSCamera.h"
+// // TEST
 
 namespace MyosotisFW::System::GameDirector {
 	GameDirector::GameDirector(const Render::RenderSubsystem_ptr& renderSubsystem) :

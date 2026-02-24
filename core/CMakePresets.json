@@ -74,7 +74,7 @@
 		},
 		{
 			"name": "ninja-clang-debug",
-			"displayName": "Ninja clang (Debug)",
+			"displayName": "[Win] Ninja clang (Debug)",
 			"inherits": "ninja-clang-base",
 			"binaryDir": "../bin/ninja_clang/debug",
 			"cacheVariables": {
@@ -83,8 +83,36 @@
 		},
 		{
 			"name": "ninja-clang-release",
-			"displayName": "Ninja clang (Release)",
+			"displayName": "[Win] Ninja clang (Release)",
 			"inherits": "ninja-clang-base",
+			"binaryDir": "../bin/ninja_clang/release",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "ninja-clang-linux-base",
+			"hidden": true,
+			"generator": "Ninja",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "clang",
+				"CMAKE_CXX_COMPILER": "clang++",
+				"CMAKE_MAKE_PROGRAM": "ninja"
+			}
+		},
+		{
+			"name": "ninja-clang-linux-debug",
+			"displayName": "[Linux] Ninja clang (Debug)",
+			"inherits": "ninja-clang-linux-base",
+			"binaryDir": "../bin/ninja_clang/debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "ninja-clang-linux-release",
+			"displayName": "[Linux] Ninja clang (Release)",
+			"inherits": "ninja-clang-linux-base",
 			"binaryDir": "../bin/ninja_clang/release",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"

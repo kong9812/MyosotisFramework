@@ -288,11 +288,13 @@ namespace MyosotisFW::System::Editor
 
 	bool VulkanWindow::nativeEvent(const QByteArray& eventType, void* message, qintptr* result)
 	{
+#if _WIN32
 		if (m_initialized)
 		{
 			MSG* msg = static_cast<MSG*>(message);
 			//ImGui_ImplWin32_WndProcHandlerEx(msg->hwnd, msg->message, msg->wParam, msg->lParam, ImGui::GetIO());
 		}
+#endif
 		return QWindow::nativeEvent(eventType, message, result);
 	}
 

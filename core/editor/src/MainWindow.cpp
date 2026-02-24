@@ -1,6 +1,6 @@
 // Copyright (c) 2025 kong9812
 #include "MainWindow.h"
-#include "Appinfo.h"
+#include "AppInfo.h"
 #include "KeyConverter.h"
 #include "ThreadPool.h"
 #include "istduuid.h"

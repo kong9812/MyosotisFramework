@@ -1,8 +1,7 @@
 // Copyright (c) 2025 kong9812
+#ifdef _WIN32
 #include <crtdbg.h>
-#include <Windows.h>
-#include <libloaderapi.h>
-#include <errhandlingapi.h>
+#endif
 #include <iostream>
 #include <filesystem>
 

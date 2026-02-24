@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
-#include "classPointer.h"
+#include "ClassPointer.h"
 #include "VK_Validation.h"
 #include "ivma.h"
 
