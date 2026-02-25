@@ -124,7 +124,7 @@ namespace MyosotisFW::AppInfo
 	// [フォルダ]リソース
 	constexpr const char* g_resourcesFolder = ".\\resources\\";
 	// [フォルダ]シェーダー
-	constexpr const char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
+	constexpr const char* g_shaderFolder = "./resources/shaders/spv/";
 	// [フォルダ]テクスチャ
 	constexpr const char* g_textureFolder = ".\\resources\\texture\\";
 	// [フォルダ]フォント

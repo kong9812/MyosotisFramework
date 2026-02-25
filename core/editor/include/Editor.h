@@ -7,7 +7,8 @@ class Editor
 {
 public:
 	Editor(int argc, char* argv[]) :
-		m_application(argc, argv),
+		m_argc(argc),
+		m_application(m_argc, argv),
 		m_mainWindow(new MyosotisFW::System::Editor::MainWindow()),
 		m_allowHotReload(false) {
 	}
@@ -17,6 +18,7 @@ public:
 	int Run();
 
 private:
+	int m_argc;
 	QApplication m_application;
 	QScopedPointer<MyosotisFW::System::Editor::MainWindow> m_mainWindow;
 	bool m_allowHotReload;

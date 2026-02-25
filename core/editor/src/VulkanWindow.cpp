@@ -8,6 +8,12 @@
 #include "VK_CreateInfo.h"
 #include "MObjectRegistry.h"
 
+#ifdef Q_OS_LINUX
+#define VK_USE_PLATFORM_XCB_KHR
+#include <xcb/xproto.h>
+#include <vulkan/vulkan_xcb.h>
+#endif
+
 // extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 
 namespace MyosotisFW::System::Editor
@@ -65,14 +71,22 @@ namespace MyosotisFW::System::Editor
 
 		// create surface
 #ifdef Q_OS_WIN
-		HWND hwnd = reinterpret_cast<HWND>(winId());
-		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-		surfaceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.hwnd = hwnd;
-		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-		VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+        HWND hwnd = reinterpret_cast<HWND>(winId());
+        VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+        surfaceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        surfaceCreateInfo.hwnd = hwnd;
+        surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+        VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+#elif defined(Q_OS_LINUX)
+    // Qtのプラットフォームインターフェースを介して取得するのが安全
+    if (QNativeInterface::QX11Application* native = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()) {
+        VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        surfaceCreateInfo.connection = native->connection();
+        surfaceCreateInfo.window = static_cast<xcb_window_t>(winId());
+        VK_VALIDATION(vkCreateXcbSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+    }
 #endif
-
 		// create render subsystem
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
 		m_renderSubsystem->SetObjectMovedCallback([this]() { emit sigObjectMoved(); });

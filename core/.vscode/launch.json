@@ -18,6 +18,15 @@
                     "value": "C:/msys64/ucrt64/bin;${env:PATH}"
                 }
             ],
+        },
+        {
+            "name": "CMake debug (gdb) - Linux",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:cmake.launchTargetPath}",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb"
         }
     ]
 }
