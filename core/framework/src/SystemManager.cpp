@@ -159,7 +159,7 @@ namespace MyosotisFW::System
 
 	void SystemManager::Render()
 	{
-		m_renderSubsystem->Render();
+		// m_renderSubsystem->Render();
 	}
 
 	void SystemManager::initializeGLFW(GLFWwindow* window)

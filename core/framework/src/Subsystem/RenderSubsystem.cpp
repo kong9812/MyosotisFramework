@@ -179,7 +179,7 @@ namespace MyosotisFW::System::Render
 			{
 				m_renderDescriptors->GetMeshInfoDescriptorSet()->Update();
 			}
-			m_accelerationStructureManager->RebuildTLAS();
+			// m_accelerationStructureManager->RebuildTLAS();
 			m_objectRegistry->ResetChangeFlags();
 		}
 		m_renderDescriptors->GetSceneInfoDescriptorSet()->Update();
@@ -194,7 +194,7 @@ namespace MyosotisFW::System::Render
 			}
 		}
 
-		m_accelerationStructureManager->Process();
+		// m_accelerationStructureManager->Process();
 		m_renderDescriptors->GetRayTracingDescriptorSet()->Update();
 		m_renderDescriptors->GetMaterialDescriptorSet()->Update();
 	}
@@ -611,10 +611,10 @@ namespace MyosotisFW::System::Render
 		m_skyboxPipeline = CreateSkyboxPipelinePointer(m_device, m_renderDescriptors);
 		m_skyboxPipeline->Initialize(m_resources, m_skyboxRenderPass->GetRenderPass());
 		// Visibility Buffer Pipeline
-		m_visibilityBufferPhase1Pipeline = CreateVisibilityBufferPhase1PipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferPhase1Pipeline->Initialize(m_resources, m_visibilityBufferPhase1RenderPass->GetRenderPass());
-		m_visibilityBufferPhase2Pipeline = CreateVisibilityBufferPhase2PipelinePointer(m_device, m_renderDescriptors);
-		m_visibilityBufferPhase2Pipeline->Initialize(m_resources, m_visibilityBufferPhase2RenderPass->GetRenderPass());
+		// m_visibilityBufferPhase1Pipeline = CreateVisibilityBufferPhase1PipelinePointer(m_device, m_renderDescriptors);
+		// m_visibilityBufferPhase1Pipeline->Initialize(m_resources, m_visibilityBufferPhase1RenderPass->GetRenderPass());
+		// m_visibilityBufferPhase2Pipeline = CreateVisibilityBufferPhase2PipelinePointer(m_device, m_renderDescriptors);
+		// m_visibilityBufferPhase2Pipeline->Initialize(m_resources, m_visibilityBufferPhase2RenderPass->GetRenderPass());
 		// Lighting Pipeline
 		m_lightingPipeline = CreateLightingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightingPipeline->Initialize(m_resources, m_lightingRenderPass->GetRenderPass());
@@ -622,8 +622,8 @@ namespace MyosotisFW::System::Render
 		m_lightmapBakingPipeline = CreateLightmapBakingPipelinePointer(m_device, m_renderDescriptors);
 		m_lightmapBakingPipeline->Initialize(m_resources, m_lightmapBakingPass->GetRenderPass());
 		// RayTracing Pipeline
-		m_rayTracingPipeline = CreateRayTracingPipelinePointer(m_device, m_renderDescriptors);
-		m_rayTracingPipeline->Initialize(m_resources);
+		// m_rayTracingPipeline = CreateRayTracingPipelinePointer(m_device, m_renderDescriptors);
+		// m_rayTracingPipeline->Initialize(m_resources);
 		// Fog Pipeline
 		m_fogPipeline = CreateFogPipelinePointer(m_device, m_renderDescriptors);
 		m_fogPipeline->Initialize(m_resources, m_postProcessRenderPass->GetRenderPass());
@@ -637,16 +637,16 @@ namespace MyosotisFW::System::Render
 
 	void RenderSubsystem::initializeAccelerationStructureManager()
 	{
-		m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors, m_resources);
-		m_resources->SetOnLoadedMesh([=](MeshesHandle& m) {m_accelerationStructureManager->OnLoadedMesh(m); });
-		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) {m_accelerationStructureManager->OnAddObject(m); });
+		// m_accelerationStructureManager = CreateAccelerationStructureManagerPointer(m_device, m_renderDescriptors, m_resources);
+		m_resources->SetOnLoadedMesh([=](MeshesHandle& m) { /*m_accelerationStructureManager->OnLoadedMesh(m);*/ });
+		m_objectRegistry->SetOnAddObject([=](const MObject_ptr& m) { /*m_accelerationStructureManager->OnAddObject(m);*/ });
 	}
 
 	void RenderSubsystem::resizeRenderPass()
 	{
 		m_skyboxRenderPass->Resize(m_swapchain->GetScreenSize());
-		m_visibilityBufferPhase1RenderPass->Resize(m_swapchain->GetScreenSize());
-		m_visibilityBufferPhase2RenderPass->Resize(m_swapchain->GetScreenSize());
+		// m_visibilityBufferPhase1RenderPass->Resize(m_swapchain->GetScreenSize());
+		// m_visibilityBufferPhase2RenderPass->Resize(m_swapchain->GetScreenSize());
 		m_lightingRenderPass->Resize(m_swapchain->GetScreenSize());
 		//m_lightmapBakingPass->Resize(m_swapchain->GetScreenSize());
 	}
@@ -655,11 +655,11 @@ namespace MyosotisFW::System::Render
 	{
 		m_hiZDepthComputePipeline->Resize();
 		m_skyboxPipeline->Resize(m_resources);
-		m_visibilityBufferPhase1Pipeline->Resize(m_resources);
-		m_visibilityBufferPhase2Pipeline->Resize(m_resources);
+		// m_visibilityBufferPhase1Pipeline->Resize(m_resources);
+		// m_visibilityBufferPhase2Pipeline->Resize(m_resources);
 		m_lightingPipeline->Resize(m_resources);
 		//m_lightmapBakingPipeline->Resize(m_resources);
-		m_rayTracingPipeline->Resize(m_resources);
+		// m_rayTracingPipeline->Resize(m_resources);
 		m_fogPipeline->Resize(m_resources);
 	}
 
