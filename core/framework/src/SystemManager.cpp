@@ -190,25 +190,41 @@ namespace MyosotisFW::System
 			extensionProperties.resize(count);
 			vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
 #ifdef DEBUG
-			for (const auto& extensionPropertie : extensionProperties)
+			for (const auto& extensionProperty : extensionProperties)
 			{
-				Logger::Info(std::string("extensionName: ") + extensionPropertie.extensionName + "(" + std::to_string(extensionPropertie.specVersion) + ")");
+				Logger::Info(std::string("extensionName: ") + extensionProperty.extensionName + "(" + std::to_string(extensionProperty.specVersion) + ")");
 			}
 #endif
 		}
 
+		std::vector<const char*> layer{};
+		// VK_LAYER_KHRONOS_validation (Nsightの時邪魔になる)
+		bool khronosValidationLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_KHRONOS_validation";
+			});
+		if (khronosValidationLayout) layer.push_back("VK_LAYER_KHRONOS_validation");
+		// VK_LAYER_LUNARG_monitor (FPS表示)
+		bool lunargMonitorLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_LUNARG_monitor";
+			});
+		if (lunargMonitorLayout) layer.push_back("VK_LAYER_LUNARG_monitor");
+
 		// vulkan instance
-		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, AppInfo::g_layer);
+		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(applicationInfo, AppInfo::g_vkInstanceExtensionProperties, layer);
 		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
 
 		// prepare for VK_EXT_DEBUG_REPORT_EXTENSION
 		m_vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT"));
 		m_vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT"));
-		VkDebugReportCallbackCreateInfoEXT vebugReportCallbackCreateInfo{};
-		vebugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-		vebugReportCallbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-		vebugReportCallbackCreateInfo.pfnCallback = &debugCallback;
-		m_vkCreateDebugReportCallbackEXT(m_instance, &vebugReportCallbackCreateInfo, nullptr, &m_vkDebugReportCallback);
+		VkDebugReportCallbackCreateInfoEXT debugReportCallbackCreateInfo{};
+		debugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+		debugReportCallbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+		debugReportCallbackCreateInfo.pfnCallback = &debugCallback;
+		m_vkCreateDebugReportCallbackEXT(m_instance, &debugReportCallbackCreateInfo, nullptr, &m_vkDebugReportCallback);
 
 		// GLFW サーフェース作成
 		VK_VALIDATION(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));

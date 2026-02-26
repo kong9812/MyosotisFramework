@@ -57,6 +57,28 @@ namespace MyosotisFW::System::Editor
 
 	void VulkanWindow::Initialize()
 	{
+		// extension
+		std::vector<VkExtensionProperties> extensionProperties{};
+		uint32_t count = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+		extensionProperties.resize(count);
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
+		std::vector<const char*> layer{};
+		// VK_LAYER_KHRONOS_validation (Nsightの時邪魔になる)
+		bool khronosValidationLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_KHRONOS_validation";
+			});
+		if (khronosValidationLayout) layer.push_back("VK_LAYER_KHRONOS_validation");
+		// VK_LAYER_LUNARG_monitor (FPS表示)
+		bool lunargMonitorLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_LUNARG_monitor";
+			});
+		if (lunargMonitorLayout) layer.push_back("VK_LAYER_LUNARG_monitor");
+
 		// create vulkan instance
 		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(
 			AppInfo::g_applicationName,
@@ -66,26 +88,26 @@ namespace MyosotisFW::System::Editor
 		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(
 			applicationInfo,
 			AppInfo::g_vkInstanceExtensionProperties,
-			AppInfo::g_layer);
+			layer);
 		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
 
 		// create surface
 #ifdef Q_OS_WIN
-        HWND hwnd = reinterpret_cast<HWND>(winId());
-        VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.hwnd = hwnd;
-        surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-        VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+		HWND hwnd = reinterpret_cast<HWND>(winId());
+		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+		surfaceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.hwnd = hwnd;
+		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+		VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
 #elif defined(Q_OS_LINUX)
-    // Qtのプラットフォームインターフェースを介して取得するのが安全
-    if (QNativeInterface::QX11Application* native = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()) {
-        VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.connection = native->connection();
-        surfaceCreateInfo.window = static_cast<xcb_window_t>(winId());
-        VK_VALIDATION(vkCreateXcbSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
-    }
+	// Qtのプラットフォームインターフェースを介して取得するのが安全
+		if (QNativeInterface::QX11Application* native = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()) {
+			VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+			surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+			surfaceCreateInfo.connection = native->connection();
+			surfaceCreateInfo.window = static_cast<xcb_window_t>(winId());
+			VK_VALIDATION(vkCreateXcbSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+		}
 #endif
 		// create render subsystem
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();

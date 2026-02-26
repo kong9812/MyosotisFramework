@@ -38,26 +38,10 @@ namespace MyosotisFW::AppInfo
 #elif __APPLE__
 		VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
 #elif __linux__
-    	"VK_KHR_xcb_surface",  // だめならVK_KHR_wayland_surface
+		"VK_KHR_wayland_surface",	// こっちのほうがいいみたい…
+		"VK_KHR_xcb_surface",
 #endif
 	};
-	// 指定VkExtensionProperties
-	const std::vector<const char*> g_vkDeviceExtensionProperties = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		// K_EXT_MESH_SHADER_EXTENSION_NAME,		// todo. オプション化
-		VK_KHR_MAINTENANCE_4_EXTENSION_NAME,	
-		// VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,		// todo. オプション化
-		// VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,	// todo. オプション化 AS構築は非同期で実行されるため
-		// VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,	// todo. オプション化
-		VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-	};
-	// 指定Layer
-	const std::vector<const char*> g_layer = {
-		// "VK_LAYER_KHRONOS_validation",	// Nsightの時邪魔になる
-		// "VK_LAYER_LUNARG_monitor"
-	};
-	// 指定物理デバイスのIndex
-	constexpr uint32_t g_physicalIndex = 1;
 	// 指定画像フォーマット
 	constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_B8G8R8A8_SRGB, VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }; // 表示用に最適化されており、多くのディスプレイがsRGBカラースペースでカラーを直接表示できる
 	// 指定プレゼントモード

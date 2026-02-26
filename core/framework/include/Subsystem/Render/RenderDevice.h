@@ -39,6 +39,9 @@ namespace MyosotisFW::System::Render
 
 		const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const { return m_physicalDeviceMemoryProperties; }
 
+		const bool IsEnableRayTracing() const { return m_isEnableRayTracing; }
+		const bool IsEnableMeshShader() const { return m_isEnableMeshShader; }
+
 	public:
 		// バッファのデバイスアドレスを取得
 		const VkDeviceAddress GetBufferDeviceAddress(const VkBuffer& buffer) const;
@@ -70,6 +73,9 @@ namespace MyosotisFW::System::Render
 		uint32_t m_maxDescriptorSetSampledImages;
 		uint32_t m_maxDescriptorSetStorageImages;
 		uint32_t m_maxDescriptorSetInputAttachments;
+
+		bool m_isEnableRayTracing;
+		bool m_isEnableMeshShader;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(RenderDevice);
 }
