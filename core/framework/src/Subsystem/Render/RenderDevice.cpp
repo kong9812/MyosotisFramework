@@ -1,4 +1,5 @@
 // Copyright (c) 2025 kong9812
+#include <algorithm>
 #include "RenderDevice.h"
 
 #include "RenderQueue.h"
@@ -119,7 +120,7 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr));
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices.data()));
-		m_physicalDevice = physicalDevices[0];
+		m_physicalDevice = physicalDevices[physicalDeviceCount-1];
 		for (const VkPhysicalDevice& physicalDevice : physicalDevices)
 		{
 			VkPhysicalDeviceProperties props{};
