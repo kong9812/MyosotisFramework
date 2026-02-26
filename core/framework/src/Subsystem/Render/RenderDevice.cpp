@@ -1,4 +1,5 @@
 // Copyright (c) 2025 kong9812
+#include <algorithm>
 #include "RenderDevice.h"
 
 #include "RenderQueue.h"
@@ -107,7 +108,9 @@ namespace MyosotisFW::System::Render
 		m_maxDescriptorSetStorageBuffers(0),
 		m_maxDescriptorSetSampledImages(0),
 		m_maxDescriptorSetStorageImages(0),
-		m_maxDescriptorSetInputAttachments(0)
+		m_maxDescriptorSetInputAttachments(0),
+		m_isEnableRayTracing(false),
+		m_isEnableMeshShader(false)
 	{
 		// prepare allocation callbacks
 		prepareAllocationCallbacks();
@@ -117,7 +120,19 @@ namespace MyosotisFW::System::Render
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, nullptr));
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 		VK_VALIDATION(vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices.data()));
-		m_physicalDevice = physicalDevices[AppInfo::g_physicalIndex];
+		m_physicalDevice = physicalDevices[physicalDeviceCount-1];
+		for (const VkPhysicalDevice& physicalDevice : physicalDevices)
+		{
+			VkPhysicalDeviceProperties props{};
+			vkGetPhysicalDeviceProperties(physicalDevice, &props);
+			// 独立GPUなら優先
+			if (props.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+				m_physicalDevice = physicalDevice;
+				break;
+			}
+		}
+
 		// デバイスプロパティを取得
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
@@ -171,6 +186,44 @@ namespace MyosotisFW::System::Render
 			Logger::Info(std::string("extensionName: ") + extensionProperty.extensionName + "(" + std::to_string(extensionProperty.specVersion) + ")");
 		}
 #endif
+		std::vector<const char*> deviceExtensionProperties =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
+			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME
+		};
+		// MeshShader
+		bool meshShaderExtension = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == VK_EXT_MESH_SHADER_EXTENSION_NAME;
+			});
+		m_isEnableMeshShader = meshShaderExtension;
+		if (m_isEnableMeshShader) deviceExtensionProperties.push_back(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+		// RayTracing
+		bool rayTracingPipelineExtension = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME;
+			});
+		bool deferredHostOperationsExtension = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
+			});
+		bool accelerationStructureExtension = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME;
+			});
+		m_isEnableRayTracing = rayTracingPipelineExtension && deferredHostOperationsExtension && accelerationStructureExtension;
+		if (m_isEnableRayTracing)
+		{
+			deviceExtensionProperties.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+			deviceExtensionProperties.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+			deviceExtensionProperties.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+		}
+
 		// デバイス機能を取得
 		VkPhysicalDeviceFeatures features{};
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &features);
@@ -223,16 +276,20 @@ namespace MyosotisFW::System::Render
 		physicalDeviceBufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
 
 		// pNextチェーン
+		// 先頭 & 必要な拡張
+		void* head = &physicalDeviceDescriptorIndexingFeatures;
 		physicalDeviceDescriptorIndexingFeatures.pNext = &separateDepthStencilFeatures;
 		separateDepthStencilFeatures.pNext = &physicalDeviceMaintenance4Features;
-		physicalDeviceMaintenance4Features.pNext = &physicalDeviceMeshShaderFeaturesEXT;
-		physicalDeviceMeshShaderFeaturesEXT.pNext = &physicalDeviceRayTracingPipelineFeaturesKHR;
-		physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR;
-		physicalDeviceAccelerationStructureFeaturesKHR.pNext = &physicalDeviceBufferDeviceAddressFeatures;
+		physicalDeviceMaintenance4Features.pNext = &physicalDeviceBufferDeviceAddressFeatures;
+		// 最後
+		void** tail = &physicalDeviceBufferDeviceAddressFeatures.pNext;
+		if (m_isEnableMeshShader) { *tail = &physicalDeviceMeshShaderFeaturesEXT; tail = &physicalDeviceMeshShaderFeaturesEXT.pNext; }
+		if (m_isEnableRayTracing) { *tail = &physicalDeviceRayTracingPipelineFeaturesKHR; physicalDeviceRayTracingPipelineFeaturesKHR.pNext = &physicalDeviceAccelerationStructureFeaturesKHR; tail = &physicalDeviceAccelerationStructureFeaturesKHR.pNext; }
+		*tail = nullptr;
 
 		// create device
-		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, AppInfo::g_vkDeviceExtensionProperties, features);
-		deviceCreateInfo.pNext = &physicalDeviceDescriptorIndexingFeatures;
+		VkDeviceCreateInfo deviceCreateInfo = Utility::Vulkan::CreateInfo::deviceCreateInfo(deviceQueueCreateInfos, deviceExtensionProperties, features);
+		deviceCreateInfo.pNext = head;
 		VK_VALIDATION(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, GetAllocationCallbacks(), &m_device));
 
 		// queue instance

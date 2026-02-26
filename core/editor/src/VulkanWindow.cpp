@@ -8,6 +8,12 @@
 #include "VK_CreateInfo.h"
 #include "MObjectRegistry.h"
 
+#ifdef Q_OS_LINUX
+#define VK_USE_PLATFORM_XCB_KHR
+#include <xcb/xproto.h>
+#include <vulkan/vulkan_xcb.h>
+#endif
+
 // extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, ImGuiIO& io); // Doesn't use ImGui::GetCurrentContext()
 
 namespace MyosotisFW::System::Editor
@@ -51,6 +57,28 @@ namespace MyosotisFW::System::Editor
 
 	void VulkanWindow::Initialize()
 	{
+		// extension
+		std::vector<VkExtensionProperties> extensionProperties{};
+		uint32_t count = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+		extensionProperties.resize(count);
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
+		std::vector<const char*> layer{};
+		// VK_LAYER_KHRONOS_validation (Nsightの時邪魔になる)
+		bool khronosValidationLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_KHRONOS_validation";
+			});
+		if (khronosValidationLayout) layer.push_back("VK_LAYER_KHRONOS_validation");
+		// VK_LAYER_LUNARG_monitor (FPS表示)
+		bool lunargMonitorLayout = std::any_of(extensionProperties.begin(), extensionProperties.end(),
+			[&](const VkExtensionProperties& prop)
+			{
+				return std::string_view(prop.extensionName) == "VK_LAYER_LUNARG_monitor";
+			});
+		if (lunargMonitorLayout) layer.push_back("VK_LAYER_LUNARG_monitor");
+
 		// create vulkan instance
 		VkApplicationInfo applicationInfo = Utility::Vulkan::CreateInfo::applicationInfo(
 			AppInfo::g_applicationName,
@@ -60,7 +88,7 @@ namespace MyosotisFW::System::Editor
 		VkInstanceCreateInfo instanceCreateInfo = Utility::Vulkan::CreateInfo::instanceCreateInfo(
 			applicationInfo,
 			AppInfo::g_vkInstanceExtensionProperties,
-			AppInfo::g_layer);
+			layer);
 		VK_VALIDATION(vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance));
 
 		// create surface
@@ -71,8 +99,16 @@ namespace MyosotisFW::System::Editor
 		surfaceCreateInfo.hwnd = hwnd;
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 		VK_VALIDATION(vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+#elif defined(Q_OS_LINUX)
+	// Qtのプラットフォームインターフェースを介して取得するのが安全
+		if (QNativeInterface::QX11Application* native = qGuiApp->nativeInterface<QNativeInterface::QX11Application>()) {
+			VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+			surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+			surfaceCreateInfo.connection = native->connection();
+			surfaceCreateInfo.window = static_cast<xcb_window_t>(winId());
+			VK_VALIDATION(vkCreateXcbSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface));
+		}
 #endif
-
 		// create render subsystem
 		m_renderSubsystem = Render::CreateEditorRenderSubsystemPointer();
 		m_renderSubsystem->SetObjectMovedCallback([this]() { emit sigObjectMoved(); });

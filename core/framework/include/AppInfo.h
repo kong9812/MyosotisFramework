@@ -26,7 +26,7 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_engineName = "MyosotisFW";
 	constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
 	constexpr uint32_t g_engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	constexpr const char* g_applicationIcon = ".\\resources\\appInfo\\MyosotisFW.png";
+	constexpr const char* g_applicationIcon = "./resources/appInfo/MyosotisFW.png";
 
 	// 指定VkExtensionProperties
 	const std::vector<const char*> g_vkInstanceExtensionProperties = {
@@ -37,27 +37,13 @@ namespace MyosotisFW::AppInfo
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif __APPLE__
 		VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
+#elif __linux__
+		"VK_KHR_wayland_surface",	// こっちのほうがいいみたい…
+		"VK_KHR_xcb_surface",
 #endif
 	};
-	// 指定VkExtensionProperties
-	const std::vector<const char*> g_vkDeviceExtensionProperties = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_EXT_MESH_SHADER_EXTENSION_NAME,
-		VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,	// AS構築は非同期で実行されるため
-		VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-		VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-	};
-	// 指定Layer
-	const std::vector<const char*> g_layer = {
-		"VK_LAYER_KHRONOS_validation",	// Nsightの時邪魔になる
-		"VK_LAYER_LUNARG_monitor"
-	};
-	// 指定物理デバイスのIndex
-	constexpr uint32_t g_physicalIndex = 0;
 	// 指定画像フォーマット
-	constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_R8G8B8A8_SRGB, VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }; // 表示用に最適化されており、多くのディスプレイがsRGBカラースペースでカラーを直接表示できる
+	constexpr VkSurfaceFormatKHR g_surfaceFormat = { VkFormat::VK_FORMAT_B8G8R8A8_SRGB, VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }; // 表示用に最適化されており、多くのディスプレイがsRGBカラースペースでカラーを直接表示できる
 	// 指定プレゼントモード
 	constexpr VkPresentModeKHR g_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR;  // FIFO: vsync
 	// 指定DepthBufferFormat
@@ -75,7 +61,7 @@ namespace MyosotisFW::AppInfo
 	// 指定画像フォーマット (Visibility Buffer)
 	constexpr VkFormat g_visibilityBufferFormat = VkFormat::VK_FORMAT_R32_UINT;
 	// 指定画像フォーマット (Lightmap)
-	constexpr VkFormat g_lightmapFormat = VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+	constexpr VkFormat g_lightmapFormat = VkFormat::VK_FORMAT_B8G8R8A8_SRGB;
 	// 指定画像フォーマット (RayTracing)
 	constexpr VkFormat g_rayTracingRenderTargetFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 
@@ -118,25 +104,25 @@ namespace MyosotisFW::AppInfo
 	constexpr float g_cameraNear = 0.01f;
 
 	// [フォルダ]ルート
-	constexpr const char* g_assetRootFolder = ".\\";
+	constexpr const char* g_assetRootFolder = "./";
 	// [フォルダ]リソース
-	constexpr const char* g_resourcesFolder = ".\\resources\\";
+	constexpr const char* g_resourcesFolder = "./resources/";
 	// [フォルダ]シェーダー
-	constexpr const char* g_shaderFolder = ".\\resources\\shaders\\spv\\";
+	constexpr const char* g_shaderFolder = "./resources/shaders/spv/";
 	// [フォルダ]テクスチャ
-	constexpr const char* g_textureFolder = ".\\resources\\texture\\";
+	constexpr const char* g_textureFolder = "./resources/texture/";
 	// [フォルダ]フォント
-	constexpr const char* g_fontFolder = ".\\resources\\font\\";
+	constexpr const char* g_fontFolder = "./resources/font/";
 	// [フォルダ]モデル
-	constexpr const char* g_modelFolder = ".\\resources\\models\\";
+	constexpr const char* g_modelFolder = "./resources/models/";
 	// [フォルダ]モデル (MFModel)
-	constexpr const char* g_mfModelFolder = ".\\resources\\models\\MFModels\\";
+	constexpr const char* g_mfModelFolder = "./resources/models/MFModels/";
 	// [フォルダ]ワールド
-	constexpr const char* g_mfWorldFolder = ".\\resources\\world\\";
+	constexpr const char* g_mfWorldFolder = "./resources/world/";
 	// [フォルダ]地形
-	constexpr const char* g_terrainFolder = ".\\resources\\terrain\\";
+	constexpr const char* g_terrainFolder = "./resources/terrain/";
 	// [フォルダ]地形 (MFTerrain)
-	constexpr const char* g_mfTerrainFolder = ".\\resources\\models\\MFTerrains\\";
+	constexpr const char* g_mfTerrainFolder = "./resources/models/MFTerrains/";
 
 	// debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
 	constexpr uint32_t g_imguiDescriptorPoolSize = 2;
