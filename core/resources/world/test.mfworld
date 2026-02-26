@@ -22,7 +22,7 @@
                 "id": 0,
                 "name": "Terrain",
                 "typeID": "fd8d858b-98a4-4479-a548-0e4fed62d577",
-                "meshName": "D:\\proj\\MyosotisFramework\\core\\resources\\terrain\\smallTerrain.png"
+                "meshName": "D:/proj/MyosotisFramework/core/resources/terrain/smallTerrain.png"
             }
         ],
         "children": []
@@ -78,7 +78,7 @@
                 "id": 2,
                 "name": "CustomMesh",
                 "typeID": "6eeb286b-2352-4a66-92f6-6c8b75736337",
-                "meshName": "D:\\proj\\MyosotisFramework\\core\\resources\\models\\Suzanne\\Suzanne.gltf"
+                "meshName": "D:/proj/MyosotisFramework/core/resources/models/Suzanne/Suzanne.gltf"
             }
         ],
         "children": []
@@ -106,7 +106,7 @@
                 "id": 3,
                 "name": "CustomMesh",
                 "typeID": "6eeb286b-2352-4a66-92f6-6c8b75736337",
-                "meshName": "D:\\proj\\MyosotisFramework\\core\\resources\\models\\Suzanne\\Suzanne.gltf"
+                "meshName": "D:/proj/MyosotisFramework/core/resources/models/Suzanne/Suzanne.gltf"
             }
         ],
         "children": []
@@ -134,7 +134,7 @@
                 "id": 4,
                 "name": "CustomMesh",
                 "typeID": "6eeb286b-2352-4a66-92f6-6c8b75736337",
-                "meshName": "D:\\proj\\MyosotisFramework\\core\\resources\\models\\Suzanne\\Suzanne.gltf"
+                "meshName": "D:/proj/MyosotisFramework/core/resources/models/Suzanne/Suzanne.gltf"
             }
         ],
         "children": []

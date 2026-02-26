@@ -26,7 +26,7 @@ namespace MyosotisFW::AppInfo
 	constexpr const char* g_engineName = "MyosotisFW";
 	constexpr uint32_t g_apiVersion = VK_API_VERSION_1_3;
 	constexpr uint32_t g_engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	constexpr const char* g_applicationIcon = ".\\resources\\appInfo\\MyosotisFW.png";
+	constexpr const char* g_applicationIcon = "./resources/appInfo/MyosotisFW.png";
 
 	// 指定VkExtensionProperties
 	const std::vector<const char*> g_vkInstanceExtensionProperties = {
@@ -120,25 +120,25 @@ namespace MyosotisFW::AppInfo
 	constexpr float g_cameraNear = 0.01f;
 
 	// [フォルダ]ルート
-	constexpr const char* g_assetRootFolder = ".\\";
+	constexpr const char* g_assetRootFolder = "./";
 	// [フォルダ]リソース
-	constexpr const char* g_resourcesFolder = ".\\resources\\";
+	constexpr const char* g_resourcesFolder = "./resources/";
 	// [フォルダ]シェーダー
 	constexpr const char* g_shaderFolder = "./resources/shaders/spv/";
 	// [フォルダ]テクスチャ
-	constexpr const char* g_textureFolder = ".\\resources\\texture\\";
+	constexpr const char* g_textureFolder = "./resources/texture/";
 	// [フォルダ]フォント
-	constexpr const char* g_fontFolder = ".\\resources\\font\\";
+	constexpr const char* g_fontFolder = "./resources/font/";
 	// [フォルダ]モデル
-	constexpr const char* g_modelFolder = ".\\resources\\models\\";
+	constexpr const char* g_modelFolder = "./resources/models/";
 	// [フォルダ]モデル (MFModel)
-	constexpr const char* g_mfModelFolder = ".\\resources\\models\\MFModels\\";
+	constexpr const char* g_mfModelFolder = "./resources/models/MFModels/";
 	// [フォルダ]ワールド
-	constexpr const char* g_mfWorldFolder = ".\\resources\\world\\";
+	constexpr const char* g_mfWorldFolder = "./resources/world/";
 	// [フォルダ]地形
-	constexpr const char* g_terrainFolder = ".\\resources\\terrain\\";
+	constexpr const char* g_terrainFolder = "./resources/terrain/";
 	// [フォルダ]地形 (MFTerrain)
-	constexpr const char* g_mfTerrainFolder = ".\\resources\\models\\MFTerrains\\";
+	constexpr const char* g_mfTerrainFolder = "./resources/models/MFTerrains/";
 
 	// debug gui (size > IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE)
 	constexpr uint32_t g_imguiDescriptorPoolSize = 2;
