@@ -14,7 +14,7 @@ namespace MyosotisFW
 			return std::filesystem::path(path);
 		}
 
-		bool empty()
+		const bool empty() const
 		{
 			return path.empty();
 		}

@@ -243,16 +243,49 @@ namespace MyosotisFW::System::Editor
 		saveAction->setStatusTip(tr("Save the current file"));
 		connect(saveAction, &QAction::triggered, this, [this]()
 			{
-				const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
-				std::string savePath = AppInfo::g_mfWorldFolder + std::string("test.mfworld");
-				m_gameDirector->SaveMFWorld(savePath, objects);
+				if (m_gameDirector->GetCurrentWorldFilePath().empty())
+				{
+					// Save As
+					const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+
+					QString fileName = QFileDialog::getSaveFileName(nullptr,
+						tr("Select File"),
+						MyosotisFW::AppInfo::g_mfWorldFolder,
+						"*.mfworld");
+
+					if (!fileName.isEmpty())
+					{
+						const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+						m_gameDirector->SaveMFWorld(fileName.toStdString(), objects);
+					}
+				}
+				else
+				{
+					const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+					m_gameDirector->SaveMFWorld(m_gameDirector->GetCurrentWorldFilePath().path, objects);
+				}
 			});
 		actions.append(saveAction);
 
 		// Save As
 		QAction* saveAsAction = new QAction(tr("Save As..."), this);
 		saveAsAction->setShortcut(QKeySequence::SaveAs);
-		// connect(saveAsAction, &QAction::triggered, this, &VulkanWindow::saveAsSlot);
+		saveAction->setStatusTip(tr("Save the current file"));
+		connect(saveAsAction, &QAction::triggered, this, [this]()
+			{
+				const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+
+				QString fileName = QFileDialog::getSaveFileName(nullptr,
+					tr("Select File"),
+					MyosotisFW::AppInfo::g_mfWorldFolder,
+					"*.mfworld");
+
+				if (!fileName.isEmpty())
+				{
+					const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
+					m_gameDirector->SaveMFWorld(fileName.toStdString(), objects);
+				}
+			});
 		actions.append(saveAsAction);
 
 		{// Separator
@@ -267,8 +300,16 @@ namespace MyosotisFW::System::Editor
 		connect(loadAction, &QAction::triggered, this, [this]()
 			{
 				const MObjectListConstPtr& objects = m_renderSubsystem->GetMObjectRegistry()->GetMObjectList();
-				std::string loadPath = AppInfo::g_mfWorldFolder + std::string("test.mfworld");
-				m_gameDirector->LoadMFWorld(loadPath);
+
+				QString fileName = QFileDialog::getOpenFileName(nullptr,
+					tr("Select File"),
+					MyosotisFW::AppInfo::g_mfWorldFolder,
+					"*.mfworld");
+
+				if (!fileName.isEmpty())
+				{
+					m_gameDirector->LoadMFWorld(fileName.toStdString());
+				}
 			});
 		actions.append(loadAction);
 

@@ -37,6 +37,7 @@ namespace MyosotisFW::System::GameDirector {
 		}
 
 		m_mfWorldLoadedCallback(topObjects);
+		m_currentWorldFilePath.path = fileName;
 	}
 
 	MObject_ptr EditorGameDirector::AddNewMObject()

@@ -3,6 +3,7 @@
 #include <functional>
 #include "GameDirector.h"
 #include "ComponentType.h"
+#include "FilePath.h"
 
 // 前方宣言
 namespace MyosotisFW
@@ -17,7 +18,7 @@ namespace MyosotisFW::System::GameDirector {
 	class EditorGameDirector : public GameDirector
 	{
 	public:
-		EditorGameDirector(const Render::RenderSubsystem_ptr& renderSubsystem) : GameDirector(renderSubsystem), m_mfWorldLoadedCallback(nullptr) {}
+		EditorGameDirector(const Render::RenderSubsystem_ptr& renderSubsystem) : GameDirector(renderSubsystem), m_mfWorldLoadedCallback(nullptr), m_currentWorldFilePath() {}
 		~EditorGameDirector() {}
 
 		void LoadMFWorld(const std::string& fileName) override;
@@ -26,8 +27,12 @@ namespace MyosotisFW::System::GameDirector {
 		ComponentBase_ptr RegisterComponent(const uuids::uuid& uuid, const MyosotisFW::ComponentType type);
 		void SetMeshChangedCallback(const std::function<void(std::vector<MObject_ptr>)>& callback) { m_mfWorldLoadedCallback = callback; }
 
+		const FilePath& GetCurrentWorldFilePath() const { return m_currentWorldFilePath; }
+
 	private:
 		std::function<void(std::vector<MObject_ptr>)> m_mfWorldLoadedCallback;
+
+		FilePath m_currentWorldFilePath;
 	};
 	TYPEDEF_SHARED_PTR_ARGS(EditorGameDirector);
 }
